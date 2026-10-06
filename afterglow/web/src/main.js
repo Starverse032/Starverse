@@ -11,6 +11,8 @@ async function loadFonts() {
     '300 40px "Noto Sans CJK SC"', '400 40px "Noto Sans CJK SC"', '400 40px "Noto Sans Mono CJK SC"',
     '400 40px "Cormorant Garamond"', '500 40px "Cormorant Garamond"', 'italic 400 40px "Cormorant Garamond"',
     '300 40px "IBM Plex Mono"', '400 40px "IBM Plex Mono"', '500 40px "IBM Plex Mono"',
+    '300 40px "Noto Serif Display VF"', '200 40px "Noto Serif CJK SC"', '500 40px "Inter"', '300 40px "Inter"', 'italic 300 40px "Inter"',
+    '400 40px "Noto Sans Mono CJK SC"', '600 40px "Noto Serif CJK SC"', '300 40px "Noto Sans CJK SC"',
   ];
   await Promise.all(specs.map(s => document.fonts.load(s, '余光 AFTERGLOW 0123')));
 }

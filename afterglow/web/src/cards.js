@@ -25,7 +25,9 @@ export class Cards {
     this.items = [
       ...(timeline.cards || []).map(c => ({ ...c, kind: 'card' })),
       ...(timeline.credits || []).map((c, i) => ({ id: `CR${i}`, fadeIn: 0.8, fadeOut: 0.8, ...c, kind: 'credit' })),
+      ...((timeline.subtitleStyle?.enabled !== false) ? (timeline.subtitles || []).map(c => ({ ...c, style: 'subtitle', kind: 'subtitle' })) : []),
     ];
+    this.sub = { font: 'Cormorant Garamond', size: 30, color: '#CFC9BE', opacity: 0.85, x: 960, baseline: 900, ...(timeline.subtitleStyle || {}) };
   }
 
   // envelope 0..1 with eased fade in/out
@@ -54,6 +56,20 @@ export class Cards {
     const e = this.env(it, t);
     if (e <= 0.001) return;
     const life = clamp((t - it.start) / Math.max(0.01, it.end - it.start));
+    if (it.style === 'subtitle') {
+      // in-film subtitle: plain italic line, no blur/drift (words change, letters never animate)
+      const st = this.sub;
+      g.save();
+      g.globalAlpha = e * (st.opacity ?? 0.85);
+      g.fillStyle = it.color || st.color;
+      g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+      g.font = `italic 400 ${Math.round((it.size || st.size) * S)}px "Cormorant Garamond", "Noto Serif"`;
+      g.letterSpacing = `${(0.5 * S).toFixed(1)}px`;
+      g.shadowColor = 'rgba(0,0,0,0.7)'; g.shadowBlur = 10 * S;
+      g.fillText(it.en || it.zh || '', (it.x ?? st.x) * S * (W / H) / (16 / 9), (it.baseline ?? st.baseline) * S);
+      g.restore();
+      return;
+    }
     const blur = (1 - e) * 10 * S;
     const drift = (life - 0.5) * -6 * S; // slow upward drift through the card's life
     const style = it.style || 'cinema_center';

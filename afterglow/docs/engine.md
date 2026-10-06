@@ -16,6 +16,8 @@ web/src/lib/earth.js     可辨认的地球：真实海岸线（Natural Earth �
                          程序化生物群落、冰盖、云层、海面太阳反光、大气辉光、夜侧气辉；createEarth(ctx) 用法见文件头注释
 web/src/lib/textatlas.js 字形图集 glyphAtlas / uniqueGlyphs / 短语图集 phraseAtlas（复杂文字整句塑形）/ glyphPointsMaterial
                          ——几十万个微小文字粒子，60 万个约 0.45 s/帧
+web/src/shots/_webgraph.js 共享的 WEB 节点图（种子 1990）+ WEB_PATH 相机样条：getWeb / webPathPose / applyWebPose /
+                         sampleWebPoints / hopDistances。c_firststar、c_web、w_sea、q_apex 必须共用它（S10 与 S35 逐帧同形）
 web/src/data/voices.js   约 5000 年的人类文字语料（楔形文字、象形文字……《天问》、苏轼、但丁、帕斯卡、萨根、
                          数十种语言的“有人吗？”和“你好”、代码、摩尔斯电码），以及每种文字对应的字体 FONT_FOR(lang)
 web/src/data/land.js / places.js   海岸线、湖泊、城市坐标与人口（只用作坐标，不用任何影像）
@@ -58,7 +60,7 @@ export async function create(ctx) {
 | exposure | 1.0 | 色调映射前的曝光倍数 |
 | bloom / bloomThreshold / bloomKnee / bloomRadius | 0.9 / 0.9 / 0.6 / 1.0 | 物理泛光（6 级 mip） |
 | streak / streakTint | 0 / [0.55,0.75,1] | 变形宽银幕水平光晕 |
-| ca | 0.0012 | 径向色差 |
+| ca | 0.0012 | 径向色差（uv 单位：画面角上的偏移约为 ca × 1920 px；剧本里的“色差 0.6 px”≈ ca 0.0003） |
 | vignette | 0.28 | 暗角 |
 | grain | 0.035 | 胶片颗粒（暗部更明显） |
 | saturation / contrast | 1 / 1 | 调色 |
