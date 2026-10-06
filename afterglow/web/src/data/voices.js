@@ -1,0 +1,127 @@
+// "Everything we ever said remained." — a corpus of real human utterances addressed to the sky,
+// spanning ~5000 years of writing. Used by the text-starfield / word-galaxy shots.
+// Each entry: { t: text, lang: BCP-47-ish code, kind, src?: attribution, era?: approx year }
+// kind: 'ancient' (early scripts), 'question' (questions to the sky / "is anyone there?"),
+//       'hello' (greetings), 'line' (famous lines about stars/sky/home), 'code' (machine languages)
+// Font for each script: FONT_FOR(lang). All fonts are installed system-wide (Noto family).
+
+export const FONT_BY_LANG = {
+  zh: '"Noto Serif CJK SC"', ja: '"Noto Serif CJK JP"', ko: '"Noto Serif CJK KR"',
+  ar: '"Noto Naskh Arabic"', fa: '"Noto Naskh Arabic"', ur: '"Noto Nastaliq Urdu"',
+  he: '"Noto Serif Hebrew"', hi: '"Noto Serif Devanagari"', sa: '"Noto Serif Devanagari"',
+  th: '"Noto Serif Thai"', ka: '"Noto Serif Georgian"', hy: '"Noto Serif Armenian"', am: '"Noto Serif Ethiopic"',
+  km: '"Noto Serif Khmer"', bo: '"Noto Serif Tibetan"', ta: '"Noto Serif Tamil"', te: '"Noto Serif Telugu"',
+  kn: '"Noto Serif Kannada"', ml: '"Noto Serif Malayalam"', bn: '"Noto Serif Bengali"', pa: '"Noto Serif Gurmukhi"',
+  gu: '"Noto Serif Gujarati"', si: '"Noto Serif Sinhala"', my: '"Noto Serif Myanmar"', lo: '"Noto Serif Lao"',
+  chr: '"Noto Sans Cherokee"', iu: '"Noto Sans Canadian Aboriginal"', syr: '"Noto Sans Syriac"',
+  xsux: '"Noto Sans Cuneiform"', egy: '"Noto Sans Egyptian Hieroglyphs"', gmy: '"Noto Sans Linear B"',
+  phn: '"Noto Sans Phoenician"', peo: '"Noto Sans Old Persian"', runr: '"Noto Sans Runic"', sga: '"Noto Sans Ogham"',
+  got: '"Noto Sans Gothic"', glag: '"Noto Sans Glagolitic"', tfng: '"Noto Sans Tifinagh"',
+  code: '"IBM Plex Mono"', morse: '"IBM Plex Mono"',
+  default: '"Cormorant Garamond", "Noto Serif"',
+};
+export const FONT_FOR = lang => FONT_BY_LANG[lang] || FONT_BY_LANG.default;
+export const RTL = new Set(['ar', 'fa', 'ur', 'he', 'syr', 'phn']);
+
+export const VOICES = [
+  // ---- the oldest marks: writing begins by naming the sky ------------------------------------
+  { t: '𒀭', lang: 'xsux', kind: 'ancient', src: 'Sumerian cuneiform sign AN / DINGIR — "sky, heaven"; the sign is a star', era: -3200 },
+  { t: '𒀭𒂗𒆤', lang: 'xsux', kind: 'ancient', src: 'Sumerian, Enlil', era: -2500 },
+  { t: '𒌓', lang: 'xsux', kind: 'ancient', src: 'cuneiform UD — "sun, day"', era: -3000 },
+  { t: '𓇼', lang: 'egy', kind: 'ancient', src: 'Egyptian hieroglyph N14 — "star"', era: -3000 },
+  { t: '𓇳', lang: 'egy', kind: 'ancient', src: 'Egyptian hieroglyph N5 — "sun"', era: -3000 },
+  { t: '𓇼𓇼𓇼', lang: 'egy', kind: 'ancient', src: 'stars', era: -2600 },
+  { t: '𐀀𐀁𐀂𐀃𐀄', lang: 'gmy', kind: 'ancient', src: 'Linear B syllabary a e i o u', era: -1400 },
+  { t: '𐤀𐤁𐤂𐤃', lang: 'phn', kind: 'ancient', src: 'Phoenician aleph bet gimel dalet — the first alphabet', era: -1050 },
+  { t: '𐎠𐎭𐎶', lang: 'peo', kind: 'ancient', src: 'Old Persian adam — "I" (Behistun inscription: "I am Darius")', era: -520 },
+  { t: 'ᚠᚢᚦᚨᚱᚲ', lang: 'runr', kind: 'ancient', src: 'Elder Futhark', era: 150 },
+  { t: '᚛ᚁᚂᚃᚄᚅ᚜', lang: 'sga', kind: 'ancient', src: 'Ogham', era: 400 },
+  { t: '𐌰𐍄𐍄𐌰 𐌿𐌽𐍃𐌰𐍂 𐌸𐌿 𐌹𐌽 𐌷𐌹𐌼𐌹𐌽𐌰𐌼', lang: 'got', kind: 'ancient', src: 'Gothic Bible (Wulfila): "Our father, who art in the heavens"', era: 360 },
+  { t: 'ⰀⰁⰂⰃ', lang: 'glag', kind: 'ancient', src: 'Glagolitic az buky vedi glagoli', era: 863 },
+  { t: 'ⵣ', lang: 'tfng', kind: 'ancient', src: 'Tifinagh yaz', era: -200 },
+
+  // ---- questions asked of the sky -----------------------------------------------------------
+  { t: '遂古之初，谁传道之？', lang: 'zh', kind: 'question', src: '屈原《天问》', era: -300 },
+  { t: '上下未形，何由考之？', lang: 'zh', kind: 'question', src: '屈原《天问》', era: -300 },
+  { t: '明月几时有？把酒问青天。', lang: 'zh', kind: 'question', src: '苏轼《水调歌头》', era: 1076 },
+  { t: '江畔何人初见月？江月何年初照人？', lang: 'zh', kind: 'question', src: '张若虚《春江花月夜》', era: 700 },
+  { t: 'को अद्धा वेद क इह प्र वोचत्', lang: 'sa', kind: 'question', src: 'Rigveda 10.129.6 (Nasadiya Sukta): "Who really knows? Who will here proclaim it?"', era: -1200 },
+  { t: 'Quid est homo, quod memor es eius?', lang: 'la', kind: 'question', src: 'Psalm 8 (Vulgate): "What is man, that thou art mindful of him?"', era: 400 },
+  { t: 'Twinkle, twinkle, little star, how I wonder what you are!', lang: 'en', kind: 'question', src: 'Jane Taylor, 1806', era: 1806 },
+  { t: 'Are we alone?', lang: 'en', kind: 'question', era: 1960 },
+  { t: 'Is anyone there?', lang: 'en', kind: 'question', era: 2000 },
+  { t: '有人吗？', lang: 'zh', kind: 'question' },
+  { t: '誰かいますか？', lang: 'ja', kind: 'question' },
+  { t: '거기 누구 있어요?', lang: 'ko', kind: 'question' },
+  { t: '¿Hay alguien ahí?', lang: 'es', kind: 'question' },
+  { t: 'Il y a quelqu’un ?', lang: 'fr', kind: 'question' },
+  { t: 'Ist da jemand?', lang: 'de', kind: 'question' },
+  { t: 'C’è qualcuno?', lang: 'it', kind: 'question' },
+  { t: 'Tem alguém aí?', lang: 'pt', kind: 'question' },
+  { t: 'Есть кто-нибудь?', lang: 'ru', kind: 'question' },
+  { t: 'Тут хтось є?', lang: 'uk', kind: 'question' },
+  { t: 'Είναι κανείς εκεί;', lang: 'el', kind: 'question' },
+  { t: 'هل يوجد أحد هنا؟', lang: 'ar', kind: 'question' },
+  { t: 'יש פה מישהו?', lang: 'he', kind: 'question' },
+  { t: 'क्या कोई है?', lang: 'hi', kind: 'question' },
+  { t: 'มีใครอยู่ไหม', lang: 'th', kind: 'question' },
+  { t: 'Có ai ở đó không?', lang: 'vi', kind: 'question' },
+  { t: 'Kimse var mı?', lang: 'tr', kind: 'question' },
+  { t: 'Kuna mtu?', lang: 'sw', kind: 'question' },
+  { t: 'Jest tam ktoś?', lang: 'pl', kind: 'question' },
+  { t: 'Is daar iemand?', lang: 'nl', kind: 'question' },
+  { t: 'Är det någon där?', lang: 'sv', kind: 'question' },
+  { t: 'Ada orang di sana?', lang: 'id', kind: 'question' },
+  { t: 'Estne aliquis ibi?', lang: 'la', kind: 'question' },
+
+  // ---- greetings (the Voyager Golden Record carried greetings in 55 languages) ---------------
+  { t: 'Hello from the children of planet Earth.', lang: 'en', kind: 'hello', src: 'Voyager Golden Record, 1977', era: 1977 },
+  { t: '你好', lang: 'zh', kind: 'hello' }, { t: 'こんにちは', lang: 'ja', kind: 'hello' }, { t: '안녕하세요', lang: 'ko', kind: 'hello' },
+  { t: 'Hola', lang: 'es', kind: 'hello' }, { t: 'Bonjour', lang: 'fr', kind: 'hello' }, { t: 'Hallo', lang: 'de', kind: 'hello' },
+  { t: 'Ciao', lang: 'it', kind: 'hello' }, { t: 'Olá', lang: 'pt', kind: 'hello' }, { t: 'Привет', lang: 'ru', kind: 'hello' },
+  { t: 'Γεια σου', lang: 'el', kind: 'hello' }, { t: 'مرحبا', lang: 'ar', kind: 'hello' }, { t: 'שלום', lang: 'he', kind: 'hello' },
+  { t: 'سلام', lang: 'fa', kind: 'hello' }, { t: 'नमस्ते', lang: 'hi', kind: 'hello' }, { t: 'สวัสดี', lang: 'th', kind: 'hello' },
+  { t: 'Xin chào', lang: 'vi', kind: 'hello' }, { t: 'Merhaba', lang: 'tr', kind: 'hello' }, { t: 'Jambo', lang: 'sw', kind: 'hello' },
+  { t: 'Sawubona', lang: 'zu', kind: 'hello', src: 'isiZulu — literally "I see you"' },
+  { t: 'ሰላም', lang: 'am', kind: 'hello' }, { t: 'გამარჯობა', lang: 'ka', kind: 'hello' }, { t: 'Բարև', lang: 'hy', kind: 'hello' },
+  { t: 'ជំរាបសួរ', lang: 'km', kind: 'hello' }, { t: 'བཀྲ་ཤིས་བདེ་ལེགས།', lang: 'bo', kind: 'hello' }, { t: 'வணக்கம்', lang: 'ta', kind: 'hello' },
+  { t: 'নমস্কার', lang: 'bn', kind: 'hello' }, { t: 'నమస్కారం', lang: 'te', kind: 'hello' }, { t: 'നമസ്കാരം', lang: 'ml', kind: 'hello' },
+  { t: 'ನಮಸ್ಕಾರ', lang: 'kn', kind: 'hello' }, { t: 'ਸਤ ਸ੍ਰੀ ਅਕਾਲ', lang: 'pa', kind: 'hello' }, { t: 'નમસ્તે', lang: 'gu', kind: 'hello' },
+  { t: 'ආයුබෝවන්', lang: 'si', kind: 'hello' }, { t: 'မင်္ဂလာပါ', lang: 'my', kind: 'hello' }, { t: 'ສະບາຍດີ', lang: 'lo', kind: 'hello' },
+  { t: 'Kia ora', lang: 'mi', kind: 'hello' }, { t: 'Aloha', lang: 'haw', kind: 'hello' }, { t: 'ᎣᏏᏲ', lang: 'chr', kind: 'hello' },
+  { t: 'ᐊᐃ', lang: 'iu', kind: 'hello' }, { t: 'ܫܠܡܐ', lang: 'syr', kind: 'hello' }, { t: 'Salve', lang: 'la', kind: 'hello' },
+  { t: 'Dzień dobry', lang: 'pl', kind: 'hello' }, { t: 'Hej', lang: 'sv', kind: 'hello' }, { t: 'Szia', lang: 'hu', kind: 'hello' },
+  { t: 'Привіт', lang: 'uk', kind: 'hello' }, { t: 'Selamat pagi', lang: 'id', kind: 'hello' }, { t: 'Kamusta', lang: 'tl', kind: 'hello' },
+
+  // ---- lines about the sky, light, home ----------------------------------------------------
+  { t: '举头望明月，低头思故乡。', lang: 'zh', kind: 'line', src: '李白《静夜思》', era: 726 },
+  { t: '天地玄黄，宇宙洪荒。', lang: 'zh', kind: 'line', src: '《千字文》', era: 520 },
+  { t: '仰观宇宙之大，俯察品类之盛。', lang: 'zh', kind: 'line', src: '王羲之《兰亭集序》', era: 353 },
+  { t: '寄蜉蝣于天地，渺沧海之一粟。', lang: 'zh', kind: 'line', src: '苏轼《赤壁赋》', era: 1082 },
+  { t: '荒海や佐渡によこたふ天河', lang: 'ja', kind: 'line', src: '松尾芭蕉', era: 1689 },
+  { t: '별 하나에 추억과 별 하나에 사랑과', lang: 'ko', kind: 'line', src: '윤동주 「별 헤는 밤」', era: 1941 },
+  { t: 'E quindi uscimmo a riveder le stelle.', lang: 'it', kind: 'line', src: 'Dante, Inferno XXXIV', era: 1320 },
+  { t: 'L’amor che move il sole e l’altre stelle.', lang: 'it', kind: 'line', src: 'Dante, Paradiso XXXIII', era: 1320 },
+  { t: 'Eppur si muove.', lang: 'it', kind: 'line', src: 'attributed to Galileo', era: 1633 },
+  { t: 'Le silence éternel de ces espaces infinis m’effraie.', lang: 'fr', kind: 'line', src: 'Pascal, Pensées', era: 1670 },
+  { t: 'Der bestirnte Himmel über mir und das moralische Gesetz in mir.', lang: 'de', kind: 'line', src: 'Kant, Kritik der praktischen Vernunft', era: 1788 },
+  { t: 'Γνῶθι σεαυτόν', lang: 'el', kind: 'line', src: 'Delphic maxim', era: -500 },
+  { t: 'Sic itur ad astra.', lang: 'la', kind: 'line', src: 'Virgil, Aeneid IX', era: -19 },
+  { t: 'Per aspera ad astra.', lang: 'la', kind: 'line' },
+  { t: 'ما ز بالاییم و بالا می‌رویم', lang: 'fa', kind: 'line', src: 'Rumi — "We are from above, and to above we go"', era: 1250 },
+  { t: 'Земля — колыбель человечества, но нельзя вечно жить в колыбели.', lang: 'ru', kind: 'line', src: 'Tsiolkovsky', era: 1911 },
+  { t: 'Поехали!', lang: 'ru', kind: 'line', src: 'Yuri Gagarin, 12 April 1961', era: 1961 },
+  { t: 'That’s one small step for man, one giant leap for mankind.', lang: 'en', kind: 'line', src: 'Neil Armstrong, 1969', era: 1969 },
+  { t: 'Look again at that dot. That’s here. That’s home. That’s us.', lang: 'en', kind: 'line', src: 'Carl Sagan, Pale Blue Dot', era: 1994 },
+  { t: 'We are a way for the cosmos to know itself.', lang: 'en', kind: 'line', src: 'Carl Sagan, Cosmos', era: 1980 },
+
+  // ---- machine languages: the newest way of speaking ---------------------------------------
+  { t: 'print("Hello, world!")', lang: 'code', kind: 'code', era: 1978 },
+  { t: '01001000 01101001', lang: 'code', kind: 'code', src: '"Hi" in ASCII binary' },
+  { t: '.. ... / .- -. -.-- --- -. . / - .... . .-. . ..--..', lang: 'morse', kind: 'code', src: 'Morse: IS ANYONE THERE?' },
+  { t: 'e^{iπ} + 1 = 0', lang: 'code', kind: 'code', src: 'Euler' },
+  { t: 'E = mc²', lang: 'code', kind: 'code', src: 'Einstein, 1905', era: 1905 },
+];
+
+// Is-anyone-there in many languages (for the finale chorus).
+export const QUESTIONS = VOICES.filter(v => v.kind === 'question' && !v.src);
