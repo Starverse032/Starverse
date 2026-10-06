@@ -13,6 +13,9 @@
 
 成片：`output/ai-history.mp4`　字幕：`output/ai-history.srt`　解说词全文：[`docs/解说词.md`](docs/解说词.md)
 
+> 仓库里的成片是为了符合 GitHub 单文件 100 MB 上限而二次压缩的版本（约 90 MB，视频约 315 kbps）。
+> 按下文步骤运行 `build.py` 可得到约 170 MB 的高画质原版（CRF 20）。
+
 ## 章节
 
 | 时间 | 章节 | 主要内容 |
