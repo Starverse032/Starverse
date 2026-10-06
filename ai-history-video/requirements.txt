@@ -1,0 +1,6 @@
+# Python 依赖（另需系统安装 ffmpeg、Noto CJK 字体、libEGL，见 README）
+numpy>=1.26
+scipy>=1.11
+soundfile>=0.12
+sherpa-onnx>=1.10
+skia-python>=87.6
