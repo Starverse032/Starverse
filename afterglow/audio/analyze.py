@@ -35,7 +35,8 @@ def main():
     ap.add_argument('--offset', type=float, default=0.0, help='timeline time of the first sample in the wav (for excerpts)')
     a = ap.parse_args()
     x = dsp.read_wav(a.wav)
-    tl = json.load(open(os.path.join(ROOT, 'timeline.json'), encoding='utf-8'))
+    tlp = os.path.join(ROOT, 'timeline.json')
+    tl = json.load(open(tlp, encoding='utf-8')) if os.path.exists(tlp) else {'shots': [], 'sync': [], 'cards': []}
     t1 = a.t1 if a.t1 is not None else a.offset + len(x) / dsp.SR
     s0, s1 = dsp.n_samples(max(0, a.t0 - a.offset)), dsp.n_samples(max(0, t1 - a.offset))
     seg = x[s0:s1].mean(axis=1)

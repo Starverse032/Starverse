@@ -180,6 +180,19 @@ export class Post {
 
   pass(mat, target) { this.fsq.material = mat; this.fsq.render(this.r, target); }
 
+  // running average: acc = mix(acc, src, w)  (w = 1/(k+1) gives the mean of k+1 samples)
+  accumulate(src, acc, w) {
+    if (!this.acc) {
+      this.acc = new THREE.ShaderMaterial({ vertexShader: VS, fragmentShader: `varying vec2 vUv; uniform sampler2D s; uniform float w; void main(){ gl_FragColor = vec4(texture2D(s, vUv).rgb, w); }`,
+        uniforms: { s: { value: null }, w: { value: 1 } }, depthTest: false, depthWrite: false, transparent: true,
+        blending: THREE.CustomBlending, blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendEquation: THREE.AddEquation });
+    }
+    this.acc.uniforms.s.value = src.texture; this.acc.uniforms.w.value = w;
+    this.r.setRenderTarget(acc);
+    if (w >= 1) { this.r.setClearColor(0x000000, 1); this.r.clear(true, false, false); }
+    this.fsq.material = this.acc; this.fsq.render(this.r, acc);
+  }
+
   blend(a, b, m, target) {
     const u = this.mix.uniforms; u.a.value = a.texture; u.b.value = b.texture; u.m.value = m;
     this.pass(this.mix, target);

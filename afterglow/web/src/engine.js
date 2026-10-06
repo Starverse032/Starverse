@@ -23,6 +23,7 @@ export class Engine {
     this.rtB = makeRT(W, H, { depth: true });
     this.msaa = null; // lazily created 4x MSAA pair for shots with hard geometric edges (shot.msaa or module.msaa)
     this.rtMix = makeRT(W, H);
+    this.rtAcc = null; // motion-blur accumulation (lazy)
     this.post = new Post(renderer, W, H);
     this.cards = new Cards(W, H, timeline);
     this.modules = new Map();   // module name -> Promise<instance>
@@ -103,19 +104,37 @@ export class Engine {
     return p;
   }
 
+  // Sub-frame motion blur: average N renders across the shutter interval (180° by default).
+  async renderShotBlurred(i, t, target, bar) {
+    const shot = this.shots[i];
+    const inst = await this.module(shot.module);
+    const n = shot.motionBlur || inst.motionBlur || 0;
+    if (!n || n < 2) return this.renderShot(i, t, target, bar);
+    if (!this.rtAcc) this.rtAcc = makeRT(this.W, this.H);
+    const shutter = (shot.shutter ?? 0.5) / this.fps;
+    let P = null;
+    for (let k = 0; k < n; k++) {
+      const tk = t + shutter * ((k + 0.5) / n - 0.5);
+      P = await this.renderShot(i, tk, target, bar);
+      this.post.accumulate(this.lastTarget, this.rtAcc, k === 0 ? 1 : 1 / (k + 1));
+    }
+    this.lastTarget = this.rtAcc;
+    return P;
+  }
+
   async renderFrame(frame) {
     const t = frame / this.fps;
     const i = this.shotIndexAt(t);
     const shot = this.shots[i];
     const bar = this.barAt(t);
     const lt = t - shot.start;
-    let P = await this.renderShot(i, t, this.rtA, bar);
+    let P = await this.renderShotBlurred(i, t, this.rtA, bar);
     let src = this.lastTarget;
     const tin = shot.transitionIn || { type: 'cut', dur: 0 };
     const tdur = tin.dur || 0;
     if (tin.type === 'dissolve' && tdur > 0 && lt < tdur && i > 0) {
       // previous shot keeps running past its end for the length of the dissolve
-      const Pprev = await this.renderShot(i - 1, t, this.rtB, bar);
+      const Pprev = await this.renderShotBlurred(i - 1, t, this.rtB, bar);
       const prevTarget = this.lastTarget;
       const m = util.ease.inOutSine(util.clamp(lt / tdur));
       this.post.blend(prevTarget, src, m, this.rtMix);

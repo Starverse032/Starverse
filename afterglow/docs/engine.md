@@ -14,6 +14,8 @@ web/src/lib/kit.js       bake / bakeSky / skyDome / starfield / filmCamera / ful
 web/src/lib/util.js      easing、keyframes、seeded rng、shake、textToPoints、textCanvas、timecode
 web/src/lib/earth.js     可辨认的地球：真实海岸线（Natural Earth 公有领域坐标）+ 合成城市灯海 / 公路 / 城镇，
                          程序化生物群落、冰盖、云层、海面太阳反光、大气辉光、夜侧气辉；createEarth(ctx) 用法见文件头注释
+web/src/lib/textatlas.js 字形图集 glyphAtlas / uniqueGlyphs / 短语图集 phraseAtlas（复杂文字整句塑形）/ glyphPointsMaterial
+                         ——几十万个微小文字粒子，60 万个约 0.45 s/帧
 web/src/data/voices.js   约 5000 年的人类文字语料（楔形文字、象形文字……《天问》、苏轼、但丁、帕斯卡、萨根、
                          数十种语言的“有人吗？”和“你好”、代码、摩尔斯电码），以及每种文字对应的字体 FONT_FOR(lang)
 web/src/data/land.js / places.js   海岸线、湖泊、城市坐标与人口（只用作坐标，不用任何影像）
@@ -45,6 +47,8 @@ export async function create(ctx) {
 - 每个镜头有输出颜色（线性 HDR）。1.0 大约是“白”，泛光阈值约 0.9，因此恒星核心、光标、超新星可以给到 5–50。
 - 画面按 2.39:1 构图：`f.barPx` 之外的上下区域会被遮幅盖住（引擎还会对遮幅区域裁剪，省下渲染时间）。主体要放在可见带内。
 - `shot.notes` / `shot.params` 里可以放镜头需要的参数。
+- 高速运动镜头可以在返回对象里加 `motionBlur: 6`（子帧数），或在 timeline 镜头上设 `motionBlur`，可选 `shutter`（默认 0.5，即 180° 快门）。成本 ×N，只在关键镜头使用。
+- 景深：粒子镜头可以在点着色器里按 |深度 − 对焦距离| 放大点尺寸、降低亮度（散景），成本很低；也可以对远景层做模糊烘焙。
 - 有硬几何边缘的镜头（星球轮廓、界面线条、文字几何）可以在返回对象里加 `msaa: true`，开启 4× MSAA，成本约 +50%。
 - 不要修改共享文件（engine / post / cards / lib / timeline.json）。需要共享能力时，先在自己的模块里实现，并在汇报里说明。
 
