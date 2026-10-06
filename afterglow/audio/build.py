@@ -28,7 +28,6 @@ sys.path.insert(0, HERE)
 import dsp  # noqa: E402
 
 OUT = os.path.join(ROOT, 'build', 'audio')
-TARGET_LUFS = -16.0   # web delivery; film keeps wide dynamics, the limiter only catches peaks
 
 
 def load_timeline():
@@ -64,6 +63,30 @@ def load_cached(name, n):
     return out
 
 
+TARGET_LUFS = -16.0  # distribution normalisation (screenplay §6.6: written at ~-20 LUFS integrated, released at -16)
+
+
+def apply_width(m, tl, n):
+    """Mid/side width automation from the letterbox keys: aspect 16:9 → mono (width 0), 2.39 → stereo (1)."""
+    keys = tl.get('letterbox') or []
+    if not keys:
+        return m
+    t = np.arange(n) / dsp.SR
+    w = np.zeros(n, np.float32)
+    cur = 1.0 if keys[0]['aspect'] > 2 else 0.0
+    w[:] = cur
+    for k in keys:
+        target = 1.0 if k['aspect'] > 2 else 0.0
+        a = dsp.n_samples(k['t']); d = max(1, dsp.n_samples(k.get('dur', 0)))
+        u = np.clip((t[a:] - k['t']) / max(1e-9, k.get('dur', 0)), 0, 1) if k.get('dur', 0) > 0 else np.ones(n - a)
+        e = np.where(u < 0.5, 4 * u ** 3, 1 - (-2 * u + 2) ** 3 / 2)  # easeInOutCubic
+        w[a:] = cur + (target - cur) * e
+        cur = target
+    mid = (m[:, 0] + m[:, 1]) * 0.5
+    side = (m[:, 0] - m[:, 1]) * 0.5 * w
+    return np.stack([mid + side, mid - side], axis=1).astype(np.float32)
+
+
 def mix(stems, tl, n):
     gains = (tl.get('mix') or {}).get('gains', {})
     music = np.zeros((n, 2), np.float32)
@@ -84,12 +107,20 @@ def mix(stems, tl, n):
         music *= env[:, None]
     m = music + fx
     m = dsp.highpass(m, 18, order=2)
-    # gentle glue compression on the master
-    m = dsp.compress(m, threshold_db=-14, ratio=1.6, attack=0.03, release=0.4)
+    # stereo width follows the letterbox (screenplay §7.3): interface = mono, film = stereo
+    m = apply_width(m, tl, n)
+    # gentle glue on the master (the score is written to absolute levels — no loudness normalisation)
+    m = dsp.compress(m, threshold_db=-12, ratio=1.5, attack=0.03, release=0.4)
     loud = dsp.lufs(m)
-    m *= 10 ** ((TARGET_LUFS - loud) / 20)
+    if TARGET_LUFS is not None and loud > -60:
+        m *= 10 ** ((TARGET_LUFS - loud) / 20)
     m = dsp.limiter(m, ceiling_db=-1.0, lookahead=0.004, release=0.12)
-    print(f'[mix] loudness before norm {loud:.1f} LUFS → target {TARGET_LUFS}; after limiter {dsp.lufs(m):.1f} LUFS, peak {dsp.peak_db(m):.1f} dBFS')
+    print(f'[mix] score-level loudness {loud:.1f} LUFS → distribution target {TARGET_LUFS}')
+    # digital silences are exact zeros, sample-accurate (they are part of the storytelling)
+    for z in tl.get('silences', []):
+        if z.get('type', 'digital') == 'digital':
+            m[dsp.n_samples(z['start']):dsp.n_samples(z['end'])] = 0.0
+    print(f'[mix] integrated {dsp.lufs(m):.1f} LUFS, peak {dsp.peak_db(m):.1f} dBFS')
     return m
 
 

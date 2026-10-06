@@ -97,7 +97,33 @@ async function launch(serverPort, wsPort) {
   return { browser, page };
 }
 
+// Global render semaphore: at most AG_SLOTS (default 3) Chromium renderers at once across all
+// processes (several agents iterate in parallel; each browser needs 1–2 GB). AG_NOLOCK=1 bypasses.
+async function acquireSlot() {
+  if (process.env.AG_NOLOCK) return;
+  const n = +(process.env.AG_SLOTS || 3), dir = path.join(ROOT, 'build', 'locks');
+  fs.mkdirSync(dir, { recursive: true });
+  let waited = 0;
+  for (;;) {
+    for (let i = 0; i < n; i++) {
+      const f = path.join(dir, `slot${i}`);
+      try {
+        const fd = fs.openSync(f, 'wx'); fs.writeSync(fd, String(process.pid)); fs.closeSync(fd);
+        process.on('exit', () => { try { fs.unlinkSync(f); } catch {} });
+        for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => process.exit(130));
+        if (waited) console.log(`(render slot ${i} acquired after ${waited}s)`);
+        return;
+      } catch {
+        try { const pid = +fs.readFileSync(f, 'utf8'); if (pid) process.kill(pid, 0); } catch (e) { if (e.code === 'ESRCH' || e.code === 'ENOENT') { try { fs.unlinkSync(f); } catch {} } }
+      }
+    }
+    if (waited % 30 === 0) console.log(`(waiting for a render slot… ${waited}s; another agent is rendering)`);
+    await new Promise(r => setTimeout(r, 2000)); waited += 2;
+  }
+}
+
 async function runSingle() {
+  await acquireSlot();
   const srv = await startServer();
   const wss = new WebSocketServer({ host: '127.0.0.1', port: 0, maxPayload: 1 << 30 });
   await new Promise(r => wss.on('listening', r));

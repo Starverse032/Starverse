@@ -13,7 +13,7 @@ echo "== soundtrack"
 python3 audio/build.py
 
 echo "== picture ($WORKERS workers)"
-node render/render.mjs --workers "$WORKERS" --crf 12 --out build/video.mp4 ${RESUME:+--resume}
+AG_NOLOCK=1 node render/render.mjs --workers "$WORKERS" --crf 12 --out build/video.mp4 ${RESUME:+--resume}
 
 echo "== master (high quality)"
 ffmpeg -y -loglevel error -i build/video.mp4 -i build/audio/mix.wav -map 0:v -map 1:a \
