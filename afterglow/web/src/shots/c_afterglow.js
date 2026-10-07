@@ -91,10 +91,11 @@ export async function create(ctx) {
         s += 0.26 * snoise(rmat(0.2, 0.8, 2.9) * d * f0 * 2.70 + vec3(0.8, 9.3, 6.0));
         // weak large-scale modulation (the sky is not perfectly uniform in contrast)
         float big = snoise(d * 3.2 + vec3(2.0, 4.0, 1.0));
-        s *= 0.85 + 0.25 * big;
-        s += 0.55 * snoise(rmat(1.0, 0.5, 0.2) * d * f0 * 0.28 + vec3(1.0, 2.0, 3.0));
+        s *= 0.80 + 0.35 * big;
+        s += 0.70 * snoise(rmat(1.0, 0.5, 0.2) * d * f0 * 0.28 + vec3(1.0, 2.0, 3.0));
+        s += 0.55 * snoise(rmat(0.4, 2.2, 1.3) * d * f0 * 0.13 + vec3(7.0, 3.0, 5.0));
         // unit variance (simplex σ ≈ 0.31 per layer; Σw² ≈ 6.9)
-        float F = s / (0.31 * sqrt(6.9));
+        float F = s / (0.31 * sqrt(7.5));
         gl_FragColor = vec4(F, big, 0.0, 1.0);
       }`,
   });
@@ -126,8 +127,11 @@ export async function create(ctx) {
       vec3 p = d * 2.6 + vec3(0.0, 0.0, uTw * 0.045);
       // domain warp (2 octaves) drifting with time, then 4-octave fbm: plasma that boils
       vec3 w1 = vec3(fbm(p * 1.3 + vec3(0.0, uTw * 0.06, 0.0), 2), fbm(p * 1.3 + vec3(5.2, 1.3, uTw * 0.05), 2), fbm(p * 1.3 + vec3(2.7, 8.1, -uTw * 0.04), 2));
-      float f = fbm(p + 1.8 * (w1 - 0.5) + vec3(0.0, -uTw * 0.03, 0.0), 4);
-      gl_FragColor = vec4(f, w1.x, 0.0, 1.0);
+      vec3 q = p + 1.8 * (w1 - 0.5) + vec3(0.0, -uTw * 0.03, 0.0);
+      float f = fbm(q, 4);
+      // bright veins in the opaque plasma (ridged turbulence on the same warped coordinates)
+      float v = ridged(q * 1.5 + vec3(4.0, 1.0, uTw * 0.03), 3);
+      gl_FragColor = vec4(f, w1.x, v, 1.0);
     }`, fogUni);
 
   // full-resolution composite
@@ -142,11 +146,11 @@ export async function create(ctx) {
     uWhite: { value: new THREE.Vector3(1, 1, 1) }, uWhiteMix: { value: 0 },
     uR: { value: new THREE.Vector2(734.5, 540.5) },
     uFlashP: { value: 0 }, uFlashSig: { value: 1.6 }, uHaloA: { value: 0 }, uHaloR: { value: 50 },
-    uLineA: { value: 0 }, uFrame: { value: 0 },
+    uLineA: { value: 0 }, uFrame: { value: 0 }, uOpen: { value: 0 }, uFlashAsp: { value: 1 }, uFGain: { value: 0.25 }, uOpenTint: { value: new THREE.Vector3(1, 1, 1) },
   };
   const main = kit.fullscreen(DIR + /* glsl */ `
-    uniform float uS, uLod, uAmpFar, uAmpFog, uContrast, uTemp, uGain, uWhiteMix, uFlashP, uFlashSig, uHaloA, uHaloR, uLineA, uFrame;
-    uniform sampler2D tFar, tFog; uniform vec4 uPlane; uniform vec2 uTexel, uR; uniform vec3 uWhite;
+    uniform float uS, uFGain, uFlashAsp, uLod, uAmpFar, uAmpFog, uContrast, uTemp, uGain, uWhiteMix, uFlashP, uFlashSig, uHaloA, uHaloR, uLineA, uFrame, uOpen;
+    uniform sampler2D tFar, tFog; uniform vec4 uPlane; uniform vec2 uTexel, uR; uniform vec3 uWhite, uOpenTint;
     void main(){
       vec2 sxy = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);     // pixel coords, top-left origin
       vec3 col = vec3(0.0);
@@ -164,19 +168,25 @@ export async function create(ctx) {
         Ff *= 0.25;
         // blur lowers the variance of a band-pass field: restore part of it so contrast does not "pop"
         Ff *= 1.0 + 0.10 * uLod;
-        vec2 fg = texture2D(tFog, vec2(gl_FragCoord.x / uRes.x, gl_FragCoord.y / uRes.y)).rg;
-        float Fn = (fg.r - 0.5) * 5.0 + (fg.g - 0.5) * 1.5;           // ≈ unit variance plasma
+        vec3 fg = texture2D(tFog, vec2(gl_FragCoord.x / uRes.x, gl_FragCoord.y / uRes.y)).rgb;
+        float Fn = (fg.r - 0.5) * 5.0 + (fg.g - 0.5) * 1.5 + (fg.b - 0.42) * 1.8;   // ≈ unit variance plasma + veins
         float F = (uAmpFar * Ff + uAmpFog * Fn) * uContrast;          // centred, ≈ unit σ
         // colour = blackbody(T·(1 + 0.12 (F01 − 0.5))) with F01 = 0.5 + 0.25 F; brightness ∝ (T'/T)^4
         float Te = uTemp * (1.0 + 0.12 * clamp(0.25 * F, -0.75, 0.75));
-        float I = pow(Te / uTemp, 4.0) * exp(0.18 * F);
+        // (+ a luminance gain on F so the hot / cold spots read as light, not as a texture)
+        float I = pow(Te / uTemp, 4.0) * exp(uFGain * F);
         col = blackbody(Te) * I * uGain;
+        // the white "opens" onto the field: the over-exposed field keeps the warm white's hue
+        col *= mix(vec3(1.0), uOpenTint, uOpen);
       }
       col = mix(col, uWhite, uWhiteMix);
       // Big Bang flash at R: radial HDR Gaussian + an expanding exponential halo
       vec2 q = (sxy - uR * uS) / uS;                                   // 1080p pixel units from R
       float r2 = dot(q, q);
-      col += vec3(1.0, 0.975, 0.93) * (uFlashP * exp(-0.5 * r2 / (uFlashSig * uFlashSig)) + uHaloA * exp(-sqrt(r2) / uHaloR));
+      // the source keeps the cursor's proportion for a frame (24:64): a vertical light crossed by the
+      // horizontal anamorphic line — the cross of f601
+      float rc = q.x * q.x + q.y * q.y / (uFlashAsp * uFlashAsp);
+      col += vec3(1.0, 0.975, 0.93) * (uFlashP * exp(-0.5 * rc / (uFlashSig * uFlashSig)) + uHaloA * exp(-sqrt(r2) / uHaloR));
       // full-width anamorphic line at y = 540 (core FWHM 6 px, halo FWHM 60 px), #CFE0FF
       if (uLineA > 0.0) {
         float dy = q.y;
@@ -190,6 +200,20 @@ export async function create(ctx) {
   // HDR value that displays as #FFF4E0 after ACES (bloom/vignette are switched off on those frames)
   const WHITE = inverseAces([1.004, srgbToLin(0xF4 / 255), srgbToLin(0xE0 / 255)]);
   uni.uWhite.value.fromArray(WHITE);
+  // JS twin of GLSL blackbody() (lib/glsl.js), for the colour continuity of the opening white
+  const bbJS = T => {
+    T = Math.min(40000, Math.max(1000, T)) / 100;
+    const c = [T <= 66 ? 1 : clamp(1.29293618606 * Math.pow(T - 60, -0.1332047592)),
+      T <= 66 ? clamp(0.39008157876 * Math.log(T) - 0.63184144378) : clamp(1.12989086089 * Math.pow(T - 60, -0.0755148492)),
+      T >= 66 ? 1 : (T <= 19 ? 0 : clamp(0.54320678911 * Math.log(T - 10) - 1.19625408914))];
+    return c.map(v => Math.pow(v, 2.2));
+  };
+  const lumaJS = c => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  const OPEN_T = 6500;
+  const bbO = bbJS(OPEN_T), wN = WHITE.map(v => v / lumaJS(WHITE)), bN = bbO.map(v => v / lumaJS(bbO));
+  uni.uOpenTint.value.set(wN[0] / bN[0], wN[1] / bN[1], wN[2] / bN[2]);
+  // field gain on f615 that matches the white's luminance (so the white "opens" without a jump)
+  const OPEN_GAIN = lumaJS(WHITE) / (1.1 * lumaJS(bbO));
 
   // ---------------------------------------------------------------------------------------------
   // Time curves (pure functions of global t). fr = frames since f600 (continuous).
@@ -197,13 +221,14 @@ export async function create(ctx) {
   const logLerp = (a, b, u) => Math.exp(lerp(Math.log(a), Math.log(b), u));
   // flash keys: f600 1.5 · f601 30 · f602 1e4 (log-interpolated between frames)
   function flashState(fr) {
-    const s = { P: 0, sig: 1.6, haloA: 0, haloR: 40, white: 0, line: 0 };
+    const s = { P: 0, sig: 1.6, haloA: 0, haloR: 40, white: 0, line: 0, asp: 1 };
     if (fr < 0) return s;
     const keysP = [1.5, 30, 1e4, 1e4];
     if (fr < 3) {
       const i = Math.floor(fr), u = fr - i;
       s.P = logLerp(keysP[i], keysP[i + 1], u);
-      s.sig = lerp([1.6, 2.2, 3.5][i], [2.2, 3.5, 6][i], u);
+      s.sig = lerp([1.6, 3.6, 3.5][i], [3.6, 3.5, 6][i], u);
+      s.asp = lerp([1, 2.67, 1.6][i], [2.67, 1.6, 1][i], u);
       // the light expands: halo grows from nothing (f600) → a disc of light (f601) → beyond the frame (f602)
       s.haloA = i === 0 ? lerp(0, 0.35, u) : i === 1 ? logLerp(0.35, 6, u) : logLerp(6, 60, u);
       s.haloR = i === 0 ? 30 : i === 1 ? logLerp(30, 220, u) : logLerp(220, 2000, u);
@@ -212,7 +237,7 @@ export async function create(ctx) {
     if (fr >= 2.5 && fr < 15) s.white = smoothstep(2.5, 3.0, fr);
     else if (fr >= 15) s.white = 1 - smoothstep(15, 27, fr);
     // anamorphic line: f601–612 at full strength, gone before f620
-    if (fr >= 0.6 && fr < 19.5) s.line = smoothstep(0.6, 1.0, fr) * (1 - smoothstep(12, 19.5, fr)) * (fr < 3 ? [4, 6, 40][Math.min(2, Math.floor(fr))] : 40);
+    if (fr >= 0.6 && fr < 19.5) s.line = smoothstep(0.6, 1.0, fr) * (1 - smoothstep(12, 19.5, fr)) * (fr < 3 ? [1.5, 2.5, 30][Math.min(2, Math.floor(fr))] : 30);
     return s;
   }
 
@@ -231,10 +256,10 @@ export async function create(ctx) {
     let ev;
     if (t < 31) ev = -(clamp(t - 27, 0, 4)) / 4;
     else ev = -1 - 6 * clamp((t - 31) / 4);
-    const L0 = 1.35;
+    const L0 = 1.1;
     let gain = L0 * Math.pow(2, ev) * (1 - smoothstep(34.2, 34.96, t));
     // while white: the field is far over-exposed and blends with the white (opening f615–f647)
-    if (fr < 48) gain *= logLerp(30, 1, smoothstep(14, 46, fr));
+    if (fr < 48) gain *= logLerp(OPEN_GAIN * 1.6, 1, smoothstep(15, 47, fr));
     // contrast: 0 under the white, opens f616–f647 (S07), full by 27.0
     const contrast = smoothstep(15, 48, fr);
     // decoupling 30–31: fog contrast → 0, speckle blur σ 6 px → 1 px
@@ -246,7 +271,7 @@ export async function create(ctx) {
     const texPerPx = (BW / (PLANE.x1 - PLANE.x0)) / (W / 2 / TAN_H);
     const lod = Math.max(0, Math.log2(Math.max(1e-3, sigmaPx * texPerPx / 0.45)));
     const tw = Math.min(t, T_DEC);
-    return { yaw, roll, T, gain, contrast, ampFog, ampFar, lod, tw };
+    return { yaw, roll, T, gain, contrast, ampFog, ampFar, lod, tw, dec };
   }
 
   return {
@@ -266,8 +291,10 @@ export async function create(ctx) {
       // before f603 the screen is the black of S06 with the growing flash only
       if (fr < 2.5) uni.uGain.value = 0;
       uni.uWhiteMix.value = S.white;
-      uni.uFlashP.value = S.P; uni.uFlashSig.value = S.sig; uni.uHaloA.value = S.haloA; uni.uHaloR.value = S.haloR;
+      uni.uFlashAsp.value = S.asp; uni.uFlashP.value = S.P; uni.uFlashSig.value = S.sig; uni.uHaloA.value = S.haloA; uni.uHaloR.value = S.haloR;
       uni.uLineA.value = S.line; uni.uFrame.value = fr;
+      uni.uOpen.value = 1 - smoothstep(15, 47, fr);
+      uni.uFGain.value = lerp(0.22, 0.30, F.dec);
       main.render(renderer, f.target);
     },
     post(shot, f) {
@@ -277,7 +304,8 @@ export async function create(ctx) {
       if (fr < 2.5) return { bloom: 1.0, streak: 0.35, vignette: 0.2, bloomThreshold: 1.0 };
       if (fr < 15) return { bloom: 0, streak: 0, vignette: 0, ca: 0 };
       const u = smoothstep(15, 40, fr);
-      return { bloom: 0.35 * u, streak: 0, vignette: 0.2 * u, bloomThreshold: 1.0, ca: 0.0006 * u };
+      // the oldest light is incandescent, not brown: a saturation lift on the warm field
+      return { bloom: 0.35 * u, streak: 0, vignette: 0.2 * u, bloomThreshold: 1.0, ca: 0.0006 * u, saturation: lerp(1, 1.3, u) };
     },
   };
 }

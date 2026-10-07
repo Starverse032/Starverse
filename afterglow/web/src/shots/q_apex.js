@@ -31,7 +31,7 @@ const FPX50 = 960 / (18 / 50);                // 2666.667: camera distance for 1
 const HUMAN = { x: 722, y: 410, font: '600 128px "Noto Serif CJK SC"', text: '有人吗？' };
 const AI = { x: 722, y: 540, cell: 64, font: '400 64px "Noto Sans Mono CJK SC"' };
 const ROWS = ['我在。', '有人吗？'];
-const N_DUST = 14000, N_CUR = 700, N_DRAIN = 11000, N_AI_MICRO = 700, N_AI_DUST = 5000;
+const N_DUST = 14000, N_CUR = 700, N_DRAIN = 8000, N_AI_MICRO = 700, N_AI_DUST = 5000;
 const FLIP = { start: 195.0, spread: 4.0, revert: [[202.0, 0.3], [203.0, 0.7], [204.0, 1.0]] };
 
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -232,6 +232,7 @@ export async function create(ctx) {
     iC[4 * i + 3] = ts; iB[4 * i + 3] = te;
   }
   const HOPTS = {
+    streak: 28,          // (max taps) analytic motion blur along each word's own path (see lexicon.js)
     uniforms: {
       uShift: { value: 0 }, uSurge: { value: 1 }, uDust: { value: 1 }, uFrac: { value: 0 }, uTauD: { value: 0 },
       uAsh: { value: new T.Vector3(...PAL.ASH) }, uCur: { value: new T.Vector3(...PAL.CURSOR) }, uRipple: { value: new T.Vector3(X(746), Y(540), 1 / 2400) },
@@ -379,12 +380,14 @@ export async function create(ctx) {
     cam.position.set(0, 0, D); cam.lookAt(0, 0, 0); cam.updateMatrixWorld();
     const shift = 130 * outCubic((t - 215.0) / 0.25) * (t >= 215.0 - EPS ? 1 : 0);
     HU.time.value = t; HU.focus.value = D; HU.aperture.value = 5;
+    HU.shutter.value = (t > 184.6 && t < 188.4) ? 0.5 / 24 : 0;   // 180° shutter while the words fly
     HU.uShift.value = shift;
     const fr = flipFrac(t);
     HU.uFrac.value = fr; HU.uDust.value = 1 - 0.55 * fr; HU.uTauD.value = tauDust(t);
     HU.uSurge.value = 1 + 0.15 * smooth(204.0, 204.12, t) * (1 - smooth(204.3, 206.0, t));
     // the absorbed sea (drain, last in the arrays) is no longer drawn once it has landed
-    humanP.geometry.setDrawRange(0, t > 188.05 ? total - nL - drainPts.length : total - nL);
+    const nSmall = t > 188.05 ? total - nL - drainPts.length : total - nL;
+    humanP.geometry.setDrawRange(0, nSmall);
     const AU = aiField.material.uniforms;
     AU.time.value = t; AU.focus.value = D; AU.aperture.value = 0; AU.uShift.value = shift;
     aiField.visible = t >= 211.0 - EPS;
@@ -408,8 +411,10 @@ export async function create(ctx) {
     }
   }
 
-  // S37 has motionBlur 4 (timeline). Only 185–188 should be blurred: outside it every sub-frame is
-  // snapped to the frame time and memoised (identical image), so the 4 sub-frames cost one render.
+  // S37 has motionBlur 4 (timeline). The engine's sub-frame average would draw every fast word as
+  // four stepped copies (it reads as a column of repeated words). Instead every sub-frame is snapped
+  // to the frame time and memoised (identical image, one render), and the blur is analytic: each
+  // word is integrated along its own spiral over a 180° shutter in the shader (streak taps).
   const cacheRT = makeRT(W, H, { depth: false });
   const blit = new FSQ(new T.ShaderMaterial({ uniforms: { tex: { value: cacheRT.texture } }, depthTest: false, depthWrite: false,
     vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
@@ -419,7 +424,7 @@ export async function create(ctx) {
   return {
     render(shot, f) {
       const t = f.t;
-      if (shot.id === 'S37' && !(t >= 185.0 && t < 188.0)) {
+      if (shot.id === 'S37') {
         const ts = Math.round(t * 24) / 24;
         if (cacheKey !== ts) { renderAt(ts, cacheRT, true); cacheKey = ts; }
         const ac = renderer.autoClear; renderer.autoClear = false; blit.render(renderer, f.target); renderer.autoClear = ac;

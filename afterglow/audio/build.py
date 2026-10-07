@@ -5,6 +5,7 @@
   python3 audio/build.py --only score    # re-render one part (others are read from cache)
   python3 audio/build.py --from 60 --to 90 --out build/audio/clip.wav   # excerpt of the mix
 
+Masters: build/audio/mix.wav (web, −18 LUFS) and build/audio/mix_festival.wav (EBU R128, −23 LUFS).
 Parts (each a module exposing `render(tl) -> dict[str, np.ndarray]` of full-length stereo stems):
   score.py  — music (leitmotif, pads, choir, piano, low end, hits)
   sfx.py    — sound design (UI, cosmos, fire, city, radio, typing, impacts, room tone)
@@ -63,7 +64,6 @@ def load_cached(name, n):
     return out
 
 
-TARGET_LUFS = -16.0  # distribution normalisation (screenplay §6.6: written at ~-20 LUFS integrated, released at -16)
 
 
 def apply_width(m, tl, n):
@@ -109,19 +109,38 @@ def mix(stems, tl, n):
     m = dsp.highpass(m, 18, order=2)
     # stereo width follows the letterbox (screenplay §7.3): interface = mono, film = stereo
     m = apply_width(m, tl, n)
-    # gentle glue on the master (the score is written to absolute levels — no loudness normalisation)
-    m = dsp.compress(m, threshold_db=-12, ratio=1.5, attack=0.03, release=0.4)
+    return m
+
+
+def frame_sample(t, fps=24):
+    """Frame-exact sample index (silences and cuts are defined on frames: sample = frame × 2000)."""
+    return int(round(t * fps)) * (dsp.SR // fps)
+
+
+def master(m, tl, kind='web'):
+    """Delivery masters per timeline.mix.masters: festival = EBU R128 −23 LUFS with no extra processing;
+    web = −18 LUFS with a smooth ≤2:1 compressor only over the climax (111–113 s). Both get a −1 dBTP
+    safety limiter, and digital silences are forced to exact zero on frame-exact samples."""
+    spec = ((tl.get('mix') or {}).get('masters') or {}).get(kind, {})
+    target = spec.get('integratedLUFS', -23 if kind == 'festival' else -18)
     loud = dsp.lufs(m)
-    if TARGET_LUFS is not None and loud > -60:
-        m *= 10 ** ((TARGET_LUFS - loud) / 20)
-    m = dsp.limiter(m, ceiling_db=-1.0, lookahead=0.004, release=0.12)
-    print(f'[mix] score-level loudness {loud:.1f} LUFS → distribution target {TARGET_LUFS}')
-    # digital silences are exact zeros, sample-accurate (they are part of the storytelling)
+    out = m * (10 ** ((target - loud) / 20)) if loud > -70 else m.copy()
+    if kind == 'web':
+        a, b = frame_sample(111.0), frame_sample(113.0)
+        pad = dsp.n_samples(0.25)
+        lo, hi = max(0, a - pad), min(len(out), b + pad)
+        seg = out[lo:hi]
+        comp = dsp.compress(seg, threshold_db=-14, ratio=2.0, attack=0.01, release=0.25)
+        w = np.ones(hi - lo, np.float32)
+        r = np.linspace(0, 1, pad, dtype=np.float32)
+        w[:pad] = r; w[-pad:] = r[::-1]
+        out[lo:hi] = seg * (1 - w[:, None]) + comp * w[:, None]
+    out = dsp.limiter(out, ceiling_db=spec.get('truePeak_dBTP', -1.0), lookahead=0.004, release=0.12)
     for z in tl.get('silences', []):
         if z.get('type', 'digital') == 'digital':
-            m[dsp.n_samples(z['start']):dsp.n_samples(z['end'])] = 0.0
-    print(f'[mix] integrated {dsp.lufs(m):.1f} LUFS, peak {dsp.peak_db(m):.1f} dBFS')
-    return m
+            out[frame_sample(z['start']):frame_sample(z['end'])] = 0.0
+    print(f'[master:{kind}] mix {loud:.1f} LUFS → {dsp.lufs(out):.1f} LUFS (target {target}), peak {dsp.peak_db(out):.1f} dBFS')
+    return out
 
 
 def main():
@@ -143,10 +162,14 @@ def main():
         else:
             stems.update(render_part(part, tl, n))
     m = mix(stems, tl, n)
-    if a.t0 is not None or a.t1 is not None:
-        m = m[dsp.n_samples(a.t0 or 0):dsp.n_samples(a.t1 or tl['duration'])]
-    dsp.write_wav(a.out, m)
-    print('→', os.path.relpath(a.out, ROOT))
+    for kind, path in (('web', a.out), ('festival', os.path.join(OUT, 'mix_festival.wav'))):
+        x = master(m, tl, kind)
+        if a.t0 is not None or a.t1 is not None:
+            x = x[dsp.n_samples(a.t0 or 0):dsp.n_samples(a.t1 or tl['duration'])]
+        dsp.write_wav(path, x)
+        print('→', os.path.relpath(path, ROOT))
+        if a.t0 is not None or a.t1 is not None:
+            break
 
 
 if __name__ == '__main__':

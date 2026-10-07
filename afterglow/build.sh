@@ -15,13 +15,13 @@ python3 audio/build.py
 echo "== picture ($WORKERS workers)"
 AG_NOLOCK=1 node render/render.mjs --workers "$WORKERS" --crf 12 --out build/video.mp4 ${RESUME:+--resume}
 
-echo "== master (high quality)"
-ffmpeg -y -loglevel error -i build/video.mp4 -i build/audio/mix.wav -map 0:v -map 1:a \
+echo "== master (high quality, festival mix EBU R128 −23 LUFS)"
+ffmpeg -y -loglevel error -i build/video.mp4 -i build/audio/mix_festival.wav -map 0:v -map 1:a \
   -c:v copy -c:a aac -b:a 320k -ar 48000 -movflags +faststart \
   -metadata title="余光 AFTERGLOW" -metadata comment="Written, directed, rendered and scored in code by Claude Opus 5.5" \
   output/afterglow-master.mp4
 
-echo "== distribution copy (< 95 MB, for the repository)"
+echo "== distribution copy (< 95 MB, web mix −18 LUFS, for the repository)"
 DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 build/video.mp4)
 VBR=$(python3 -c "print(int((92*8*1024*1024/$DUR - 192000)/1000))")
 ffmpeg -y -loglevel error -i build/video.mp4 -c:v libx264 -preset slow -b:v ${VBR}k -pass 1 -an -f mp4 -passlogfile build/x264 /dev/null

@@ -62,13 +62,15 @@ export function solveCamera(I, { D0 = 26, zEnd = 6, count = 66 } = {}) {
     }
     if (near || vis < 8) continue;
     const mx = sx / vis, my = sy / vis;
-    const spread = Math.sqrt(Math.max(0, sxx / vis - mx * mx)) / 1920 + Math.sqrt(Math.max(0, syy / vis - my * my)) / 804;
-    // also: the second star should be visible at 39 and stay well inside the frame
-    const score = vis + 18 * spread - 0.006 * Math.abs(mx - 960);
-    if (!best || score > best.score) best = { score, vis, spread, u: u.clone(), D, rot: Rm.clone() };
+    const sdx = Math.sqrt(Math.max(0, sxx / vis - mx * mx)), sdy = Math.sqrt(Math.max(0, syy / vis - my * my));
+    const spread = sdx / 1920 + sdy / 804;
+    // a constellation that fills the 2.39 frame: wide horizontal spread, centred a little right of R
+    // (the first star on the left golden line, the cascade opening into the frame)
+    const score = vis + 60 * sdx / 1920 + 14 * sdy / 804 - 0.012 * Math.abs(mx - 900);
+    if (!best || score > best.score) best = { score, vis, spread, mx, sdx, sdy, u: u.clone(), D, rot: Rm.clone() };
   }
   const q = new THREE.Quaternion().setFromRotationMatrix(best.rot);
-  return { F, S, u: best.u, D0: best.D, quat: q, vis: best.vis, spread: best.spread, theta };
+  return { F, S, u: best.u, D0: best.D, quat: q, vis: best.vis, spread: best.spread, mx: best.mx, sdx: best.sdx, sdy: best.sdy, theta };
 }
 
 // Pose of the S09 camera at global time t.

@@ -37,7 +37,7 @@ const CARD4 = [165.25, 169.25, 0.75];           // card ④ (timeline C04): star
 
 // four readable lines of S35: window [t0, t1], screen centre at the window middle, char size there
 const LINES = [
-  { text: '遂古之初，谁传道之？', font: '400 160px "Noto Serif CJK SC"', t0: 174.75, t1: 176.75, at: [600, 345], px: 50, D: 39 },
+  { text: '遂古之初，谁传道之？', font: '400 160px "Noto Serif CJK SC"', t0: 174.75, t1: 176.75, at: [600, 300], px: 50, D: 39 },
   { text: 'Is anyone there?', font: 'italic 400 170px "Cormorant Garamond"', t0: 176.75, t1: 177.75, at: [585, 600], px: 66, D: 24 },
   { text: '誰かいますか？', font: '400 150px "Noto Serif CJK JP"', t0: 177.75, t1: 178.75, at: [1290, 455], px: 46, D: 22 },
   { text: 'هل يوجد أحد هنا؟', font: '400 160px "Noto Naskh Arabic"', t0: 178.75, t1: 179.75, at: [905, 640], px: 52, D: 20, rtl: true },
@@ -75,13 +75,56 @@ export async function create(ctx) {
     for (let k = 0; k < path.length; k += 2) { const q = path[k]; const dd = (x - q.x) ** 2 + (y - q.y) ** 2 + (z - q.z) ** 2; if (dd < dm) dm = dd; }
     if (dm > 2.5 * 2.5 && dm < 12 * 12 && hash1(i, 91) < 0.55) keepNear.push(i);
   }
+  // + S34's own near field: the camera is locked at WEB_PATH(0), where the uniform sampling leaves
+  // almost nothing within reading distance. The same edges and the same lateral law (σ = 0.02 L),
+  // sampled densely only where they pass 4–40 units in front of the lens (a level of detail of the
+  // same graph) — the words that let the eye *read* that the stars are words.
+  {
+    const rN = rng(1990 * 34 + 7), F = P0.forward, Rt = P0.right, Up = P0.up, O = P0.pos;
+    const tx = 18 / 24 + 0.05, ty = 10.125 / 24 * 804 / 1080 + 0.04;
+    const { nodes: Nd, edges: Ed, E } = web;
+    const extra = [];
+    for (let e = 0; e < E; e++) {
+      const a = Ed[2 * e], c = Ed[2 * e + 1];
+      const ax = Nd[3 * a], ay = Nd[3 * a + 1], az = Nd[3 * a + 2], bx = Nd[3 * c], by = Nd[3 * c + 1], bz = Nd[3 * c + 2];
+      const L = Math.hypot(bx - ax, by - ay, bz - az);
+      // cheap reject: both ends far behind / far away
+      const da = (ax - O.x) * F.x + (ay - O.y) * F.y + (az - O.z) * F.z, db = (bx - O.x) * F.x + (by - O.y) * F.y + (bz - O.z) * F.z;
+      if ((da < 2 && db < 2) || (da > 60 && db > 60) || Math.min(Math.hypot(ax - O.x, ay - O.y, az - O.z), Math.hypot(bx - O.x, by - O.y, bz - O.z)) > 60 + L) continue;
+      const m = Math.ceil(L * 2.2);
+      for (let k = 0; k < m; k++) {
+        const u = rN(), sg = 0.02 * L;
+        const x = ax + (bx - ax) * u + rN.gauss() * sg, y = ay + (by - ay) * u + rN.gauss() * sg, z = az + (bz - az) * u + rN.gauss() * sg;
+        const dx = x - O.x, dy = y - O.y, dz = z - O.z, d = dx * F.x + dy * F.y + dz * F.z;
+        if (d < 4 || d > 40) continue;
+        if (Math.abs(dx * Rt.x + dy * Rt.y + dz * Rt.z) > tx * d || Math.abs(dx * Up.x + dy * Up.y + dz * Up.z) > ty * d) continue;
+        extra.push([x, y, z, e, u, u < 0.5 ? a : c]);
+      }
+    }
+    for (let k = 0; k < extra.length; k++) if (hash1(k, 92) < 0.6) keepNear.push(extra[k]);
+    console.log(`WARN w_sea: S34 near field ${extra.length} candidates`);
+  }
   const pts = { count: pts0.count + keepNear.length, pos: new Float32Array((pts0.count + keepNear.length) * 3), edgeOf: new Uint32Array(pts0.count + keepNear.length), kind: new Uint8Array(pts0.count + keepNear.length), along: new Float32Array(pts0.count + keepNear.length), nodeOf: new Uint32Array(pts0.count + keepNear.length) };
   pts.pos.set(pts0.pos); pts.edgeOf.set(pts0.edgeOf); pts.kind.set(pts0.kind); pts.along.set(pts0.along); pts.nodeOf.set(pts0.nodeOf);
-  keepNear.forEach((i, k) => { const o = pts0.count + k; pts.pos.set(near.pos.subarray(3 * i, 3 * i + 3), 3 * o); pts.edgeOf[o] = near.edgeOf[i]; pts.kind[o] = 0; pts.along[o] = near.along[i]; pts.nodeOf[o] = near.nodeOf[i]; });
+  keepNear.forEach((i, k) => {
+    const o = pts0.count + k;
+    if (Array.isArray(i)) { pts.pos.set(i.slice(0, 3), 3 * o); pts.edgeOf[o] = i[3]; pts.kind[o] = 0; pts.along[o] = i[4]; pts.nodeOf[o] = i[5]; return; }
+    pts.pos.set(near.pos.subarray(3 * i, 3 * i + 3), 3 * o); pts.edgeOf[o] = near.edgeOf[i]; pts.kind[o] = 0; pts.along[o] = near.along[i]; pts.nodeOf[o] = near.nodeOf[i];
+  });
   const n = pts.count + N_GRAIN;
   const iPos = new Float32Array(n * 3), iRect = new Float32Array(n * 4), iA = new Float32Array(n * 4), iB = new Float32Array(n * 4), iC = new Float32Array(n * 4), iCol = new Float32Array(n * 3);
   const r = rng(1990 * 34 + 1);
-  const sents = lex.sentences.filter(s => s.sea.length);
+  // One continuous stream of human text: every sentence of the corpus once, in a fixed shuffled
+  // order, word after word. Each filament reads a run of consecutive words of the stream (in strand
+  // order), each node clump a longer passage — so a clump is a paragraph, never a word cloud of
+  // one repeated "Salve".
+  const order = lex.sentences.map((x, i) => i).filter(i => lex.sentences[i].sea.length)
+    .sort((a, b) => hash1(a, 341) - hash1(b, 341));
+  const stream = []; for (const i of order) stream.push(...lex.sentences[i].sea);
+  const SL = stream.length;
+  const perEdge = new Map();
+  for (let i = 0; i < pts.count; i++) if (pts.kind[i] === 0) perEdge.set(pts.edgeOf[i], (perEdge.get(pts.edgeOf[i]) || 0) + 1);
+  let clumpNode = -1, clumpK = 0;
   const warm = [[1.0, 0.36, 0.085], PAL.AMBER, [1.0, 0.58, 0.25], [1.0, 0.74, 0.47]];
   const pickCol = (h, bright) => {
     const k = h * 3, i = Math.min(2, Math.floor(k)), f = k - i;
@@ -92,9 +135,10 @@ export async function create(ctx) {
   const { nodes, edges } = web;
   for (let i = 0; i < pts.count; i++) {
     const e = pts.edgeOf[i], isFil = pts.kind[i] === 0;
-    const sIdx = Math.floor(hash1(isFil ? e : 100000 + pts.nodeOf[i], 34) * sents.length);
-    const toks = sents[sIdx].sea;
-    const tok = isFil ? toks[Math.min(toks.length - 1, Math.floor(pts.along[i] * toks.length))] : toks[Math.floor(r() * toks.length)];
+    let si;
+    if (isFil) si = Math.floor(hash1(e, 34) * SL) + Math.min(perEdge.get(e) - 1, Math.floor(pts.along[i] * perEdge.get(e)));
+    else { if (pts.nodeOf[i] !== clumpNode) { clumpNode = pts.nodeOf[i]; clumpK = 0; } si = Math.floor(hash1(clumpNode, 38) * SL) + clumpK++; }
+    const tok = stream[si % SL];
     iRect.set(lex.rects.subarray(tok * 4, tok * 4 + 4), i * 4);
     iPos.set(pts.pos.subarray(3 * i, 3 * i + 3), 3 * i);
     // brightness: lognormal × node mass (a few heavy clusters, many faint knots)
@@ -175,6 +219,7 @@ export async function create(ctx) {
     { pos: iPos, flow: iB, flowStride: 4, flowOffset: 0, flowT0: T34, birth: births, always: N_GRAIN, big: seaF.quads.geometry, bigPx: 18 });
   sea.material.uniforms.capPx.value = [34, 52];     // quad height (≈ 1.6 × glyph size): ≤ 32 px glyphs
   sea.material.uniforms.nearFade.value = [0.6, 2.2];
+  sea.material.uniforms.moteRange.value = [6.5, 12];   // atlas-row px: below ≈ 4 px em a word is a star
 
   // =========================================================================================
   // Far field: 450 000 motes on the same web (screenplay fallback C1). Beyond ~40 units every word
@@ -271,7 +316,7 @@ export async function create(ctx) {
   const mainScene = new T.Scene(); mainScene.add(motes); mainScene.add(seaF.group);
   // 𒀭: a plane on the camera ray through (900, 450); 72-px glyph at depth 10, receding to depth 42
   const anTex = canvasTex(320, 320, g => { g.font = '400 200px "Noto Sans Cuneiform"'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('𒀭', 160, 160); });
-  const AN_D0 = 10, AN_D1 = 42;
+  const AN_D0 = 10, AN_D1 = 70;           // 72 px at depth 10 → ≈ 10 px at depth 70: one word of the sea
   const an = new T.Mesh(new T.PlaneGeometry(1, 1), planeMat(anTex));
   an.frustumCulled = false; mainScene.add(an);
   const anDir = camRay(900, 450, 1).sub(P0.pos);          // unnormalised: point at depth d = P0.pos + anDir·d
@@ -331,32 +376,40 @@ export async function create(ctx) {
     // 𒀭
     const aU = an.material.uniforms;
     if (t >= 164.0) {
-      const k = smooth(165.5, 166.7, t), d = AN_D0 + (AN_D1 - AN_D0) * k;
+      // readable 164.0–165.5, then it recedes along its ray (1/d in screen size, so the eye reads a
+      // steady drift away) and dims to the sea's level by 167.2; from then on it is a word of the sea
+      const k = smooth(165.5, 167.2, t), d = 1 / (1 / AN_D0 + (1 / AN_D1 - 1 / AN_D0) * k);
       an.position.copy(P0.pos).addScaledVector(anDir, d);
       an.quaternion.copy(anQuat);
-      const sc = 72 * (320 / 200) * d / FPX24; an.scale.set(sc, sc, 1);
+      const sc = 72 * (320 / 200) * AN_D0 / FPX24; an.scale.set(sc, sc, 1);   // fixed world size: 72 px at depth 10
       const on = smooth(164.0, 164.17, t);
       // in S35 the camera flies towards it: same ≤ 32 px rule as every other word
       const depth = an.position.clone().sub(P.pos).dot(P.forward);
       const px = depth > 0.05 ? sc * (200 / 320) * FPX24 / depth : 1e3;
-      aU.gain.value = on * (1.4 + 0.9 * Math.exp(-(t - 164.0) * 6)) * (1 - 0.62 * k) * (s34 ? 1 : 1 - smooth(24, 34, px));
+      aU.gain.value = on * (1.4 + 0.9 * Math.exp(-(t - 164.0) * 6)) * (1 - 0.55 * k) * (s34 ? 1 : 1 - smooth(24, 34, px));
       aU.bias.value = 0;
       an.visible = true;
     } else an.visible = false;
     // readable lines: blurred glow → rack to focus at t0 (the celesta frame) → hold → defocus out
     for (const L of LINES) {
       const u = L.mesh.material.uniforms;
-      const pre = smooth(L.t0 - 1.6, L.t0 - 0.4, t), focusIn = smooth(L.t0 - 0.36, L.t0, t), out = smooth(L.t1, L.t1 + 0.42, t);
-      u.bias.value = 4.2 * (1 - focusIn) + 4.5 * out;
-      u.gain.value = (0.18 * pre + 1.22 * focusIn) * (1 - out);
+      // before its window a line is only a soft warm smear (a light not yet a sentence): one line
+      // readable at a time
+      const pre = smooth(L.t0 - 1.4, L.t0 - 0.4, t), focusIn = smooth(L.t0 - 0.33, L.t0, t), out = smooth(L.t1, L.t1 + 0.4, t);
+      u.bias.value = 5.6 * (1 - focusIn) + 5.0 * out;
+      u.gain.value = (0.07 * pre + 1.33 * focusIn) * (1 - out);
       L.mesh.visible = !s34 && u.gain.value > 0.002;
     }
     draw(mainScene, cam, f.target, false);
     // fog (violet in S34, fading in with the words; amber in S35)
     const gu = gasMat.uniforms;
     gu.fpxQ.value = cam.projectionMatrix.elements[5] * gasRT.height * 0.5;
-    if (s34) { gu.hazeCol.value.set(...PAL.HAZE); gu.alpha.value = 0.02; gu.gain.value = 0.42 * smooth(165.0, 168.8, t); }
-    else { gu.hazeCol.value.set(...PAL.SODIUM); gu.alpha.value = 0.015; gu.gain.value = 0.6; }
+    // violet (S10's) fog while card ④ speaks; once the cursor has dissolved into the words the
+    // filaments warm to amber (169.8–171.0), so the cut to S35 is a cut of motion only
+    const warmK = smooth(169.8, 171.0, t);
+    gu.hazeCol.value.set(...PAL.HAZE.map((v, j) => v + (PAL.SODIUM[j] - v) * warmK));
+    gu.alpha.value = 0.02 + (0.015 - 0.02) * warmK;
+    gu.gain.value = (0.42 + (0.6 - 0.42) * warmK) * smooth(165.0, 168.8, t);
     if (gu.gain.value > 0.001) {
       draw(gasScene, cam, gasRT, true);
       comp.material.uniforms.gain.value = 1;
@@ -406,25 +459,51 @@ function buildS36(ctx, lex, canvasTex, planeMat) {
   line.position.set(Q.x + (cw / 2 - soCx) * s, Q.y - (ch / 2 - soCy) * s, -DF);
   line.material.uniforms.gain.value = 1.3;
   line.frustumCulled = false;
-  // bokeh: the sea behind (and a few words in front of) the focus plane
-  const NB = 420, NM = 260, NF = 18, n = NB + NM + NF;
+  // The sea as a 100 mm lens sees it at f/1.4: four depth layers, sparse and uneven, like real
+  // bokeh — never a wallpaper of equal discs.
+  //   far    (6–60 u)   ~110 round discs 45–80 px: single signs, so the aperture shape stays round
+  //   mid    (3.1–5 u)  ~60 words 12–40 px: still faintly word-shaped, the sea right behind the line
+  //   plane  (2.3–2.9 u) a dozen words almost in focus above / below the line: it sits among words
+  //   front  (0.7–1.4 u) 5 huge, very faint discs drifting through the lens
+  // A clear pocket around the line and the subtitle: discs whose footprint would cross them are
+  // dimmed (×0.1 / ×0.3) — legibility first, and the line reads as the one lamp in the room.
+  const NF = 112, NM = 44, NP = 12, NX = 5, n = NF + NM + NP + NX;
   const iPos = new Float32Array(n * 3), iRect = new Float32Array(n * 4), iA = new Float32Array(n * 4), iB = new Float32Array(n * 4), iCol = new Float32Array(n * 3);
   const r = rng(36036);
-  const toks = lex.sea;
+  const signs = lex.sea.filter(k => lex.rowAspect(k) < 1.25), words = lex.sea.filter(k => lex.rowAspect(k) > 1.6 && lex.rowAspect(k) < 4.5);
+  const AP = 0.04, fpx = FPX100;
+  const cocAt = d => AP * fpx * Math.abs(1 / d - 1 / DF);
+  const lineBox = [700, 488, 1250, 600], subBox = [740, 820, 1180, 915];
+  const overlap = (cx, cy, rx, ry, B) => cx + rx > B[0] && cx - rx < B[2] && cy + ry > B[1] && cy - ry < B[3];
   for (let i = 0; i < n; i++) {
-    // layers: background bokeh (6–70 u: 60–85 px discs), mid field just behind the line (2.9–4.2 u:
-    // soft, still glyph-shaped), a few huge foreground blurs (0.9–1.7 u)
-    const front = i >= NB + NM, mid = i >= NB && !front;
-    const d = front ? 0.9 + 0.8 * r() : mid ? 3.4 + 1.8 * Math.pow(r(), 0.7) : 6 * Math.exp(Math.pow(r(), 0.9) * 2.45);
-    const x = (r() * 2 - 1) * 1.25 * 960 / FPX100 * d, y = (r() * 2 - 1) * 1.35 * 410 / FPX100 * d;
+    const layer = i < NF ? 0 : i < NF + NM ? 1 : i < NF + NM + NP ? 2 : 3;
+    let d, sx, sy;
+    if (layer === 0) d = 6 * Math.pow(10, Math.pow(r(), 1.3));
+    else if (layer === 1) d = 3.1 + 1.9 * r();
+    else if (layer === 2) d = 2.3 + 0.6 * r();
+    else d = 0.7 + 0.7 * r();
+    // screen position (1080p px); plane-layer words stay out of the line's rows
+    sx = -80 + 2080 * r(); sy = 120 + 840 * r();
+    if (layer === 2) { sy = r() < 0.5 ? 250 + 190 * r() : 650 + 130 * r(); sx = 120 + 1680 * r(); }
+    const x = (sx - 960) / fpx * d, y = -(sy - 540) / fpx * d;
     iPos.set([x, y, -d], 3 * i);
-    const tok = toks[Math.floor(r() * toks.length)];
+    const tok = layer === 0 || layer === 3 ? signs[Math.floor(r() * signs.length)] : words[Math.floor(r() * words.length)];
     iRect.set(lex.rects.subarray(tok * 4, tok * 4 + 4), 4 * i);
-    const b = Math.exp(1.0 * r.gauss()) * (front ? 2.0 : mid ? 0.9 : 8.0);
-    iA.set([(mid ? 0.014 : 0.03) * Math.exp(0.3 * r.gauss()) * (front ? 0.6 : 1), Math.min(b, 40), r(), r()], 4 * i);
-    iB.set([(r() - 0.5) * 0.004 * d, (0.3 + r()) * 0.0035 * d, 0, 0], 4 * i);
+    // world height: far signs ~ 6–10 px if they were in focus, words 9–16 px
+    const hpx = layer === 0 ? 6 + 4 * r() : layer === 3 ? 30 : 12 + 9 * r();
+    const hW = hpx * 1.6 * d / fpx;
+    // brightness: lognormal, most discs dim, a few bright lamps (energy is spread over the disc)
+    let b = Math.exp(1.05 * r.gauss()) * (layer === 0 ? 9.0 : layer === 1 ? 1.5 : layer === 2 ? 0.55 : 1.0);
+    b = Math.min(b, layer === 0 ? 60 : 8);
+    const coc = cocAt(d), rad = 0.5 * Math.max(coc, hpx * 1.6);
+    if (overlap(sx, sy, rad * (layer === 0 ? 1 : 2.2), rad, lineBox)) b *= 0.1;
+    else if (overlap(sx, sy, rad, rad, subBox)) b *= 0.3;
+    iA.set([hW, b, r(), r()], 4 * i);
+    // slow drift (screen-relative px/s → world): the sea moves past the lamp, upward and to the left
+    const vx = (-3 - 4 * r()) * d / fpx, vy = (2 + 3 * r()) * d / fpx;
+    iB.set([vx * (layer === 3 ? 6 : 1), vy * (layer === 3 ? 4 : 1), 0, 0], 4 * i);
     const h = r();
-    const c = h < 0.5 ? [1.0, 0.42 + 0.2 * h, 0.12 + 0.12 * h] : [1.0, 0.52 + 0.3 * (h - 0.5), 0.2 + 0.36 * (h - 0.5)];
+    const c = h < 0.55 ? [1.0, 0.36 + 0.28 * h, 0.09 + 0.14 * h] : h < 0.9 ? [1.0, 0.55 + 0.4 * (h - 0.55), 0.22 + 0.5 * (h - 0.55)] : [1.0, 0.86, 0.72];
     iCol.set(c, 3 * i);
   }
   const bok = glyphMesh(n, { iPos, iRect, iA, iB, iCol }, {
@@ -432,8 +511,19 @@ function buildS36(ctx, lex, canvasTex, planeMat) {
     vertexBody: /* glsl */ `p += vec3(iB.xy * (time - 180.0), 0.0); b *= 0.9 + 0.1 * sin(time * (0.4 + iA.z) + iA.w * 30.0);`,
   });
   const U = bok.material.uniforms;
-  U.res.value.set(W, H); U.focus.value = DF; U.aperture.value = 0.04; U.minPx.value = 1.2; U.nearFade.value = [0.3, 0.6];
+  U.res.value.set(W, H); U.focus.value = DF; U.aperture.value = AP; U.minPx.value = 1.2; U.nearFade.value = [0.3, 0.6];
+  U.discRange.value = [1.4, 3.2];   // defocused words stay soft words (mip blur); only the far signs open into discs
+  // the lamp: a very faint warm light around the line (the bloom of a small night-light in air)
+  const glowMat = new T.ShaderMaterial({
+    transparent: true, depthTest: false, depthWrite: false, blending: T.AdditiveBlending,
+    uniforms: { c: { value: new T.Vector3(...PAL.AMBER.map(v => v * 0.022)) }, rect: { value: new T.Vector4(960 + 0, 545, 520, 110) } },
+    vertexShader: /* glsl */ `varying vec2 vPx; void main(){ vPx = (position.xy * 0.5 + 0.5) * vec2(1920.0, 1080.0); vPx.y = 1080.0 - vPx.y; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+    fragmentShader: /* glsl */ `uniform vec3 c; uniform vec4 rect; varying vec2 vPx;
+      void main(){ vec2 q = (vPx - rect.xy) / rect.zw; gl_FragColor = vec4(c * exp(-dot(q, q)), 1.0); }`,
+  });
+  const glow = new T.Mesh(new T.PlaneGeometry(2, 2), glowMat); glow.frustumCulled = false;
   const scene = new T.Scene(); scene.add(bok); scene.add(line);
+  const glowScene = new T.Scene(); glowScene.add(glow);
   const cam = kit.filmCamera(W, H, { focalMM: 100, near: 0.01, far: 500 });
   // SB1 — the Chinese subtitle line, screen space (baseline 862, centred on x 960)
   const SB = ctx.timeline.subtitles?.find(s2 => s2.id === 'SB1') || { start: 180.5, end: 184.0, fadeIn: 0.25, fadeOut: 0.25, zh: '……或许，他也不知道。' };
@@ -454,6 +544,7 @@ function buildS36(ctx, lex, canvasTex, planeMat) {
       cam.lookAt(cam.position.x, cam.position.y, cam.position.z - 1); cam.updateMatrixWorld();
       U.time.value = f.t;
       draw(scene, cam, f.target, false);
+      draw(glowScene, ortho, f.target, false);
       const e = env(f.t, SB.start, SB.end, SB.fadeIn ?? 0.25, SB.fadeOut ?? 0.25);
       if (e > 0.001) { sb.material.uniforms.opacity.value = e; draw(overlay, ortho, f.target, false); }
     },

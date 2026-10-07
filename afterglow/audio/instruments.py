@@ -607,15 +607,18 @@ def choir_section(n, voices, dyn, women=True, seed=0, pan=0.0, breath_db=-20.0):
         for k, fc in enumerate(voices):
             if k % 2 == g:
                 src += choir_voice_src(n, fc, seed * 31 + k * 7 + g)
-        nz = r.standard_normal(n) * 10 ** (breath_db / 20) * 1.2
+        # breath: pink-ish (−3 dB/oct) noise, so that after lip radiation it is not a white hiss
+        nz = lp1(r.standard_normal(n), 900.0) * 10 ** (breath_db / 20) * 3.0
         x = src + nz
         x = _sig.lfilter([1.0, -0.95], [1.0], x)              # lip radiation
-        y = 10 ** (-30 / 20) * x
+        xs_ = _sig.lfilter([1.0, -0.95], [1.0], src)
+        # voiced floor between/above the formants (voiced source only: the breath lives IN the formants)
+        y = 10 ** (-30 / 20) * sos_lp(xs_, 7000, 2)
         for (F, BW), gd in list(zip(fm, gains)) + [(f5[:2], f5[2])]:
             F = F * shift
             b_, a_ = _sig.iirpeak(F, F / BW, fs=SR)
             y = y + 10 ** (gd / 20) * _sig.lfilter(b_, a_, x)
-        y += 10 ** (-38 / 20) * sos_hp(nz, 5000, 2) * 4.0      # air above the formants
+        y += 10 ** (-52 / 20) * sos_bp(r.standard_normal(n), 5000, 11000, 1)   # a little air above the formants
         y = sos_hp(y, 120 if women else 80, 2)
         p = pan + (g - 0.5) * 0.5
         out += pan2(y, p)

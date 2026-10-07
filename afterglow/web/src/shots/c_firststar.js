@@ -3,7 +3,7 @@
 //   35.0–37.0  the Dark Ages: true black, only the film grain of the post chain.
 //   37.0 f888  the first star ignites at R — its FIRST frame is a 24×64 vertical rectangle of light
 //              (the cursor's footprint, one of the film's three), warm cursor white, HDR 2.0.
-//   f889–      a point-spread star (core FWHM 2 px), HDR 1 → 40 in 6 frames (easeOutQuad + a slight
+//   f889–      a point-spread star (core FWHM 2 px + Moffat wing: brighter stars look bigger), HDR 1 → 40 in 6 frames (easeOutQuad + a slight
 //              overshoot), a short own anamorphic streak (±60 px), colour STAR #BFD4FF.
 //   39.0       the second star at (1086, 422); from 39.0 the camera dollies straight back, uniformly,
 //              z = 1 → 6 (distance to the first star ×6), the first star pinned on R.
@@ -40,7 +40,7 @@ export async function create(ctx) {
     // peak HDR: the first star 40, the second 16, the rest lognormal (Population III stars are all
     // massive and hot: a narrow, bright distribution, weighted gently by the node's mass)
     const m = Math.pow(web.mass[n], 0.35);
-    amp[k] = k === 0 ? 40 : k === 1 ? 16 : Math.min(26, 5.5 * m * Math.exp(0.55 * r.gauss()));
+    amp[k] = k === 0 ? 40 : k === 1 ? 16 : Math.min(30, 3.6 * m * Math.exp(0.95 * r.gauss()));
     temp[k] = k === 0 ? 16000 : 11000 + 14000 * r();
     isFirst[k] = k === 0 ? 1 : 0;
   }
@@ -89,8 +89,10 @@ export async function create(ctx) {
         q.y = -q.y;
         float r2 = dot(q, q);
         // PSF: core FWHM 2 px (σ 0.85), a faint diffraction wing; bloom (post) adds the glow
+        // photographic PSF: brighter stars look bigger. Gaussian core (FWHM 2 px) + Moffat wing (β 2.5,
+        // its visible radius grows ∝ amp^0.2) + a faint halation skirt
         float core = exp(-0.5 * r2 / (0.85 * 0.85));
-        float wing = 0.010 * exp(-sqrt(r2) / 3.5) + 0.0012 * exp(-sqrt(r2) / 14.0);
+        float wing = 0.045 * pow(1.0 + r2 / (1.8 * 1.8), -2.5) + 0.0010 * exp(-sqrt(r2) / 12.0);
         // short anamorphic streak, ±60 px, thin
         float st = vStreak * 0.010 * exp(-abs(q.x) / 20.0) * exp(-0.5 * q.y * q.y / (0.9 * 0.9)) * smoothstep(64.0, 40.0, abs(q.x));
         float I = vI * (core + wing + st);

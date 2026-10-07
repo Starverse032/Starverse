@@ -117,13 +117,14 @@ def dbenv(points, i0, n):
     starts at absolute sample i0 and lasts n samples. Values ≤ −99 dB → 0."""
     ts = np.array([p[0] for p in points], dtype=np.float64)
     vs = np.array([p[1] for p in points], dtype=np.float64)
+    lin = np.array([len(p) > 2 and p[2] == 'lin' for p in points])   # segment from this point is linear in dB
     t = (i0 + np.arange(n)) / SR
     if len(ts) == 1:
         v = np.full(n, vs[0])
     else:
         k = np.clip(np.searchsorted(ts, t, side='right') - 1, 0, len(ts) - 2)
         u = np.clip((t - ts[k]) / np.maximum(ts[k + 1] - ts[k], 1e-9), 0, 1)
-        u = 0.5 - 0.5 * np.cos(np.pi * u)
+        u = np.where(lin[k], u, 0.5 - 0.5 * np.cos(np.pi * u))
         v = vs[k] + (vs[k + 1] - vs[k]) * u
     g = 10 ** (v / 20)
     g[v <= -99] = 0.0
@@ -329,12 +330,16 @@ def asker_h(n, f, amp, harm, vib, seed):
     return (y * amp / 1.25).astype(np.float32)
 
 
-def radio(x, hp=420.0, lp=3000.0, drive=2.0):
-    """Radio voicing of the carrier (§7.1 #27): band-limit, soft saturation, band-limit again."""
-    y = I.sos_hp(x, hp, 2)
-    y = np.tanh(drive * y / (np.abs(y).max() + 1e-12)) * (np.abs(y).max() + 1e-12) / np.tanh(drive)
-    y = I.sos_lp(I.sos_hp(y, hp * 0.8, 1), lp, 2)
-    return y
+def radio(x, hp=800.0, lp=3000.0, drive=2.0):
+    """Radio voicing of the carrier (§7.1 #27): BP 800–3000 Hz, soft tanh saturation (relative to the
+    clip's peak, so it does not depend on level), band-limit again; RMS-matched to the input so the
+    written level (−24 → −40 dB) is kept while the fundamental thins out under the high-pass."""
+    x = np.asarray(x, dtype=np.float64)
+    y = I.sos_hp(x, hp * 0.75, 2)
+    pk = np.abs(y).max() + 1e-12
+    y = np.tanh(drive * y / pk) * pk / np.tanh(drive)
+    y = I.sos_lp(I.sos_hp(y, hp, 1), lp, 2)
+    return y * (np.sqrt(np.mean(x ** 2)) / (np.sqrt(np.mean(y ** 2)) + 1e-12))
 
 
 def sub(sc, f, t_on, t_off, level, attack=1.0, release=2.0, pts=None, h2=-10.0, seed=0, stem='low', rev=None,
@@ -657,7 +662,7 @@ def scene_solo():
     y = asker_h(n, f, amp * key, harm, None, SEED + 113)
     clean_w = harm
     radio_w = 1 - harm
-    yr = radio(y.astype(np.float64)) * 1.1
+    yr = radio(y.astype(np.float64))
     sc.add('asker', y * clean_w, i_on, gain=db(-24.0), rev={'hall': 0.22})
     sc.add('asker', (yr * radio_w).astype(np.float32), i_on, gain=db(-24.0), rev={'void': 0.05})
     # the solo violin: one player, bow noise −24 dB, vibrato; exits ∝ min(1, 10 000 km / d), gone by 125.5
@@ -743,12 +748,10 @@ def scene_converge():
     return sc
 
 
-def scene_answer_question():
-    """M9 + M10: 194.000 ♯C5 – 194.333 E5↘D5 – 194.667 D major (the only one) → decays 8 cents flat →
-    202 cut → 203 D5 → E5 → 204.000 reversed ♯C5 ends, E5 out in 18 frames → 205–208 nothing →
-    208/209/210 D4 A4 E5 (+ choir 210) → 211 Dsus2, vibrato grows → 215 D1 → 216.000 bass D → A,
-    Asus2 → 224 warmest → 228.5 black, chord goes on → 229 A6 bell → −6 dB / 2 s → gone ≈ 236."""
-    sc = Scene('question', 191.0, 236.5, tail=0.5)
+def scene_answer():
+    """M9: 194.000 ♯C5 – 194.333 E5↘D5 – 194.667 D major (the only one) → decays 8 cents flat →
+    202 cut → 203 D5 → E5 → 204.000 reversed ♯C5 ends, E5 out in 18 frames → 205–208 nothing."""
+    sc = Scene('answer', 191.0, 208.0, tail=0.0)
     H3 = {'hall3': 0.32}
     # ---------------- the answer
     i_on = fs(194.0)
@@ -775,7 +778,7 @@ def scene_answer_question():
         o = I.organ(N(nm), nn / SR, stops=(1.0, 0.35, 0.12, 0.06, 0.0, 0.0), chiff=0.0, seed=SEED + 1960 + k)
         o = o * dbenv(chord_pts, i_c, len(o)).astype(np.float32) * note_env(len(o), 0.8, len(o) - n_samples(0.1), 0.1)
         sc.add('strings', I.sos_lp(o, 1800), i_c, gain=db(-38.0) * 3.0, pan=-0.3 + 0.2 * k, rev=H3)
-    sc.cut(202.0, stems=('strings',), fade=480, until=210.9)
+    sc.cut(202.0, stems=('strings',), fade=480)
     # #32 the reversed ♯C5: the 194.000 ♯C5 + 0.4 s of R_hall, time-reversed, 0.625 s, ends on 204.000
     nn = n_samples(0.333 + 0.6)
     a = note_env(nn, 0.12, n_samples(0.333), 0.2)
@@ -787,18 +790,26 @@ def scene_answer_question():
     seg[-CUT:] *= I.raised(CUT)[::-1, None]                           # it stops on the deletion frame
     assert fs(203.375) + len(seg) == fs(204.0)
     sc.add('asker', seg, fs(203.375), gain=db(-24.0) / (np.abs(seg).max() + 1e-12), rev={})
-    sc.window(('asker',), [(204.7, 0), (205.0, -100), (207.99, -100), (208.0, 0)])
+    sc.window(('asker',), [(204.7, 0), (205.0, -100)])          # 205–208: the score is silent
+    return sc
+
+
+def scene_question():
+    """208/209/210 D4 A4 E5 (+ choir 210) → 211 Dsus2, vibrato grows → 215 D1 → 216.000 bass D → A,
+    Asus2 → 224 warmest → 228.5 black, chord goes on, −6 dB every 2 s → 229 A6 bell → gone ≈ 236."""
+    sc = Scene('question', 208.0, 236.5, tail=0.5)
+    H3 = {'hall3': 0.32}
     # ---------------- the question: 208 D4 / 209 A4 / 210 E5, then E5 to the end (vibrato from 211)
     i_q = fs(208.0)
     n = fs(236.0) - i_q
     tq = (i_q + np.arange(n)) / SR
     vib = 12.0 * np.clip((tq - 211.0) / 3.0, 0, 1) ** 1.5
     ev = [(fs(208.0), N('D4'), 0), (fs(209.0), N('A4'), 0.06), (fs(210.0), N('E5'), 0.06)]
-    amp = [(208.0, -4), (209.0, -3), (210.0, -2), (211.0, 0), (215.0, -2), (216.0, -3), (224.0, 0), (228.5, -1),
+    amp = [(208.0, -4), (209.0, -3), (210.0, -2), (211.0, 0), (215.0, -2), (216.0, -3), (224.0, 0), (228.5, -1, 'lin'),
            (236.0, -24)]
     asker_line(sc, i_q, n, ev, amp, -25.0, seed=SEED + 208, vib=vib, release_at=fs(234.0), release=2.0, rev=H3)
     # ---------------- strings: Dsus2 at 211 (D2–A2–E3–A3–D4–E4), revoiced to Asus2 at 216
-    fin = [(211.0, -2), (214.5, -4), (216.0, -6), (224.0, -3), (228.5, -3.5), (236.0, -26)]
+    fin = [(211.0, -2), (214.5, -4), (216.0, -6), (224.0, -3), (228.5, -3.5, 'lin'), (236.0, -26)]
     i216 = fs(216.0)
     for k, (nm, to, lv) in enumerate((('D2', None, -28.0), ('A2', 'A2', -29.0), ('E3', 'E3', -30.0), ('A3', 'B3', -31.0),
                                       ('D4', None, -32.0), ('E4', 'E4', -32.0))):
@@ -822,7 +833,7 @@ def scene_answer_question():
     # ---------------- choir: 16 voices, only from 210.0 — S×4 E5, A×4 A4 (→ 2 to B4), T×4 D4 → E4, B×4 A3 (211)
     i_ch = fs(210.0)
     n = fs(236.0) - i_ch
-    cpts = [(210.0, -12), (211.0, -2), (214.5, -4), (216.0, -5), (224.0, -2), (228.5, -2.5), (236.0, -25)]
+    cpts = [(210.0, -12), (211.0, -2), (214.5, -4), (216.0, -5), (224.0, -2), (228.5, -2.5, 'lin'), (236.0, -25)]
     dyn = note_env(n, 1.5, n - n_samples(0.5), 0.5) * dbenv(cpts, i_ch, n)
 
     def cv(name, to=None):
@@ -850,12 +861,12 @@ def scene_answer_question():
     sc.add('choir', I.choir_section(nb, bas, dynb, False, SEED + 2104, pan=0.35), i_b, gain=db(-33.0) * K_CH, rev=H3)
     # ---------------- 229.0 glass bell A6 (−36 dB): the light on the road, the last time
     bell(sc, 1760.0, 229.0, -36.0, sec=6.0, seed=SEED + 229, pan=0.1, rev={'hall3': 0.3, 'void': 0.3})
-    sc.window(None, [(191.0, 1.0), (233.5, 1.0), (236.2, 0.0)], linear=True)
+    sc.window(None, [(208.0, 1.0), (233.5, 1.0), (236.2, 0.0)], linear=True)
     return sc
 
 
 SCENES = (scene_prologue, scene_bigbang, scene_druid, scene_supernova_to_lamps, scene_solo, scene_golden,
-          scene_words, scene_converge, scene_answer_question)
+          scene_words, scene_converge, scene_answer, scene_question)
 
 
 # ===================================================================== render

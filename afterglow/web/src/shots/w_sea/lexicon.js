@@ -138,90 +138,166 @@ export function getLexicon() {
 //   iRect2 vec4  alternate token (flip) iA     vec4  (world height, brightness, hash1, hash2)
 //   iB, iC vec4  shot-specific data     iCol   vec3  colour (linear)
 // The shot's GLSL (vertexBody) may change: vec3 p, float hW, float b, vec3 col, float sel (0/1 picks
-// iRect/iRect2), float sx (horizontal card-flip scale 0..1), float extraBias.
+// iRect/iRect2), float sx (horizontal card-flip scale 0..1), float extraBias. It is compiled as a
+// function of `time`, so that the streak option can evaluate the motion at the shutter's ends.
+//
+// Options:
+//   moteRange [lo, hi] (uniform, 1080p px of atlas-row height): below lo a word is a round point of
+//     light of the same energy (a word 3 px tall is a star, never a dash); between lo and hi it
+//     cross-fades into the readable word. Disable with [-2, -1].
+//   streak K (define): analytic motion blur — the glyph is drawn as the average of K taps along its
+//     own screen-space motion over the shutter (uniform `shutter`, seconds, centred on `time`), so
+//     fast glyphs become smooth streaks instead of the stepped copies of sub-frame accumulation.
+//     The camera is assumed static over the shutter.
 export const GLYPH_ATTRS = { iPos: 3, iRect: 4, iRect2: 4, iA: 4, iB: 4, iC: 4, iCol: 3 };
-export function glyphMaterial(tex, { points = true, uniforms = {}, vertexBody = '', header = '', fragmentBody = '' } = {}) {
-  const P = points ? '#define POINTS 1\n' : '';
+export function glyphMaterial(tex, { points = true, uniforms = {}, vertexBody = '', header = '', fragmentBody = '', streak = 0 } = {}) {
+  const P = (points ? '#define POINTS 1\n' : '') + (streak ? `#define STREAK ${streak | 0}\n` : '');
   return new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,   // streak quads are oriented along the motion: either winding
     uniforms: {
       atlas: { value: tex }, res: { value: new THREE.Vector2(1920, 1080) }, time: { value: 0 },
       focus: { value: 30 }, aperture: { value: 0 }, minPx: { value: 1.2 }, capPx: { value: [1e5, 2e5] },
-      gain: { value: 1 }, nearFade: { value: [0.5, 1.5] }, ...uniforms,
+      gain: { value: 1 }, nearFade: { value: [0.5, 1.5] }, moteRange: { value: [-2, -1] }, shutter: { value: 0 }, discRange: { value: [0.45, 1.8] }, ...uniforms,
     },
     vertexShader: P + /* glsl */ `
       #ifndef POINTS
       attribute vec2 corner;
       #endif
       attribute vec3 iPos; attribute vec4 iRect; attribute vec4 iRect2; attribute vec4 iA; attribute vec4 iB; attribute vec4 iC; attribute vec3 iCol;
-      uniform vec2 res; uniform float time, focus, aperture, minPx, gain; uniform vec2 capPx, nearFade;
+      uniform vec2 res; uniform float time, focus, aperture, minPx, gain, shutter; uniform vec2 capPx, nearFade, moteRange, discRange;
       varying vec4 vRect; varying vec3 vCol; varying float vBias, vDisc;
       varying vec4 vGeo;     // (glyph width px, glyph height px, disc half-segment, disc radius)
+      varying vec3 vMote;    // (word weight 0..1, mote radius px, mote intensity relative to the word's ink)
+      varying vec2 vDelta;   // streak: screen motion over the shutter (px, y down)
       #ifdef POINTS
       varying float vSize;
       #else
       varying vec2 vOff;
       #endif
       ${header}
+      void body(float time, inout vec3 p, inout float hW, inout float b, inout vec3 col, inout float sel, inout float sx, inout float extraBias) {
+        ${vertexBody}
+      }
+      vec2 screenOf(vec3 q) { vec4 c = projectionMatrix * modelViewMatrix * vec4(q, 1.0); return c.xy / max(c.w, 1e-4) * res * vec2(0.5, -0.5); }
       void main(){
         vec3 p = iPos; float hW = iA.x; float b = iA.y; vec3 col = iCol; float sel = 0.0; float sx = 1.0; float extraBias = 0.0;
-        ${vertexBody}
+        body(time, p, hW, b, col, sel, sx, extraBias);
+        vec2 delta = vec2(0.0);
+        #ifdef STREAK
+        if (shutter > 0.0) {
+          vec3 pa = iPos, pb = iPos; float h1 = iA.x, b1 = iA.y, s1 = 0.0, x1 = 1.0, e1 = 0.0; vec3 c1 = iCol;
+          float h2 = iA.x, b2 = iA.y, s2 = 0.0, x2 = 1.0, e2 = 0.0; vec3 c2 = iCol;
+          body(time - 0.5 * shutter, pa, h1, b1, c1, s1, x1, e1);
+          body(time + 0.5 * shutter, pb, h2, b2, c2, s2, x2, e2);
+          delta = screenOf(pb) - screenOf(pa);
+          p = 0.5 * (pa + pb);                               // the streak is centred on the shutter
+        }
+        #endif
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         float d = -mv.z;
         float pxs = res.y / 1080.0;                         // render px per 1080p px
         float fpx = projectionMatrix[1][1] * res.y * 0.5;   // focal length in render px
         b *= smoothstep(nearFade.x, nearFade.y, d);
         vec4 R = sel > 0.5 ? iRect2 : iRect;
-        float asp = (R.z - R.x) / max(1e-6, R.w - R.y);
+        float asp = max(0.05, (R.z - R.x) / max(1e-6, R.w - R.y));
         float h = hW * fpx / max(d, 1e-3);                  // glyph (atlas row) height, render px
         b *= 1.0 - smoothstep(capPx.x * pxs, capPx.y * pxs, h);
         float hmin = minPx * pxs;
         float hq = max(h, hmin);
-        b *= min(1.0, (h / hmin) * (h / hmin));             // sub-pixel: energy-conserving mote
+        b *= min(1.0, (h / hmin) * (h / hmin));             // sub-pixel: energy-conserving
         float coc = aperture * fpx * abs(1.0 / max(d, 1e-3) - 1.0 / focus);
         float ext = sqrt(hq * hq + coc * coc);
-        float w0 = asp * hq, w = w0 * max(0.06, sx);       // sx: card-flip squash (footprint only)
-        b *= (w0 * hq) / ((w0 + ext - hq) * ext);           // defocus spreads the same energy
-        vec2 sz = vec2(w + (ext - hq), ext);                // footprint in render px
+        float w0 = asp * hq, w = max(0.5, w0 * max(0.06, sx));       // sx: card-flip squash (footprint only)
+        // below legibility a word is a point of light carrying the same energy (ink ≈ 20 % of its row)
+        float leg = smoothstep(moteRange.x * pxs, moteRange.y * pxs, h);
+        float rm0 = clamp(0.3 * sqrt(w0 * hq), 0.75 * pxs, 1.7 * pxs);
+        float rm = sqrt(rm0 * rm0 + 0.25 * coc * coc);
+        float moteI = 0.2 * w0 * hq / (3.14159 * rm * rm);
+        float spread = (w0 * hq) / max(1e-6, (w0 + ext - hq) * ext);
+        b *= mix(1.0, spread, leg);                         // defocus spreads the same energy
+        moteI /= max(1e-6, mix(1.0, spread, leg));
+        vec2 sz = leg > 0.001 ? vec2(w + (ext - hq), ext) : vec2(2.6 * rm);   // footprint in render px
+        sz = max(sz, vec2(2.6 * rm));
+        sz += abs(delta);
         gl_Position = projectionMatrix * mv;
         if (d < 0.05 || b < 1e-4) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); }
         #ifdef POINTS
         vSize = max(sz.x, sz.y);
         gl_PointSize = vSize;
         #else
-        gl_Position.xy += corner * sz * 2.0 / res * gl_Position.w;
-        vOff = corner * sz;
+        vec2 cd = vec2(corner.x, -corner.y) * sz;           // corner offset, px, y down
+        #ifdef STREAK
+        float dl = length(delta);
+        if (dl > 0.6) {                                     // a rectangle along the motion, not a box around it
+          vec2 dn = delta / dl, nn = vec2(-dn.y, dn.x);
+          float hx = max(0.5 * w, 0.5 * ext) + 1.5 * rm + 1.0, hy = max(0.5 * hq, 0.5 * ext) + 1.5 * rm + 1.0;
+          float ea = abs(dn.x) * hx + abs(dn.y) * hy, ec = abs(dn.y) * hx + abs(dn.x) * hy;
+          cd = dn * corner.x * (dl + 2.0 * ea) + nn * corner.y * 2.0 * ec;
+        }
         #endif
-        vGeo = vec4(w, hq, max(0.0, 0.5 * (sz.x - ext)), 0.5 * ext);
+        gl_Position.xy += vec2(cd.x, -cd.y) * 2.0 / res * gl_Position.w;
+        vOff = vec2(cd.x, -cd.y);
+        #endif
+        vGeo = vec4(w, hq, max(0.0, 0.5 * (w + ext - hq - ext)), 0.5 * ext);
+        vMote = vec3(leg, rm, moteI);
+        vDelta = delta;
         vRect = R; vCol = col * b * gain;
         vBias = log2(max(1.0, coc / 1.6)) + extraBias;      // the mip whose texel ≈ CoC/2
-        vDisc = smoothstep(0.45, 1.8, coc / hq);
+        vDisc = smoothstep(discRange.x, discRange.y, coc / hq) * step(0.001, leg);
       }`,
     fragmentShader: P + /* glsl */ `
       uniform sampler2D atlas;
-      varying vec4 vRect; varying vec3 vCol; varying float vBias, vDisc; varying vec4 vGeo;
+      varying vec4 vRect; varying vec3 vCol; varying float vBias, vDisc; varying vec4 vGeo; varying vec3 vMote; varying vec2 vDelta;
       #ifdef POINTS
       varying float vSize;
       #else
       varying vec2 vOff;
       #endif
+      float glyphA(vec2 off) {
+        float a = 0.0;
+        if (vMote.x > 0.001) {
+          vec2 q = vec2(off.x / vGeo.x, off.y / vGeo.y) + 0.5;
+          if (vDisc < 0.999) {
+            float inside = smoothstep(-0.03, 0.04, q.x) * smoothstep(1.03, 0.96, q.x) * smoothstep(-0.03, 0.04, q.y) * smoothstep(1.03, 0.96, q.y);
+            if (inside > 0.0) a = texture(atlas, mix(vRect.xy, vRect.zw, clamp(q, 0.0, 1.0)), vBias).a * inside;
+          }
+          if (vDisc > 0.001) {
+            float r = length(vec2(max(0.0, abs(off.x) - vGeo.z), off.y)) / vGeo.w;
+            float disc = smoothstep(1.0, 0.8, r) * (0.78 + 0.3 * smoothstep(0.45, 0.92, r));
+            a = mix(a, disc * 0.22, vDisc);
+          }
+        }
+        if (vMote.x < 0.999) a = mix(exp(-dot(off, off) / (vMote.y * vMote.y)) * vMote.z, a, vMote.x);
+        return a;
+      }
       void main(){
         #ifdef POINTS
         vec2 off = (gl_PointCoord - 0.5) * vSize;           // px from centre, y down
         #else
         vec2 off = vec2(vOff.x, -vOff.y);
         #endif
-        vec2 q = vec2(off.x / vGeo.x, off.y / vGeo.y) + 0.5;
         float a = 0.0;
-        if (vDisc < 0.999) {
-          float inside = smoothstep(-0.03, 0.04, q.x) * smoothstep(1.03, 0.96, q.x) * smoothstep(-0.03, 0.04, q.y) * smoothstep(1.03, 0.96, q.y);
-          a = texture2D(atlas, mix(vRect.xy, vRect.zw, clamp(q, 0.0, 1.0)), vBias).a * inside;
-        }
-        if (vDisc > 0.001) {
-          float r = length(vec2(max(0.0, abs(off.x) - vGeo.z), off.y)) / vGeo.w;
-          float disc = smoothstep(1.0, 0.8, r) * (0.78 + 0.3 * smoothstep(0.45, 0.92, r));
-          a = mix(a, disc * 0.22, vDisc);
-        }
+        #ifdef STREAK
+        // taps spaced ≤ ~0.4 of the glyph's smaller side, so the copies always overlap into a streak
+        float len = length(vDelta);
+        int nt = int(clamp(ceil(len / max(0.8, 0.4 * min(vGeo.x, vGeo.y))), 1.0, float(STREAK)));
+        if (nt > 1) {
+          // only the taps whose glyph box can cover this fragment are evaluated (a long streak in a
+          // square point sprite is mostly empty: those fragments leave before any texture fetch)
+          vec2 dn = vDelta / len;
+          float hx = max(0.5 * vGeo.x, vGeo.w) + 1.5 * vMote.y + 1.0, hy = max(0.5 * vGeo.y, vGeo.w) + 1.5 * vMote.y + 1.0;
+          float ea = abs(dn.x) * hx + abs(dn.y) * hy, ec = abs(dn.y) * hx + abs(dn.x) * hy;
+          float al = dot(off, dn), ac = dot(off, vec2(-dn.y, dn.x));
+          if (abs(ac) > ec || abs(al) > 0.5 * len + ea) discard;
+          float kc = (al / len + 0.5) * float(nt) - 0.5, hw = ea / len * float(nt) + 1.0;
+          int k0 = max(0, int(floor(kc - hw))), k1 = min(nt - 1, int(ceil(kc + hw)));
+          for (int k = 0; k < STREAK; k++) { int kk = k0 + k; if (kk > k1) break; a += glyphA(off - vDelta * ((float(kk) + 0.5) / float(nt) - 0.5)); }
+          a /= float(nt);
+        } else a = glyphA(off);
+        #else
+        a = glyphA(off);
+        #endif
         vec3 c = vCol * a;
         ${fragmentBody}
         if (a < 0.002) discard;
