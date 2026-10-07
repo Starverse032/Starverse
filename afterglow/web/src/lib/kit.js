@@ -110,8 +110,8 @@ export function starfield({ count = 30000, seed = 1, radius = 3000, volume = fal
 // Shots should frame for the 2.39:1 band: content outside f.barPx..H-f.barPx is hidden.
 export function filmCamera(W, H, { focalMM = 35, near = 0.1, far = 20000 } = {}) {
   const cam = new THREE.PerspectiveCamera(40, W / H, near, far);
-  cam.setFocalLength(focalMM); // based on 35mm film (36mm wide) and the 16:9 frame
-  cam.filmGauge = 36;
+  cam.filmGauge = 36;            // 36 mm wide gauge on the full 16:9 canvas → vertical fov = 2·atan(10.125/f)
+  cam.setFocalLength(focalMM);
   return cam;
 }
 

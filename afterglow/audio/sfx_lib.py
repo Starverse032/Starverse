@@ -409,3 +409,41 @@ def pitch_up(x, ratio):
     n = int(len(y) / ratio)
     src = np.arange(n) * ratio
     return np.interp(src, np.arange(len(y)), y).astype(np.float32)
+
+
+def soft_ceiling(x, ceil_db, knee_db=6.0):
+    """Transparent below (ceil - knee), smooth tanh knee into a hard ceiling at ceil_db.
+    For sparse grain streams whose rare overlaps would otherwise spike far above the bed."""
+    c = db(ceil_db)
+    t = db(ceil_db - knee_db)
+    a = np.abs(x)
+    over = a > t
+    y = np.array(x, dtype=np.float32, copy=True)
+    k = c - t
+    y[over] = np.sign(x[over]) * (t + k * np.tanh((a[over] - t) / k))
+    return y
+
+
+def peak_pct_to(x, target_db, pct=99.9, region=None):
+    """Scale so the pct-th percentile of |x| (over region slice, non-zero samples) hits target_db."""
+    ref = np.abs(x if region is None else x[region])
+    ref = ref[ref > 0]
+    p = float(np.percentile(ref, pct)) if len(ref) else 0.0
+    return (x * (db(target_db) / p)).astype(np.float32) if p > 0 else x
+
+
+def smooth_limit(x, ceil_db, win=0.004):
+    """Look-ahead gain limiter without waveshaping (no added harmonics): the gain is the minimum of
+    ceil/|x| over a centred window, smoothed with a Hann of the same length, so rare overlapping
+    grains are turned down as a whole instead of being clipped."""
+    from scipy.ndimage import maximum_filter1d
+    c = db(ceil_db)
+    a = np.abs(x).max(axis=1) if x.ndim == 2 else np.abs(x)
+    k = max(3, int(win * SR)) | 1
+    env = maximum_filter1d(a, size=2 * k + 1, mode='nearest')
+    g = np.minimum(1.0, c / np.maximum(env, 1e-12))
+    h = np.hanning(k + 2)[1:-1]; h /= h.sum()
+    g = np.convolve(g, h, mode='same')
+    g = np.minimum(g, 1.0)
+    y = x * (g[:, None] if x.ndim == 2 else g)
+    return y.astype(np.float32)

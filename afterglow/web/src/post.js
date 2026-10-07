@@ -190,7 +190,11 @@ export class Post {
     this.acc.uniforms.s.value = src.texture; this.acc.uniforms.w.value = w;
     this.r.setRenderTarget(acc);
     if (w >= 1) { this.r.setClearColor(0x000000, 1); this.r.clear(true, false, false); }
+    // the engine runs with renderer.autoClear = true; accumulation must not clear between sub-frames
+    const autoClear = this.r.autoClear;
+    this.r.autoClear = false;
     this.fsq.material = this.acc; this.fsq.render(this.r, acc);
+    this.r.autoClear = autoClear;
   }
 
   blend(a, b, m, target) {

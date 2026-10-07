@@ -103,10 +103,10 @@ export function getWeb() {
   // first star (final-1.1): the node that S09 ignites at R, that S10 dollies towards from the first
   // frame (it starts near the frame centre) and that lands exactly on R = (734, 540) at WEB_PATH(9.0),
   // the locked pose of S11, where it collapses (→ S12 supernova). 24 units ahead of that pose.
-  // R is projected with kit.filmCamera(…, {focalMM: 24}) (three's 35-mm film gauge at setFocalLength
-  // time → tan(hFOV/2) = 17.5/24) and the pixel centre convention (734.5, 540.5).
+  // R is projected with kit.filmCamera(…, {focalMM: 24}) (36 mm gauge → tan(hFOV/2) = 18/24)
+  // and the pixel centre convention (734.5, 540.5).
   const P9 = webPathPose(WEB.duration);
-  const fpx = 960 / (17.5 / WEB.focalMM);                     // focal length in 1080p pixels
+  const fpx = 960 / (18 / WEB.focalMM);                       // focal length in 1080p pixels (36 mm gauge)
   const D1 = 24, Rx = 734.5, Ry = 540.5;
   const fp = P9.pos.clone().addScaledVector(P9.forward, D1)
     .addScaledVector(P9.right, (Rx - 960) / fpx * D1).addScaledVector(P9.up, -(Ry - 540) / fpx * D1);

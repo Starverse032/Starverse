@@ -1,13 +1,15 @@
 """AFTERGLOW — sound design part (screenplay §7.1, everything that is not music).
 
 render(tl) -> {stem: full-length stereo float32}. Stems:
+  ident  — sound logo "节律收拢" 0.25–2.000, tick granules converging on the first heartbeat (#1)
   heart  — cursor heartbeat lub/dub (#2)
   keys   — script keys, mono keys, enters, heavy enter (one sample, twice), AI keys, backspaces, print ticks (#3–#9)
   room   — room tone, hairline swish, infrasound, curtain swell (#10–#13)
   cosmos — star-light key granules, CMB / receiver hiss, decoupling glide (#14, #18, #19)
   fire   — flint, ignition, campfire, night wind (#22–#25)
   city   — city hum, distant city through the window (#26, #33)
-  radio  — scattered E6 morse, void hiss, pulsar beeps (one sample), tail hiss (#27 part, #28)
+  radio  — scattered E6 morse, receiver / void hiss, pulsar tail hiss (#27 part, #18)
+  pulsar — pulsar beeps, one sample, t_k = 137.000 + 1.337 k (#28)
   probe  — Voyager servo / stop click / shutter (#29)
   words  — word granules, breathing of the human line and of the AI line (#30, #31)
 
@@ -37,6 +39,81 @@ def cursor_pan(x):
 
 R_X = 734
 CELL = 64  # one full-width CJK cell (64 px) in S38
+
+
+# =================================================================== ident (#1)
+def render_ident(tl, n):
+    """#1 sound logo "节律收拢" 0.25 → 2.000 (hard cut on the first heartbeat sample, no tail).
+    Key / data-tick transients (press noise of #3/#4, no key body → no pitch), random BP inside
+    1–8 kHz; Poisson density 200 → 20 /s, spectrum wide → narrow, interval variance → 0, level and
+    timbre variance → 0; the last 0.5 s: remaining ticks at halving intervals (0.25, 0.125, …)
+    converging on 2.000 — by then every tick is the identical sample (the machine locks in).
+    Under it a machine-room bed (fan-like broadband noise, BP centre random walk, LP 8 k → 800 Hz,
+    no mains hum) narrowing and fading. Mono, peak ≤ −30 dBFS."""
+    buf = np.zeros((n, 2), np.float32)
+    a, z = 0.25, 2.0
+    i0, i1 = t_idx(a), t_idx(z)          # 12000, 96000
+    m = i1 - i0
+    seg = np.zeros((m + SR // 10, 2), np.float32)
+    r = dsp.rng(SEED + 1)
+
+    def tick(seed, lo, hi, ms):
+        rr = dsp.rng(seed)
+        k = max(24, int(ms / 1000 * SR))
+        x = np.zeros(k + 480, np.float32)
+        x[:k] = rr.standard_normal(k) * L.onset_env(k, 5, k / 3.2)
+        y = L.bp(x, lo, hi, 2)
+        y = dsp.lowpass(y, min(hi * 1.6, 15000), order=2)
+        y = L.fade_out_tail(y, 0.004)
+        return (y / (np.abs(y).max() + 1e-12)).astype(np.float32)
+
+    locked = tick(5150, 2400, 4200, 2.2)  # the one tick everything converges to
+    t, j = a + 0.004, 0
+    u_end = 1.5
+    while t < u_end:
+        u = (t - a) / (u_end - a)          # 0 → 1
+        rate = 200 * (20 / 200) ** u
+        v = u ** 1.3                         # variance → 0
+        # spectrum wide → narrow: band from 1–8 kHz (3 oct) down to ~0.8 oct around 3.2 kHz
+        bw = 3.0 * (1 - v) + 0.8 * v
+        ctr = 2 ** (r.uniform(np.log2(1000) + bw / 2, np.log2(8000) - bw / 2)) if bw < 2.99 else 2830
+        ctr = ctr ** (1 - v) * 3200 ** v
+        lo, hi = ctr / 2 ** (bw / 2), ctr * 2 ** (bw / 2)
+        g = tick(6000 + j, lo, hi, r.uniform(1.0, 4.0) * (1 - v) + 2.2 * v)
+        L_ = max(len(g), len(locked))
+        g = np.pad(g, (0, L_ - len(g))) * (1 - v ** 2) + np.pad(locked, (0, L_ - len(locked))) * (v ** 2)
+        amp = math.exp(r.normal(0, 0.55 * (1 - v))) * (0.55 + 0.45 * v)
+        place(seg, g * amp, int((t - a) * SR))
+        t += (1 - v) * r.exponential(1 / rate) + v * (1 / rate)
+        j += 1
+    # Zeno pull-in: 1.5, 1.75, 1.875, … → 2.000 (stop when the gap would be < 3 ms)
+    gap = 0.5
+    tz = z - gap
+    while gap >= 0.003:
+        place(seg, locked * (0.9 + 0.1 * (gap / 0.5)), t_idx(tz) - i0)
+        gap /= 2
+        tz = z - gap
+    seg = seg[:m, 0]
+    seg = L.verb(seg, 'room', 0.12)[:m].mean(axis=1)
+    # machine-room bed: broadband pink, BP centre random walk, LP 8 k → 800 Hz, fading & narrowing
+    sec = m / SR
+    tt = a + np.arange(m) / SR
+    u = np.clip((tt - a) / (z - a), 0, 1)
+    nz = dsp.pink(sec + 0.2, SEED + 101)[-m:]
+    ctr = 1400 * 2 ** (1.2 * L.smooth_noise(m, 2.5, SEED + 102, -1, 1))
+    fan = L.swept(nz, ctr, 'bp', order=1, bw_oct=2.5) * 0.6 + nz * 0.4
+    fan = L.swept(fan, 8000 * (800 / 8000) ** L.ease_in_out_sine(u), 'lp', order=2)
+    fan = dsp.highpass(fan, 70, order=2)
+    fan = L.follow_unit(fan, 0.15)
+    fan *= 1 + 0.12 * L.smooth_noise(m, 9.0, SEED + 103, -1, 1)  # airflow turbulence, unpitched
+    fan_lvl = np.interp(tt, [a, a + 0.12, 0.9, 1.6, 2.0], [-90, -50, -53, -60, -66])
+    out = seg * db(-30) + fan * db(fan_lvl)
+    out[:int(0.004 * SR)] *= L.raised_ramp(int(0.004 * SR))
+    pk = np.abs(out).max()
+    if pk > db(-30):
+        out *= db(-30) / pk
+    buf[i0:i1] = np.stack([out, out], axis=1)  # mono; ends on sample 95999: the heartbeat owns 96000
+    return buf
 
 
 # =================================================================== heart
@@ -263,8 +340,10 @@ def render_cosmos(tl, n):
     lvl = np.interp(tt, [21.0, 21.5, 22.0, 23.0, 23.95, 24.0], [-60, -40, -34, -33, -31, -31])
     # normalise by a long-term RMS (grains are sparse; set the 22–23 s region to −34 dB RMS)
     seg = grains[int(1.0 * SR):int(2.0 * SR)]
-    gn = grains / (np.sqrt(np.mean(seg.astype(np.float64) ** 2)) + 1e-12)
-    place(buf, (gn * db(lvl)[:, None]).astype(np.float32), t_idx(a))
+    # level as a peak spec: the sparkle's 99.9th-percentile peak = lvl, rare overlaps knee'd off
+    gn = L.peak_pct_to(grains, 0.0, 99.9, slice(int(1.0 * SR), int(2.0 * SR)))
+    gn = L.smooth_limit(gn * db(lvl + 6.0)[:, None], -24.0)  # +6: the spec level as the grains’ typical peak
+    place(buf, gn.astype(np.float32), t_idx(a))
     # --- #18 CMB hiss 25.333 → 37: decorrelated pink, LP 18k → 12k(27) → 3k(30), 30.0 dives to
     #     1.2 kHz then slides to 300 Hz (35); −26 → −34(31) → −52(35) → −62(37), gone
     a, b = 25.333, 37.6
@@ -429,7 +508,7 @@ def render_fire(tl, n):
     out = near * (1 - w)[:, None] + far * w[:, None]
     # match dissolve out
     out *= np.clip((95.25 - tt) / 0.5, 0, 1)[:, None] ** 1.2
-    place(buf, out.astype(np.float32), t_idx(a))
+    place(buf, L.smooth_limit(out.astype(np.float32), -19.0), t_idx(a))
     # --- #25 night wind 79–95: pink BP 200–800 Hz, slowly drifting centre, decorrelated L/R, −38 dB
     a, b = 79.0, 95.25
     sec = b - a
@@ -581,16 +660,17 @@ def render_radio(tl, n):
     # --- #28 pulsar: ONE sample, t_k = 137.000 + 1.337 k (k = 0…5 audible), −24 dB peak;
     #     k = 4 the same sample at −3 dB; k = 5 the same sample −6 dB, LP 1.5 kHz
     ps = L.peak_to(L.pulsar_sample(), -24)
-    ps5 = dsp.lowpass(ps, 1500, order=4)
+    from scipy import signal as _sg
+    ps5 = _sg.sosfiltfilt(_sg.butter(2, 1500, 'low', fs=SR, output='sos'), ps).astype(np.float32)  # zero-phase: onset stays on t_k
     ps5 = ps5 * (np.abs(ps).max() / (np.abs(ps5).max() + 1e-12))
     period = 64176  # 1.337 s × 48000, exact
+    pb = np.zeros((n, 2), np.float32)
     for k in range(6):
         i = 137 * SR + k * period
         clip, g = (ps, 1.0) if k < 4 else ((ps, db(-3)) if k == 4 else (ps5, db(-6)))
-        x_px = 1800 if k == 0 else (734 if k < 4 else 1700)  # where the flash is on screen
-        if 1 <= k <= 3:
-            x_px = 1800 + (734 - 1800) * min(1, k / 2)
-        place(buf, clip, i, g, cursor_pan(x_px) * 0.5)
+        # the impostor sits on R: every beep the identical sample, identical position — indifference
+        place(pb, clip, i, g, cursor_pan(R_X) * 0.5)
+    render_radio.pulsar = pb
     return buf
 
 
@@ -671,14 +751,17 @@ def render_words(tl, n):
             break
         ms = r.uniform(5, 20)
         g = L.sine_grain(r.choice(pitch) * 2 ** (r.uniform(-4, 4) / 1200), ms, r.uniform(0, 6.28))
-        place(seg, g * math.exp(r.normal(0, 0.5)), int((t - a) * SR), 1.0, r.uniform(-0.85, 0.85))
+        pn = r.uniform(-0.85, 0.85)
+        # a slow swell of light travelling across the sea of words (stereo): the texture is never static
+        wave = 0.62 + 0.38 * math.sin(2 * math.pi * 0.13 * (t - a) + 2.6 * pn) * math.sin(2 * math.pi * 0.047 * (t - a) + 1.0)
+        place(seg, g * math.exp(r.normal(0, 0.35)) * wave, int((t - a) * SR), 1.0, pn)
     seg = seg[:m]
     seg = L.verb(seg, 'mid', 0.35, dry=1.0)[:m]
     ref = seg[int(7 * SR):int(14 * SR)]
     seg = seg / (np.sqrt(np.mean(ref.astype(np.float64) ** 2)) + 1e-12)
     tt = a + np.arange(m) / SR
     lvl = np.interp(tt, [165.0, 166.5, 171.0, 172.5, 179.98, 180.0], [-70, -40, -40, -34, -34, -34])
-    seg = seg * db(lvl)[:, None]
+    seg = L.smooth_limit(seg * db(lvl)[:, None], -24.0)
     seg[-int(0.012 * SR):] *= L.raised_ramp(int(0.012 * SR))[::-1, None]  # out on the 180.0 cut
     place(buf, seg.astype(np.float32), t_idx(a))
     # --- #31 breathing of the words 188.5 → 216.0
@@ -750,6 +833,7 @@ def breathing():
     fout = np.clip((216.0 - tt) / 1.0, 0, 1) ** 1.5  # drowned by the choir after 215, gone by the 216 cut
     out = hum * (fin * fout)[:, None] + ai * (ai_in * fout)[:, None]
     out = L.verb(out, 'room', 0.12)[:m]
+    out = L.smooth_limit(out, -31.0)  # a breath, not a click: knee off the rare grain pile-ups
     out[-48:] *= np.linspace(1, 0, 48)[:, None]
     return out.astype(np.float32)
 
@@ -766,6 +850,7 @@ def zero_digital(stems, tl):
 def render(tl):
     n = int(round(tl['duration'] * SR))
     stems = {
+        'ident': render_ident(tl, n),
         'heart': render_heart(tl, n),
         'keys': render_keys(tl, n),
         'room': render_room(tl, n),
@@ -773,6 +858,7 @@ def render(tl):
         'fire': render_fire(tl, n),
         'city': render_city(tl, n),
         'radio': render_radio(tl, n),
+        'pulsar': render_radio.pulsar,
         'probe': render_probe(tl, n),
         'words': render_words(tl, n),
     }
