@@ -3,9 +3,13 @@
 // the inner universe of words must have exactly the same shape as the outer universe of stars.
 //
 //   import { getWeb, webPathPose, sampleWebPoints, WEB } from './_webgraph.js';
-//   const web = getWeb();                         // { nodes Float32Array(N*3), N, edges Uint32Array(2E), E, degree, hero }
+//   const web = getWeb();                         // { nodes Float32Array(N*3), N, edges Uint32Array(2E), E, degree, mass, hero: {filament, node, first} }
 //   const pose = webPathPose(lt);                 // { pos, target, up, roll } at S10/S35 local time lt (0..9 s)
-//   const pts = sampleWebPoints(web, 600000, 7);  // { pos Float32Array(n*3), nodeOf Uint32Array, along Float32Array, kind Uint8Array }
+//   const pts = sampleWebPoints(web, 600000, 7);  // { pos Float32Array(n*3), nodeOf Uint32Array, along Float32Array, kind Uint8Array, edgeOf Uint32Array }
+//
+// final-1.1 changes (cosmos team): WEB.accel = 0 and WEB.rollDeg = 0 (pure uniform 9 u/s dolly, no roll,
+// J9); hero.first = the first star (S09 at R; lands on R at WEB_PATH(9) = S11's locked pose); web.mass
+// (per-node brightness weight); points carry edgeOf. All additive: existing calls are unchanged.
 import * as THREE from 'three';
 import { rng } from '../lib/util.js';
 
@@ -13,10 +17,10 @@ export const WEB = {
   seed: 1990,
   box: 400,            // web box edge (units)
   nodes: 5000,
-  speed: 9,            // units / s after the ramp
-  accel: 2,            // s, easeInQuad ramp of *speed* 0 → 9
+  speed: 9,            // units / s (locked final-1.1: constant from the first frame)
+  accel: 0,            // s, easeInQuad ramp of *speed* 0 → 9 (locked final-1.1: 0 = pure uniform dolly, J9)
   duration: 9,         // S10 and S35 are both 9 s
-  rollDeg: 3,          // roll −3° → +3°
+  rollDeg: 0,          // roll −rollDeg → +rollDeg (locked final-1.1: 0 = no roll, J9)
   focalMM: 24,
 };
 
@@ -32,7 +36,7 @@ const PATH_LEN = CURVE.getLength();
 export function webPathDistance(lt) {
   const a = WEB.accel, v = WEB.speed;
   if (lt <= 0) return 0;
-  if (lt < a) return v * lt * lt * lt / (3 * a * a);       // ∫ v (t/a)² dt
+  if (a > 0 && lt < a) return v * lt * lt * lt / (3 * a * a);       // ∫ v (t/a)² dt
   return v * a / 3 + v * (lt - a);
 }
 
@@ -96,6 +100,17 @@ export function getWeb() {
   const P6 = webPathPose(6);
   const hp = P6.pos.clone().addScaledVector(P6.forward, 10).addScaledVector(P6.right, 2.6).addScaledVector(P6.up, 0.35);
   const heroNode = nodes.length; nodes.push([hp.x, hp.y, hp.z]);
+  // first star (final-1.1): the node that S09 ignites at R, that S10 dollies towards from the first
+  // frame (it starts near the frame centre) and that lands exactly on R = (734, 540) at WEB_PATH(9.0),
+  // the locked pose of S11, where it collapses (→ S12 supernova). 24 units ahead of that pose.
+  // R is projected with kit.filmCamera(…, {focalMM: 24}) (three's 35-mm film gauge at setFocalLength
+  // time → tan(hFOV/2) = 17.5/24) and the pixel centre convention (734.5, 540.5).
+  const P9 = webPathPose(WEB.duration);
+  const fpx = 960 / (17.5 / WEB.focalMM);                     // focal length in 1080p pixels
+  const D1 = 24, Rx = 734.5, Ry = 540.5;
+  const fp = P9.pos.clone().addScaledVector(P9.forward, D1)
+    .addScaledVector(P9.right, (Rx - 960) / fpx * D1).addScaledVector(P9.up, -(Ry - 540) / fpx * D1);
+  const firstNode = nodes.length; nodes.push([fp.x, fp.y, fp.z]);
 
   const N = nodes.length;
   const pos = new Float32Array(N * 3);
@@ -125,17 +140,31 @@ export function getWeb() {
     for (let m = 0; m < Math.min(k, near.length); m++) addEdge(i, near[m][1]);
   }
   for (let k = 0; k < heroFil.length - 1; k++) addEdge(heroFil[k], heroFil[k + 1]);
-  CACHE = { nodes: pos, N, edges: new Uint32Array(edges), E: edges.length / 2, degree, hero: { filament: heroFil, node: heroNode } };
+  // mass: a deterministic per-node weight (lognormal × local density × degree) for a brightness
+  // hierarchy — a few heavy clusters, many faint knots — so the web reads as a cosmic web, not a mesh.
+  // Optional to use; c_web uses it for filament / clump brightness (edge weight = sqrt(m_a m_b)).
+  const rm = rng(WEB.seed + 7);
+  const mass = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    const d = density(pos[3 * i], pos[3 * i + 1], pos[3 * i + 2]);
+    mass[i] = Math.exp(0.75 * rm.gauss() + 2.2 * (d - 0.5)) * (0.55 + 0.15 * degree[i]);
+  }
+  for (const i of heroFil) mass[i] = Math.max(mass[i], 1.6);
+  mass[heroNode] = Math.max(mass[heroNode], 6);
+  mass[firstNode] = Math.max(mass[firstNode], 5);
+  CACHE = { nodes: pos, N, edges: new Uint32Array(edges), E: edges.length / 2, degree, mass, hero: { filament: heroFil, node: heroNode, first: firstNode } };
   return CACHE;
 }
 
 // Points along the web: `count` points split between filaments (∝ 1/length, gaussian σ = 0.02 L)
 // and node clumps (∝ degree). kind: 0 = filament, 1 = node clump. along: 0..1 position on the edge
 // (node clumps: 0). nodeOf: nearest node index (for ignition order / birth time).
+// edgeOf: edge index of a filament point (node clumps: 0xffffffff).
 export function sampleWebPoints(web, count, seed = 7, { clumpShare = 0.25 } = {}) {
   const r = rng(seed);
   const { nodes, edges, E, N, degree } = web;
   const pos = new Float32Array(count * 3), nodeOf = new Uint32Array(count), along = new Float32Array(count), kind = new Uint8Array(count);
+  const edgeOf = new Uint32Array(count).fill(0xffffffff);
   const lens = new Float32Array(E); let wsum = 0;
   for (let e = 0; e < E; e++) {
     const a = edges[2 * e], b = edges[2 * e + 1];
@@ -156,12 +185,12 @@ export function sampleWebPoints(web, count, seed = 7, { clumpShare = 0.25 } = {}
       pos[3 * o] = nodes[3 * a] + (nodes[3 * b] - nodes[3 * a]) * u + r.gauss() * s;
       pos[3 * o + 1] = nodes[3 * a + 1] + (nodes[3 * b + 1] - nodes[3 * a + 1]) * u + r.gauss() * s;
       pos[3 * o + 2] = nodes[3 * a + 2] + (nodes[3 * b + 2] - nodes[3 * a + 2]) * u + r.gauss() * s;
-      nodeOf[o] = u < 0.5 ? a : b; along[o] = u; kind[o] = 0;
+      nodeOf[o] = u < 0.5 ? a : b; along[o] = u; kind[o] = 0; edgeOf[o] = e;
     }
   }
   // node clumps
   for (let i = 0; i < N && o < count; i++) {
-    const n = Math.round(nClump * degree[i] / degSum + (i === web.hero.node ? 600 : 0));
+    const n = Math.round(nClump * degree[i] / degSum + (i === web.hero.node || i === web.hero.first ? 600 : 0));
     const sig = 0.6 + 0.25 * degree[i];
     for (let k = 0; k < n && o < count; k++, o++) {
       const rr = Math.abs(r.gauss()) * sig * Math.pow(r(), 0.5);
@@ -170,7 +199,7 @@ export function sampleWebPoints(web, count, seed = 7, { clumpShare = 0.25 } = {}
       nodeOf[o] = i; along[o] = 0; kind[o] = 1;
     }
   }
-  return { pos: pos.subarray(0, o * 3), nodeOf: nodeOf.subarray(0, o), along: along.subarray(0, o), kind: kind.subarray(0, o), count: o };
+  return { pos: pos.subarray(0, o * 3), nodeOf: nodeOf.subarray(0, o), along: along.subarray(0, o), kind: kind.subarray(0, o), edgeOf: edgeOf.subarray(0, o), count: o };
 }
 
 // Graph distance (in hops) from a start node — for "ignite in order of distance from the first star".
