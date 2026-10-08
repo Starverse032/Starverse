@@ -8,6 +8,10 @@
 //        (shrinking only in the last 0.5 s); dust layer ≤ 3 px; ~700 words gather into the cursor
 //        block at R. Breathing = 0.25 Hz brightness + ±3.5 px flow along the stroke tangent.
 //        191.0 the cursor block condenses into solid warm white.
+//        Motion blur: the timeline's 4 sub-frames would draw each fast word as four stepped copies
+//        (a column of repeated words — "character rain"). Every sub-frame is snapped to the frame
+//        time (one memoised render) and each word is integrated analytically along its own spiral
+//        over a 180° shutter in the shader (lexicon.js `streak`): smooth arcs of light.
 //   S38 我在。/ 有人吗？ 191.0–216.0  locked. Frame-exact per the screenplay table:
 //        194.0 我 · 194.333 在 · 194.667 。 (one key per 8 frames) — the AI's own voice, Noto Sans Mono
 //        CJK SC 64 px, CURSOR HDR 1.6, centre y 540.
@@ -51,7 +55,7 @@ function aiLine(t) {
   return { row, n, returned: t >= 215.0 - EPS };
 }
 // cursor: steady while typing / deleting / returning, else the 60 BPM square wave (on x.00–x.11)
-const STEADY = [[194.0, 195.0], [202.0, 204.5], [208.0, 212.0], [215.0, 217.0]];
+const STEADY = [[194.0, 195.0], [202.0, 205.0], [208.0, 212.0], [215.0, 217.0]];
 function cursorOn(t) {
   if (t < T38 - EPS) return false;
   for (const [a, b] of STEADY) if (t >= a - EPS && t < b - EPS) return true;
@@ -329,7 +333,7 @@ export async function create(ctx) {
   // micro glyphs in the strokes of 有人吗？ (each cell's own character; ？ cycles through 有人吗)
   const AM = inkMask(ROWS[1], AI.font, AI.x, AI.y, { cell: AI.cell, region: [712, 500, 280, 80] });
   const ra = rng(55 * 38 + 3);
-  const micro = gridInk(AM, Math.sqrt(4.2 * 4.2 / 2.2) * 1.0, ra, 0.5);
+  const micro = gridInk(AM, Math.sqrt(AM.ink / N_AI_MICRO), ra, 0.5);     // ≈ 700 micro glyphs in the strokes
   const mN = Math.min(micro.length, N_AI_MICRO + 200);
   const adust = randInk(AM, N_AI_DUST, ra, 0.45);
   const an = mN + adust.length;
@@ -381,6 +385,10 @@ export async function create(ctx) {
     const shift = 130 * outCubic((t - 215.0) / 0.25) * (t >= 215.0 - EPS ? 1 : 0);
     HU.time.value = t; HU.focus.value = D; HU.aperture.value = 5;
     HU.shutter.value = (t > 184.6 && t < 188.4) ? 0.5 / 24 : 0;   // 180° shutter while the words fly
+    // the far sea is a starfield of words (sub-legible words are points of light, as in S34–S35);
+    // as the words come close and land they are words again
+    const mk = smooth(186.2, 187.2, t);
+    HU.moteRange.value = [6.5 + (-2 - 6.5) * mk, 12 + (-1 - 12) * mk];
     HU.uShift.value = shift;
     const fr = flipFrac(t);
     HU.uFrac.value = fr; HU.uDust.value = 1 - 0.55 * fr; HU.uTauD.value = tauDust(t);

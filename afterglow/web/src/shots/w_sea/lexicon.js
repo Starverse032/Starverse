@@ -23,7 +23,8 @@ import { rng } from '../../lib/util.js';
 // until they land there (see sharedRequests in the w_sea report).
 export const RIGVEDA_7 = { t: 'सो अङ्ग वेद यदि वा न वेद', lang: 'sa', kind: 'question', src: 'Rigveda 10.129.7 (Nasadiya Sukta): "…or perhaps he does not know."', era: -1200 };
 export const SHADER_LINE = { t: 'vec3 c = blackbody(T) * exp(-t / tau);', lang: 'code', kind: 'code', src: 'AFTERGLOW, c_afterglow.js' };
-export const CORPUS = [...VOICES, RIGVEDA_7, SHADER_LINE];
+// (added only while voices.js lacks them, so the shared file can take them over without duplicates)
+export const CORPUS = [...VOICES, ...[RIGVEDA_7, SHADER_LINE].filter(x => !VOICES.some(v => v.t === x.t))];
 
 // sea fonts: FONT_FOR(lang), except that machine languages are set in a proportional sans
 // (monospace never enters the sea).
@@ -213,12 +214,13 @@ export function glyphMaterial(tex, { points = true, uniforms = {}, vertexBody = 
         float leg = smoothstep(moteRange.x * pxs, moteRange.y * pxs, h);
         float rm0 = clamp(0.3 * sqrt(w0 * hq), 0.75 * pxs, 1.7 * pxs);
         float rm = sqrt(rm0 * rm0 + 0.25 * coc * coc);
-        float moteI = 0.2 * w0 * hq / (3.14159 * rm * rm);
+        // (peak capped: a whole word's energy in a 3-px star would bloom like a planet)
+        float moteI = min(3.0, 0.2 * w0 * hq / (3.14159 * rm * rm));
         float spread = (w0 * hq) / max(1e-6, (w0 + ext - hq) * ext);
         b *= mix(1.0, spread, leg);                         // defocus spreads the same energy
         moteI /= max(1e-6, mix(1.0, spread, leg));
-        vec2 sz = leg > 0.001 ? vec2(w + (ext - hq), ext) : vec2(2.6 * rm);   // footprint in render px
-        sz = max(sz, vec2(2.6 * rm));
+        vec2 sz = leg > 0.001 ? vec2(w + (ext - hq), ext) : vec2(4.2 * rm);   // footprint in render px
+        if (leg < 0.999) sz = max(sz, vec2(4.2 * rm));     // the gaussian reaches ~2 % at the sprite edge
         sz += abs(delta);
         gl_Position = projectionMatrix * mv;
         if (d < 0.05 || b < 1e-4) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); }
@@ -254,13 +256,13 @@ export function glyphMaterial(tex, { points = true, uniforms = {}, vertexBody = 
       #else
       varying vec2 vOff;
       #endif
-      float glyphA(vec2 off) {
+      float glyphA(vec2 off, float bias) {
         float a = 0.0;
         if (vMote.x > 0.001) {
           vec2 q = vec2(off.x / vGeo.x, off.y / vGeo.y) + 0.5;
           if (vDisc < 0.999) {
             float inside = smoothstep(-0.03, 0.04, q.x) * smoothstep(1.03, 0.96, q.x) * smoothstep(-0.03, 0.04, q.y) * smoothstep(1.03, 0.96, q.y);
-            if (inside > 0.0) a = texture(atlas, mix(vRect.xy, vRect.zw, clamp(q, 0.0, 1.0)), vBias).a * inside;
+            if (inside > 0.0) a = texture(atlas, mix(vRect.xy, vRect.zw, clamp(q, 0.0, 1.0)), vBias + bias).a * inside;
           }
           if (vDisc > 0.001) {
             float r = length(vec2(max(0.0, abs(off.x) - vGeo.z), off.y)) / vGeo.w;
@@ -292,11 +294,12 @@ export function glyphMaterial(tex, { points = true, uniforms = {}, vertexBody = 
           if (abs(ac) > ec || abs(al) > 0.5 * len + ea) discard;
           float kc = (al / len + 0.5) * float(nt) - 0.5, hw = ea / len * float(nt) + 1.0;
           int k0 = max(0, int(floor(kc - hw))), k1 = min(nt - 1, int(ceil(kc + hw)));
-          for (int k = 0; k < STREAK; k++) { int kk = k0 + k; if (kk > k1) break; a += glyphA(off - vDelta * ((float(kk) + 0.5) / float(nt) - 0.5)); }
+          float sb = log2(max(1.0, len / float(nt)));      // each tap blurred by its spacing: a continuous streak
+          for (int k = 0; k < STREAK; k++) { int kk = k0 + k; if (kk > k1) break; a += glyphA(off - vDelta * ((float(kk) + 0.5) / float(nt) - 0.5), sb); }
           a /= float(nt);
-        } else a = glyphA(off);
+        } else a = glyphA(off, 0.0);
         #else
-        a = glyphA(off);
+        a = glyphA(off, 0.0);
         #endif
         vec3 c = vCol * a;
         ${fragmentBody}
