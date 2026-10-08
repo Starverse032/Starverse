@@ -21,12 +21,12 @@ import { rng } from '../../lib/util.js';
 import { lonLatDir, enu, R_EARTH_KM, NILE_MAIN, NILE_ROSETTA, NILE_DAMIETTA, SEINE } from './geo.js';
 
 export const PATCHES = {
-  nairobi: { lon: 36.8, lat: -1.3, sizeKm: 640, res: 4096, seed: 11 },
-  delta:   { lon: 31.0, lat: 30.45, sizeKm: 420, res: 4096, seed: 12, nile: true },
-  naples:  { lon: 14.2, lat: 40.95, sizeKm: 300, res: 4096, seed: 13 },
-  paris:   { lon: 2.35, lat: 48.86, sizeKm: 120, res: 4096, seed: 14, rivers: [SEINE] },
-  europe:  { lon: 6.6, lat: 50.9, sizeKm: 900, res: 4096, seed: 15 },
-  fishing: { lon: 130.3, lat: 37.0, sizeKm: 560, res: 4096, seed: 16, fleet: true },
+  nairobi: { lon: 36.8, lat: -1.3, sizeKm: 640, res: 4096, seed: 11, rural: 0.05 },
+  delta:   { lon: 31.0, lat: 30.45, sizeKm: 420, res: 4096, seed: 12, nile: true, coast: 0.3, gain: 0.7 },
+  naples:  { lon: 14.2, lat: 40.95, sizeKm: 300, res: 4096, seed: 13, coast: 0.55, rural: 0.22 },
+  paris:   { lon: 2.35, lat: 48.86, sizeKm: 120, res: 4096, seed: 14, rivers: [SEINE], rural: 0.15 },
+  europe:  { lon: 6.6, lat: 50.9, sizeKm: 900, res: 4096, seed: 15, rural: 0.42, gain: 1.35 },
+  fishing: { lon: 130.3, lat: 37.0, sizeKm: 560, res: 4096, seed: 16, fleet: true, coast: 0.35, rural: 0.12 },
 };
 
 function frameOf(P) {
@@ -39,8 +39,11 @@ function makeUV(F) {
   return (lon, lat) => {
     const q = lonLatDir(lon, lat), d = q.clone().sub(F.c);
     let x = d.dot(F.e), y = d.dot(F.n);
-    // tangent-plane projection folds back beyond ~25°: push far points far outside instead
-    if (q.dot(F.c) < 0.9) { const L = Math.hypot(x, y) || 1; x = x / L * 40 * F.half; y = y / L * 40 * F.half; }
+    // orthographic (= the globe shader's tangent-plane mapping) near the patch; beyond 60° the radius
+    // keeps growing with the angle so the mapping stays continuous and monotonic: far polygon vertices
+    // never fold back, and no long chord between two of them can cut straight across the patch
+    const th = Math.acos(Math.max(-1, Math.min(1, q.dot(F.c))));
+    if (th > Math.PI / 3) { const L = Math.hypot(x, y) || 1, rr = Math.sin(Math.PI / 3) + (th - Math.PI / 3); x = x / L * rr; y = y / L * rr; }
     return [x / (2 * F.half) + 0.5, y / (2 * F.half) + 0.5];
   };
 }
@@ -92,11 +95,12 @@ function vectorCanvas(P, F, uvOf, places) {
   const r = rng(P.seed * 7919);
   // G: rivers (dark masks). Nile: main stem 0.9 km wide, branches 0.5 km
   const rivers = [];
-  if (P.nile) rivers.push([NILE_MAIN, 0.9], [NILE_ROSETTA, 0.55], [NILE_DAMIETTA, 0.55]);
-  for (const rv of P.rivers || []) rivers.push([rv, 0.18]);
+  // (the Nile branches are 0.3–0.9 km wide: unresolved from orbit at night, so no dark mask —
+  //  they show as the strings of brighter towns along them, see densityCanvas)
+  for (const rv of P.rivers || []) rivers.push([rv, 0.16]);
   g.lineCap = 'round'; g.lineJoin = 'round';
   for (const [line, wkm] of rivers) {
-    const pts = fractalize(line.map(p => px(p[0], p[1])), 3, 0.22, N);
+    const pts = fractalize(line.map(p => px(p[0], p[1])), 3, 0.09, N);
     g.strokeStyle = 'rgb(0,255,0)'; g.lineWidth = Math.max(1.2, wkm * kmPx);
     g.beginPath(); g.moveTo(...pts[0]); for (const p of pts) g.lineTo(...p); g.stroke();
   }
@@ -166,19 +170,64 @@ function densityCanvas(P, F, uvOf, places) {
       g.fillStyle = gr; g.beginPath(); g.arc(x, y, radKm * kmPx * 0.5, 0, 6.283); g.fill();
     }
   }
+  if (P.coast) {
+    // settlements crowd the shore: a soft band of density along the (fractal) coastline
+    const px = (lon, lat) => { const [u, v] = uvOf(lon, lat); return [u * N, (1 - v) * N]; };
+    g.lineJoin = 'round';
+    for (const [w, a] of [[9, 0.35], [3.5, 0.6]]) {
+      g.strokeStyle = `rgba(255,0,0,${(a * P.coast).toFixed(3)})`; g.lineWidth = w * kmPx;
+      for (const r of LAND) {
+        let near = false;
+        for (let i = 0; i < r.length; i += 2) { const [u, v] = uvOf(r[i], r[i + 1]); if (u > -0.2 && u < 1.2 && v > -0.2 && v < 1.2) { near = true; break; } }
+        if (!near) continue;
+        // stroke only segments whose ends are both near the patch (a ring that jumps across the
+        // antimeridian or folds round the globe must not draw a chord through the patch)
+        const inN = (lon, lat) => { const [u, v] = uvOf(lon, lat); return u > -0.3 && u < 1.3 && v > -0.3 && v < 1.3; };
+        g.beginPath();
+        for (let i = 0; i < r.length; i += 2) {
+          const j = (i + 2) % r.length;
+          if (!inN(r[i], r[i + 1]) || !inN(r[j], r[j + 1]) || Math.abs(r[j] - r[i]) > 5) continue;
+          g.moveTo(...px(r[i], r[i + 1])); g.lineTo(...px(r[j], r[j + 1]));
+        }
+        g.stroke();
+      }
+    }
+  }
   if (P.nile) {
     // the Nile valley ribbon and the densely farmed delta fan (villages everywhere between the branches)
     const px = (lon, lat) => { const [u, v] = uvOf(lon, lat); return [u * N, (1 - v) * N]; };
     g.lineCap = 'round'; g.lineJoin = 'round';
-    for (const [w, a] of [[16, 0.10], [8, 0.16], [3.5, 0.2]]) {
+    for (const [w, a] of [[10, 0.08], [4, 0.14]]) {
       g.strokeStyle = `rgba(255,0,0,${a})`; g.lineWidth = w * kmPx;
       for (const line of [NILE_MAIN, NILE_ROSETTA, NILE_DAMIETTA]) { g.beginPath(); g.moveTo(...px(...line[0])); for (const q of line) g.lineTo(...px(...q)); g.stroke(); }
     }
-    g.fillStyle = 'rgba(255,0,0,0.55)'; g.beginPath();
-    g.moveTo(...px(31.12, 30.15)); for (const q of NILE_ROSETTA) g.lineTo(...px(q[0] - 0.12, q[1]));
-    g.lineTo(...px(30.9, 31.5)); g.lineTo(...px(31.5, 31.45)); g.lineTo(...px(32.15, 31.25));
-    for (const q of NILE_DAMIETTA.slice().reverse()) g.lineTo(...px(q[0] + 0.15, q[1])); g.closePath();
-    g.filter = 'blur(6px)'; g.fill(); g.filter = 'none';
+    const fan = new Path2D();
+    fan.moveTo(...px(31.12, 30.15)); for (const q of NILE_ROSETTA) fan.lineTo(...px(q[0] - 0.12, q[1]));
+    fan.lineTo(...px(30.9, 31.5)); fan.lineTo(...px(31.5, 31.45)); fan.lineTo(...px(32.15, 31.25));
+    for (const q of NILE_DAMIETTA.slice().reverse()) fan.lineTo(...px(q[0] + 0.15, q[1])); fan.closePath();
+    // a low even floor of farm hamlets …
+    g.fillStyle = 'rgba(255,0,0,0.34)'; g.filter = 'blur(4px)'; g.fill(fan); g.filter = 'none';
+    // … and a hierarchy of market towns on top (denser and brighter along the two branches)
+    const rr = rng(P.seed * 31 + 5);
+    const town = (x, y, radKm, a) => {
+      const rad = Math.max(1.2, radKm * kmPx);
+      const gr = g.createRadialGradient(x, y, 0, x, y, rad);
+      gr.addColorStop(0, `rgba(255,0,0,${a.toFixed(3)})`); gr.addColorStop(0.5, `rgba(255,0,0,${(a * 0.35).toFixed(3)})`); gr.addColorStop(1, 'rgba(255,0,0,0)');
+      g.fillStyle = gr; g.beginPath(); g.arc(x, y, rad, 0, 6.283); g.fill();
+    };
+    const [bx0, by0] = px(29.7, 31.7), [bx1, by1] = px(32.4, 29.9);
+    for (let i = 0, made = 0; i < 20000 && made < 520; i++) {
+      const x = bx0 + (bx1 - bx0) * rr(), y = by0 + (by1 - by0) * rr();
+      if (!g.isPointInPath(fan, x, y)) continue;
+      made++; town(x, y, 2.0 * Math.exp(rr.gauss() * 0.45), 0.12 + 0.3 * Math.pow(rr(), 2));
+    }
+    for (const br of [NILE_ROSETTA, NILE_DAMIETTA, NILE_MAIN.slice(-4)]) {
+      for (let s2 = 0; s2 < br.length - 1; s2++) for (let k = 0; k < 9; k++) {
+        const t = rr(), a = br[s2], b = br[s2 + 1];
+        const [x, y] = px(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t);
+        town(x + rr.gauss() * 2.5 * kmPx, y + rr.gauss() * 2.5 * kmPx, 2.6 * Math.exp(rr.gauss() * 0.4), 0.18 + 0.3 * rr());
+      }
+    }
   }
   // soften
   const c2 = document.createElement('canvas'); c2.width = N; c2.height = N; const g2 = c2.getContext('2d');
@@ -187,7 +236,7 @@ function densityCanvas(P, F, uvOf, places) {
 }
 
 const BAKE = /* glsl */ `
-uniform sampler2D vecT, denT; uniform float sizeKm, texKm, fleet, seed;
+uniform sampler2D vecT, denT; uniform float sizeKm, texKm, fleet, seed, nile, rural;
 // 2D Voronoi (3×3): returns (F1, approximate distance to the nearest cell edge) in cell units
 vec2 vor(vec2 x, float sd){
   vec2 n = floor(x), f = fract(x); float f1 = 8.0, f2 = 8.0;
@@ -219,14 +268,17 @@ void main(){
   float land = vt.r, river = vt.g, road = vt.b;
   vec4 dn = texture2D(denT, uv);
   float D = dn.r, core = dn.g;
+  // rural floor: scattered villages between the towns (Europe, Campania, Korea are settled everywhere)
+  D = max(D, rural * smoothstep(0.25, 0.8, vnoise(p * 0.045 + seed * 4.1)) * (0.6 + 0.4 * vnoise(p * 0.2 + seed)));
   float px = texKm;                                          // one texel in km: the PSF floor
   vec3 SOD = vec3(1.0, 0.456, 0.102), LED = vec3(0.807, 0.871, 1.0), WARM = vec3(1.0, 0.62, 0.30);
   vec3 col = vec3(0.0);
-  if (D > 0.004 || road > 0.004) {
+  if (D > 0.002 || road > 0.004) {
     vec2 w = p + 0.9 * vec2(vnoise(p * 0.21 + seed), vnoise(p * 0.21 + 17.0 + seed)) - 0.45;
     // break the splatted blobs into irregular sprawl (lobes, gaps, fingers along valleys)
-    float lob = vnoise(p * 0.09 + seed * 1.7) * 0.6 + vnoise(p * 0.31 + seed * 2.3) * 0.4;
+    float lob = vnoise(p * 0.09 + seed * 1.7) * 0.78 + vnoise(p * 0.31 + seed * 2.3) * 0.22;
     float Dm = D * (0.55 + 0.9 * lob);
+    if (nile > 0.5) Dm = D * (0.8 + 0.4 * lob);               // the delta is farmed evenly: no big lobes
     // street blocks: coarse (suburbs) + fine (dense core) Voronoi edges, line width ≥ 1 texel
     vec2 v1 = vor(w / 0.6, seed), v2 = vor(w / 0.2, seed + 3.0);
     float lw = max(px * 0.7, 0.02);
@@ -235,14 +287,19 @@ void main(){
     e1 = mix(2.4 * lw / 0.6, e1, smoothstep(2.5, 6.0, 0.6 / px));
     e2 = mix(2.4 * lw / 0.2, e2, smoothstep(2.5, 6.0, 0.2 / px));
     float dense = smoothstep(0.35, 0.95, Dm);
-    float streets = (e1 * (1.0 - dense * 0.5) + e2 * dense) * smoothstep(0.22, 0.55, Dm);
+    // brightness follows density continuously (no thresholds that flatten towns into plateaus):
+    //   glow    = the unresolved street grid, ∝ density² and broken by sub-km grain
+    //   streets = resolved block edges, only where blocks are large enough and dense enough
+    //   vil     = discrete point lights: hamlets in the countryside, a finer layer in towns
+    float glow = pow(Dm, 2.2) * 0.5 * (0.55 + 0.9 * vnoise(p * 3.1 + seed * 7.0));
+    float streets = (e1 * (1.0 - dense * 0.5) + e2 * dense) * smoothstep(0.3, 0.85, Dm) * Dm * 0.8;
     streets *= 0.45 + 0.55 * vnoise(p * 1.7 + seed);          // lamps are not a continuous tube
-    float hue;
-    float vil = dots(p, 0.5, smoothstep(0.08, 0.5, Dm) * 0.92, max(px * 0.8, 0.05), seed + 9.0, hue);
-    float park = 1.0 - 0.55 * smoothstep(0.62, 0.74, vnoise(p * 0.55 + seed * 3.0)) * dense;
-    float carpet = Dm * Dm * smoothstep(0.2, 0.6, Dm) * 0.08;
+    float hue, hue2;
+    float vil = dots(p, 1.15, clamp(Dm * 1.6, 0.0, 0.9), max(px * 0.8, 0.07), seed + 9.0, hue) * (0.35 + 1.1 * Dm)
+              + dots(p, 0.42, clamp((Dm - 0.25) * 1.5, 0.0, 0.8), max(px * 0.8, 0.05), seed + 13.0, hue2) * 0.45 * Dm;
+    float park = 1.0 - 0.55 * smoothstep(0.58, 0.82, vnoise(p * 0.55 + seed * 3.0)) * smoothstep(0.6, 0.9, Dm) * (1.0 - nile);
     float rd = road * (0.3 + 0.7 * smoothstep(0.35, 0.65, vnoise(p * 1.9 + seed * 5.0)));   // highways read as strings of lamps
-    float I = (streets * (0.45 + 0.9 * Dm) + vil * 0.6 * (0.35 + Dm) + rd * (0.9 + 0.8 * Dm) + carpet) * park;
+    float I = (glow + streets + vil * 0.6 + rd * (0.9 + 0.8 * Dm)) * park;
     vec3 c = mix(SOD, WARM, 0.35 * hue);
     c = mix(c, LED, smoothstep(0.15, 0.6, core) * 0.75 * dense);
     col = c * I;
@@ -255,8 +312,9 @@ void main(){
     vec2 q = p * vec2(0.0042, 0.0105); q += 0.8 * vec2(vnoise(p * 0.006 + 3.0), vnoise(p * 0.006 + 9.0));
     float band = smoothstep(0.52, 0.72, vnoise(q * 3.0) * 0.65 + vnoise(q * 7.0) * 0.35);
     float hue;
-    float boats = dots(p, 1.9, band * 0.9, max(px * 0.9, 0.12), seed + 21.0, hue);
-    col += vec3(1.0, 0.56, 0.17) * boats * 7.0 * off;
+    float boats = dots(p, 3.2, band * 0.8, max(px * 0.9, 0.12), seed + 21.0, hue);
+    // each boat burns hundreds of kilowatts of lamps: brilliant points (they bloom into a constellation)
+    col += mix(vec3(1.0, 0.56, 0.17), vec3(1.0, 0.85, 0.6), hue) * boats * 26.0 * off;
   }
   gl_FragColor = vec4(col, land);
 }`;
@@ -286,7 +344,7 @@ export function createPatchBank(ctx) {
     });
     const mat = new THREE.ShaderMaterial({
       vertexShader: VS_UV, fragmentShader: GLSL.all + '\nvarying vec2 vUv;\n' + BAKE, depthTest: false, depthWrite: false,
-      uniforms: { vecT: { value: vt }, denT: { value: dt }, sizeKm: { value: P.sizeKm }, texKm: { value: P.sizeKm / N }, fleet: { value: P.fleet ? 1 : 0 }, seed: { value: P.seed } },
+      uniforms: { vecT: { value: vt }, denT: { value: dt }, sizeKm: { value: P.sizeKm }, texKm: { value: P.sizeKm / N }, fleet: { value: P.fleet ? 1 : 0 }, nile: { value: P.nile ? 1 : 0 }, rural: { value: P.rural || 0 }, seed: { value: P.seed } },
     });
     const fsq = new FSQ(mat);
     const prev = renderer.getRenderTarget();
@@ -301,7 +359,7 @@ export function createPatchBank(ctx) {
     renderer.setRenderTarget(prev);
     mat.dispose(); vt.dispose(); dt.dispose();
     rt.texture.anisotropy = 8;
-    return { key, tex: rt.texture, c: F.c, e: F.e, n: F.n, half: F.half, res: N, uvOf, P };
+    return { key, tex: rt.texture, c: F.c, e: F.e, n: F.n, half: F.half, res: N, uvOf, P, gain: P.gain ?? 1 };
   }
   return {
     get(key) { if (!cache[key]) cache[key] = bakePatch(key); return cache[key]; },

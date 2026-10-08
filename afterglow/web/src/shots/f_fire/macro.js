@@ -529,7 +529,7 @@ export function createMacro(ctx) {
         vec3 n2 = texture2D(uNoise, nuv * vec2(2.1, 1.7) + (n1.rg - 0.5) * 0.22 + vec2(0.0, -uT * 0.35)).rgb;
         float sway = (n1.r - 0.5) * 1.1 * y * y + 0.12 * sin(uT * 2.3 + sd * 9.0) * y;
         float x = vQ.x - sway;
-        float wy = 0.62 * pow(max(1.0 - y / 1.18, 0.0), 0.7) * (0.45 + 0.55 * smoothstep(0.0, 0.16, y));
+        float wy = max(0.62 * pow(max(1.0 - y / 1.18, 0.0), 0.7) * (0.45 + 0.55 * smoothstep(0.0, 0.16, y)), 1e-3);   // > 0: smoothstep(0,0,x) is NaN
         float body = smoothstep(wy, wy * 0.15, abs(x));
         float tongue = smoothstep(0.25, 0.75, n2.g * 1.25 + 0.62 - y * 1.05);
         float dens = body * mix(1.0, tongue, smoothstep(0.08, 0.6, y)) * smoothstep(0.0, 0.05, y + 0.02);
@@ -550,13 +550,13 @@ export function createMacro(ctx) {
   const G = 4.9, KD = 3.2, SHUT = 0.5 / 24;
   const SP = [-0.050, 0.092, 0.024];                   // flint strike point (above the band, left)
   const sparks = [];
-  const strike = (t0, n, seed, landers) => {
+  const strike = (t0, n, seed, landers, gain = 1) => {
     const r = util.rng(seed);
     for (let i = 0; i < n; i++) {
       const sp = 0.25 + Math.pow(r(), 0.7) * 0.75;
       const d = [0.25 + 0.75 * r(), -0.95 + 0.9 * r(), -0.45 + 0.9 * r()];
       const L = Math.hypot(...d);
-      sparks.push({ p0: SP.map((x, j) => x + (r() - 0.5) * 0.006), v0: d.map(x => x / L * sp), tb: t0 + r() * 0.03, life: (6 + r() * 4) / 24, kind: 0, seed: r(), I0: 10 + 16 * r(), T0: 2300 + 600 * r() });
+      sparks.push({ p0: SP.map((x, j) => x + (r() - 0.5) * 0.006), v0: d.map(x => x / L * sp), tb: t0 + r() * 0.03, life: (6 + r() * 4) / 24, kind: 0, seed: r(), I0: gain * (10 + 16 * r()), T0: 2300 + 600 * r() });
     }
     for (let i = 0; i < landers; i++) {            // aimed into the tinder: they end in the ember
       const tl = 0.16 + 0.03 * i;
@@ -567,7 +567,7 @@ export function createMacro(ctx) {
       sparks.push({ p0, v0, tb: t0 + 0.01 * i, life: tl, kind: 0, seed: r(), I0: 22, T0: 2600 });
     }
   };
-  strike(71.5, 30, 1501, 0);
+  strike(71.5, 30, 1501, 0, 0.45);          // the first strike lights nothing
   strike(72.5, 60, 1502, 0);
   strike(73.5, 40, 1503, 3);
   const T_LAND = 73.5 + 0.16;
@@ -709,7 +709,7 @@ export function createMacro(ctx) {
     return [r, g, b].map(c => Math.pow(c, 2.2));
   };
   const C_EMB = bb(1250), C_FL = bb(1850), C_SP = bb(2300);
-  const K_EMB = 0.004, K_FL = 0.0042, K_SP = 0.0010;
+  const K_EMB = 0.012, K_FL = 0.03, K_SP = 0.00001;
 
   return {
     render(shot, f) {
@@ -734,6 +734,7 @@ export function createMacro(ctx) {
       const ht = 215 * (0.6 + 0.4 * clamp(fl, 0, 1.3)) * (0.92 + 0.08 * fk);
       plateU.uFl.value.set(RX, RY - 22, ht);
       platePass.render(renderer, f.target);
+
 
       // live: ember & burning fibres
       if (em > 0) {

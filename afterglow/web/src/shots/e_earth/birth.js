@@ -101,15 +101,19 @@ export function buildBirth() {
   // normalise: Moscow (37.6E, 55.8N) ≈ 0.95, so the visible hemisphere is fully lit when τ ≈ 1
   const at = (lon, la) => T[Math.round((la1 - la) / STEP - 0.5) * GW + Math.round((lon - lo0) / STEP - 0.5)];
   const ref = at(37.6, 55.75) / 0.95;
-  const half = new Uint16Array(N * 4);
+  // 16-bit fixed point split over two 8-bit channels (v = (R·256 + G)·255 / 16384, range 0…4).
+  // Bilinear filtering of each byte channel is linear, so the decoded value is exactly the bilinear
+  // interpolation of v — and 8-bit textures filter everywhere (half-float data textures came out
+  // nearest-sampled on SwiftShader, which drew the 0.2° grid as visible squares).
+  const enc = new Uint8Array(N * 4);
   for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
     // texture row 0 = south (lat0), so flip y
-    const v = Math.min(T[y * GW + x] / ref, 4.0);
+    const v = Math.min(T[y * GW + x] / ref, 3.99);
+    const q = Math.round(v * 16384);
     const o = ((GH - 1 - y) * GW + x) * 4;
-    half[o] = THREE.DataUtils.toHalfFloat(v);
-    half[o + 3] = THREE.DataUtils.toHalfFloat(1);
+    enc[o] = q >> 8; enc[o + 1] = q & 255; enc[o + 3] = 255;
   }
-  const tex = new THREE.DataTexture(half, GW, GH, THREE.RGBAFormat, THREE.HalfFloatType);
+  const tex = new THREE.DataTexture(enc, GW, GH, THREE.RGBAFormat, THREE.UnsignedByteType);
   tex.minFilter = tex.magFilter = THREE.LinearFilter; tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
   tex.needsUpdate = true;
   const probe = {};

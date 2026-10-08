@@ -19,6 +19,7 @@ import * as G from './e_earth/geo.js';
 import { createGlobe } from './e_earth/globe.js';
 import { buildBirth, BIRTH_RECT } from './e_earth/birth.js';
 import { createPatchBank } from './e_earth/patches.js';
+import { buildNightMap } from './e_earth/nightmap.js';
 
 const FPS = 24;
 const D2R = Math.PI / 180;
@@ -39,6 +40,9 @@ export async function create(ctx) {
   const globe = createGlobe(ctx, earth, { birthTex: birth.tex });
   globe.uniforms.birthRect.value.set(...BIRTH_RECT);
   const patches = createPatchBank(ctx);
+  const night = buildNightMap(ctx);
+  console.log('[e_earth] night map splats ' + night.count);
+  globe.setNight(night);
   // stars (only seen in S14 / S18 above the limb)
   const scene = new THREE.Scene();
   const stars = kit.starfield({ count: 26000, seed: 1407, radius: 1000, H, brightness: 0.75, sizeScale: 0.85, warm: 0.35 });
@@ -63,13 +67,13 @@ export async function create(ctx) {
 
   // ---------------- S18 ----------------
   const s18Sun = G.lonLatDir(192, -6);
-  const s18Moon = G.lonLatDir(-60, 10);
+  const s18Moon = G.lonLatDir(25, 12);
   const s18Pose = (t) => {
     const u = (t - 95.0) / 12.0;
     const k = pullback(u);
     const alt = 400 * Math.pow(9000 / 400, k);
-    const sub = lerp(1.2, 21.5, Math.pow(k, 1.3));                 // camera drifts south as it climbs (horizon enters at the top)
-    const az = 174 + 6 * clamp(u, 0, 1.1);                          // yaw 6° over the shot
+    const sub = lerp(1.0, 23.0, Math.pow(k, 1.3));                 // camera drifts SSE as it climbs (horizon enters at the top)
+    const az = 159 + 6 * clamp(u, 0, 1.1);                          // yaw 6° over the shot
     const s = G.travel(g, az * D2R, sub * D2R);
     const pos = s.clone().multiplyScalar(1 + alt / G.R_EARTH_KM);
     const up = G.enu(g).north.clone().applyAxisAngle(g, (-4 + 6 * clamp(u, 0, 1.1)) * D2R);
@@ -96,7 +100,7 @@ export async function create(ctx) {
   };
   const MONTAGE = {
     // S19 Nile delta: vertical, north pointing right-up so the lotus opens across the 2.39 frame; drifting east
-    S19: lt => { const [lon, lat] = drift(31.0, 30.85, 7 * lt, 0); return { pose: groundCam({ lon, lat, altKm: 1050, focal: 85, upAz: -80 }), patch: 'delta' }; },
+    S19: lt => { const [lon, lat] = drift(31.0, 30.85, 7 * lt, 0); return { pose: groundCam({ lon, lat, altKm: 720, focal: 85, upAz: -80 }), patch: 'delta' }; },
     // S20 Gulf of Naples necklace: oblique, looking NW across the bay, drifting back along the coast
     S20: lt => { const [lon, lat] = drift(14.30, 40.80, -3.2 * lt, 1.4 * lt); return { pose: groundCam({ lon, lat, altKm: 260, focal: 85, tilt: 40, heading: 340 }), patch: 'naples' }; },
     // S21 Paris: 135 mm vertical; radial arterials, LED core, sodium rings
@@ -104,15 +108,16 @@ export async function create(ctx) {
     // S22 the Rhine–Ruhr / Benelux highway web, oblique 30°
     S22: lt => { const [lon, lat] = drift(6.2, 51.05, -9 * lt, 0); return { pose: groundCam({ lon, lat, altKm: 470, focal: 85, tilt: 30, heading: 20 }), patch: 'europe' }; },
     // S22A squid fleet in the East Sea, looking west to the Korean coast
-    S22A: lt => { const [lon, lat] = drift(129.78, 37.0, 0, 6 * lt); return { pose: groundCam({ lon, lat, altKm: 360, focal: 85, tilt: 35, heading: 268 }), patch: 'fishing' }; },
+    S22A: lt => { const [lon, lat] = drift(129.86, 36.22, 0, 6 * lt); return { pose: groundCam({ lon, lat, altKm: 330, focal: 85, tilt: 35, heading: 252 }), patch: 'fishing' }; },
   };
-  const fishMoon = G.lonLatDir(150, 30);
+  // S22A: put the moon where its glint lands on the open sea in the upper middle of the frame
+  const fishMoon = (() => { const p = MONTAGE.S22A(0).pose; return moonFor(p, 1060, 300); })();
 
   // shared defaults per frame
   function base() {
     U.dayGain.value = 0; U.moonGain.value = 0; U.lightsGain.value = 1; U.cloudsGain.value = 1; U.glowGain.value = 0.6;
     U.nightLand.value = 0.012; U.atmoGain.value = 1; U.airglowGain.value = 0.4; U.conicOn.value = 0; U.birthOn.value = 0;
-    U.dimAmt.value = 1; U.cloudShift.value = 0;
+    U.dimAmt.value = 1; U.cloudShift.value = 0; U.termGain.value = 1; U.airglowSig.value = 0.0022; U.glintExp.value = 260; U.glintBroad.value = 0.18;
     globe.setPatch(null); globe.clearSprites();
   }
 
@@ -129,20 +134,20 @@ export async function create(ctx) {
         // equivalently rotate the lights with it (sun / moon are fixed to the camera's sky)
         const q = new THREE.Quaternion().setFromAxisAngle(s14.pos.clone().normalize(), ang);
         U.sunDir.value.copy(s14Sun).applyQuaternion(q); U.moonDir.value.copy(s14Moon).applyQuaternion(q);
-        U.lightsGain.value = 0; U.moonGain.value = 0.9; U.nightLand.value = 0.006;
+        U.lightsGain.value = 0; U.moonGain.value = 0.32; U.nightLand.value = 0.004; U.glintExp.value = 140; U.glintBroad.value = 0.08;
         U.cloudsGain.value = 1.0; U.cloudShift.value = 0.00004 * lt;
         U.conicOn.value = 1; U.conicCore.value = 1.25; U.conicGlow.value = 0.075; U.conicOut.value = 0.25; U.twGain.value = 0.5;
         U.atmoGain.value = 0.0; U.airglowGain.value = 0.6;
-        stars.material.uniforms.brightness.value = 0.75;
+        stars.material.uniforms.brightness.value = 1.6;
       } else if (shot.id === 'S18') {
         pose = s18Pose(t);
         U.sunDir.value.copy(s18Sun); U.moonDir.value.copy(s18Moon);
-        U.dayGain.value = 1; U.moonGain.value = 0.3; U.cloudShift.value = 0.00003 * lt; U.lightsGain.value = 1.5;
+        U.dayGain.value = 1; U.moonGain.value = 0.12; U.cloudShift.value = 0.00003 * lt; U.lightsGain.value = 1.5;
         U.birthOn.value = 1;
         const tb = 95.25;
         U.birthTau.value = t < tb ? -1 : 1.1 * ease.inQuad(clamp((t - tb) / 10.4, 0, 1)) + 0.0012;
         U.birthSoft.value = 0.006;
-        U.airglowGain.value = 0.55;
+        U.airglowGain.value = 0.22; U.airglowSig.value = 0.0012; U.termGain.value = 0.35; U.glowGain.value = 0.05; U.nightLand.value = 0.006;
         const altKm = (pose.pos.length() - 1) * G.R_EARTH_KM;
         if (altKm < 4000) globe.setPatch(patches.get('nairobi'));
         // the first lamp: footprint rectangle on its very first frame, then a round point light
@@ -153,15 +158,19 @@ export async function create(ctx) {
           const I = lerp(2.2, 0.0, ease.inOutSine(k));
           if (I > 0) globe.sprite(0, Rpx[0], Rpx[1], (2.2 + 1.2 * (1 - k)) * S, [I * 1.0, I * 0.78, I * 0.52], 0);
         }
-        stars.material.uniforms.brightness.value = 0.6;
+        stars.material.uniforms.brightness.value = 1.3;
       } else {
         const m = (MONTAGE[shot.id] || MONTAGE.S19)(lt);
         pose = m.pose;
         if (m.patch) globe.setPatch(patches.get(m.patch));
-        U.sunDir.value.copy(G.lonLatDir(-140, 0)); U.moonDir.value.copy(shot.id === 'S22A' ? fishMoon : G.lonLatDir(-60, 10));
-        U.moonGain.value = shot.id === 'S22A' ? 0.9 : 0.25; U.nightLand.value = 0.02;
-        U.cloudsGain.value = shot.id === 'S21' ? 0.0 : 0.55;
-        U.glowGain.value = 0.35;
+        // local midnight under every montage camera (sun at the antipode of its sub-point)
+        U.sunDir.value.copy(pose.pos).normalize().negate();
+        U.moonDir.value.copy(shot.id === 'S22A' ? fishMoon : G.lonLatDir(-60, 10));
+        U.moonGain.value = shot.id === 'S22A' ? 0.35 : 0.12; U.nightLand.value = 0.008;
+        // no clouds: a 10 km/texel cloud map magnified 50–100× only reads as murk at these altitudes
+        U.cloudsGain.value = 0.0;
+        if (shot.id === 'S22A') { U.glintExp.value = 900; U.glintBroad.value = 0.01; U.moonGain.value = 0.16; }
+        U.glowGain.value = 0.06;
         U.airglowGain.value = 0.4;
       }
       globe.setPose(pose);
@@ -172,7 +181,7 @@ export async function create(ctx) {
     },
     post(shot, f) {
       if (shot.id === 'S14') return { streak: 0.18, bloom: 0.7, vignette: 0.24 };
-      if (shot.id === 'S18') return { streak: 0.12, bloom: 0.8, vignette: 0.22 };
+      if (shot.id === 'S18') return { streak: 0.05, bloom: 0.7, vignette: 0.22 };
       return { streak: 0.08, bloom: 0.85, vignette: 0.24, contrast: 1.04 };
     },
     _debug: { birth, s14 },

@@ -21,7 +21,7 @@ uniform vec3 camPos, camR, camU, camB;
 uniform sampler2D albedoTex, cloudTex, lightsTex, birthTex, patchTex;
 uniform vec3 sunDir, moonDir;
 uniform float dayGain, moonGain, lightsGain, cloudsGain, cloudShift, glowGain, nightLand;
-uniform float atmoGain, airglowGain, airglowAlt, airglowSig, rayleighH;
+uniform float atmoGain, airglowGain, airglowAlt, airglowSig, rayleighH, termGain, glintExp, glintBroad;
 // birth mask
 uniform float birthOn, birthTau, birthSoft; uniform vec4 birthRect;   // lon0, lat0, lon1, lat1 (deg)
 // detail patch
@@ -41,19 +41,61 @@ vec2 eqUV(vec3 n){
   float u = fwidth(u1) <= fwidth(u2) + 1e-6 ? u1 : u2;
   return vec2(u, lat / PI + 0.5);
 }
+// cubic B-spline reconstruction from 4 bilinear taps at an explicit mip level: under strong
+// magnification (S18 at 400–2000 km) plain bilinear draws every coarse texel as a soft square.
+vec3 texBS(sampler2D t, vec2 uv, float lod){
+  float L = floor(lod + 0.5);
+  vec2 size = vec2(textureSize(t, int(L)));
+  vec2 st = uv * size - 0.5; vec2 i = floor(st); vec2 f = st - i;
+  vec2 f2 = f * f, f3 = f2 * f;
+  vec2 w0 = (1.0 - 3.0 * f + 3.0 * f2 - f3) / 6.0, w1 = (4.0 - 6.0 * f2 + 3.0 * f3) / 6.0;
+  vec2 w2 = (1.0 + 3.0 * f + 3.0 * f2 - 3.0 * f3) / 6.0, w3 = f3 / 6.0;
+  vec2 g0 = w0 + w1, g1 = w2 + w3;
+  vec2 p0 = (i + 0.5 - 1.0 + w1 / g0) / size, p1 = (i + 0.5 + 1.0 + w3 / g1) / size;
+  return g0.y * (g0.x * textureLod(t, vec2(p0.x, p0.y), L).rgb + g1.x * textureLod(t, vec2(p1.x, p0.y), L).rgb)
+       + g1.y * (g0.x * textureLod(t, vec2(p0.x, p1.y), L).rgb + g1.x * textureLod(t, vec2(p1.x, p1.y), L).rgb);
+}
+// mip level a texture of the given size would pick for coordinates c (implicit derivatives)
+float footLod(vec2 c, vec2 size){
+  vec2 dx = dFdx(c) * size, dy = dFdy(c) * size;
+  return 0.5 * log2(max(max(dot(dx, dx), dot(dy, dy)), 1e-12));
+}
 // sodium / white mapping of the 8-bit earth.js lights map (stored at 1/3)
 vec3 globalLights(vec2 uv, float lod){
-  vec3 li = lod > 0.0 ? textureLod(lightsTex, uv, lod).rgb : texture2D(lightsTex, uv).rgb;
+  vec3 li;
+  if (lod > 0.0) li = texBS(lightsTex, uv, lod);
+  else { float fl = footLod(uv, vec2(textureSize(lightsTex, 0))); li = fl < 0.0 ? texBS(lightsTex, uv, 0.0) : texture2D(lightsTex, uv).rgb; }
   float lum = dot(li, vec3(0.333)) * 3.0;
   lum = lum * (0.35 + 0.65 * smoothstep(0.0, 0.6, lum));
   vec3 warm = mix(vec3(1.0, 0.55, 0.2), vec3(1.0, 0.85, 0.65), smoothstep(0.4, 1.2, lum));
   return lum * warm * 1.6;
 }
+// regional HDR night map (nightmap.js) over nightRect, faded into the global map at its border
+uniform sampler2D nightTex; uniform vec4 nightRect; uniform float nightOn, nightGain;
+vec2 nightUV(vec3 n){
+  float lon = atan(n.x, n.z) * 57.29578, lat = asin(clamp(n.y, -1.0, 1.0)) * 57.29578;
+  return vec2((lon - nightRect.x) / (nightRect.z - nightRect.x), (lat - nightRect.y) / (nightRect.w - nightRect.y));
+}
+vec3 lightsAt(vec3 n, vec2 uv, float lod){
+  float w = 0.0; vec3 m = vec3(0.0);
+  if (nightOn > 0.5) {
+    vec2 nu = nightUV(n); vec2 e = min(nu, 1.0 - nu);
+    w = smoothstep(0.0, 0.03, min(e.x, e.y));
+    if (w > 0.0) {
+      if (lod > 0.0) m = texBS(nightTex, nu, max(lod - 1.0, 0.0));
+      else { float fl = footLod(nu, vec2(textureSize(nightTex, 0))); m = fl < 0.0 ? texBS(nightTex, nu, 0.0) : texture2D(nightTex, nu).rgb; }
+      m *= nightGain;
+    }
+  }
+  if (w >= 1.0) return m;
+  return mix(globalLights(uv, lod), m, w);
+}
 float birthAt(vec3 n){
   float lon = atan(n.x, n.z) * 57.29578, lat = asin(clamp(n.y, -1.0, 1.0)) * 57.29578;
   vec2 b = vec2((lon - birthRect.x) / (birthRect.z - birthRect.x), (lat - birthRect.y) / (birthRect.w - birthRect.y));
   if (b.x < 0.0 || b.x > 1.0 || b.y < 0.0 || b.y > 1.0) return 9.0;
-  return textureLod(birthTex, b, 0.0).r;
+  vec2 e = textureLod(birthTex, b, 0.0).rg;
+  return (e.r * 256.0 + e.g) * (255.0 / 16384.0);
 }
 
 void main(){
@@ -108,7 +150,9 @@ void main(){
     float mdl = max(ndm, 0.0);
     vec3 moonLit = albc * mdl * 2.2;
     vec3 Hm = normalize(M + V); float nhm = max(dot(n, Hm), 0.0);
-    float glintM = (pow(nhm, 260.0) * 2.2 + pow(nhm, 40.0) * 0.18) * (1.0 - land) * (1.0 - cl) * smoothstep(0.0, 0.15, ndm);
+    // wave facets (~300 m, fixed to the surface) break a sharp glint into sparkle
+    float facet = glintExp > 300.0 ? 0.25 + 1.5 * pow(vnoise(n * 21000.0), 3.0) : 1.0;
+    float glintM = (pow(nhm, glintExp) * 2.2 * facet + pow(nhm, 40.0) * glintBroad) * (1.0 - land) * (1.0 - cl) * smoothstep(0.0, 0.15, ndm);
     moonLit = mix(moonLit, vec3(0.55, 0.6, 0.68) * mdl * 1.6, cl * 0.9) + glintM * vec3(0.9, 0.95, 1.0);
     col += moonLit * moonC * moonGain * (1.0 - day);
     // ambient night (airglow/starlight) so continents still separate from the sea
@@ -116,11 +160,12 @@ void main(){
     // ---- city lights ----
     float night = 1.0 - smoothstep(-0.15, 0.08, ndl);
     if (lightsGain > 0.0) {
-      vec3 gl = globalLights(uv, 0.0);
+      vec3 gl = lightsAt(n, uv, 0.0);
       // the patch only adds detail where the global map says people live (keeps both maps consistent)
-      float gate = smoothstep(0.004, 0.06, dot(globalLights(uv, 3.0), vec3(0.333)));
-      vec3 li = mix(gl, pt.rgb * patchGain * gate, pw);
-      vec3 blur = globalLights(uv, 5.0) * 2.2;                 // ~150 km scattering kernel for cloud bellies
+      // (the patch is built from the same places as the regional map; it replaces it where it lies)
+      vec3 li = mix(gl, pt.rgb * patchGain, pw);
+      // cloud bellies: blurred lights (~25–80 km kernel) under cloud only (skipped where it cannot show)
+      vec3 blur = cl * glowGain > 0.004 ? lightsAt(n, uv, 4.0) * 2.2 : vec3(0.0);
       float lit = 1.0, flare = 0.0;
       if (birthOn > 0.5) {
         float bt = birthAt(n);
@@ -157,7 +202,7 @@ void main(){
     float dens = exp(-alt / rayleighH) * (1.0 - cov);
     float lit = smoothstep(-0.3, 0.4, mu);
     atm += vec3(0.16, 0.4, 1.0) * dens * lit * 2.4;
-    atm += vec3(1.0, 0.33, 0.07) * dens * exp(-pow(mu / 0.14, 2.0)) * 1.4;
+    atm += vec3(1.0, 0.33, 0.07) * dens * exp(-pow(mu / 0.14, 2.0)) * 1.4 * termGain;
     atm += vec3(1.0, 0.75, 0.5) * dens * pow(max(dot(rd, L), 0.0), 8.0) * 3.0 * smoothstep(-0.2, 0.1, mu);
     atm *= atmoGain;
     // airglow: a thin emitting shell seen edge-on (limb brightening), only on the night side
@@ -207,9 +252,10 @@ export function createGlobe(ctx, earth, { birthTex = null } = {}) {
     camPos: { value: new THREE.Vector3() }, camR: { value: new THREE.Vector3() }, camU: { value: new THREE.Vector3() }, camB: { value: new THREE.Vector3() },
     albedoTex: { value: tx.albedoTex }, cloudTex: { value: tx.cloudTex }, lightsTex: { value: tx.lightsTex },
     birthTex: { value: birthTex || dummy }, patchTex: { value: dummy },
+    nightTex: { value: dummy }, nightRect: { value: new THREE.Vector4(-30, -50, 100, 70) }, nightOn: { value: 0 }, nightGain: { value: 1 },
     sunDir: { value: new THREE.Vector3(0, 0, -1) }, moonDir: { value: new THREE.Vector3(0, 1, 0) },
     dayGain: { value: 1 }, moonGain: { value: 0 }, lightsGain: { value: 1 }, cloudsGain: { value: 1 }, cloudShift: { value: 0 }, glowGain: { value: 0.6 }, nightLand: { value: 0.012 },
-    atmoGain: { value: 1 }, airglowGain: { value: 0.4 }, airglowAlt: { value: 0.0150 }, airglowSig: { value: 0.0022 }, rayleighH: { value: 0.0065 },
+    atmoGain: { value: 1 }, airglowGain: { value: 0.4 }, airglowAlt: { value: 0.0150 }, airglowSig: { value: 0.0022 }, rayleighH: { value: 0.0065 }, termGain: { value: 1 }, glintExp: { value: 260 }, glintBroad: { value: 0.18 },
     birthOn: { value: 0 }, birthTau: { value: 0 }, birthSoft: { value: 0.01 }, birthRect: { value: new THREE.Vector4(-40, -45, 100, 75) },
     patchOn: { value: 0 }, patchHalf: { value: 0.05 }, patchGain: { value: 1 }, patchTexels: { value: 4096 },
     patchC: { value: new THREE.Vector3(0, 0, 1) }, patchE: { value: new THREE.Vector3(1, 0, 0) }, patchN: { value: new THREE.Vector3(0, 1, 0) },
@@ -232,6 +278,7 @@ export function createGlobe(ctx, earth, { birthTex = null } = {}) {
       U.camR.value.copy(pose.cols[0]); U.camU.value.copy(pose.cols[1]); U.camB.value.copy(pose.cols[2]);
       U.fpx.value = (W / 2) * pose.focalMM / 18;
     },
+    setNight(nm) { U.nightTex.value = nm.tex; U.nightRect.value.set(...nm.rect); U.nightOn.value = 1; },
     setPatch(p) {
       if (!p) { U.patchOn.value = 0; return; }
       U.patchOn.value = 1; U.patchTex.value = p.tex; U.patchHalf.value = p.half; U.patchTexels.value = p.res;
