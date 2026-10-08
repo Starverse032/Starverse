@@ -66,19 +66,32 @@ export async function create(ctx) {
   const s14Sun = G.travel(g, 80 * D2R, 140 * D2R);
 
   // ---------------- S18 ----------------
-  const s18Sun = G.lonLatDir(192, -6);
-  const s18Moon = G.lonLatDir(25, 12);
+  // The camera climbs out to the SSE of R_geo and looks back north over Africa, local north turned
+  // ~20° towards screen upper-right (yaw 6° over the shot): the Nile runs from R up to the delta, the
+  // Levant, Anatolia and the Aegean crowd the limb at the top, Arabia / the Gulf / Iran fill the right.
+  // (At 9000 km a nadir view cannot hold both R_geo at R and the Mediterranean inside the 804 px band.)
   const s18Pose = (t) => {
     const u = (t - 95.0) / 12.0;
     const k = pullback(u);
     const alt = 400 * Math.pow(9000 / 400, k);
-    const sub = lerp(1.0, 23.0, Math.pow(k, 1.3));                 // camera drifts SSE as it climbs (horizon enters at the top)
-    const az = 159 + 6 * clamp(u, 0, 1.1);                          // yaw 6° over the shot
+    const sub = lerp(0.4, 21.0, Math.pow(k, 1.3));                 // camera drifts SE as it climbs (horizon enters at the top)
+    const az = 155 + 6 * clamp(u, 0, 1.1);                          // yaw 6° over the shot
     const s = G.travel(g, az * D2R, sub * D2R);
     const pos = s.clone().multiplyScalar(1 + alt / G.R_EARTH_KM);
-    const up = G.enu(g).north.clone().applyAxisAngle(g, (-4 + 6 * clamp(u, 0, 1.1)) * D2R);
+    const up = G.enu(g).north.clone().applyAxisAngle(g, (16 + 6 * clamp(u, 0, 1.1)) * D2R);
     return G.aim(pos, g, Rpx[0], Rpx[1], W, H, 35, up);
   };
+  // sun: just below the dawn terminator a few degrees beyond the right edge of the final frame
+  const s18Sun = (() => {
+    const pe = s18Pose(107.0);
+    let q = null;      // the disc's right-most surface point on row 700
+    for (let x = 1919; x > 900 && !q; x -= 4) q = G.hitSphere(pe.pos, G.worldRay(pe, W, H, (x - 30) * S, 700 * S));
+    q = q || g.clone();
+    const tq = q.clone().multiplyScalar(q.dot(g)).sub(g).normalize();
+    const dl = 2.5 * D2R;
+    return q.clone().multiplyScalar(-Math.sin(dl)).addScaledVector(tq, Math.cos(dl)).normalize();
+  })();
+  const s18Moon = G.lonLatDir(25, 12);
 
   // ---------------- montage cameras ----------------
   // nadir/oblique camera over a ground target: tilt from nadir (deg), view heading (deg from north),
@@ -117,7 +130,7 @@ export async function create(ctx) {
   function base() {
     U.dayGain.value = 0; U.moonGain.value = 0; U.lightsGain.value = 1; U.cloudsGain.value = 1; U.glowGain.value = 0.6;
     U.nightLand.value = 0.012; U.atmoGain.value = 1; U.airglowGain.value = 0.4; U.conicOn.value = 0; U.birthOn.value = 0;
-    U.dimAmt.value = 1; U.cloudShift.value = 0; U.termGain.value = 1; U.airglowSig.value = 0.0022; U.glintExp.value = 260; U.glintBroad.value = 0.18;
+    U.dimAmt.value = 1; U.clearAmt.value = 0; U.sparkOn.value = 0; U.cloudShift.value = 0; U.termGain.value = 1; U.airglowSig.value = 0.0022; U.glintExp.value = 260; U.glintBroad.value = 0.18;
     globe.setPatch(null); globe.clearSprites();
   }
 
@@ -143,7 +156,9 @@ export async function create(ctx) {
         pose = s18Pose(t);
         U.sunDir.value.copy(s18Sun); U.moonDir.value.copy(s18Moon);
         U.dayGain.value = 1; U.moonGain.value = 0.12; U.cloudShift.value = 0.00003 * lt; U.lightsGain.value = 1.5;
-        U.birthOn.value = 1;
+        U.birthOn.value = 1; U.sparkOn.value = 1;
+        // a clear night over the Rift: clouds thin out within ~6–16° of R_geo
+        U.clearDir.value.copy(g); U.clearCos.value.set(Math.cos(6 * D2R), Math.cos(16 * D2R)); U.clearAmt.value = 1;
         const tb = 95.25;
         U.birthTau.value = t < tb ? -1 : 1.1 * ease.inQuad(clamp((t - tb) / 10.4, 0, 1)) + 0.0012;
         U.birthSoft.value = 0.006;

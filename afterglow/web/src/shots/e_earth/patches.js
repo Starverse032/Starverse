@@ -21,7 +21,7 @@ import { rng } from '../../lib/util.js';
 import { lonLatDir, enu, R_EARTH_KM, NILE_MAIN, NILE_ROSETTA, NILE_DAMIETTA, SEINE } from './geo.js';
 
 export const PATCHES = {
-  nairobi: { lon: 36.8, lat: -1.3, sizeKm: 640, res: 4096, seed: 11, rural: 0.05 },
+  nairobi: { lon: 36.8, lat: -1.3, sizeKm: 640, res: 4096, seed: 11, rural: 0.05, roadGain: 0.45, radLen: 0.6, warpKm: 3.5, glow: 0.55 },
   delta:   { lon: 31.0, lat: 30.45, sizeKm: 420, res: 4096, seed: 12, nile: true, coast: 0.3, gain: 0.7 },
   naples:  { lon: 14.2, lat: 40.95, sizeKm: 300, res: 4096, seed: 13, coast: 0.55, rural: 0.22 },
   paris:   { lon: 2.35, lat: 48.86, sizeKm: 120, res: 4096, seed: 14, rivers: [SEINE], rural: 0.15 },
@@ -125,7 +125,7 @@ function vectorCanvas(P, F, uvOf, places) {
     const a0 = r() * 6.283;
     for (let k = 0; k < nR; k++) {
       const ang = a0 + k * 6.283 / nR + (r() - 0.5) * 0.5;
-      const len = radKm * (0.7 + r() * 0.9) * kmPx;
+      const len = radKm * (0.7 + r() * 0.9) * (P.radLen ?? 1) * kmPx;
       const steps = 28; let x = p.x, y = p.y, an = ang;
       for (let s = 0; s < steps; s++) {
         const f = s / steps;
@@ -236,7 +236,7 @@ function densityCanvas(P, F, uvOf, places) {
 }
 
 const BAKE = /* glsl */ `
-uniform sampler2D vecT, denT; uniform float sizeKm, texKm, fleet, seed, nile, rural;
+uniform sampler2D vecT, denT; uniform float sizeKm, texKm, fleet, seed, nile, rural, roadGain, warpKm, glowK;
 // 2D Voronoi (3×3): returns (F1, approximate distance to the nearest cell edge) in cell units
 vec2 vor(vec2 x, float sd){
   vec2 n = floor(x), f = fract(x); float f1 = 8.0, f2 = 8.0;
@@ -266,7 +266,10 @@ void main(){
   vec2 uv = vUv; vec2 p = (uv - 0.5) * sizeKm;              // km, east / north
   vec4 vt = texture2D(vecT, uv);
   float land = vt.r, river = vt.g, road = vt.b;
-  vec4 dn = texture2D(denT, uv);
+  // irregular town outlines: the splatted (round) density field is looked up through a domain warp
+  vec2 wq = warpKm * (vec2(vnoise(p * 0.08 + seed * 3.3), vnoise(p * 0.08 + seed * 5.9 + 11.0)) - 0.5)
+          + 0.4 * warpKm * (vec2(vnoise(p * 0.3 + seed), vnoise(p * 0.3 + seed + 4.0)) - 0.5);
+  vec4 dn = texture2D(denT, uv + wq / sizeKm);
   float D = dn.r, core = dn.g;
   // rural floor: scattered villages between the towns (Europe, Campania, Korea are settled everywhere)
   D = max(D, rural * smoothstep(0.25, 0.8, vnoise(p * 0.045 + seed * 4.1)) * (0.6 + 0.4 * vnoise(p * 0.2 + seed)));
@@ -291,14 +294,14 @@ void main(){
     //   glow    = the unresolved street grid, ∝ density² and broken by sub-km grain
     //   streets = resolved block edges, only where blocks are large enough and dense enough
     //   vil     = discrete point lights: hamlets in the countryside, a finer layer in towns
-    float glow = pow(Dm, 2.2) * 0.5 * (0.55 + 0.9 * vnoise(p * 3.1 + seed * 7.0));
+    float glow = pow(Dm, 2.2) * 0.5 * glowK * (0.55 + 0.9 * vnoise(p * 3.1 + seed * 7.0));
     float streets = (e1 * (1.0 - dense * 0.5) + e2 * dense) * smoothstep(0.3, 0.85, Dm) * Dm * 0.8;
     streets *= 0.45 + 0.55 * vnoise(p * 1.7 + seed);          // lamps are not a continuous tube
     float hue, hue2;
     float vil = dots(p, 1.15, clamp(Dm * 1.6, 0.0, 0.9), max(px * 0.8, 0.07), seed + 9.0, hue) * (0.35 + 1.1 * Dm)
               + dots(p, 0.42, clamp((Dm - 0.25) * 1.5, 0.0, 0.8), max(px * 0.8, 0.05), seed + 13.0, hue2) * 0.45 * Dm;
     float park = 1.0 - 0.55 * smoothstep(0.58, 0.82, vnoise(p * 0.55 + seed * 3.0)) * smoothstep(0.6, 0.9, Dm) * (1.0 - nile);
-    float rd = road * (0.3 + 0.7 * smoothstep(0.35, 0.65, vnoise(p * 1.9 + seed * 5.0)));   // highways read as strings of lamps
+    float rd = roadGain * road * (0.3 + 0.7 * smoothstep(0.35, 0.65, vnoise(p * 1.9 + seed * 5.0)));   // highways read as strings of lamps
     float I = (glow + streets + vil * 0.6 + rd * (0.9 + 0.8 * Dm)) * park;
     vec3 c = mix(SOD, WARM, 0.35 * hue);
     c = mix(c, LED, smoothstep(0.15, 0.6, core) * 0.75 * dense);
@@ -344,7 +347,7 @@ export function createPatchBank(ctx) {
     });
     const mat = new THREE.ShaderMaterial({
       vertexShader: VS_UV, fragmentShader: GLSL.all + '\nvarying vec2 vUv;\n' + BAKE, depthTest: false, depthWrite: false,
-      uniforms: { vecT: { value: vt }, denT: { value: dt }, sizeKm: { value: P.sizeKm }, texKm: { value: P.sizeKm / N }, fleet: { value: P.fleet ? 1 : 0 }, nile: { value: P.nile ? 1 : 0 }, rural: { value: P.rural || 0 }, seed: { value: P.seed } },
+      uniforms: { vecT: { value: vt }, denT: { value: dt }, sizeKm: { value: P.sizeKm }, texKm: { value: P.sizeKm / N }, fleet: { value: P.fleet ? 1 : 0 }, nile: { value: P.nile ? 1 : 0 }, rural: { value: P.rural || 0 }, seed: { value: P.seed }, roadGain: { value: P.roadGain ?? 1 }, warpKm: { value: P.warpKm ?? 0 }, glowK: { value: P.glow ?? 1 } },
     });
     const fsq = new FSQ(mat);
     const prev = renderer.getRenderTarget();

@@ -101,7 +101,7 @@ async function launch(serverPort, wsPort) {
 // processes (several agents iterate in parallel; each browser needs 1–2 GB). AG_NOLOCK=1 bypasses.
 async function acquireSlot() {
   if (process.env.AG_NOLOCK) return;
-  const n = +(process.env.AG_SLOTS || 3), dir = path.join(ROOT, 'build', 'locks');
+  const n = +(process.env.AG_SLOTS || 2), dir = path.join(ROOT, 'build', 'locks');
   fs.mkdirSync(dir, { recursive: true });
   let waited = 0;
   for (;;) {

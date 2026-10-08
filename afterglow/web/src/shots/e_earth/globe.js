@@ -33,6 +33,9 @@ uniform float S;                           // pixel scale (H / 1080)
 uniform vec4 spr[4]; uniform vec4 sprCol[4];
 uniform vec4 dimRect; uniform float dimAmt;   // card box (px, top-left origin): x0, y0, x1, y1
 uniform float lightsColdOcean;               // unused hook (kept 0)
+// clear sky: clouds thinned inside a cap around clearDir (cos of inner / outer radius) — S18 opens on
+// a cloudless night over the Rift so the first lamps are crisp, the weather comes in with distance
+uniform vec3 clearDir; uniform vec2 clearCos; uniform float clearAmt;
 varying vec2 vUv;
 
 vec2 eqUV(vec3 n){
@@ -76,6 +79,37 @@ vec2 nightUV(vec3 n){
   float lon = atan(n.x, n.z) * 57.29578, lat = asin(clamp(n.y, -1.0, 1.0)) * 57.29578;
   return vec2((lon - nightRect.x) / (nightRect.z - nightRect.x), (lat - nightRect.y) / (nightRect.w - nightRect.y));
 }
+// Detail synthesis for magnified lights: where a pixel is much smaller than a night-map texel the
+// map's smooth gaussian splats are redistributed into a field of discrete point lamps (mean = 1, so the
+// flux is conserved) — a town seen from 1000 km becomes a cluster of sharp lights instead of a soft
+// ball. Every lamp's PSF is at least ~0.6 px (band-limited), and the field fades back to its mean
+// once a cell spans less than ~1.5 px, so it can never alias or shimmer.
+uniform float sparkOn;
+float pixKmG;                      // pixel footprint on the ground (km), set in main()
+float sparkLayer(vec2 x, float cellKm, float sd){
+  vec2 q = x / cellKm; vec2 c0 = floor(q);
+  float sig = max(0.11 * cellKm, 0.6 * pixKmG) / cellKm;      // PSF σ in cell units
+  float s = 0.0;
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
+    vec2 c = c0 + vec2(float(i), float(j));
+    vec3 h = hash33(vec3(c, sd));
+    vec2 d = q - (c + 0.1 + 0.8 * h.xy);
+    float b = 0.25 + 2.2 * h.z * h.z * h.z;               // mean 0.8: a few bright lamps, many faint
+    s += b * exp(-0.5 * dot(d, d) / (sig * sig));
+  }
+  return s / (0.8 * 6.2832 * sig * sig);                 // normalise: E[s] = 1
+}
+float sparkle(vec3 n){
+  if (sparkOn < 0.5) return 1.0;
+  float lat = asin(clamp(n.y, -1.0, 1.0)), lon = atan(n.x, n.z);
+  vec2 x = vec2(lon * cos(lat), lat) * 6371.0;            // km
+  float w1 = 1.0 - smoothstep(0.3, 0.7, pixKmG / 0.9);  // fine lamps (0.9 km cells)
+  float w2 = 1.0 - smoothstep(0.3, 0.7, pixKmG / 2.8);   // clustered blocks (2.8 km cells)
+  float s = 1.0;
+  if (w2 > 0.0) s = mix(1.0, sparkLayer(x, 2.8, 5.0), w2);
+  if (w1 > 0.0) s *= mix(1.0, sparkLayer(x + 13.7, 0.9, 9.0), w1);
+  return s;
+}
 vec3 lightsAt(vec3 n, vec2 uv, float lod){
   float w = 0.0; vec3 m = vec3(0.0);
   if (nightOn > 0.5) {
@@ -85,6 +119,7 @@ vec3 lightsAt(vec3 n, vec2 uv, float lod){
       if (lod > 0.0) m = texBS(nightTex, nu, max(lod - 1.0, 0.0));
       else { float fl = footLod(nu, vec2(textureSize(nightTex, 0))); m = fl < 0.0 ? texBS(nightTex, nu, 0.0) : texture2D(nightTex, nu).rgb; }
       m *= nightGain;
+      if (lod <= 0.0 && dot(m, m) > 1e-8) m *= sparkle(n);
     }
   }
   if (w >= 1.0) return m;
@@ -117,6 +152,7 @@ void main(){
   vec3 col = vec3(0.0);
   float tHit = -b - sqrt(max(disc, 0.0));
   vec3 n = normalize(ro + rd * max(tHit, 0.0));
+  pixKmG = 0.7071 * length(vec2(length(dFdx(n)), length(dFdy(n)))) * 6371.0;
   {   // surface (evaluated everywhere: keeps implicit derivatives well defined at the limb)
     vec3 V = -rd;
     vec2 uv = eqUV(n);
@@ -135,6 +171,7 @@ void main(){
       pt = texture2D(patchTex, puv); land = mix(land, pt.a, pw);
     }
     float cl = texture2D(cloudTex, uv + vec2(cloudShift, 0.0)).r * cloudsGain;
+    if (clearAmt > 0.0) cl *= 1.0 - clearAmt * smoothstep(clearCos.y, clearCos.x, dot(n, clearDir));
     float ndl = dot(n, L), ndm = dot(n, M);
     float day = smoothstep(-0.08, 0.25, ndl);
     vec3 albc = mix(mix(vec3(0.004, 0.014, 0.04), vec3(0.008, 0.03, 0.055), alb.a), alb.rgb, land);   // patch coast overrides land/sea
@@ -173,7 +210,7 @@ void main(){
         float j = (snoise(n * 900.0) * 0.6 + snoise(n * 3100.0) * 0.4) * 0.018;
         float a = bt + j;
         lit = clamp((birthTau - a) / birthSoft, 0.0, 1.0);
-        flare = lit * exp(-max(birthTau - a, 0.0) / 0.03);       // a newly lit town burns a touch brighter
+        flare = lit * exp(-max(birthTau - a, 0.0) / 0.03) * 0.3; // a newly lit town burns a touch brighter
         float bb = clamp((birthTau - bt) / 0.05, 0.0, 1.0);
         blur *= bb;
       }
@@ -262,6 +299,8 @@ export function createGlobe(ctx, earth, { birthTex = null } = {}) {
     conicOn: { value: 0 }, conicCore: { value: 1.4 }, conicGlow: { value: 0.1 }, conicOut: { value: 0.3 }, twGain: { value: 0.35 },
     airCol: { value: new THREE.Vector3(0.212, 0.768, 0.539) },     // AIRGLOW #7FE3C2 (linear)
     spr: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) }, sprCol: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) },
+    sparkOn: { value: 0 },
+    clearDir: { value: new THREE.Vector3(0, 1, 0) }, clearCos: { value: new THREE.Vector2(1, 1) }, clearAmt: { value: 0 },
     dimRect: { value: new THREE.Vector4(-1e4, -1e4, -1e4, -1e4) }, dimAmt: { value: 1 }, lightsColdOcean: { value: 0 },
   };
   const mat = new THREE.ShaderMaterial({

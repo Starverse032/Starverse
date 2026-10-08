@@ -94,7 +94,7 @@ export function buildNightMap(ctx, { res = 4096, seed = 1407 } = {}) {
     const radKm = 1.6 * Math.pow(pop / 1e4, 0.42);           // urban radius
     const coreC = mixc(WARM, LED, led * Math.min(1, lp / 2.5));
     // core: a compact bright centre
-    add(lon, lat, Math.max(0.6, radKm * 0.28), F0 * e * 2.2 * Math.pow(pop / 1e4, 0.85) * Math.exp(r.gauss() * 0.35), coreC);
+    add(lon, lat, Math.max(0.6, radKm * 0.22), F0 * e * 1.1 * Math.pow(pop / 1e4, 0.85) * Math.exp(r.gauss() * 0.35), coreC);
     // sprawl: clustered sub-lights inside the urban radius (exponential falloff, irregular lobes)
     const nS = Math.min(1600, Math.round(14 * Math.pow(pop / 1e4, 0.55)));
     const lobes = 2 + Math.floor(r() * 4), lobeA = r() * 6.283;
@@ -135,7 +135,7 @@ export function buildNightMap(ctx, { res = 4096, seed = 1407 } = {}) {
       if (j < i && cand.length > 1) { /* each pair once, mostly */ }
       const [lo2, la2, pop2] = big[j];
       const [e] = grade((lo + lo2) / 2, (la + la2) / 2);
-      const w = Math.min(1, Math.sqrt(Math.min(pop, pop2)) / 900) * e;
+      const w = Math.min(1, Math.sqrt(Math.min(pop, pop2)) / 900) * e * Math.min(1, e * 1.2);   // poorly electrified regions: barely any road lamps
       const bend = (r() - 0.5) * 0.22;
       const n = Math.round(d / 1.2);
       for (let k = 0; k <= n; k++) {
