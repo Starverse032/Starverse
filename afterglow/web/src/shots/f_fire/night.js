@@ -274,12 +274,12 @@ export function createNight(ctx) {
     add(g, 3, seed % 1, false);
   };
   const apex = FP.clone().add(new THREE.Vector3(0.02, 0.29, 0.0));
-  for (let k = 0; k < 5; k++) {
-    const a = k / 5 * Math.PI * 2 + 0.5 + (rng() - 0.5) * 0.4, rr = 0.27 + rng() * 0.05;
+  for (let k = 0; k < 7; k++) {
+    const a = k / 7 * Math.PI * 2 + 0.75 + (rng() - 0.5) * 0.35, rr = 0.25 + rng() * 0.07;
     const base = [FP.x + Math.cos(a) * rr, hG(FP.x + Math.cos(a) * rr, FP.z + Math.sin(a) * rr) + 0.01, FP.z + Math.sin(a) * rr];
     const dir = apex.clone().sub(new THREE.Vector3(...base));
-    const top = new THREE.Vector3(...base).addScaledVector(dir, 1.12 + 0.1 * rng());
-    log(base, [top.x + (rng() - 0.5) * 0.04, top.y, top.z + (rng() - 0.5) * 0.04], 0.020 + rng() * 0.014, 0.37 + k * 0.29);
+    const top = new THREE.Vector3(...base).addScaledVector(dir, 0.94 + 0.12 * rng());
+    log(base, [top.x + (rng() - 0.5) * 0.05, top.y, top.z + (rng() - 0.5) * 0.05], 0.011 + rng() * 0.011, 0.37 + k * 0.29);
   }
   log([FP.x - 0.62, 0.035, FP.z + 0.18], [FP.x + 0.18, 0.06, FP.z - 0.05], 0.045, 0.91);
   log([FP.x + 0.55, 0.03, FP.z + 0.25], [FP.x - 0.05, 0.07, FP.z - 0.1], 0.04, 0.53);
@@ -536,12 +536,12 @@ export function createNight(ctx) {
           float P = 4.0, k = floor((t - iA.w) / P);
           tau = t - iA.w - k * P;
           vec3 h1 = hash33(vec3(iB.x * 1000.0, k, 1.7)), h2 = hash33(vec3(iB.x * 1000.0, k, 5.3)), h3 = hash33(vec3(iB.x * 1000.0, k, 9.1));
-          v = mix(0.45, 1.45, h1.x); life = 2.5 + 1.5 * h1.y; I0 = mix(0.8, 6.0, pow(h1.z, 3.0));
-          if (hash12(vec2(iB.x * 777.0, k)) > 0.42) life = -1.0;          // the fire breathes: most cycles stay dark
+          v = mix(0.45, 1.45, h1.x); life = 2.5 + 1.5 * h1.y; I0 = mix(4.0, 26.0, pow(h1.z, 2.5));
+          if (hash12(vec2(iB.x * 777.0, k)) > 0.7) life = -1.0;          // the fire breathes: most cycles stay dark
           p0 = uFP + vec3((h2.x - 0.5) * 0.16, 0.18 + 0.30 * h2.y, (h2.z - 0.5) * 0.14);
           amp = mix(0.05, 0.22, h3.x); ph = vec4(h3.yz, h2.yx) * 6.2832;
         } else {
-          tau = t - iA.w; life = iB.z; v = iB.w; I0 = 9.0 + 5.0 * iB.x; p0 = iA.xyz; amp = 0.05;
+          tau = t - iA.w; life = iB.z; v = iB.w; I0 = 40.0 + 20.0 * iB.x; p0 = iA.xyz; amp = 0.05;
           ph = vec4(iB.x * 31.0, iB.x * 17.0, iB.x * 7.0, iB.x * 3.0);
         }
       }
@@ -565,7 +565,7 @@ export function createNight(ctx) {
         float r0 = 0.75 * uS, rad = sqrt(r0 * r0 + coc * coc);
         float L = length(sa - sb);
         float u = clamp(tau / life, 0.0, 1.0);
-        float cool = iB.y < 0.5 ? exp(-tau / 0.9) : exp(-tau / 3.2);           // sparks cool fast; heroes burn longer
+        float cool = iB.y < 0.5 ? exp(-tau / 1.5) : exp(-tau / 4.5);           // sparks cool fast; heroes burn longer
         float I = I0 * cool * pow(1.0 - u, 1.2) * (0.72 + 0.28 * sin(tau * 37.0 + ph.x * 5.0)) * smoothstep(0.0, 0.04, tau);
         vI = uGain * I * alive * (r0 * r0) / (rad * rad) * (2.5 * rad) / (2.5 * rad + L);
         vCol = blackbody(mix(2300.0, 1000.0, 1.0 - cool * (1.0 - u * 0.5)));
@@ -665,9 +665,9 @@ export function createNight(ctx) {
   function renderS16(t, f) {
     const p = setCam16(t);
     setHand(hand, breath(util, t, { px: 1.5, deg: 0.15, hz: 0.3, seed: 15 }));
-    const gain = 0.38 + 0.62 * ss(0.08, 0.7, p.e);
+    const gain = 0.6 + 0.4 * ss(0.08, 0.7, p.e);
     const invDF = (1 / FD) * (1 - ss(0.12, 0.6, p.e));         // focus pull: fire → infinity
-    setSky(cam16, M16, gain, 1.0);
+    setSky(cam16, M16, gain, 2.2);
     skyPass.render(renderer, f.target);
     stars.uniforms.uCoc.value = Math.min(6, COCK * invDF);
     renderer.setRenderTarget(f.target); renderer.render(starScene, cam16);

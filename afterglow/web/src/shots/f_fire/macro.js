@@ -40,7 +40,7 @@ const LIGHTS = [
   [0.011, 0.044, -0.006],  // 3 flame right
   [-0.022, 0.050, 0.012],  // 4 spark cloud
 ];
-const R0 = [0.006, 0.016, 0.016, 0.016, 0.012];   // light "size" (soft core of the falloff)
+const R0 = [0.006, 0.028, 0.028, 0.028, 0.012];   // a flame is a volume source: no near-field hot spot   // light "size" (soft core of the falloff)
 
 // ---- ground height (CPU; the mesh and the pebble placement share it) -----------------------------
 function hG(x, z) {
@@ -180,19 +180,51 @@ export function createMacro(ctx) {
     const g = tag(ribbon(pts, ws, { eye }), { mat: 3, seed });
     parts.push(g); nestParts.push(g);
   };
-  for (let i = 0; i < 380; i++) {
-    const r0 = 0.0055 + Math.pow(rng(), 0.8) * 0.026;
-    const ph0 = rng() * Math.PI * 2, dph = 0.9 + rng() * 2.2;
-    const yb = 0.0015 + 0.017 * Math.pow(r0 / 0.032, 1.3) + (rng() - 0.5) * 0.004;
-    const slope = (rng() - 0.5) * 0.006, n = 26, pts = [];
-    const sd = rng() * 100;
+  // A loose bundle of dry grass and shredded bark, NOT a woven bowl: each fibre is an arc of a circle
+  // whose plane is tilted at random (up to ±50° from horizontal) and centred off-axis, wobbled by
+  // low-frequency noise, lifted onto a flattened-dome envelope with a hollow where the charred lump
+  // sits; a third are long, gently bent straws laid across the bundle in every direction.
+  const envY = r => 0.0022 + 0.016 * Math.pow(Math.min(r / 0.028, 1.0), 1.25) * (1 - 0.7 * Math.pow(Math.max(0, (r - 0.026) / 0.016), 1.5));
+  const V3 = THREE.Vector3;
+  for (let i = 0; i < 330; i++) {
+    const c = new V3((rng() - 0.5) * 0.012, 0, (rng() - 0.5) * 0.010);
+    const tilt = (rng() - 0.5) * 2 * 0.87 * Math.pow(rng(), 0.6), ta = rng() * Math.PI * 2;
+    const nrm = new V3(0, 1, 0).applyAxisAngle(new V3(Math.cos(ta), 0, Math.sin(ta)), tilt);
+    const e1 = new V3(1, 0, 0).projectOnPlane(nrm).normalize(), e2 = new V3().crossVectors(nrm, e1);
+    const r0 = 0.007 + Math.pow(rng(), 0.75) * 0.025;
+    const ph0 = rng() * Math.PI * 2, dph = 0.7 + rng() * 2.0, n = 26, pts = [], sd = rng() * 100;
+    const lift = (rng() - 0.5) * 0.005;
     for (let k = 0; k < n; k++) {
-      const s = k / (n - 1), ph = ph0 + dph * s;
-      const rr = r0 * (1 + 0.18 * Math.sin(ph * 3 + sd) + 0.08 * Math.sin(ph * 9 + sd * 2));
-      const y = Math.max(0.0012, yb + slope * s + 0.0015 * Math.sin(ph * 5 + sd));
-      pts.push([Math.cos(ph) * rr, y, Math.sin(ph) * rr]);
+      const s2 = k / (n - 1), ph = ph0 + dph * s2;
+      const rr = r0 * (1 + 0.16 * Math.sin(ph * 2.3 + sd) + 0.07 * Math.sin(ph * 7.1 + sd * 2));
+      const q = c.clone().addScaledVector(e1, Math.cos(ph) * rr).addScaledVector(e2, Math.sin(ph) * rr);
+      const rh = Math.hypot(q.x, q.z);
+      const y = envY(rh) + q.y * 0.55 + lift + 0.0012 * Math.sin(ph * 4.3 + sd);
+      pts.push([q.x, Math.max(0.0011, y), q.z]);
     }
-    fibre(pts, 0.00022 + rng() * 0.00036, rng());
+    fibre(pts, 0.00020 + rng() * 0.00036, rng());
+  }
+  for (let i = 0; i < 140; i++) {                      // straws laid across the bundle
+    const a0 = rng() * Math.PI * 2, rS = 0.004 + rng() * 0.03;
+    const dir = a0 + Math.PI / 2 + (rng() - 0.5) * 1.6, len = 0.02 + rng() * 0.045, bend = (rng() - 0.5) * 18;
+    const n = 24, pts = []; let x = Math.cos(a0) * rS - Math.cos(dir) * len * 0.5, z = Math.sin(a0) * rS - Math.sin(dir) * len * 0.5;
+    const sd = rng() * 100, lift = (rng() - 0.3) * 0.004;
+    for (let k = 0; k < n; k++) {
+      const s2 = k / (n - 1), d = dir + bend * (s2 - 0.5) * len;
+      const rh = Math.hypot(x, z);
+      pts.push([x, Math.max(0.0011, envY(rh) + lift + 0.0016 * Math.sin(s2 * 5 + sd)), z]);
+      x += Math.cos(d) * len / (n - 1); z += Math.sin(d) * len / (n - 1);
+    }
+    fibre(pts, 0.00024 + rng() * 0.0004, rng());
+  }
+  for (let i = 0; i < 26; i++) {                       // a few flat shreds of bark
+    const a0 = rng() * Math.PI * 2, rS = 0.012 + rng() * 0.02, dir = a0 + Math.PI / 2 + (rng() - 0.5), len = 0.012 + rng() * 0.02;
+    const n = 12, pts = [];
+    for (let k = 0; k < n; k++) {
+      const s2 = k / (n - 1) - 0.5, x = Math.cos(a0) * rS + Math.cos(dir) * len * s2, z = Math.sin(a0) * rS + Math.sin(dir) * len * s2;
+      pts.push([x, Math.max(0.0012, envY(Math.hypot(x, z)) + 0.001 * Math.sin(s2 * 4)), z]);
+    }
+    fibre(pts, 0.0009 + rng() * 0.0012, rng());
   }
   // loose strands sticking out of the bundle
   for (let i = 0; i < 80; i++) {
@@ -487,7 +519,8 @@ export function createMacro(ctx) {
       void main(){ vec2 p = vUv * 6.0; gl_FragColor = vec4(tf(p, 6.0, 1), tf(p, 6.0, 9), tf(p * 2.0, 12.0, 17), 1.0); }`,
   });
   const flameRT = ctx.makeRT(Math.round(W / 2), Math.round(H / 2));
-  const NSHEET = 7;
+  const NSHEET = 9;
+  const FL_ROOT = 26;                                         // flame root below R (px): its luminous core sits on R
   const sheets = [];
   for (let k = 0; k < NSHEET; k++) sheets.push({ dx: (rng() - 0.5) * 56, w: 52 + rng() * 40, h: 0.62 + rng() * 0.42, seed: rng(), gain: 0.55 + rng() * 0.6 });
   sheets.sort((a, b) => b.w - a.w);
@@ -506,15 +539,15 @@ export function createMacro(ctx) {
     shGeo.setAttribute('gain', new THREE.BufferAttribute(new Float32Array(gains), 1));
     shGeo.setIndex(idx);
   }
-  const flU = { ...hand, uT: { value: 0 }, uF: { value: 0 }, uHt: { value: 220 }, uBase: { value: new THREE.Vector2(RX, RY - 22) }, uNoise: { value: noiseTex }, uFlick: { value: 1 } };
+  const flU = { ...hand, uT: { value: 0 }, uF: { value: 0 }, uHt: { value: 220 }, uBase: { value: new THREE.Vector2(RX, RY + FL_ROOT) }, uNoise: { value: noiseTex }, uFlick: { value: 1 }, uSpread: { value: 1 } };
   const flMat = new THREE.ShaderMaterial({
     uniforms: flU, depthTest: false, depthWrite: false, transparent: true, blending: THREE.AdditiveBlending,
     vertexShader: HAND_GLSL + /* glsl */ `
       attribute vec2 corner; attribute vec4 par; attribute float gain;
-      uniform float uHt; uniform vec2 uBase; varying vec2 vQ; varying vec2 vP;
+      uniform float uHt, uSpread; uniform vec2 uBase; varying vec2 vQ; varying vec2 vP;
       void main(){
         float h = uHt * par.z, w = par.y;
-        vec2 px = uBase + vec2(par.x * (1.0 - 0.3 * corner.y) + corner.x * w, -corner.y * h);
+        vec2 px = uBase + vec2(par.x * uSpread * (1.0 - 0.3 * corner.y) + corner.x * w * mix(1.0, uSpread, 0.5), -corner.y * h);
         vQ = vec2(corner.x, corner.y); vP = vec2(par.w, gain);
         vec4 c = vec4(px.x / 1920.0 * 2.0 - 1.0, 1.0 - px.y / 1080.0 * 2.0, 0.0, 1.0);
         gl_Position = handClip(c);
@@ -535,16 +568,36 @@ export function createMacro(ctx) {
         float dens = body * mix(1.0, tongue, smoothstep(0.08, 0.6, y)) * smoothstep(0.0, 0.05, y + 0.02);
         float core = smoothstep(wy * 0.65, 0.0, abs(x)) * smoothstep(0.62, 0.08, y) * smoothstep(-0.02, 0.1, y);
         float T = mix(1250.0, 1950.0, clamp(core * 0.9 + (1.0 - y) * 0.25 + (n2.b - 0.5) * 0.2, 0.0, 1.0));
-        vec3 c = blackbody(T) * (dens * 0.9 + core * 1.8) * vP.y;
+        vec3 c = blackbody(T) * (dens * 1.25 + core * 1.0) * vP.y;
         // the soot-free core of a small flame reads yellow-white: lift green/blue where it is hottest
         c += vec3(0.30, 0.22, 0.10) * core * core * vP.y;
-        gl_FragColor = vec4(c * uF * uFlick * 1.1, 1.0);
+        gl_FragColor = vec4(c * uF * uFlick * 1.05, 1.0);
       }`,
   });
   const flScene = new THREE.Scene();
   const flMesh = new THREE.Mesh(shGeo, flMat); flMesh.frustumCulled = false; flScene.add(flMesh);
   const flCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
   const comp = kit.compositor();
+  // The flame stands just behind the plane of focus (the fibres in front of it are sharp): a uniform
+  // disc gather (the iris) of radius FL_COC turns it into a soft, luminous tongue, its hot core a
+  // bokeh disc. Half resolution, scissored to the flame's box — a few ms.
+  const FL_COC = 15;                                           // 1080p px
+  const flameBlur = ctx.makeRT(Math.round(W / 2), Math.round(H / 2));
+  const flBlur = kit.fullscreen(/* glsl */ `
+    uniform sampler2D uSrc; uniform vec2 uRes; uniform float uR;
+    void main(){
+      vec2 px = gl_FragCoord.xy; vec3 s = vec3(0.0);
+      for (int i = 0; i < 64; i++){
+        float r = uR * sqrt((float(i) + 0.5) / 64.0), a = float(i) * 2.39996;
+        s += texture2D(uSrc, (px + vec2(cos(a), sin(a)) * r) / uRes).rgb;
+      }
+      gl_FragColor = vec4(s / 64.0, 1.0);
+    }`, { uSrc: { value: flameRT.texture }, uRes: { value: new THREE.Vector2(flameRT.width, flameRT.height) }, uR: { value: FL_COC * S / 2 } });
+  {
+    const x0 = Math.floor((RX - 240) * S / 2), y0 = Math.floor((1080 - (RY + 70)) * S / 2);
+    const box = new THREE.Vector4(x0, y0, Math.ceil(480 * S / 2), Math.ceil(620 * S / 2));
+    flameRT.scissor.copy(box); flameBlur.scissor.copy(box);
+  }
 
   // ---- sparks -----------------------------------------------------------------------------------------
   const G = 4.9, KD = 3.2, SHUT = 0.5 / 24;
@@ -556,7 +609,7 @@ export function createMacro(ctx) {
       const sp = 0.25 + Math.pow(r(), 0.7) * 0.75;
       const d = [0.25 + 0.75 * r(), -0.95 + 0.9 * r(), -0.45 + 0.9 * r()];
       const L = Math.hypot(...d);
-      sparks.push({ p0: SP.map((x, j) => x + (r() - 0.5) * 0.006), v0: d.map(x => x / L * sp), tb: t0 + r() * 0.03, life: (6 + r() * 4) / 24, kind: 0, seed: r(), I0: gain * (10 + 16 * r()), T0: 2300 + 600 * r() });
+      sparks.push({ p0: SP.map((x, j) => x + (r() - 0.5) * 0.006), v0: d.map(x => x / L * sp), tb: t0 + r() * 0.03, life: (6 + r() * 4) / 24, kind: 0, seed: r(), I0: gain * (34 + 60 * Math.pow(r(), 1.5)), T0: 2700 + 700 * r() });
     }
     for (let i = 0; i < landers; i++) {            // aimed into the tinder: they end in the ember
       const tl = 0.16 + 0.03 * i;
@@ -564,7 +617,7 @@ export function createMacro(ctx) {
       const p0 = SP.map((x, j) => x + (r() - 0.5) * 0.004);
       const e = (1 - Math.exp(-KD * tl)) / KD, gk = -G / KD;
       const v0 = [0, 1, 2].map(j => { const gkj = j === 1 ? gk : 0; return gkj + (tgt[j] - p0[j] - gkj * tl) / e; });
-      sparks.push({ p0, v0, tb: t0 + 0.01 * i, life: tl, kind: 0, seed: r(), I0: 22, T0: 2600 });
+      sparks.push({ p0, v0, tb: t0 + 0.01 * i, life: tl, kind: 0, seed: r(), I0: 60, T0: 2900 });
     }
   };
   strike(71.5, 30, 1501, 0, 0.45);          // the first strike lights nothing
@@ -577,9 +630,9 @@ export function createMacro(ctx) {
     const strings = [77.0, 77.45, 77.8, 78.2, 78.5, 78.75, 78.95, 79.1];
     for (const ts of strings) {
       const n = 4 + Math.floor(r() * 7), x0 = (r() - 0.5) * 0.012;
-      for (let i = 0; i < n; i++) sparks.push({ p0: [x0 + (r() - 0.5) * 0.004, 0.030 + r() * 0.016, (r() - 0.5) * 0.008], v0: [(r() - 0.5) * 0.05, 0.12 + 0.2 * r(), (r() - 0.5) * 0.05], tb: ts + r() * 0.15, life: 0.6 + r() * 0.9, kind: 1, seed: r(), I0: 6 + 10 * r(), T0: 1800 + 300 * r() });
+      for (let i = 0; i < n; i++) sparks.push({ p0: [x0 + (r() - 0.5) * 0.004, 0.030 + r() * 0.016, (r() - 0.5) * 0.008], v0: [(r() - 0.5) * 0.05, 0.12 + 0.2 * r(), (r() - 0.5) * 0.05], tb: ts + r() * 0.15, life: 0.6 + r() * 0.9, kind: 1, seed: r(), I0: 30 + 40 * r(), T0: 1900 + 400 * r() });
     }
-    for (let i = 0; i < 24; i++) sparks.push({ p0: [(r() - 0.5) * 0.016, 0.03 + r() * 0.02, (r() - 0.5) * 0.01], v0: [(r() - 0.5) * 0.06, 0.1 + 0.2 * r(), (r() - 0.5) * 0.05], tb: 76.6 + r() * 2.6, life: 0.5 + r() * 0.8, kind: 1, seed: r(), I0: 4 + 8 * r(), T0: 1700 + 300 * r() });
+    for (let i = 0; i < 24; i++) sparks.push({ p0: [(r() - 0.5) * 0.016, 0.03 + r() * 0.02, (r() - 0.5) * 0.01], v0: [(r() - 0.5) * 0.06, 0.1 + 0.2 * r(), (r() - 0.5) * 0.05], tb: 76.6 + r() * 2.6, life: 0.5 + r() * 0.8, kind: 1, seed: r(), I0: 18 + 30 * r(), T0: 1800 + 400 * r() });
   }
   const NS = sparks.length;
   const spGeo = new THREE.InstancedBufferGeometry();
@@ -654,7 +707,7 @@ export function createMacro(ctx) {
   const sparkLight = t => {
     let s = 0;
     for (const sp of sparks) {
-      if (sp.kind !== 0) continue;
+      if (sp.kind !== 0 || sp.tb < 72.0) continue;          // the first strike lights nothing
       const tau = t - sp.tb; if (tau < 0 || tau > sp.life) continue;
       const u = tau / sp.life;
       const y = sp.p0[1] + (-G / KD) * tau + (sp.v0[1] + G / KD) * (1 - Math.exp(-KD * tau)) / KD;
@@ -709,7 +762,7 @@ export function createMacro(ctx) {
     return [r, g, b].map(c => Math.pow(c, 2.2));
   };
   const C_EMB = bb(1250), C_FL = bb(1850), C_SP = bb(2300);
-  const K_EMB = 0.012, K_FL = 0.03, K_SP = 0.00001;
+  const K_EMB = 0.012, K_FL = 0.03, K_SP = 0.0000042;
 
   return {
     render(shot, f) {
@@ -731,8 +784,9 @@ export function createMacro(ctx) {
       plateU.uW3.value.set(...C_FL.map(c => c * fw * Math.max(0.05, a3)));
       plateU.uW4.value.set(...C_SP.map(c => c * sl * K_SP));
       plateU.uT.value = t; plateU.uHaze.value = clamp(fl, 0, 1);
-      const ht = 215 * (0.6 + 0.4 * clamp(fl, 0, 1.3)) * (0.92 + 0.08 * fk);
-      plateU.uFl.value.set(RX, RY - 22, ht);
+      const grow = ss(75.0, 79.2, t);                         // the tinder catches: the fire keeps growing
+      const ht = 290 * (0.6 + 0.4 * clamp(fl, 0, 1.3)) * (0.9 + 0.1 * fk) * (1 + 0.3 * grow);
+      plateU.uFl.value.set(RX, RY + FL_ROOT, ht);
       platePass.render(renderer, f.target);
 
 
@@ -744,10 +798,17 @@ export function createMacro(ctx) {
       }
       // flame (half res, then added)
       if (fl > 0) {
-        flU.uT.value = t; flU.uF.value = clamp(fl, 0, 1.3); flU.uHt.value = ht; flU.uFlick.value = fk;
-        renderer.setRenderTarget(flameRT); renderer.setClearColor(0x000000, 1); renderer.clear();
+        flU.uT.value = t; flU.uF.value = clamp(fl, 0, 1.3) * (1 - 0.12 * grow); flU.uHt.value = ht; flU.uFlick.value = fk; flU.uSpread.value = 1 + 0.5 * grow;
+        renderer.setClearColor(0x000000, 1);
+        renderer.setRenderTarget(flameRT); renderer.clear();
+        flameRT.scissorTest = true; renderer.setRenderTarget(flameRT);
         renderer.render(flScene, flCam);
-        comp.material.uniforms.tex.value = flameRT.texture; comp.material.uniforms.gain.value = 1;
+        flameRT.scissorTest = false;
+        renderer.setRenderTarget(flameBlur); renderer.clear();
+        flameBlur.scissorTest = true;
+        flBlur.render(renderer, flameBlur);
+        flameBlur.scissorTest = false;
+        comp.material.uniforms.tex.value = flameBlur.texture; comp.material.uniforms.gain.value = 1;
         comp.render(renderer, f.target);
       }
       // sparks
@@ -759,7 +820,7 @@ export function createMacro(ctx) {
       renderer.setRenderTarget(f.target);
     },
     post(shot, f) {
-      return { exposure: 1.0, bloom: 0.8, bloomThreshold: 1.0, streak: 0.14, streakTint: [1.0, 0.72, 0.45], vignette: 0.32, grain: 0.04 };
+      return { exposure: 1.0, bloom: 0.8, bloomThreshold: 1.0, streak: 0.05, streakTint: [1.0, 0.72, 0.45], vignette: 0.32, grain: 0.04 };
     },
   };
 }

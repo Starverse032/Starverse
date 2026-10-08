@@ -325,6 +325,8 @@ export function createGlobe(ctx, earth, { birthTex = null } = {}) {
     },
     clearSprites() { for (const c of U.sprCol.value) c.set(0, 0, 0, 0); },
     sprite(i, x, y, r, rgb, shape = 0) { U.spr.value[i].set(x, y, r, shape); U.sprCol.value[i].set(rgb[0], rgb[1], rgb[2], 1); },
-    render(renderer, target) { fsq.render(renderer, target); },
+    // composite over what is already in the target (stars): the engine runs with autoClear = true,
+    // which would wipe the starfield when the fullscreen pass is drawn
+    render(renderer, target) { const ac = renderer.autoClear; renderer.autoClear = false; fsq.render(renderer, target); renderer.autoClear = ac; },
   };
 }
