@@ -3,7 +3,7 @@
   "zh": "余光",
   "en": "AFTERGLOW"
  },
- "version": "final-1.1 (locked revision after jury + DP review)",
+ "version": "final-1.1 (locked revision after jury + DP review) · v1.1 transitions softened",
  "fps": 24,
  "width": 1920,
  "height": 1080,
@@ -422,8 +422,9 @@
    "camera": "85 mm，锁定",
    "light": "冷白弧光于黑",
    "transitionIn": {
-    "type": "cut",
-    "dur": 0.0
+    "type": "dissolve",
+    "dur": 0.5,
+    "note": "v1.1: softened (was cut)"
    },
    "sound": "涨潮的长尾里浮出单独的 A6 正弦（1760 Hz，轻微颤音，−28 dB）——“在路上的光”，持续到 63.5 淡出；弦乐收成 D2 持续音（ppp）。",
    "notes": "卡① 59.0–63.25。出：匹配剪辑①（弧 → 地平线），64.0。",
@@ -444,8 +445,9 @@
    "camera": "35 mm；先解相机：高度 2033 km，视轴低于当地水平面 44.08°，弧顶 (960,430)，再绕视轴旋转地球让 R_geo 投影到 R；第一帧地平线 = anchors.arc 的二次曲线；之后沿地平线匀速平行漂移（每秒 0.5° 行星弧）+ 1% 推进",
    "light": "蓝黑；地平线一线曙光",
    "transitionIn": {
-    "type": "match",
-    "dur": 0.0
+    "type": "dissolve",
+    "dur": 0.33,
+    "note": "v1.1: softened (was match)"
    },
    "sound": "D2 持续音（ppp）；A6 余音已消失。从轨道上看，地球是无声的。",
    "notes": "出：70.0 硬切到黑。在模块里克隆 earth.js 的 ShaderMaterial（不改共享库）。",
@@ -459,7 +461,11 @@
     "pitchDeg": -44.08
    },
    "post": null,
-   "tc": "01:04.00 → 01:10.00"
+   "tc": "01:04.00 → 01:10.00",
+   "transitionOut": {
+    "type": "fade_to_black",
+    "dur": 0.75
+   }
   },
   {
    "id": "S15",
@@ -495,8 +501,9 @@
    "camera": "35 mm；升降臂 0.4→1.2 m + 仰摇 −5°→+62°（easeInOutSine，7 s）；手持呼吸延续",
    "light": "暖火星 → 冷银河",
    "transitionIn": {
-    "type": "cut",
-    "dur": 0.0
+    "type": "dissolve",
+    "dur": 0.5,
+    "note": "v1.1: softened (was cut)"
    },
    "sound": "噼啪退远（LP 8→1.5 kHz，−10 dB）；夜风（粉红噪声 BP 200–800 Hz，左右去相关，−38 dB）；弦乐温暖铺底 D3–A3（p）。",
    "notes": "出：86.0 硬切。",
@@ -514,8 +521,9 @@
    "camera": "24 mm 固定机位（全片最像一幅画的画面）；手持呼吸 0.5 px",
    "light": "暖点于冷夜",
    "transitionIn": {
-    "type": "cut",
-    "dur": 0.0
+    "type": "dissolve",
+    "dur": 1.0,
+    "note": "v1.1: softened (was cut)"
    },
    "sound": "88.0 A6 回来（玻璃轻钟，−30 dB）：同一个音高，“总有光在路上”。远处噼啪（−40 dB）、风；弦乐 D3–A3（p）。",
    "notes": "卡② 89.5–93.5（cinema_lower 居中，y≈781，落在山脊下方的暗地上）。出：95.0 匹配叠化 0.5 s（以 R 为锚：篝火的暖点 → 轨道上 R 处的一点暖光）。",
@@ -730,8 +738,9 @@
    "camera": "18 mm；贴着 R 那束光的前沿向外飞，侧后方取景：离地距离 d(t)=6000 km·e^{0.49(t−123)}，131.0 约 30 万 km（光是人类的，摄影机骑在它上面——规则 7 的“物理推动”）",
    "light": "暖字流于黑；冷月",
    "transitionIn": {
-    "type": "cut",
-    "dur": 0.0
+    "type": "dissolve",
+    "dur": 0.75,
+    "note": "v1.1: softened (was cut)"
    },
    "sound": "S27 的孤音 E5 在这里被无线电化：独奏小提琴按 min(1, 1 万 km/d) 退场（约 125.5 前），提问者的泛音渐去，变成 E5 纯正弦载波（659.26 Hz + 二次谐波 −30 dB）；城市低鸣按 min(1, 1 万 km/d) 退场。125.0 起以摩尔斯电码键控 “IS ANYONE THERE?”（dit 60 ms，共 129 个单位 ≈ 7.74 s，132.74 结束）；电平 −24 dB(127)→−40 dB(131)。",
    "notes": "入：硬切。出：连续（同一模块）。",
@@ -749,8 +758,9 @@
    "camera": "35 mm；相机与字流前沿同行，相对速度逐渐减小，133.0 停住（easeOutCubic）",
    "light": "黑",
    "transitionIn": {
-    "type": "cut",
-    "dur": 0.0
+    "type": "dissolve",
+    "dur": 0.75,
+    "note": "v1.1: softened (was cut)"
    },
    "sound": "摩尔斯最后一个“?”（..--..）在 132.74 结束——就在最后一个“？”抵达 R 之前；载波 −60 dB 收尾，135.0 归零；只剩接收机嘶声（−62 dB，LP 2 kHz）：近静默 2 s，到 137.0 第一声脉冲。不是数字零。",
    "notes": "出：黑切黑，看不出剪辑。",
@@ -901,8 +911,9 @@
    "camera": "100 mm，近，极浅景深；几乎静止（漂移 0.3%/s）",
    "light": "暖得像一盏小夜灯",
    "transitionIn": {
-    "type": "cut",
-    "dur": 0.0
+    "type": "dissolve",
+    "dur": 0.5,
+    "note": "v1.1: softened (was cut)"
    },
    "sound": "一切退场，只剩一个玻璃弓奏的 A4 持续——问题中间的那个音，问到一半。",
    "notes": "片内字幕：中文「……或许，他也不知道。」（w_sea 在屏幕空间自绘，Noto Serif CJK SC Light 26 px，基线 862）+ 英文 — or perhaps he does not know.（cards.js subtitle，基线 900），180.5–184.0。这句要加进 voices.js（RV 10.129.7）。出：硬切。",
@@ -920,8 +931,9 @@
    "camera": "50 mm；微微后拉，188.0 停稳——此后的构图就是 S38 的锁定机位",
    "light": "暖",
    "transitionIn": {
-    "type": "cut",
-    "dur": 0.0
+    "type": "dissolve",
+    "dur": 0.5,
+    "note": "v1.1: softened (was cut)"
    },
    "sound": "所有“众问者”声部缓缓滑向同一个 E5 同度并渐弱；188.5 字的呼吸声淡入（−44 dBFS）；189.0 音乐归于静默，只剩呼吸；191.0“嗒”——心跳回来了。",
    "notes": "片内字幕 Is anyone there?（188.0–191.75）。运动模糊 4 子帧只在 185–188 使用。",
@@ -1024,8 +1036,9 @@
    "camera": "35 mm；相机距离：219–224 近乎静止（9000 km 高度，k≈0.03/s）；224.0 起指数后拉，k 在 1 s 内升到 1.6/s 后恒定，228.0 地球圆盘半径约 4 px",
    "light": "暖白点 + 琥珀夜面 + 冷星",
    "transitionIn": {
-    "type": "cut",
-    "dur": 0.0
+    "type": "dissolve",
+    "dur": 0.75,
+    "note": "v1.1: softened (was cut)"
    },
    "sound": "Asus2 渐强到 224.0 最暖（mf：最暖，不是最响），一直延续到黑场以后。",
    "notes": "卡⑤ 224.0–227.5（切黑前 1 s 淡出）；卡在场时卡的包围盒内地球灯光 ×0.5。出：228.5 硬切到黑——正好落在光标的“灭”相位上（和弦不断）。原 S41 并入本镜。",
