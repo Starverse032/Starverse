@@ -45,14 +45,19 @@ export function buildBirth() {
   const N = GW * GH;
   const cost = new Float32Array(N);
   const r = rng(1855);
-  // value-noise jitter field (coarse lattice, bilinear)
-  const LW = 36, LH = 32, lat = new Float32Array(LW * LH).map(() => r());
-  const vn = (x, y) => {
-    const fx = x * (LW - 1), fy = y * (LH - 1), ix = Math.min(LW - 2, fx | 0), iy = Math.min(LH - 2, fy | 0), tx = fx - ix, ty = fy - iy;
-    const s = t => t * t * (3 - 2 * t);
-    const a = lat[iy * LW + ix], b = lat[iy * LW + ix + 1], c = lat[(iy + 1) * LW + ix], d = lat[(iy + 1) * LW + ix + 1];
-    return (a + (b - a) * s(tx)) * (1 - s(ty)) + (c + (d - c) * s(tx)) * s(ty);
+  // value-noise jitter fields (bilinear lattices at ~4°, ~0.8° and ~0.3°): the travel cost varies
+  // over every scale, so the front never reads as a geometric ring — it fingers ahead along easy
+  // ground and lags in pockets, as settlement actually spread
+  const lattice = (LW, LH) => {
+    const lat = new Float32Array(LW * LH).map(() => r());
+    return (x, y) => {
+      const fx = x * (LW - 1), fy = y * (LH - 1), ix = Math.min(LW - 2, fx | 0), iy = Math.min(LH - 2, fy | 0), tx = fx - ix, ty = fy - iy;
+      const s = t => t * t * (3 - 2 * t);
+      const a = lat[iy * LW + ix], b = lat[iy * LW + ix + 1], c = lat[(iy + 1) * LW + ix], d = lat[(iy + 1) * LW + ix + 1];
+      return (a + (b - a) * s(tx)) * (1 - s(ty)) + (c + (d - c) * s(tx)) * s(ty);
+    };
   };
+  const vn = lattice(36, 32), vn2 = lattice(176, 152), vn3 = lattice(470, 400);
   for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
     const i = y * GW + x, o = i * 4;
     const lon = lo0 + (x + 0.5) * STEP, la = la1 - (y + 0.5) * STEP;
@@ -74,7 +79,7 @@ export function buildBirth() {
       if (sah || arab) k = 1.8;
       if (rv > 0.2) k = Math.min(k, 0.16 + 0.2 * (1 - rv));        // the Nile corridor
     }
-    k *= 0.75 + 0.5 * vn(x / GW, y / GH);
+    k *= (0.75 + 0.5 * vn(x / GW, y / GH)) * Math.exp(1.1 * (vn2(x / GW, y / GH) - 0.5) + 0.9 * (vn3(x / GW, y / GH) - 0.5));
     cost[i] = k;
   }
   // Dijkstra from R_geo
@@ -118,6 +123,10 @@ export function buildBirth() {
   tex.needsUpdate = true;
   const probe = {};
   for (const [n, ll] of Object.entries({ Victoria: [33.2, 0.4], Khartoum: [32.5, 15.6], Cairo: [31.24, 30.05], Alex: [29.9, 31.2], Jerusalem: [35.2, 31.8], Istanbul: [28.97, 41.02], Rome: [12.5, 41.9], Paris: [2.35, 48.86], Lagos: [3.39, 6.45], Joburg: [28, -26.2], Riyadh: [46.7, 24.6], Tehran: [51.4, 35.7] })) probe[n] = +(at(...ll) / ref).toFixed(3);
+  for (const km of [50, 150, 300, 600, 1200]) for (const [nm, dx, dy] of [['N', 0, 1], ['E', 1, 0], ['S', 0, -1], ['W', -1, 0]]) {
+    const lon = R_GEO[0] + dx * km / 111.32, la = R_GEO[1] + dy * km / 111.32;
+    probe[nm + km] = +(at(lon, la) / ref).toFixed(4);
+  }
   return { tex, probe };
 }
 

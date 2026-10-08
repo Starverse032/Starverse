@@ -56,8 +56,8 @@ export function createAntenna(ctx) {
 
   // ---- sky: the shared Milky Way, placed so the band climbs behind the dish from lower left ---------
   const gal = bakeGalaxy(ctx);
-  const M = skyFrame(skyCam, [860, 600], 36, 38, -1.0);
-  const stars = makeStars(ctx, gal, { count: 110000, seed: 2323 });
+  const M = skyFrame(skyCam, [900, 560], 36, 16, -1.0);
+  const stars = makeStars(ctx, gal, { count: 300000, seed: 2323 });
   stars.setFrame(M);
   stars.uniforms.uExt.value = 0.16; stars.uniforms.uGain.value = 1.25;
   const starScene = new THREE.Scene(); starScene.add(stars.pts);
@@ -107,7 +107,7 @@ export function createAntenna(ctx) {
       vec3 col = skyBase(el, 1.15);
       // the airglow: a faint green layer ~10° up, brightest towards the horizon (van Rhijn)
       col += uAirC * 0.0085 * exp(-pow((el / DG - 9.0) / 7.0, 2.0)) + uAirC * 0.0040 * exp(-max(el, 0.0) / 0.30);
-      col += galaxy(uGal, uM, d, uL, uB) * extinction(el, 0.16) * 0.26;
+      col += galaxy(uGal, uM, d, uL, uB) * extinction(el, 0.16) * 0.30;
       gl_FragColor = vec4(col, 1.0);
     }`, U);
   // hills: premultiplied "over" (they hide the stars); also writes the near floor in a second pass
@@ -277,7 +277,7 @@ export function createAntenna(ctx) {
     void main(){
       vec2 px = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) / uS - vec2(${RX.toFixed(1)}, ${RY.toFixed(1)});
       float r2 = dot(px, px);
-      float core = exp(-0.5 * r2 / (1.25 * 1.25)), halo = exp(-sqrt(r2) / 7.0) * 0.035;
+      float core = exp(-0.5 * r2 / (1.25 * 1.25)), halo = exp(-sqrt(r2) / 9.0) * 0.06;
       gl_FragColor = vec4(uFeed * uI * (core + halo) + vec3(1.0, 0.75, 0.7) * uI * 0.35 * exp(-0.5 * r2 / 0.36), 1.0);
     }`, { uRes: U.uRes, uS: U.uS, uI: { value: 2.0 }, uFeed: lineU.uFeed }, { blending: THREE.AdditiveBlending, transparent: true });
 

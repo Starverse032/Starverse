@@ -21,12 +21,12 @@ import { rng } from '../../lib/util.js';
 import { lonLatDir, enu, R_EARTH_KM, NILE_MAIN, NILE_ROSETTA, NILE_DAMIETTA, SEINE } from './geo.js';
 
 export const PATCHES = {
-  nairobi: { lon: 36.8, lat: -1.3, sizeKm: 640, res: 4096, seed: 11, rural: 0.05, roadGain: 0.45, radLen: 0.6, warpKm: 3.5, glow: 0.55 },
+  nairobi: { lon: 36.8, lat: -1.3, sizeKm: 320, edge: 0.42, res: 4096, seed: 11, rural: 0.05, roadGain: 0.45, radLen: 0.6, warpKm: 3.5, glow: 0.8, gain: 1.8, darkPoly: [[[36.77, -1.325], [36.86, -1.315], [36.93, -1.33], [36.965, -1.37], [36.93, -1.43], [36.84, -1.425], [36.78, -1.39]]] },
   delta:   { lon: 31.0, lat: 30.45, sizeKm: 420, res: 4096, seed: 12, nile: true, coast: 0.3, gain: 0.7 },
-  naples:  { lon: 14.2, lat: 40.95, sizeKm: 300, res: 4096, seed: 13, coast: 0.55, rural: 0.22 },
+  naples:  { lon: 14.2, lat: 40.95, sizeKm: 300, res: 4096, seed: 13, coast: 1.0, rural: 0.34, gain: 1.35, roadGain: 0.55, dark: [[14.426, 40.821, 3.6]] },
   paris:   { lon: 2.35, lat: 48.86, sizeKm: 120, res: 4096, seed: 14, rivers: [SEINE], rural: 0.15 },
-  europe:  { lon: 6.6, lat: 50.9, sizeKm: 900, res: 4096, seed: 15, rural: 0.42, gain: 1.35 },
-  fishing: { lon: 130.3, lat: 37.0, sizeKm: 560, res: 4096, seed: 16, fleet: true, coast: 0.35, rural: 0.12 },
+  europe:  { lon: 6.6, lat: 50.9, sizeKm: 900, res: 4096, seed: 15, rural: 0.26, gain: 1.35, roadGain: 1.7, radLen: 0.55 },
+  fishing: { lon: 130.3, lat: 37.0, sizeKm: 560, res: 4096, seed: 16, fleet: true, fleetAt: [129.86, 36.235], coast: 0.8, rural: 0.12, gain: 1.4 },
 };
 
 function frameOf(P) {
@@ -98,6 +98,18 @@ function vectorCanvas(P, F, uvOf, places) {
   // (the Nile branches are 0.3–0.9 km wide: unresolved from orbit at night, so no dark mask —
   //  they show as the strings of brighter towns along them, see densityCanvas)
   for (const rv of P.rivers || []) rivers.push([rv, 0.16]);
+  // unlit ground polygons (G channel): Nairobi National Park, the dark wedge under the city
+  for (const poly of P.darkPoly || []) {
+    const pts = fractalize(poly.map(q => px(q[0], q[1])).concat([px(poly[0][0], poly[0][1])]), 3, 0.14, N);
+    g.fillStyle = 'rgb(0,230,0)'; g.beginPath(); g.moveTo(...pts[0]); for (const q of pts) g.lineTo(...q); g.closePath(); g.fill();
+  }
+  // unlit ground (G channel): Vesuvius' cone is a dark disc ringed by the towns on its flanks
+  for (const [dlon, dlat, rKm] of P.dark || []) {
+    const [x, y] = px(dlon, dlat), rr = rKm * kmPx;
+    const gr = g.createRadialGradient(x, y, 0, x, y, rr);
+    gr.addColorStop(0, 'rgba(0,255,0,1)'); gr.addColorStop(0.6, 'rgba(0,255,0,0.9)'); gr.addColorStop(1, 'rgba(0,255,0,0)');
+    g.fillStyle = gr; g.beginPath(); g.arc(x, y, rr, 0, 6.283); g.fill();
+  }
   g.lineCap = 'round'; g.lineJoin = 'round';
   for (const [line, wkm] of rivers) {
     const pts = fractalize(line.map(p => px(p[0], p[1])), 3, 0.09, N);
@@ -120,29 +132,39 @@ function vectorCanvas(P, F, uvOf, places) {
     }
   }
   for (const p of top) {
-    const radKm = 2.2 * Math.pow(p.pop / 1e4, 0.42);
-    const nR = Math.min(10, 4 + Math.floor(Math.log10(p.pop / 1e4) * 2.5));
+    const radKm = Math.min(21, 2.2 * Math.pow(p.pop / 1e4, 0.42));
+    // radial arterials: only real cities get a star of avenues (a 30 000-person town with eight
+    // spokes reads as an asterisk); they start a little out from the centre (no single bright hub),
+    // swell to full brightness at ~20 % of their length and then fade into the countryside
+    const lp = Math.log10(p.pop / 1e4);
+    const nR = p.pop < 1e5 ? 2 + (r() < 0.5 ? 1 : 0) : Math.min(9, 3 + Math.floor(lp * 2.0));
     const a0 = r() * 6.283;
     for (let k = 0; k < nR; k++) {
-      const ang = a0 + k * 6.283 / nR + (r() - 0.5) * 0.5;
-      const len = radKm * (0.7 + r() * 0.9) * (P.radLen ?? 1) * kmPx;
-      const steps = 28; let x = p.x, y = p.y, an = ang;
+      const ang = a0 + k * 6.283 / nR + (r() - 0.5) * 0.7;
+      const len = radKm * (0.9 + r() * 0.7) * (P.radLen ?? 1) * kmPx * (p.pop < 1e5 ? 0.6 : 1);
+      const steps = 28; let an = ang;
+      let x = p.x + Math.cos(an) * radKm * 0.12 * kmPx, y = p.y + Math.sin(an) * radKm * 0.12 * kmPx;
       for (let s = 0; s < steps; s++) {
         const f = s / steps;
         const nx = x + Math.cos(an) * len / steps, ny = y + Math.sin(an) * len / steps;
-        an += (r() - 0.5) * 0.22;
-        const I = Math.pow(1 - f, 2.2) * Math.min(0.6, 0.18 + 0.1 * Math.log10(p.pop / 1e4));
+        an += (r() - 0.5) * 0.3;
+        const I = Math.min(1, f / 0.2) * Math.pow(1 - f, 2.6) * Math.min(0.45, 0.12 + 0.09 * lp) * (p.pop < 1e5 ? 0.6 : 1);
         g.strokeStyle = `rgba(0,0,255,${(0.9 * I).toFixed(3)})`;
-        g.lineWidth = Math.max(1.0, (0.06 + 0.06 * (1 - f)) * kmPx);
+        g.lineWidth = Math.max(1.0, (0.05 + 0.04 * (1 - f)) * kmPx);
         g.beginPath(); g.moveTo(x, y); g.lineTo(nx, ny); g.stroke();
         x = nx; y = ny;
       }
     }
     // ring road for the big ones
     if (p.pop > 3e6) {
-      g.strokeStyle = 'rgba(0,0,255,0.32)'; g.lineWidth = Math.max(1.0, 0.08 * kmPx);
+      g.strokeStyle = 'rgba(0,0,255,0.22)'; g.lineWidth = Math.max(1.0, 0.07 * kmPx);
       g.beginPath();
-      for (let k = 0; k <= 64; k++) { const an = k / 64 * 6.283; const rr = radKm * 0.24 * kmPx * (1 + 0.06 * Math.sin(an * 3 + p.x)); const q = [p.x + Math.cos(an) * rr, p.y + Math.sin(an) * rr]; k ? g.lineTo(...q) : g.moveTo(...q); }
+      const ph = [r() * 6.3, r() * 6.3, r() * 6.3];
+      for (let k = 0; k <= 96; k++) {
+        const an = k / 96 * 6.283;
+        const rr = radKm * 0.3 * kmPx * (1 + 0.1 * Math.sin(an * 2 + ph[0]) + 0.06 * Math.sin(an * 3 + ph[1]) + 0.04 * Math.sin(an * 5 + ph[2]));
+        const q = [p.x + Math.cos(an) * rr * 1.15, p.y + Math.sin(an) * rr * 0.87]; k ? g.lineTo(...q) : g.moveTo(...q);
+      }
       g.stroke();
     }
   }
@@ -150,7 +172,7 @@ function vectorCanvas(P, F, uvOf, places) {
 }
 
 function densityCanvas(P, F, uvOf, places) {
-  const N = 1024, c = document.createElement('canvas'); c.width = N; c.height = N;
+  const N = 2048, c = document.createElement('canvas'); c.width = N; c.height = N;
   const g = c.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, N, N);
   g.globalCompositeOperation = 'lighter';
   const kmPx = N / P.sizeKm;
@@ -161,7 +183,7 @@ function densityCanvas(P, F, uvOf, places) {
   };
   for (const p of places) {
     const x = p.u * N, y = (1 - p.v) * N;
-    const radKm = 2.0 * Math.pow(p.pop / 1e4, 0.42);
+    const radKm = Math.min(19, 2.0 * Math.pow(p.pop / 1e4, 0.42));     // megacities: ~40 km across, not 80
     blob(x, y, radKm * kmPx * 1.1, Math.min(0.95, 0.42 + 0.16 * Math.log10(p.pop / 1e4)));
     // green channel: "core" (LED) fraction for dense centres
     if (p.pop > 4e5) {
@@ -176,6 +198,7 @@ function densityCanvas(P, F, uvOf, places) {
     g.lineJoin = 'round';
     for (const [w, a] of [[9, 0.35], [3.5, 0.6]]) {
       g.strokeStyle = `rgba(255,0,0,${(a * P.coast).toFixed(3)})`; g.lineWidth = w * kmPx;
+      g.filter = `blur(${(0.3 * w * kmPx).toFixed(1)}px)`;                // a shore band fades inland, it has no inner edge
       for (const r of LAND) {
         let near = false;
         for (let i = 0; i < r.length; i += 2) { const [u, v] = uvOf(r[i], r[i + 1]); if (u > -0.2 && u < 1.2 && v > -0.2 && v < 1.2) { near = true; break; } }
@@ -193,6 +216,7 @@ function densityCanvas(P, F, uvOf, places) {
       }
     }
   }
+  g.filter = 'none';
   if (P.nile) {
     // the Nile valley ribbon and the densely farmed delta fan (villages everywhere between the branches)
     const px = (lon, lat) => { const [u, v] = uvOf(lon, lat); return [u * N, (1 - v) * N]; };
@@ -206,7 +230,7 @@ function densityCanvas(P, F, uvOf, places) {
     fan.lineTo(...px(30.9, 31.5)); fan.lineTo(...px(31.5, 31.45)); fan.lineTo(...px(32.15, 31.25));
     for (const q of NILE_DAMIETTA.slice().reverse()) fan.lineTo(...px(q[0] + 0.15, q[1])); fan.closePath();
     // a low even floor of farm hamlets …
-    g.fillStyle = 'rgba(255,0,0,0.34)'; g.filter = 'blur(4px)'; g.fill(fan); g.filter = 'none';
+    g.fillStyle = 'rgba(255,0,0,0.26)'; g.filter = 'blur(8px)'; g.fill(fan); g.filter = 'none';
     // … and a hierarchy of market towns on top (denser and brighter along the two branches)
     const rr = rng(P.seed * 31 + 5);
     const town = (x, y, radKm, a) => {
@@ -216,36 +240,44 @@ function densityCanvas(P, F, uvOf, places) {
       g.fillStyle = gr; g.beginPath(); g.arc(x, y, rad, 0, 6.283); g.fill();
     };
     const [bx0, by0] = px(29.7, 31.7), [bx1, by1] = px(32.4, 29.9);
-    for (let i = 0, made = 0; i < 20000 && made < 520; i++) {
+    // ~3000 farm villages (0.4–1.2 km, the delta's real texture: a dense mesh of small bright towns)
+    for (let i = 0, made = 0; i < 90000 && made < 4600; i++) {
       const x = bx0 + (bx1 - bx0) * rr(), y = by0 + (by1 - by0) * rr();
       if (!g.isPointInPath(fan, x, y)) continue;
-      made++; town(x, y, 2.0 * Math.exp(rr.gauss() * 0.45), 0.12 + 0.3 * Math.pow(rr(), 2));
+      made++; town(x, y, 0.6 * Math.exp(rr.gauss() * 0.35), 0.65 + 0.4 * Math.pow(rr(), 2));
+    }
+    // a few hundred market towns
+    for (let i = 0, made = 0; i < 20000 && made < 260; i++) {
+      const x = bx0 + (bx1 - bx0) * rr(), y = by0 + (by1 - by0) * rr();
+      if (!g.isPointInPath(fan, x, y)) continue;
+      made++; town(x, y, 1.6 * Math.exp(rr.gauss() * 0.4), 0.15 + 0.35 * Math.pow(rr(), 2));
     }
     for (const br of [NILE_ROSETTA, NILE_DAMIETTA, NILE_MAIN.slice(-4)]) {
       for (let s2 = 0; s2 < br.length - 1; s2++) for (let k = 0; k < 9; k++) {
         const t = rr(), a = br[s2], b = br[s2 + 1];
         const [x, y] = px(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t);
-        town(x + rr.gauss() * 2.5 * kmPx, y + rr.gauss() * 2.5 * kmPx, 2.6 * Math.exp(rr.gauss() * 0.4), 0.18 + 0.3 * rr());
+        town(x + rr.gauss() * 2.5 * kmPx, y + rr.gauss() * 2.5 * kmPx, 1.4 * Math.exp(rr.gauss() * 0.4), 0.25 + 0.35 * rr());
       }
     }
   }
   // soften
   const c2 = document.createElement('canvas'); c2.width = N; c2.height = N; const g2 = c2.getContext('2d');
-  g2.filter = 'blur(3px)'; g2.drawImage(c, 0, 0);
+  g2.filter = 'blur(2px)'; g2.drawImage(c, 0, 0);
   return c2;
 }
 
 const BAKE = /* glsl */ `
-uniform sampler2D vecT, denT; uniform float sizeKm, texKm, fleet, seed, nile, rural, roadGain, warpKm, glowK;
+uniform sampler2D vecT, denT; uniform vec2 fleetT; uniform float sizeKm, texKm, fleet, seed, nile, rural, roadGain, warpKm, glowK;
 // 2D Voronoi (3×3): returns (F1, approximate distance to the nearest cell edge) in cell units
-vec2 vor(vec2 x, float sd){
-  vec2 n = floor(x), f = fract(x); float f1 = 8.0, f2 = 8.0;
+vec4 vor(vec2 x, float sd){     // (F1, distance to the nearest edge, id of the cell, id of the edge)
+  vec2 n = floor(x), f = fract(x); float f1 = 8.0, f2 = 8.0; float id = 0.0, id2 = 0.0;
   for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
     vec2 g = vec2(float(i), float(j)); vec2 o = hash22(n + g + sd);
     vec2 r = g + o - f; float d = dot(r, r);
-    if (d < f1) { f2 = f1; f1 = d; } else if (d < f2) f2 = d;
+    float h = fract(o.x * 17.13 + o.y * 3.71);
+    if (d < f1) { f2 = f1; id2 = id; f1 = d; id = h; } else if (d < f2) { f2 = d; id2 = h; }
   }
-  return vec2(sqrt(f1), 0.5 * (sqrt(f2) - sqrt(f1)));
+  return vec4(sqrt(f1), 0.5 * (sqrt(f2) - sqrt(f1)), id, fract((id + id2) * 37.7 + id * id2 * 11.3));
 }
 // point lights on a jittered lattice; presence ∝ density; returns summed gaussian (texel-sized PSF)
 float dots(vec2 x, float cellKm, float pres, float psfKm, float sd, out float hue){
@@ -256,7 +288,7 @@ float dots(vec2 x, float cellKm, float pres, float psfKm, float sd, out float hu
     if (h.z > pres) continue;
     vec2 p = (c + 0.15 + 0.7 * h.xy) * cellKm;
     float d2 = dot(x - p, x - p) / (psfKm * psfKm);
-    float b = exp(-d2) * (0.35 + 1.3 * pow(fract(h.x * 13.7 + h.y * 7.1), 3.0));
+    float b = exp(-d2) * (0.2 + 2.6 * pow(fract(h.x * 13.7 + h.y * 7.1), 5.0));
     s += b; hue += b * fract(h.y * 31.3);
   }
   hue = s > 0.0 ? hue / s : 0.5;
@@ -282,29 +314,51 @@ void main(){
     float lob = vnoise(p * 0.09 + seed * 1.7) * 0.78 + vnoise(p * 0.31 + seed * 2.3) * 0.22;
     float Dm = D * (0.55 + 0.9 * lob);
     if (nile > 0.5) Dm = D * (0.8 + 0.4 * lob);               // the delta is farmed evenly: no big lobes
-    // street blocks: coarse (suburbs) + fine (dense core) Voronoi edges, line width ≥ 1 texel
-    vec2 v1 = vor(w / 0.6, seed), v2 = vor(w / 0.2, seed + 3.0);
-    float lw = max(px * 0.7, 0.02);
-    float e1 = exp(-pow(v1.y * 0.6 / lw, 2.0)), e2 = exp(-pow(v2.y * 0.2 / lw, 2.0));
-    // band-limit: when a block is only a few texels wide, replace its edges by their mean coverage
-    e1 = mix(2.4 * lw / 0.6, e1, smoothstep(2.5, 6.0, 0.6 / px));
-    e2 = mix(2.4 * lw / 0.2, e2, smoothstep(2.5, 6.0, 0.2 / px));
+    // urban fabric (the "chessboard"): Voronoi districts ~1.3 km across, each with its own street
+    // grid (orientation and block size from the district's hash: 110–210 m blocks) — like a real
+    // city's quarters laid out at different times — bounded by brighter arterials along the district
+    // edges. Blocks carry their own brightness (housing, a dark rail yard, a floodlit depot).
+    // Lines are never thinner than a texel and are replaced by their mean coverage once a block
+    // spans only a few texels (band-limited for every footprint the patch is seen at).
+    vec4 dv = vor(w / 1.3, seed + 5.0);
+    float th = dv.z * 3.14159, sp = (0.11 + 0.10 * fract(dv.z * 7.31)) * mix(1.0, 0.7, smoothstep(0.6, 1.0, D));
+    vec2 rq = mat2(cos(th), -sin(th), sin(th), cos(th)) * w / sp;
+    vec2 fq = fract(rq); vec2 dl = (0.5 - abs(fq - 0.5)) * sp;     // km to the nearest grid line, per axis
+    float lw = max(px * 0.6, 0.012);
+    float kg = smoothstep(2.5, 5.0, sp / px), kd = smoothstep(2.5, 6.0, 1.3 / px);
+    float gl = max(exp(-pow(dl.x / lw, 2.0)), exp(-pow(dl.y / lw, 2.0)));
+    gl = mix(min(1.0, 3.4 * lw / sp), gl, kg);
+    // only some district edges are arterials (a city is not a turtle shell), the rest are ordinary streets
+    float artW = dv.w < 0.42 ? 1.0 : 0.22;
+    float art = exp(-pow(dv.y * 1.3 / (lw * 1.6), 2.0));
+    art = mix(min(1.0, 4.0 * lw / 1.3), art, kd) * artW;
+    art *= smoothstep(0.5, 0.9, Dm);                          // arterials belong to the dense city, not to every hamlet
+    float bh = hash12(floor(rq) + dv.z * 91.0);
+    // unresolved blocks: each district keeps its own mean brightness (a mottled patchwork of quarters
+    // instead of a smooth glow); resolved: per-block variation (sparse fringe: no mosaic)
+    float blkU = mix(0.6, 0.25 + 0.9 * fract(dv.z * 5.37), kd);
+    float blk = mix(blkU, mix(0.45 + 0.4 * bh, 0.12 + 1.2 * bh * bh, smoothstep(0.35, 0.8, Dm)), kg);
     float dense = smoothstep(0.35, 0.95, Dm);
     // brightness follows density continuously (no thresholds that flatten towns into plateaus):
-    //   glow    = the unresolved street grid, ∝ density² and broken by sub-km grain
-    //   streets = resolved block edges, only where blocks are large enough and dense enough
+    //   glow    = lit blocks (the unresolved fabric), ∝ density² × block brightness × grain
+    //   streets = the street grid + district arterials, where the town is dense enough to have them
     //   vil     = discrete point lights: hamlets in the countryside, a finer layer in towns
-    float glow = pow(Dm, 2.2) * 0.5 * glowK * (0.55 + 0.9 * vnoise(p * 3.1 + seed * 7.0));
-    float streets = (e1 * (1.0 - dense * 0.5) + e2 * dense) * smoothstep(0.3, 0.85, Dm) * Dm * 0.8;
-    streets *= 0.45 + 0.55 * vnoise(p * 1.7 + seed);          // lamps are not a continuous tube
+    float grain = 0.5 + 1.0 * vnoise(p * 2.3 + seed * 7.0) * (0.5 + vnoise(p * 7.9 + seed * 3.0));
+    // a town has an edge: the built-up fabric switches on over a narrow density range (lobed by the
+    // warp above), outside it only scattered lamps remain — no soft "galaxy" halo of light
+    float urb = smoothstep(0.16, 0.5, Dm);
+    float glow = pow(Dm, 1.7) * urb * 0.32 * glowK * grain * blk;
+    float streets = (gl * 0.55 + art * 1.1) * smoothstep(0.42, 0.9, Dm) * Dm;
+    streets *= 0.45 + 0.55 * vnoise(p * 1.7 + seed) * (0.6 + 0.8 * vnoise(p * 9.0 + seed));   // lamps are not a continuous tube
     float hue, hue2;
-    float vil = dots(p, 1.15, clamp(Dm * 1.6, 0.0, 0.9), max(px * 0.8, 0.07), seed + 9.0, hue) * (0.35 + 1.1 * Dm)
-              + dots(p, 0.42, clamp((Dm - 0.25) * 1.5, 0.0, 0.8), max(px * 0.8, 0.05), seed + 13.0, hue2) * 0.45 * Dm;
+    float vil = dots(p, 1.15, clamp(Dm * 1.6 - 0.04, 0.0, 0.9), max(px * 0.8, 0.04), seed + 9.0, hue) * (0.35 + 1.1 * Dm)
+              + dots(p, 0.42, clamp((Dm - 0.25) * 1.5, 0.0, 0.8), max(px * 0.8, 0.035), seed + 13.0, hue2) * 0.55 * Dm;
     float park = 1.0 - 0.55 * smoothstep(0.58, 0.82, vnoise(p * 0.55 + seed * 3.0)) * smoothstep(0.6, 0.9, Dm) * (1.0 - nile);
     float rd = roadGain * road * (0.3 + 0.7 * smoothstep(0.35, 0.65, vnoise(p * 1.9 + seed * 5.0)));   // highways read as strings of lamps
-    float I = (glow + streets + vil * 0.6 + rd * (0.9 + 0.8 * Dm)) * park;
+    float I = (glow + streets + vil * (0.6 + 0.5 * (1.0 - dense)) + rd * (0.9 + 0.8 * Dm)) * park;
+    I = I / (1.0 + 0.3 * I) * 1.25;                           // soft knee: dense cores saturate like film, not into a bloom ball
     vec3 c = mix(SOD, WARM, 0.35 * hue);
-    c = mix(c, LED, smoothstep(0.15, 0.6, core) * 0.75 * dense);
+    c = mix(c, LED, smoothstep(0.15, 0.6, core) * 0.55 * dense);
     col = c * I;
   }
   col *= land * (1.0 - 0.95 * river);
@@ -313,11 +367,34 @@ void main(){
     // squid-fishing fleets: bands and clots of very bright lamps on open water (> 15 km offshore)
     float off = 1.0 - smoothstep(0.0, 0.25, land);
     vec2 q = p * vec2(0.0042, 0.0105); q += 0.8 * vec2(vnoise(p * 0.006 + 3.0), vnoise(p * 0.006 + 9.0));
-    float band = smoothstep(0.52, 0.72, vnoise(q * 3.0) * 0.65 + vnoise(q * 7.0) * 0.35);
-    float hue;
-    float boats = dots(p, 3.2, band * 0.8, max(px * 0.9, 0.12), seed + 21.0, hue);
-    // each boat burns hundreds of kilowatts of lamps: brilliant points (they bloom into a constellation)
-    col += mix(vec3(1.0, 0.56, 0.17), vec3(1.0, 0.85, 0.6), hue) * boats * 26.0 * off;
+    float band = smoothstep(0.52, 0.72, vnoise(q * 3.0) * 0.65 + vnoise(q * 7.0) * 0.35) * 0.3;
+    // the S22A composition: two meandering fleet lanes cross the frame diagonally (WNW–ESE on the
+    // ground, lower-left → upper-right on screen) through the camera's target point fleetT
+    vec2 fd = vec2(-0.891, 0.454), fnrm = vec2(-fd.y, fd.x);
+    vec2 fr = p - fleetT; float fs = dot(fr, fd), fo = dot(fr, fnrm);
+    float o1 = fo - 6.0 * sin(fs / 21.0) - 2.5 * sin(fs / 8.0 + 1.3);
+    float lane1 = exp(-pow(o1 / 4.5, 2.0)) * smoothstep(0.2, 0.55, vnoise(vec2(fs / 13.0, 3.0)));
+    float o2 = fo + 22.0 - 4.0 * sin(fs / 16.0 + 2.0);
+    float lane2 = exp(-pow(o2 / 3.2, 2.0)) * smoothstep(0.35, 0.7, vnoise(vec2(fs / 10.0, 9.0)));
+    band = max(band, max(lane1, lane2 * 0.85));
+    // boats: fully jittered (no lattice), each a brilliant point plus a faint pool of lit water
+    vec3 boats = vec3(0.0);
+    for (int L = 0; L < 2; L++) {
+      float cell = L == 0 ? 2.1 : 1.1, pres = L == 0 ? band * 0.6 : band * band * band * 0.3;
+      vec2 qq = p / cell; vec2 c0 = floor(qq);
+      for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
+        vec2 c = c0 + vec2(float(i), float(j));
+        vec3 h = hash33(vec3(c, seed + 21.0 + float(L) * 7.0));
+        if (h.z > pres) continue;
+        vec2 bp = (c + 0.05 + 0.9 * h.xy) * cell;
+        float d2 = dot(p - bp, p - bp);
+        float b = 0.5 + 1.5 * fract(h.x * 7.3 + h.y * 3.1);
+        float psf = max(px * 0.9, 0.05);
+        vec3 bc = mix(vec3(1.0, 0.56, 0.17), vec3(1.0, 0.86, 0.62), fract(h.y * 11.7));
+        boats += bc * b * (exp(-d2 / (psf * psf)) * 16.0 + exp(-d2 / 0.09) * 0.22);
+      }
+    }
+    col += boats * off;
   }
   gl_FragColor = vec4(col, land);
 }`;
@@ -326,7 +403,7 @@ const VS_UV = /* glsl */ `varying vec2 vUv; void main(){ vUv = uv; gl_Position =
 
 export function createPatchBank(ctx) {
   const { renderer } = ctx;
-  const cache = {};
+  const cache = {}; let useCount = 0;
   function bakePatch(key) {
     const P = PATCHES[key]; const F = frameOf(P); const uvOf = makeUV(F);
     const N = P.res;
@@ -347,7 +424,7 @@ export function createPatchBank(ctx) {
     });
     const mat = new THREE.ShaderMaterial({
       vertexShader: VS_UV, fragmentShader: GLSL.all + '\nvarying vec2 vUv;\n' + BAKE, depthTest: false, depthWrite: false,
-      uniforms: { vecT: { value: vt }, denT: { value: dt }, sizeKm: { value: P.sizeKm }, texKm: { value: P.sizeKm / N }, fleet: { value: P.fleet ? 1 : 0 }, nile: { value: P.nile ? 1 : 0 }, rural: { value: P.rural || 0 }, seed: { value: P.seed }, roadGain: { value: P.roadGain ?? 1 }, warpKm: { value: P.warpKm ?? 0 }, glowK: { value: P.glow ?? 1 } },
+      uniforms: { vecT: { value: vt }, denT: { value: dt }, fleetT: { value: new THREE.Vector2(...(P.fleetAt ? uvOf(...P.fleetAt).map(u => (u - 0.5) * P.sizeKm) : [0, 0])) }, sizeKm: { value: P.sizeKm }, texKm: { value: P.sizeKm / N }, fleet: { value: P.fleet ? 1 : 0 }, nile: { value: P.nile ? 1 : 0 }, rural: { value: P.rural || 0 }, seed: { value: P.seed }, roadGain: { value: P.roadGain ?? 1 }, warpKm: { value: P.warpKm ?? 0 }, glowK: { value: P.glow ?? 1 } },
     });
     const fsq = new FSQ(mat);
     const prev = renderer.getRenderTarget();
@@ -362,10 +439,20 @@ export function createPatchBank(ctx) {
     renderer.setRenderTarget(prev);
     mat.dispose(); vt.dispose(); dt.dispose();
     rt.texture.anisotropy = 8;
-    return { key, tex: rt.texture, c: F.c, e: F.e, n: F.n, half: F.half, res: N, uvOf, P, gain: P.gain ?? 1 };
+    return { key, rt, tex: rt.texture, c: F.c, e: F.e, n: F.n, half: F.half, res: N, uvOf, P, gain: P.gain ?? 1 };
   }
   return {
-    get(key) { if (!cache[key]) cache[key] = bakePatch(key); return cache[key]; },
+    // keep at most two baked patches resident (each is a 4096² HalfFloat target with mips, ~170 MB
+    // of CPU memory under SwiftShader): a worker renders the montage in order, so the cache never thrashes
+    get(key) {
+      if (!cache[key]) {
+        const keys = Object.keys(cache);
+        if (keys.length >= 2) { const old = keys.sort((a, b) => cache[a].used - cache[b].used)[0]; cache[old].rt.dispose(); delete cache[old]; }
+        cache[key] = bakePatch(key);
+      }
+      cache[key].used = ++useCount;
+      return cache[key];
+    },
     frame(key) { return frameOf(PATCHES[key]); },
   };
 }

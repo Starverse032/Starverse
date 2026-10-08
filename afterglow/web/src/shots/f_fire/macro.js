@@ -12,8 +12,9 @@
 //   fully re-lit, re-blurred scene would be. Shadows of the grass wobble because the flame light
 //   moves between three bases.
 //   Live on top: the burning front creeping along the tinder fibres and the Worley crack glow of the
-//   ember (the protagonist, in focus, msaa), the out-of-focus flame (7 advected-noise sheets,
-//   blackbody, half resolution), heat haze (±2 px) on the plate above it, flint sparks and rising
+//   ember (the protagonist, in focus, msaa), the out-of-focus flame (9 advected-noise teardrop sheets,
+//   blackbody, half resolution) and a thin plume of smoke lit from below by it, heat haze (±2 px) on
+//   the plate above it, flint sparks and rising
 //   sparks as motion-blurred capsules with their own bokeh, and the cursor footprint at f1776.
 //
 // Timing (screenplay §3 S15): 70.0–71.5 black · strikes on the off-beats 71.5 (30 sparks, light
@@ -338,10 +339,12 @@ export function createMacro(ctx) {
           trans = 0.55; tcol = vec3(1.0, 0.78, 0.45); rough = 0.5; f0 = 0.045;
         } else if (vMat < 3.5) {                              // tinder fibres
           float sd = vSeed;
-          alb = mix(vec3(0.46, 0.36, 0.22), vec3(0.34, 0.27, 0.18), fract(sd * 5.1));
-          alb = mix(alb, vec3(0.14, 0.09, 0.055), step(0.78, fract(sd * 9.7)));
-          alb *= 0.85 + 0.3 * vnoise(vec2(vRu.x * 40.0, sd * 77.0));
-          trans = 0.6; tcol = vec3(1.0, 0.8, 0.5); rough = 0.55;
+          // pale dry grass and bark shreds; a good part already charred near the lump (dark, matte)
+          alb = mix(vec3(0.42, 0.34, 0.22), vec3(0.28, 0.23, 0.16), fract(sd * 5.1));
+          float charred = step(0.66, fract(sd * 9.7)) + (1.0 - step(0.66, fract(sd * 9.7))) * smoothstep(0.016, 0.006, length(P.xz)) * 0.8;
+          alb = mix(alb, vec3(0.035, 0.028, 0.022), clamp(charred, 0.0, 1.0));
+          alb *= 0.75 + 0.5 * vnoise(vec2(vRu.x * 40.0, sd * 77.0));
+          trans = 0.38 * (1.0 - clamp(charred, 0.0, 1.0)); tcol = vec3(1.0, 0.8, 0.5); rough = 0.6;
         } else {                                              // charred lump
           vec3 q = (P - vec3(0.0, 0.0045, 0.0)) * 500.0;
           float ash = smoothstep(0.55, 0.75, fbm(q, 4));
@@ -520,9 +523,9 @@ export function createMacro(ctx) {
   });
   const flameRT = ctx.makeRT(Math.round(W / 2), Math.round(H / 2));
   const NSHEET = 9;
-  const FL_ROOT = 26;                                         // flame root below R (px): its luminous core sits on R
+  const FL_ROOT = 6;                                          // flame root just below R (px): the ember at R stays visible under it
   const sheets = [];
-  for (let k = 0; k < NSHEET; k++) sheets.push({ dx: (rng() - 0.5) * 56, w: 52 + rng() * 40, h: 0.62 + rng() * 0.42, seed: rng(), gain: 0.55 + rng() * 0.6 });
+  for (let k = 0; k < NSHEET; k++) sheets.push({ dx: (rng() - 0.5) * 46, w: 34 + rng() * 30, h: 0.6 + rng() * 0.55, seed: rng(), gain: 0.5 + rng() * 0.6 });
   sheets.sort((a, b) => b.w - a.w);
   const shGeo = new THREE.BufferGeometry();
   {
@@ -547,7 +550,7 @@ export function createMacro(ctx) {
       uniform float uHt, uSpread; uniform vec2 uBase; varying vec2 vQ; varying vec2 vP;
       void main(){
         float h = uHt * par.z, w = par.y;
-        vec2 px = uBase + vec2(par.x * uSpread * (1.0 - 0.3 * corner.y) + corner.x * w * mix(1.0, uSpread, 0.5), -corner.y * h);
+        vec2 px = uBase + vec2(par.x * uSpread * (1.0 - 0.55 * corner.y) + corner.x * w * mix(1.0, uSpread, 0.5), -corner.y * h);
         vQ = vec2(corner.x, corner.y); vP = vec2(par.w, gain);
         vec4 c = vec4(px.x / 1920.0 * 2.0 - 1.0, 1.0 - px.y / 1080.0 * 2.0, 0.0, 1.0);
         gl_Position = handClip(c);
@@ -556,26 +559,65 @@ export function createMacro(ctx) {
       uniform float uT, uF, uFlick; uniform sampler2D uNoise; varying vec2 vQ; varying vec2 vP;
       void main(){
         float y = vQ.y, sd = vP.x;
-        float spd = 1.25 + 0.5 * sd;
-        vec2 nuv = vec2(vQ.x * 0.16 + sd * 7.31, y * 0.42 - uT * spd * 0.42);
+        // two octaves of noise advected upward (the flame's own buoyant flow), the second warped by the first
+        float spd = 1.3 + 0.6 * sd;
+        vec2 nuv = vec2(vQ.x * 0.18 + sd * 7.31, y * 0.46 - uT * spd * 0.46);
         vec3 n1 = texture2D(uNoise, nuv).rgb;
-        vec3 n2 = texture2D(uNoise, nuv * vec2(2.1, 1.7) + (n1.rg - 0.5) * 0.22 + vec2(0.0, -uT * 0.35)).rgb;
-        float sway = (n1.r - 0.5) * 1.1 * y * y + 0.12 * sin(uT * 2.3 + sd * 9.0) * y;
+        vec3 n2 = texture2D(uNoise, nuv * vec2(2.3, 1.9) + (n1.rg - 0.5) * 0.3 + vec2(0.0, -uT * 0.5)).rgb;
+        // sway grows with height: the root is anchored in the tinder, the tip licks
+        float sway = (n1.r - 0.5) * 1.4 * y * y + 0.16 * sin(uT * (2.1 + 1.5 * sd) + sd * 9.0 - y * 2.6) * y;
         float x = vQ.x - sway;
-        float wy = max(0.62 * pow(max(1.0 - y / 1.18, 0.0), 0.7) * (0.45 + 0.55 * smoothstep(0.0, 0.16, y)), 1e-3);   // > 0: smoothstep(0,0,x) is NaN
-        float body = smoothstep(wy, wy * 0.15, abs(x));
-        float tongue = smoothstep(0.25, 0.75, n2.g * 1.25 + 0.62 - y * 1.05);
-        float dens = body * mix(1.0, tongue, smoothstep(0.08, 0.6, y)) * smoothstep(0.0, 0.05, y + 0.02);
-        float core = smoothstep(wy * 0.65, 0.0, abs(x)) * smoothstep(0.62, 0.08, y) * smoothstep(-0.02, 0.1, y);
-        float T = mix(1250.0, 1950.0, clamp(core * 0.9 + (1.0 - y) * 0.25 + (n2.b - 0.5) * 0.2, 0.0, 1.0));
-        vec3 c = blackbody(T) * (dens * 1.25 + core * 1.0) * vP.y;
-        // the soot-free core of a small flame reads yellow-white: lift green/blue where it is hottest
-        c += vec3(0.30, 0.22, 0.10) * core * core * vP.y;
-        gl_FragColor = vec4(c * uF * uFlick * 1.05, 1.0);
+        // a teardrop: rounded root, widest at ~0.2, a long taper to the tip
+        float wy = 0.44 * sqrt(smoothstep(-0.03, 0.18, y)) * pow(max(1.0 - smoothstep(0.05, 1.22, y), 0.0), 0.8) * (1.0 - 0.5 * y) + 1e-3;
+        float body = smoothstep(wy, wy * 0.25, abs(x));
+        // the upper part tears into separate tongues
+        float tongue = smoothstep(0.2, 0.62, n2.g * 1.25 + 0.72 - y * 1.1 + 0.3 * (n1.b - 0.5));
+        // the root rises out of the burning tinder: no hard bottom edge
+        float dens = body * mix(1.0, tongue, smoothstep(0.04, 0.45, y)) * smoothstep(-0.04, 0.2, y + 0.06 * (n1.g - 0.5));
+        // temperature: hottest low in the middle (the luminous soot zone), cooling to the tips
+        float core = smoothstep(wy * 0.8, 0.0, abs(x)) * exp(-pow((y - 0.22) / 0.25, 2.0));
+        float T = 1050.0 + 880.0 * clamp(0.8 * core + 0.35 * (1.0 - y) * body - 0.15 * y + 0.15 * (n2.b - 0.5), 0.0, 1.0);
+        vec3 c = blackbody(T) * dens * (0.3 + 0.75 * core + 0.3 * (1.0 - y)) * vP.y;
+        c += vec3(0.20, 0.15, 0.06) * core * core * vP.y;
+        gl_FragColor = vec4(c * uF * uFlick * 1.15, 1.0);
       }`,
   });
   const flScene = new THREE.Scene();
   const flMesh = new THREE.Mesh(shGeo, flMat); flMesh.frustumCulled = false; flScene.add(flMesh);
+  // smoke: a thin plume curling up out of the flame, lit from below by it (emission only, on black);
+  // it shares the flame's half-resolution layer and its defocus
+  const smU = { ...hand, uT: flU.uT, uF: flU.uF, uHt: flU.uHt, uBase: flU.uBase, uNoise: flU.uNoise, uSmk: { value: 0 } };
+  const smGeo = new THREE.BufferGeometry();
+  smGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-1, 0, 0, 1, 0, 0, -1, 1, 0, 1, 1, 0]), 3));
+  smGeo.setIndex([0, 1, 2, 1, 3, 2]);
+  const smMat = new THREE.ShaderMaterial({
+    uniforms: smU, depthTest: false, depthWrite: false, transparent: true, blending: THREE.AdditiveBlending,
+    vertexShader: HAND_GLSL + /* glsl */ `
+      uniform vec2 uBase; varying vec2 vPx;
+      void main(){
+        vec2 px = uBase + vec2(position.x * 230.0, -position.y * 560.0);
+        vPx = px;
+        gl_Position = handClip(vec4(px.x / 1920.0 * 2.0 - 1.0, 1.0 - px.y / 1080.0 * 2.0, 0.0, 1.0));
+      }`,
+    fragmentShader: GLSL.common + /* glsl */ `
+      uniform float uT, uF, uHt, uSmk; uniform vec2 uBase; uniform sampler2D uNoise; varying vec2 vPx;
+      void main(){
+        float h = uBase.y - vPx.y;                                   // px above the flame root
+        float h0 = uHt * 0.45;                                       // smoke appears above the flame body
+        float xc = uBase.x + 26.0 * sin(h * 0.0105 - uT * 0.55) * smoothstep(40.0, 260.0, h) + 0.00009 * h * h;
+        float wd = 16.0 + 0.16 * h;
+        float xn = (vPx.x - xc) / wd;
+        vec2 q = vec2(xn * 0.11 + h * 0.0009, h * 0.0021 - uT * 0.11);
+        vec3 n1 = texture2D(uNoise, q).rgb;
+        vec3 n2 = texture2D(uNoise, q * vec2(2.4, 2.1) + (n1.rg - 0.5) * 0.25 + vec2(0.0, -uT * 0.07)).rgb;
+        float body = exp(-xn * xn * (1.2 + 1.2 * n1.r));
+        float dens = body * smoothstep(0.32, 0.8, n1.g * 0.75 + n2.b * 0.55) * smoothstep(h0 * 0.6, h0 * 1.4, h) * (1.0 - smoothstep(300.0, 560.0, h));
+        // lit by the flame below it: warm, falling off with height
+        vec3 lit = vec3(1.0, 0.52, 0.24) * (0.3 * exp(-max(h - h0, 0.0) / 170.0)) + vec3(0.010, 0.008, 0.006);
+        gl_FragColor = vec4(lit * dens * uSmk * clamp(uF, 0.0, 1.0), 1.0);
+      }`,
+  });
+  const smMesh = new THREE.Mesh(smGeo, smMat); smMesh.frustumCulled = false; smMesh.renderOrder = -1; flScene.add(smMesh);
   const flCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
   const comp = kit.compositor();
   // The flame stands just behind the plane of focus (the fibres in front of it are sharp): a uniform
@@ -594,8 +636,8 @@ export function createMacro(ctx) {
       gl_FragColor = vec4(s / 64.0, 1.0);
     }`, { uSrc: { value: flameRT.texture }, uRes: { value: new THREE.Vector2(flameRT.width, flameRT.height) }, uR: { value: FL_COC * S / 2 } });
   {
-    const x0 = Math.floor((RX - 240) * S / 2), y0 = Math.floor((1080 - (RY + 70)) * S / 2);
-    const box = new THREE.Vector4(x0, y0, Math.ceil(480 * S / 2), Math.ceil(620 * S / 2));
+    const x0 = Math.floor((RX - 280) * S / 2), y0 = Math.floor((1080 - (RY + 70)) * S / 2);
+    const box = new THREE.Vector4(x0, y0, Math.ceil(560 * S / 2), Math.ceil(660 * S / 2));
     flameRT.scissor.copy(box); flameBlur.scissor.copy(box);
   }
 
@@ -620,17 +662,19 @@ export function createMacro(ctx) {
       sparks.push({ p0, v0, tb: t0 + 0.01 * i, life: tl, kind: 0, seed: r(), I0: 60, T0: 2900 });
     }
   };
-  strike(71.5, 30, 1501, 0, 0.45);          // the first strike lights nothing
+  strike(71.5, 30, 1501, 0, 0.85);          // the first strike lights nothing
   strike(72.5, 60, 1502, 0);
   strike(73.5, 40, 1503, 3);
   const T_LAND = 73.5 + 0.16;
   // rising sparks from 77.0: strings of 4–10 born within 0.15 s, plus singles
   {
     const r = util.rng(1504);
-    const strings = [77.0, 77.45, 77.8, 78.2, 78.5, 78.75, 78.95, 79.1];
+    // born inside the flame, slow at first (buoyancy accelerates them): each string stays in frame
+    // ~0.5 s; the last full string (78.62) is mid-flight on the cut at 79.0
+    const strings = [77.0, 77.45, 77.8, 78.2, 78.45, 78.62, 78.85, 79.1];
     for (const ts of strings) {
-      const n = 4 + Math.floor(r() * 7), x0 = (r() - 0.5) * 0.012;
-      for (let i = 0; i < n; i++) sparks.push({ p0: [x0 + (r() - 0.5) * 0.004, 0.030 + r() * 0.016, (r() - 0.5) * 0.008], v0: [(r() - 0.5) * 0.05, 0.12 + 0.2 * r(), (r() - 0.5) * 0.05], tb: ts + r() * 0.15, life: 0.6 + r() * 0.9, kind: 1, seed: r(), I0: 30 + 40 * r(), T0: 1900 + 400 * r() });
+      const n = (ts === 78.62 ? 10 : 4 + Math.floor(r() * 6)), x0 = (r() - 0.5) * 0.012;
+      for (let i = 0; i < n; i++) sparks.push({ p0: [x0 + (r() - 0.5) * 0.004, 0.016 + r() * 0.014, (r() - 0.5) * 0.008], v0: [(r() - 0.5) * 0.04, 0.06 + 0.11 * r(), (r() - 0.5) * 0.04], tb: ts + r() * 0.15, life: 0.6 + r() * 0.9, kind: 1, seed: r(), I0: 30 + 40 * r(), T0: 1900 + 400 * r() });
     }
     for (let i = 0; i < 24; i++) sparks.push({ p0: [(r() - 0.5) * 0.016, 0.03 + r() * 0.02, (r() - 0.5) * 0.01], v0: [(r() - 0.5) * 0.06, 0.1 + 0.2 * r(), (r() - 0.5) * 0.05], tb: 76.6 + r() * 2.6, life: 0.5 + r() * 0.8, kind: 1, seed: r(), I0: 18 + 30 * r(), T0: 1800 + 400 * r() });
   }
@@ -657,8 +701,8 @@ export function createMacro(ctx) {
       if (C.x < 0.5) { vec3 gk = vec3(0.0, -uG / uK, 0.0); return A.xyz + gk * tau + (B.xyz - gk) * (1.0 - exp(-uK * tau)) / uK; }
       vec3 p = A.xyz + vec3(B.x * tau, B.y * tau + 0.32 * tau * tau, B.z * tau);
       float e = min(tau * 4.0, 1.0);
-      p.x += 0.0028 * sin(tau * (7.0 + 4.0 * C.y) + C.y * 20.0) * e;
-      p.z += 0.0020 * cos(tau * (5.0 + 3.0 * C.y) + C.y * 13.0) * e;
+      p.x += (0.011 * sin(tau * (3.0 + 2.5 * C.y) + C.y * 20.0) + 0.0025 * sin(tau * 13.0 + C.y * 7.0)) * e + 0.01 * tau * (C.y - 0.5);
+      p.z += 0.0035 * cos(tau * (3.0 + 2.0 * C.y) + C.y * 13.0) * e;
       return p;
     }`;
   const spMat = new THREE.ShaderMaterial({
@@ -785,7 +829,7 @@ export function createMacro(ctx) {
       plateU.uW4.value.set(...C_SP.map(c => c * sl * K_SP));
       plateU.uT.value = t; plateU.uHaze.value = clamp(fl, 0, 1);
       const grow = ss(75.0, 79.2, t);                         // the tinder catches: the fire keeps growing
-      const ht = 290 * (0.6 + 0.4 * clamp(fl, 0, 1.3)) * (0.9 + 0.1 * fk) * (1 + 0.3 * grow);
+      const ht = 330 * (0.6 + 0.4 * clamp(fl, 0, 1.3)) * (0.9 + 0.1 * fk) * (1 + 0.3 * grow);
       plateU.uFl.value.set(RX, RY + FL_ROOT, ht);
       platePass.render(renderer, f.target);
 
@@ -798,6 +842,7 @@ export function createMacro(ctx) {
       }
       // flame (half res, then added)
       if (fl > 0) {
+        smU.uSmk.value = ss(tIg + 0.3, tIg + 2.5, t);
         flU.uT.value = t; flU.uF.value = clamp(fl, 0, 1.3) * (1 - 0.12 * grow); flU.uHt.value = ht; flU.uFlick.value = fk; flU.uSpread.value = 1 + 0.5 * grow;
         renderer.setClearColor(0x000000, 1);
         renderer.setRenderTarget(flameRT); renderer.clear();

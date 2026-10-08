@@ -31,8 +31,8 @@ function grade(lon, lat) {
   if (lat < 17 && lon > -20 && lon < 52) { e = 0.22; led = 0.0; rur = 0.25; }          // sub-Saharan Africa
   if (box(2, 15, 4, 14)) { e = 0.42; rur = 0.45; }                                     // Nigeria
   if (lat < -22 && lon > 15 && lon < 35) { e = 0.9; led = 0.15; rur = 0.6; }            // South Africa
-  if (box(32, 42, -6, 4)) { e = 0.55; rur = 0.55; }                                     // Kenya / Uganda highlands (R)
-  if (box(36, 41, 6, 12)) { e = 0.45; rur = 0.6; }                                      // Ethiopian highlands
+  if (box(32, 42, -6, 4)) { e = 0.55; rur = 1.5; }                                     // Kenya / Uganda highlands (R)
+  if (box(36, 41, 6, 12)) { e = 0.45; rur = 1.2; }                                      // Ethiopian highlands
   if (box(-18, 12, 27, 38)) { e = 0.85; led = 0.1; rur = 0.7; }                          // Maghreb
   if (box(29, 34.5, 22, 32)) { e = 1.35; led = 0.15; rur = 2.2; }                       // Egypt: the Nile and the delta
   if (box(34, 37, 29, 37.5)) { e = 1.3; led = 0.45; rur = 1.2; }                         // Levant
@@ -50,9 +50,12 @@ const SOD = [1.0, 0.456, 0.102];        // #FFB45A (linear)
 const LED = [0.807, 0.871, 1.0];         // #E8F0FF
 const WARM = [1.0, 0.62, 0.30];
 
-export function buildNightMap(ctx, { res = 4096, seed = 1407 } = {}) {
+// rect: the equirect window; detail: >1 splits each town's sprawl / villages into that many times
+// more, proportionally fainter sub-lights (same total flux, so a fine regional map and the wide map
+// agree wherever both are seen at a footprint the wide map can resolve).
+export function buildNightMap(ctx, { res = 4096, seed = 1407, rect = NIGHT_RECT, detail = 1 } = {}) {
   const { renderer } = ctx;
-  const [lo0, la0, lo1, la1] = NIGHT_RECT;
+  const [lo0, la0, lo1, la1] = rect;
   const TX = res / (lo1 - lo0), TY = res / (la1 - la0);              // texels per degree
   const kmX = lat => 111.32 * Math.cos(lat * D2R) / TX, kmY = 111.32 / TY;   // km per texel
   // ---- land mask (CPU, 0.05°) for rejection of off-shore villages / road lamps
@@ -86,7 +89,9 @@ export function buildNightMap(ctx, { res = 4096, seed = 1407 } = {}) {
   const mixc = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
   const off = (lon, lat, dxKm, dyKm) => [lon + dxKm / (111.32 * Math.cos(lat * D2R)), lat + dyKm / 111.32];
   const region = PLACES.filter(([lo, la]) => lo > lo0 - 2 && lo < lo1 + 2 && la > la0 - 2 && la < la1 + 2);
-  const F0 = 0.9 * (kmY * kmY) / 9;      // flux unit ≈ a 1 km² lit block in a 3.26 km texel
+  // flux unit: calibrated on the wide map (3.26 km texels); a texel-flux of F0 is a fixed physical
+  // luminous flux, so it scales with 1 / texel area on finer maps
+  const F0 = 1.063 * Math.pow(3.26 / kmY, 2);
 
   for (const [lon, lat, pop] of region) {
     const [e, led, rur] = grade(lon, lat);
@@ -94,9 +99,9 @@ export function buildNightMap(ctx, { res = 4096, seed = 1407 } = {}) {
     const radKm = 1.6 * Math.pow(pop / 1e4, 0.42);           // urban radius
     const coreC = mixc(WARM, LED, led * Math.min(1, lp / 2.5));
     // core: a compact bright centre
-    add(lon, lat, Math.max(0.6, radKm * 0.22), F0 * e * 1.1 * Math.pow(pop / 1e4, 0.85) * Math.exp(r.gauss() * 0.35), coreC);
+    add(lon, lat, Math.max(0.6, radKm * 0.14), F0 * e * 0.8 * Math.pow(pop / 1e4, 0.85) * Math.exp(r.gauss() * 0.35), coreC);
     // sprawl: clustered sub-lights inside the urban radius (exponential falloff, irregular lobes)
-    const nS = Math.min(1600, Math.round(14 * Math.pow(pop / 1e4, 0.55)));
+    const nS = Math.round(detail * Math.min(1600, 14 * Math.pow(pop / 1e4, 0.55)));
     const lobes = 2 + Math.floor(r() * 4), lobeA = r() * 6.283;
     for (let i = 0; i < nS; i++) {
       let ang = r() * 6.283;
@@ -108,15 +113,15 @@ export function buildNightMap(ctx, { res = 4096, seed = 1407 } = {}) {
       if (!isLand(x, y)) continue;
       const fall = Math.exp(-d / (radKm * 0.9));
       const c = mixc(SOD, coreC, fall * fall * 0.8);
-      add(x, y, 0.35 + 0.5 * r(), F0 * e * (0.5 + 1.6 * fall) * Math.exp(r.gauss() * 0.6) * 3.0, c);
+      add(x, y, (0.35 + 0.5 * r()) / Math.sqrt(detail), F0 * e * (0.5 + 1.6 * fall) * Math.exp(r.gauss() * 0.6) * 3.3 / detail, c);
     }
     // satellite villages: rural density around the place, out to several urban radii
-    const nV = Math.round(rur * 16 * Math.pow(pop / 1e4, 0.38));
+    const nV = Math.round(detail * rur * 16 * Math.pow(pop / 1e4, 0.38));
     for (let i = 0; i < nV; i++) {
       const ang = r() * 6.283, d = radKm * 1.2 + (12 + 30 * Math.pow(pop / 1e5, 0.25)) * (-Math.log(1 - r() * 0.99)) * 0.7;
       const [x, y] = off(lon, lat, Math.cos(ang) * d, Math.sin(ang) * d);
       if (!isLand(x, y)) continue;
-      add(x, y, 0.3 + 0.4 * r(), F0 * Math.min(1.4, e) * 0.3 * Math.exp(r.gauss() * 0.95), mixc(SOD, WARM, r() * 0.5));
+      add(x, y, 0.3 + 0.4 * r(), F0 * Math.min(1.4, e) * 0.4 * Math.exp(r.gauss() * 0.95) / detail, mixc(SOD, WARM, r() * 0.5));
     }
   }
   // highways: strings of lamps between near neighbours (only over land), towns every few dozen km
@@ -135,11 +140,14 @@ export function buildNightMap(ctx, { res = 4096, seed = 1407 } = {}) {
       if (j < i && cand.length > 1) { /* each pair once, mostly */ }
       const [lo2, la2, pop2] = big[j];
       const [e] = grade((lo + lo2) / 2, (la + la2) / 2);
-      const w = Math.min(1, Math.sqrt(Math.min(pop, pop2)) / 900) * e * Math.min(1, e * 1.2);   // poorly electrified regions: barely any road lamps
-      const bend = (r() - 0.5) * 0.22;
+      // poorly electrified regions: barely any road lamps (a road there is a chain of towns, not a line)
+      const w = Math.min(1, Math.sqrt(Math.min(pop, pop2)) / 900) * e * Math.min(1, e * 1.2) * Math.min(1, Math.pow(e, 1.5));
+      // the road meanders (three harmonics, pinned at both towns) instead of drawing one smooth arc
+      const bend = (r() - 0.5) * 0.16, a2 = (r() - 0.5) * 0.06, a3 = (r() - 0.5) * 0.025, p2 = r() * 6.3, p3 = r() * 6.3;
       const n = Math.round(d / 1.2);
       for (let k = 0; k <= n; k++) {
-        const t = k / n, sb = Math.sin(t * Math.PI) * bend;
+        const t = k / n, env = Math.sin(t * Math.PI);
+        const sb = env * bend + env * a2 * Math.sin(t * 12.6 + p2) + Math.sqrt(env) * a3 * Math.sin(t * 37.7 + p3);
         const x = lo + (lo2 - lo) * t - (la2 - la) * sb, y = la + (la2 - la) * t + (lo2 - lo) * sb;
         if (!isLand(x, y)) continue;
         const flick = 0.55 + 0.45 * Math.sin(k * 0.37 + i) * Math.sin(k * 0.071 + j);
@@ -227,5 +235,5 @@ export function buildNightMap(ctx, { res = 4096, seed = 1407 } = {}) {
   renderer.render(scene, cam);
   renderer.setRenderTarget(prev); renderer.setClearColor(prevClr, prevA);
   geo.dispose(); mat.dispose();
-  return { tex: rt.texture, rect: NIGHT_RECT, count: N };
+  return { tex: rt.texture, rect, count: N };
 }

@@ -54,7 +54,7 @@ export async function create(ctx) {
     frag: /* glsl */ `
       void main(){
         vec2 p = (vUv - 0.5) * vec2(2.0, 1.0);
-        vec2 q = rot2(-0.42) * p;
+        vec2 q = rot2(0.95) * p;
         vec2 w = vec2(fbm(q * 3.0 + 1.3, 5), fbm(q * 3.0 + 8.1, 5)) - 0.5;
         float env = exp(-pow(length(q * vec2(0.9, 2.2)) / 0.62, 2.0));
         float f1 = fbm(q * 5.0 + w * 1.6, 6);
@@ -75,7 +75,7 @@ export async function create(ctx) {
   const LIMB_C = [-760, 1720], LIMB_R = 1420;
   const bgU = {
     uRes: { value: new THREE.Vector2(W, H) }, uS: { value: S }, uNeb: { value: nebTex },
-    uNebP: { value: new THREE.Vector4(pNeb[0] - 260, pNeb[1] - 130, 520, 260) },
+    uNebP: { value: new THREE.Vector4(pNeb[0] - 262, pNeb[1] - 128, 500, 250) },
     uC: { value: new THREE.Vector2(...LIMB_C) }, uRad: { value: LIMB_R },
     uAir: { value: new THREE.Vector3(...hex(0x7FE3C2)) }, uTw: { value: new THREE.Vector3(...hex(0x3A6FD8)) },
     uOIII: { value: new THREE.Vector3(...hex(0x4FE0D0)) }, uIron: { value: new THREE.Vector3(...hex(0x6FA8FF)) },
@@ -91,15 +91,17 @@ export async function create(ctx) {
       float inside = smoothstep(0.8, -0.8, r);
       vec3 land = vec3(0.0010, 0.0011, 0.0016) + vec3(1.0, 0.62, 0.32) * 0.010 * exp(-length(px - vec2(60.0, 1010.0)) / 160.0);
       // limb: a thin airglow line (σ ≈ 2 px) a little above the surface + Rayleigh blue haze, faint
-      float ag = exp(-0.5 * pow((r - 9.0) / 2.2, 2.0));
-      float ray = exp(-max(r, 0.0) / 22.0) * step(0.0, r);
-      col += uAir * ag * 0.05 + uTw * ray * 0.012;
+      float ag = exp(-0.5 * pow((r - 9.0) / 3.0, 2.0));
+      float ray = exp(-max(r, 0.0) / 26.0) * smoothstep(-1.5, 1.5, r) + 0.35 * exp(-max(r, 0.0) / 90.0) * step(0.0, r);
+      // the limb is brighter towards the beam root (scattered city light), fading along the arc
+      float along = exp(-length(px - vec2(120.0, 960.0)) / 700.0);
+      col += (uAir * ag * 0.10 + uTw * ray * 0.035) * (0.35 + 0.65 * along);
       col = mix(col, land, inside); a = inside;
       // the cold nebula
       vec2 nu = (px - uNebP.xy) / uNebP.zw;
       if (nu.x > 0.0 && nu.x < 1.0 && nu.y > 0.0 && nu.y < 1.0) {
         vec2 n = texture2D(uNeb, vec2(nu.x, 1.0 - nu.y)).rg;
-        col += mix(uIron, uOIII, n.g) * n.r * 0.035;
+        col += mix(uIron, uOIII, n.g) * n.r * 0.085;
       }
       gl_FragColor = vec4(col, a);
     }`, bgU, { blending: THREE.CustomBlending, transparent: true });
@@ -129,17 +131,18 @@ export async function create(ctx) {
         float sg = max(sig, 0.75), flux = min(sig / 0.75, 1.0);
         float headF = smoothstep(uHead, uHead * 0.78, s);     // the front, softly
         float prof = exp(-0.5 * dp * dp / (sg * sg));
-        float I = 3.0 * flux * headF;
+        float I = 2.6 * flux * headF;
         col += uCol * I * prof;
         col += vec3(1.0, 0.72, 0.45) * I * 0.05 * exp(-dp / (4.0 * sg));   // soft skirt
         // ② particles flowing outwards: one every 9 units, 60 units/s; bright where the bit is 1
         float sp = 9.0, flow = s - 60.0 * uT;
         float k = floor(flow / sp + 0.5), fr = flow - k * sp;
         float bit = texelFetch(uBits, ivec2(int(mod(k, 1679.0)), 0), 0).r;
-        float along = fr / (sp * 0.22);
+        float along = fr / (sp * 0.3);
         float ds = (uF * uDxy * (uDR + uCz)) / (depth * depth);             // px per unit along the beam
-        float pl = exp(-0.5 * along * along) * exp(-0.5 * dp * dp / (sg * sg * 0.35));
-        col += vec3(1.0, 0.93, 0.82) * pl * mix(0.10, 1.0, bit) * 2.6 * flux * headF * smoothstep(0.6, 2.0, sp * ds);
+        // the beads are a little wider than the core, so their rhythm reads in the glow around it
+        float pl = exp(-0.5 * along * along) * exp(-0.5 * dp * dp / (sg * sg * 1.7));
+        col += vec3(1.0, 0.86, 0.66) * pl * mix(0.04, 1.0, bit) * 0.8 * flux * headF * smoothstep(0.6, 2.0, sp * ds);
         // ① the air around the root: closed-form single scattering of a line source (≈ 1/√(d₃² + r₀²))
         float rho = exp(-(s - uSEntry + 260.0) / 240.0);
         float d3 = dp * depth / uF, r0 = 3.0;
@@ -148,7 +151,7 @@ export async function create(ctx) {
         vec2 nu = (px - uNebP.xy) / uNebP.zw;
         if (uScratch > 0.0 && nu.x > 0.0 && nu.x < 1.0 && nu.y > 0.0 && nu.y < 1.0 && s < uHead) {
           float n = texture2D(uNeb, vec2(nu.x, 1.0 - nu.y)).r;
-          col += vec3(1.0, 0.62, 0.32) * n * uScratch * (exp(-dp / 2.5) * 1.2 + exp(-dp / 12.0) * 0.25);
+          col += vec3(1.0, 0.62, 0.32) * n * uScratch * (exp(-dp / 2.5) * 1.2 + exp(-dp / 12.0) * 0.5);
         }
       }
       gl_FragColor = vec4(col, 1.0);

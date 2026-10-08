@@ -25,7 +25,7 @@ uniform float atmoGain, airglowGain, airglowAlt, airglowSig, rayleighH, termGain
 // birth mask
 uniform float birthOn, birthTau, birthSoft; uniform vec4 birthRect;   // lon0, lat0, lon1, lat1 (deg)
 // detail patch
-uniform float patchOn, patchHalf, patchGain, patchTexels; uniform vec3 patchC, patchE, patchN;
+uniform float patchOn, patchHalf, patchGain, patchTexels, patchEdge; uniform vec3 patchC, patchE, patchN;
 // S14 conic limb
 uniform float conicOn, conicCore, conicGlow, conicOut, twGain; uniform vec3 airCol;
 uniform float S;                           // pixel scale (H / 1080)
@@ -84,7 +84,7 @@ vec2 nightUV(vec3 n){
 // flux is conserved) — a town seen from 1000 km becomes a cluster of sharp lights instead of a soft
 // ball. Every lamp's PSF is at least ~0.6 px (band-limited), and the field fades back to its mean
 // once a cell spans less than ~1.5 px, so it can never alias or shimmer.
-uniform float sparkOn;
+uniform float sparkOn; uniform float lightsKnee; uniform float cloudDetail; uniform float glintSlick;
 float pixKmG;                      // pixel footprint on the ground (km), set in main()
 float sparkLayer(vec2 x, float cellKm, float sd){
   vec2 q = x / cellKm; vec2 c0 = floor(q);
@@ -110,14 +110,28 @@ float sparkle(vec3 n){
   if (w1 > 0.0) s *= mix(1.0, sparkLayer(x + 13.7, 0.9, 9.0), w1);
   return s;
 }
+// a finer regional map (East Africa, S18's climb) nested inside the wide one
+uniform sampler2D nightTex2; uniform vec4 nightRect2; uniform float night2On;
+vec3 sampleNight(sampler2D t, vec2 nu, float lod){
+  if (lod > 0.0) return texBS(t, nu, max(lod - 1.0, 0.0));
+  float fl = footLod(nu, vec2(textureSize(t, 0)));
+  return fl < 0.0 ? texBS(t, nu, 0.0) : texture2D(t, nu).rgb;
+}
 vec3 lightsAt(vec3 n, vec2 uv, float lod){
   float w = 0.0; vec3 m = vec3(0.0);
   if (nightOn > 0.5) {
     vec2 nu = nightUV(n); vec2 e = min(nu, 1.0 - nu);
     w = smoothstep(0.0, 0.03, min(e.x, e.y));
     if (w > 0.0) {
-      if (lod > 0.0) m = texBS(nightTex, nu, max(lod - 1.0, 0.0));
-      else { float fl = footLod(nu, vec2(textureSize(nightTex, 0))); m = fl < 0.0 ? texBS(nightTex, nu, 0.0) : texture2D(nightTex, nu).rgb; }
+      float w2 = 0.0; vec2 nu2 = vec2(0.0);
+      if (night2On > 0.5) {
+        float lon = atan(n.x, n.z) * 57.29578, lat = asin(clamp(n.y, -1.0, 1.0)) * 57.29578;
+        nu2 = vec2((lon - nightRect2.x) / (nightRect2.z - nightRect2.x), (lat - nightRect2.y) / (nightRect2.w - nightRect2.y));
+        vec2 e2 = min(nu2, 1.0 - nu2);
+        w2 = smoothstep(0.0, 0.08, min(e2.x, e2.y));
+      }
+      if (w2 < 1.0) m = sampleNight(nightTex, nu, lod);
+      if (w2 > 0.0) m = mix(m, sampleNight(nightTex2, nu2, lod), w2);
       m *= nightGain;
       if (lod <= 0.0 && dot(m, m) > 1e-8) m *= sparkle(n);
     }
@@ -136,6 +150,13 @@ float birthAt(vec3 n){
 void main(){
   vec2 frag = gl_FragCoord.xy;                       // bottom-left origin
   vec2 pix = vec2(frag.x, res.y - frag.y);           // top-left origin (screenplay convention)
+  // card legibility (S40): a rounded box with a wide feather, so no rectangle is ever seen on the planet
+  float dimK = 1.0;
+  if (dimAmt < 1.0) {
+    vec2 hc = 0.5 * (dimRect.xy + dimRect.zw), hh = 0.5 * (dimRect.zw - dimRect.xy);
+    vec2 q = max(abs(pix - hc) - hh, 0.0);
+    dimK = mix(dimAmt, 1.0, smoothstep(0.0, 90.0 * S, length(q)));
+  }
   vec3 dc = normalize(vec3((frag.x - 0.5 * res.x) / fpx, (frag.y - 0.5 * res.y) / fpx, -1.0));
   vec3 rd = normalize(camR * dc.x + camU * dc.y + camB * dc.z);
   vec3 ro = camPos;
@@ -164,7 +185,7 @@ void main(){
       vec3 dpp = n - patchC;
       vec2 puv = vec2(dot(dpp, patchE), dot(dpp, patchN)) / (2.0 * patchHalf) + 0.5;
       vec2 e = min(puv, 1.0 - puv);
-      pw = smoothstep(0.0, 0.22, min(e.x, e.y)) * step(0.0, dot(n, patchC));
+      pw = (patchEdge > 0.3 ? smoothstep(0.5, 0.5 - patchEdge, length(puv - 0.5)) : smoothstep(0.0, patchEdge, min(e.x, e.y))) * step(0.0, dot(n, patchC));   // wide soft patches fade radially
       // footprint blend: patch texels per pixel; once a pixel covers > 48 patch texels the global map is as good
       float fp = length(vec2(length(dFdx(puv)), length(dFdy(puv)))) * patchTexels;
       pw *= 1.0 - smoothstep(24.0, 64.0, fp);
@@ -172,6 +193,13 @@ void main(){
     }
     float cl = texture2D(cloudTex, uv + vec2(cloudShift, 0.0)).r * cloudsGain;
     if (clearAmt > 0.0) cl *= 1.0 - clearAmt * smoothstep(clearCos.y, clearCos.x, dot(n, clearDir));
+    // sub-texel cloud structure (the baked map is ~10 km/texel; S14 sees it at ~1 km/px): three
+    // octaves of simplex noise erode the edges and break the interiors into cells and streets
+    if (cloudDetail > 0.0 && cl > 0.003) {
+      float dn = snoise(n * 700.0) * 0.55 + snoise(n * 2100.0 + 7.0) * 0.3 + snoise(n * 5200.0 + 3.0) * 0.15 * (1.0 - smoothstep(0.6, 1.6, pixKmG));
+      cl = clamp(cl + cloudDetail * dn * (0.1 + 1.8 * cl * (1.0 - cl)), 0.0, 1.0);
+      cl = mix(cl, smoothstep(0.08, 0.92, cl), cloudDetail * 0.6);   // crisper cloud edges
+    }
     float ndl = dot(n, L), ndm = dot(n, M);
     float day = smoothstep(-0.08, 0.25, ndl);
     vec3 albc = mix(mix(vec3(0.004, 0.014, 0.04), vec3(0.008, 0.03, 0.055), alb.a), alb.rgb, land);   // patch coast overrides land/sea
@@ -187,8 +215,10 @@ void main(){
     float mdl = max(ndm, 0.0);
     vec3 moonLit = albc * mdl * 2.2;
     vec3 Hm = normalize(M + V); float nhm = max(dot(n, Hm), 0.0);
-    // wave facets (~300 m, fixed to the surface) break a sharp glint into sparkle
-    float facet = glintExp > 300.0 ? 0.25 + 1.5 * pow(vnoise(n * 21000.0), 3.0) : 1.0;
+    // wind slicks: the moonglint is smooth at the pixel scale (no per-pixel sparkle, which only reads
+    // as sensor noise) but varies over 5–20 km — calm slicks shine, rough patches go dull
+    float facet = 1.0;
+    if (glintSlick > 0.0) facet = mix(1.0, 0.6 + 0.8 * smoothstep(-0.6, 0.7, snoise(n * vec3(300.0, 1100.0, 300.0) + 5.0) * 0.6 + snoise(n * vec3(900.0, 3000.0, 900.0)) * 0.4), glintSlick);
     float glintM = (pow(nhm, glintExp) * 2.2 * facet + pow(nhm, 40.0) * glintBroad) * (1.0 - land) * (1.0 - cl) * smoothstep(0.0, 0.15, ndm);
     moonLit = mix(moonLit, vec3(0.55, 0.6, 0.68) * mdl * 1.6, cl * 0.9) + glintM * vec3(0.9, 0.95, 1.0);
     col += moonLit * moonC * moonGain * (1.0 - day);
@@ -208,6 +238,8 @@ void main(){
         float bt = birthAt(n);
         // organic front: high-frequency jitter so towns pop on individually, not as a wipe
         float j = (snoise(n * 900.0) * 0.6 + snoise(n * 3100.0) * 0.4) * 0.018;
+        // …and block by block: each ~400 m cell switches on at its own moment within the front
+        j += (hash13(floor(n * 16000.0)) - 0.5) * 0.012 * (1.0 - smoothstep(0.3, 1.0, pixKmG));
         float a = bt + j;
         lit = clamp((birthTau - a) / birthSoft, 0.0, 1.0);
         flare = lit * exp(-max(birthTau - a, 0.0) / 0.03) * 0.3; // a newly lit town burns a touch brighter
@@ -215,7 +247,10 @@ void main(){
         blur *= bb;
       }
       li *= lit * (1.0 + 1.2 * flare);
-      col += li * lightsGain * night * (1.0 - 0.72 * cl);
+      // soft knee (film shoulder): dense cores saturate around lightsKnee instead of blooming into balls
+      vec3 lv = li * lightsGain; float lm = max(lv.r, max(lv.g, lv.b));
+      lv *= 1.0 / (1.0 + lm / lightsKnee);
+      col += lv * night * (1.0 - 0.72 * cl);
       // cloud bellies lit orange by the city glow underneath (blurred lights × cloud cover)
       col += blur * vec3(1.0, 0.52, 0.22) * cl * (1.0 - cl * 0.4) * glowGain * lightsGain * night;
     }
@@ -226,8 +261,7 @@ void main(){
     col += (vec3(0.16, 0.4, 1.0) * smoothstep(-0.3, 0.4, mus) * 0.5 + vec3(1.0, 0.36, 0.08) * exp(-pow(mus / 0.12, 2.0)) * 0.35) * hz * atmoGain;
     col += airCol * hz * 0.02 * airglowGain * (1.0 - smoothstep(-0.2, 0.1, mus));
     // card legibility: lights in the card's bounding box × dimAmt (S40)
-    vec2 dr = smoothstep(dimRect.xy - 30.0 * S, dimRect.xy, pix) * (1.0 - smoothstep(dimRect.zw, dimRect.zw + 30.0 * S, pix));
-    col *= mix(1.0, dimAmt, dr.x * dr.y);
+    col *= dimK;
   }
   // ---- atmosphere outside the disc: limb Rayleigh, terminator ring, forward scatter, airglow layer ----
   vec3 atm = vec3(0.0);
@@ -277,7 +311,7 @@ void main(){
     }
   }
   vec3 outc = col * cov;
-  gl_FragColor = vec4(outc + atm + sp, cov);
+  gl_FragColor = vec4(outc + atm * dimK + sp, cov);
 }`;
 
 export function createGlobe(ctx, earth, { birthTex = null } = {}) {
@@ -289,17 +323,18 @@ export function createGlobe(ctx, earth, { birthTex = null } = {}) {
     camPos: { value: new THREE.Vector3() }, camR: { value: new THREE.Vector3() }, camU: { value: new THREE.Vector3() }, camB: { value: new THREE.Vector3() },
     albedoTex: { value: tx.albedoTex }, cloudTex: { value: tx.cloudTex }, lightsTex: { value: tx.lightsTex },
     birthTex: { value: birthTex || dummy }, patchTex: { value: dummy },
+    nightTex2: { value: dummy }, nightRect2: { value: new THREE.Vector4(0, 0, 1, 1) }, night2On: { value: 0 },
     nightTex: { value: dummy }, nightRect: { value: new THREE.Vector4(-30, -50, 100, 70) }, nightOn: { value: 0 }, nightGain: { value: 1 },
     sunDir: { value: new THREE.Vector3(0, 0, -1) }, moonDir: { value: new THREE.Vector3(0, 1, 0) },
     dayGain: { value: 1 }, moonGain: { value: 0 }, lightsGain: { value: 1 }, cloudsGain: { value: 1 }, cloudShift: { value: 0 }, glowGain: { value: 0.6 }, nightLand: { value: 0.012 },
     atmoGain: { value: 1 }, airglowGain: { value: 0.4 }, airglowAlt: { value: 0.0150 }, airglowSig: { value: 0.0022 }, rayleighH: { value: 0.0065 }, termGain: { value: 1 }, glintExp: { value: 260 }, glintBroad: { value: 0.18 },
     birthOn: { value: 0 }, birthTau: { value: 0 }, birthSoft: { value: 0.01 }, birthRect: { value: new THREE.Vector4(-40, -45, 100, 75) },
-    patchOn: { value: 0 }, patchHalf: { value: 0.05 }, patchGain: { value: 1 }, patchTexels: { value: 4096 },
+    patchOn: { value: 0 }, patchHalf: { value: 0.05 }, patchGain: { value: 1 }, patchTexels: { value: 4096 }, patchEdge: { value: 0.12 },
     patchC: { value: new THREE.Vector3(0, 0, 1) }, patchE: { value: new THREE.Vector3(1, 0, 0) }, patchN: { value: new THREE.Vector3(0, 1, 0) },
     conicOn: { value: 0 }, conicCore: { value: 1.4 }, conicGlow: { value: 0.1 }, conicOut: { value: 0.3 }, twGain: { value: 0.35 },
     airCol: { value: new THREE.Vector3(0.212, 0.768, 0.539) },     // AIRGLOW #7FE3C2 (linear)
     spr: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) }, sprCol: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) },
-    sparkOn: { value: 0 },
+    sparkOn: { value: 0 }, lightsKnee: { value: 1.6 }, cloudDetail: { value: 0 }, glintSlick: { value: 0 },
     clearDir: { value: new THREE.Vector3(0, 1, 0) }, clearCos: { value: new THREE.Vector2(1, 1) }, clearAmt: { value: 0 },
     dimRect: { value: new THREE.Vector4(-1e4, -1e4, -1e4, -1e4) }, dimAmt: { value: 1 }, lightsColdOcean: { value: 0 },
   };
@@ -318,10 +353,11 @@ export function createGlobe(ctx, earth, { birthTex = null } = {}) {
       U.fpx.value = (W / 2) * pose.focalMM / 18;
     },
     setNight(nm) { U.nightTex.value = nm.tex; U.nightRect.value.set(...nm.rect); U.nightOn.value = 1; },
+    setNight2(nm) { if (!nm) { U.night2On.value = 0; return; } U.nightTex2.value = nm.tex; U.nightRect2.value.set(...nm.rect); U.night2On.value = 1; },
     setPatch(p) {
       if (!p) { U.patchOn.value = 0; return; }
       U.patchOn.value = 1; U.patchTex.value = p.tex; U.patchHalf.value = p.half; U.patchTexels.value = p.res;
-      U.patchC.value.copy(p.c); U.patchE.value.copy(p.e); U.patchN.value.copy(p.n); U.patchGain.value = p.gain ?? 1;
+      U.patchC.value.copy(p.c); U.patchE.value.copy(p.e); U.patchN.value.copy(p.n); U.patchGain.value = p.gain ?? 1; U.patchEdge.value = p.P.edge ?? 0.12;
     },
     clearSprites() { for (const c of U.sprCol.value) c.set(0, 0, 0, 0); },
     sprite(i, x, y, r, rgb, shape = 0) { U.spr.value[i].set(x, y, r, shape); U.sprCol.value[i].set(rgb[0], rgb[1], rgb[2], 1); },

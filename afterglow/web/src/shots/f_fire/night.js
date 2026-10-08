@@ -43,7 +43,7 @@ export function createNight(ctx) {
   // SKY (shared)
   // =====================================================================================================
   const gal = bakeGalaxy(ctx);
-  const stars = makeStars(ctx, gal, { count: 150000, seed: 1616 });
+  const stars = makeStars(ctx, gal, { count: 420000, seed: 1616 });
   const starScene = new THREE.Scene(); starScene.add(stars.pts);
   stars.uniforms.uExt.value = 0.12;
   const hand = stars.uniforms;                         // { uHand, uHandC } shared by every layer
@@ -69,7 +69,7 @@ export function createNight(ctx) {
 
   // sky placement (world → galactic): S16 composed on its last frame, S17 on its locked frame
   setCam16(T16 + 7);
-  const M16 = skyFrame(cam16, [1010, 470], 34, 22, -1.0);
+  const M16 = skyFrame(cam16, [960, 480], 40, 13, -1.0);
   const M17 = skyFrame(cam17, [205, 640], 23, -2, 0.4);
 
   const invVP = cam => new THREE.Matrix4().multiplyMatrices(cam.matrixWorld, cam.projectionMatrixInverse);
@@ -88,7 +88,7 @@ export function createNight(ctx) {
       vec3 d = rayAt(handInv(pix()));
       float el = asin(clamp(d.y, -1.0, 1.0));
       vec3 col = skyBase(el, uAir) * mix(1.0, uGain, 0.5);
-      col += galaxy(uGal, uM, d, uL, uB) * extinction(el, uExt) * uGain * 0.42;
+      col += galaxy(uGal, uM, d, uL, uB) * extinction(el, uExt) * uGain * 0.40;
       gl_FragColor = vec4(col, 1.0);
     }`, skyU);
 
@@ -279,7 +279,7 @@ export function createNight(ctx) {
     const base = [FP.x + Math.cos(a) * rr, hG(FP.x + Math.cos(a) * rr, FP.z + Math.sin(a) * rr) + 0.01, FP.z + Math.sin(a) * rr];
     const dir = apex.clone().sub(new THREE.Vector3(...base));
     const top = new THREE.Vector3(...base).addScaledVector(dir, 0.94 + 0.12 * rng());
-    log(base, [top.x + (rng() - 0.5) * 0.05, top.y, top.z + (rng() - 0.5) * 0.05], 0.011 + rng() * 0.011, 0.37 + k * 0.29);
+    log(base, [top.x + (rng() - 0.5) * 0.05, top.y, top.z + (rng() - 0.5) * 0.05], 0.018 + rng() * 0.014, 0.37 + k * 0.29);
   }
   log([FP.x - 0.62, 0.035, FP.z + 0.18], [FP.x + 0.18, 0.06, FP.z - 0.05], 0.045, 0.91);
   log([FP.x + 0.55, 0.03, FP.z + 0.25], [FP.x - 0.05, 0.07, FP.z - 0.1], 0.04, 0.53);
@@ -386,8 +386,13 @@ export function createNight(ctx) {
           float litter = smoothstep(0.45, 0.62, fbm(q * 4.0 + 11.0, 4)) * smoothstep(0.7, 1.4, rf);
           vec3 straw = vec3(0.22, 0.16, 0.085) * (0.6 + 0.8 * vnoise(q * vec2(90.0, 23.0)));
           alb = mix(soil, straw, litter * 0.8) * (0.85 + 0.3 * n3);
-          float ash = smoothstep(0.62, 0.36, rf + 0.05 * (n2 - 0.5));
-          alb = mix(alb, vec3(0.16, 0.15, 0.14) * (0.7 + 0.5 * n2), ash * 0.85);
+          // the pit: patchy grey ash, charcoal flecks, scorched soil — never a flat disc
+          float n4 = fbm(q * 7.0 + 4.0, 4);
+          float ash = smoothstep(0.66, 0.30, rf + 0.12 * (n4 - 0.5) + 0.05 * (n2 - 0.5));
+          vec3 ashC = mix(vec3(0.035, 0.03, 0.027), vec3(0.12, 0.115, 0.108), smoothstep(0.35, 0.7, n4)) * (0.6 + 0.7 * n2);
+          float fleck = step(0.8, vnoise(q * 140.0)) * ash;
+          ashC = mix(ashC, vec3(0.012, 0.010, 0.009), fleck);
+          alb = mix(alb, ashC, ash * 0.9);
           alb = mix(alb, vec3(0.025, 0.022, 0.02), smoothstep(0.36, 0.28, rf) * 0.7);
           h = n2 * 0.004 + litter * 0.002 * vnoise(q * 60.0); bump = true;
         } else if (vMat < 1.5) {                               // basalt stones
@@ -617,7 +622,7 @@ export function createNight(ctx) {
     void main(){
       vec2 d = vPx - uR;
       float core = exp(-0.5 * (d.x * d.x / 0.95 + (d.y + 0.6) * (d.y + 0.6) / 2.1));
-      float glow = exp(-length(d) / 5.0) * 0.035 + exp(-length(d) / 16.0) * 0.006;
+      float glow = exp(-length(d) / 5.0) * 0.045 + exp(-length(d) / 18.0) * 0.009;
       gl_FragColor = vec4(uCol * uI * (core + glow) + vec3(0.25, 0.18, 0.08) * uI * core * core, 1.0);
     }`, { uCol: { value: new THREE.Vector3(...C_FIRE17) }, uI: { value: 5 }, uR: { value: new THREE.Vector2(RX, RY) } });
   const smokeSpr = sprite(560, 90, 1060, 548, /* glsl */ `
@@ -632,8 +637,8 @@ export function createNight(ctx) {
       vec3 n1 = texture2D(uNoise, q).rgb, n2 = texture2D(uNoise, q * 2.7 + (n1.rg - 0.5) * 0.12 + vec2(0.0, -uT * 0.03)).rgb;
       float body = exp(-xn * xn * (1.4 + 0.8 * n1.r));
       float dens = body * smoothstep(0.25, 0.75, n1.g * 0.8 + n2.b * 0.5) * smoothstep(-2.0, 10.0, h) * exp(-h / 210.0);
-      float a = clamp(dens * 0.32, 0.0, 0.45);
-      vec3 emi = uFire * 0.06 * exp(-h / 14.0) * dens + vec3(0.0016, 0.0019, 0.0026) * dens;
+      float a = clamp(dens * 0.36, 0.0, 0.5);
+      vec3 emi = uFire * 0.10 * exp(-h / 18.0) * dens + vec3(0.0036, 0.0040, 0.0052) * dens;
       gl_FragColor = vec4(emi, a);
     }`, { uT: { value: 0 }, uNoise: { value: noiseTex }, uFire: { value: new THREE.Vector3(...C_FIRE17) }, uR: { value: new THREE.Vector2(RX, RY) } }, 'over');
   const guestSpr = sprite(G17[0] - 260, G17[1] - 260, G17[0] + 260, G17[1] + 260, /* glsl */ `
@@ -693,7 +698,7 @@ export function createNight(ctx) {
 
   function renderS17(t, f) {
     setHand(hand, breath(util, t, { px: 0.5, deg: 0.05, hz: 0.3, seed: 17, zeroAt: 95.25 }));
-    setSky(cam17, M17, 1.0, 1.0);
+    setSky(cam17, M17, 1.0, 1.9);
     skyPass.render(renderer, f.target);
     stars.uniforms.uCoc.value = 0;
     renderer.setRenderTarget(f.target); renderer.render(starScene, cam17);
@@ -702,7 +707,7 @@ export function createNight(ctx) {
     terrain.render(renderer, f.target);
     smokeSpr.u.uT.value = t;
     renderer.setRenderTarget(f.target); renderer.render(smokeSpr.scene, orthoCam);
-    fireSpr.u.uI.value = 4.2 * (0.85 + 0.15 * fk);
+    fireSpr.u.uI.value = 5.5 * (0.85 + 0.15 * fk);
     renderer.render(fireSpr.scene, orthoCam);
     if (t >= T_GUEST) {
       const u = clamp((t - T_GUEST) / 1.5);

@@ -13,7 +13,10 @@
 //   224.0        exponential pull-back along the sub-point radial: k ramps 0.03 → 1.6 /s over 1 s
 //                (smoothstep), then constant. R_geo stays locked on R, so the disc and the light both
 //                contract onto R; at 228.0 the disc radius is ≈ 2.5 px.
-//   228.0–228.5  disc and question merge into one warm-white point at R (CURSOR #F2EEE4, HDR 2.5).
+//   228.0–228.5  disc and question merge into one warm-white point at R (CURSOR #F2EEE4). A 2.5-HDR
+//                point this small tone-maps to a grey dot dimmer than the stars, so its core is driven
+//                to ~9 (it saturates warm-white and blooms like the cursor); stars are kept at 0.95 so
+//                the rising light and this point are always the brightest things in the sky.
 //   228.5        hard cut to black on the cursor's off-phase (engine cut; nothing to do here).
 //   Card ⑤ 224.0–227.5: lights × 0.5 inside the card's box while it is up.
 import * as THREE from 'three';
@@ -87,7 +90,7 @@ export async function create(ctx) {
       U.dayGain.value = 1; U.moonGain.value = 0.1; U.nightLand.value = 0.006;
       U.lightsGain.value = 1.5; U.cloudsGain.value = 1; U.cloudShift.value = 0.00002 * (t - T0); U.glowGain.value = 0.12;
       U.atmoGain.value = 1; U.airglowGain.value = 0.3; U.airglowSig.value = 0.0012; U.termGain.value = 0.5;
-      U.conicOn.value = 0; U.birthOn.value = 0; U.patchOn.value = 0;
+      U.conicOn.value = 0; U.birthOn.value = 0; U.patchOn.value = 0; U.cloudDetail.value = 0.5;
       // card legibility: lights in the card box × 0.5 while the card is up (fades with the card)
       const cardA = smoothstep(224.0, 224.75, t) * (1 - smoothstep(226.75, 227.5, t));
       U.dimRect.value.set(card.x0 * S, card.y0 * S, card.x1 * S, card.y1 * S);
@@ -99,17 +102,20 @@ export async function create(ctx) {
       if (t >= T_RISE) {
         const [x, y, z] = G.project(pose, W, H, lightPos(t));
         if (z > 0) {
-          const I = 2.0 * (1 - m);
-          globe.sprite(0, x, y, 2.4 * S, [RIS[0] * I, RIS[1] * I, RIS[2] * I], 0);
+          // the brightest thing in the sky (HDR core ≈ 3.5: it blooms a little, like the cursor)
+          const I = 3.5 * (1 - m);
+          globe.sprite(0, x, y, 2.8 * S, [RIS[0] * I, RIS[1] * I, RIS[2] * I], 0);
         }
       }
       // the city at R: one warm point (CITY #FFC37A) that the question leaves from
       { const I = 0.9 * (1 - m); globe.sprite(2, R[0], R[1], 2.6 * S, [1.0 * I, 0.546 * I, 0.195 * I], 0); }
       if (m > 0) {
-        const I = 2.5 * m;
-        globe.sprite(1, R[0], R[1], 2.2 * S, [CUR[0] * I, CUR[1] * I, CUR[2] * I], 0);
+        // as bright as the cursor reads: a small saturated core with its bloom (a 2.5-HDR point this
+        // size would tone-map to a grey dot, dimmer than the stars)
+        const I = 9.0 * m;
+        globe.sprite(1, R[0], R[1], 3.0 * S, [CUR[0] * I, CUR[1] * I, CUR[2] * I], 0);
       }
-      stars.material.uniforms.brightness.value = 1.5;
+      stars.material.uniforms.brightness.value = 0.95;
       renderer.setRenderTarget(f.target);
       renderer.render(scene, cam);
       globe.render(renderer, f.target);

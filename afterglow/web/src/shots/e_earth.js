@@ -9,9 +9,16 @@
 //       with the S13 light-front profile (3 px core + 30 px inward glow), twilight brightening right.
 //  S18  400 km → 9000 km exponential pull-back (easeInCubic start), yaw 6°, R_geo locked on R;
 //       lights born at R (cursor footprint 24×64 on f2286) spreading along the Nile and the coasts
-//       (travel-time birth mask, shots/e_earth/birth.js); Nairobi detail patch while low.
-//  S19–S22A  4096² regional detail patches (shots/e_earth/patches.js): Nile delta lotus, the Gulf of
-//       Naples necklace, Paris, the Rhine–Ruhr/Benelux highway web, a squid-fishing fleet off Korea.
+//       (travel-time birth mask, shots/e_earth/birth.js). The birth front is driven by the altitude
+//       so it stays ≈ 0.8 × the visible half-width: the spreading edge is always on screen. Lights
+//       come from a nested pair of HDR night maps (nightmap.js: the wide map + a 0.8 km/texel East
+//       Africa map with 3× finer sprawl) through a soft film knee (no bloom balls), and a soft radial
+//       Nairobi patch (park, district mottling) for the first, lowest seconds.
+//  S19–S22A  4096² regional detail patches (shots/e_earth/patches.js): Nile delta lotus (4600 farm
+//       villages), the Gulf of Naples necklace (dark Vesuvius), Paris (district street grids, ring,
+//       arterials, the Seine), the Rhine–Ruhr/Benelux highway web, and two squid-fishing fleet lanes
+//       off Korea composed to cross the frame over a moonlit, wind-slicked sea. Every patch is
+//       mip-mapped and footprint-blended, so nothing shimmers at 14–36 frames per cut.
 import * as THREE from 'three';
 import { createEarth } from '../lib/earth.js';
 import { ease, clamp, lerp, smoothstep } from '../lib/util.js';
@@ -25,7 +32,7 @@ const FPS = 24;
 const D2R = Math.PI / 180;
 
 // S18 pull-back profile: log-distance velocity ramps in with an easeInCubic, then stays constant
-function pullback(u, a = 0.42) {
+function pullback(u, a = 0.3) {
   u = clamp(u, 0, 1.2);
   const Gf = x => (x < a ? a * Math.pow(x / a, 4) / 4 : a / 4 + (x - a));
   return Gf(u) / Gf(1);
@@ -43,6 +50,9 @@ export async function create(ctx) {
   const night = buildNightMap(ctx);
   console.log('[e_earth] night map splats ' + night.count);
   globe.setNight(night);
+  // East Africa at ~0.8 km/texel with 3× finer sprawl: what S18's climb sees between 600 and 4000 km
+  const night2 = buildNightMap(ctx, { rect: [22, -16, 52, 16], res: 4096, seed: 1408, detail: 3 });
+  console.log('[e_earth] fine night map splats ' + night2.count);
   // stars (only seen in S14 / S18 above the limb)
   const scene = new THREE.Scene();
   const stars = kit.starfield({ count: 26000, seed: 1407, radius: 1000, H, brightness: 0.75, sizeScale: 0.85, warm: 0.35 });
@@ -130,8 +140,8 @@ export async function create(ctx) {
   function base() {
     U.dayGain.value = 0; U.moonGain.value = 0; U.lightsGain.value = 1; U.cloudsGain.value = 1; U.glowGain.value = 0.6;
     U.nightLand.value = 0.012; U.atmoGain.value = 1; U.airglowGain.value = 0.4; U.conicOn.value = 0; U.birthOn.value = 0;
-    U.dimAmt.value = 1; U.clearAmt.value = 0; U.sparkOn.value = 0; U.cloudShift.value = 0; U.termGain.value = 1; U.airglowSig.value = 0.0022; U.glintExp.value = 260; U.glintBroad.value = 0.18;
-    globe.setPatch(null); globe.clearSprites();
+    U.dimAmt.value = 1; U.clearAmt.value = 0; U.lightsKnee.value = 1.6; U.cloudDetail.value = 0; U.glintSlick.value = 0; U.sparkOn.value = 0; U.cloudShift.value = 0; U.termGain.value = 1; U.airglowSig.value = 0.0022; U.glintExp.value = 260; U.glintBroad.value = 0.18;
+    globe.setPatch(null); globe.clearSprites(); globe.setNight2(null);
   }
 
   return {
@@ -148,19 +158,26 @@ export async function create(ctx) {
         const q = new THREE.Quaternion().setFromAxisAngle(s14.pos.clone().normalize(), ang);
         U.sunDir.value.copy(s14Sun).applyQuaternion(q); U.moonDir.value.copy(s14Moon).applyQuaternion(q);
         U.lightsGain.value = 0; U.moonGain.value = 0.32; U.nightLand.value = 0.004; U.glintExp.value = 140; U.glintBroad.value = 0.08;
-        U.cloudsGain.value = 1.0; U.cloudShift.value = 0.00004 * lt;
+        U.cloudsGain.value = 1.0; U.cloudShift.value = 0.00004 * lt; U.cloudDetail.value = 0.8;
         U.conicOn.value = 1; U.conicCore.value = 1.25; U.conicGlow.value = 0.075; U.conicOut.value = 0.25; U.twGain.value = 0.5;
         U.atmoGain.value = 0.0; U.airglowGain.value = 0.6;
         stars.material.uniforms.brightness.value = 1.6;
       } else if (shot.id === 'S18') {
         pose = s18Pose(t);
         U.sunDir.value.copy(s18Sun); U.moonDir.value.copy(s18Moon);
-        U.dayGain.value = 1; U.moonGain.value = 0.12; U.cloudShift.value = 0.00003 * lt; U.lightsGain.value = 1.5;
-        U.birthOn.value = 1; U.sparkOn.value = 1;
+        U.dayGain.value = 1; U.moonGain.value = 0.12; U.cloudShift.value = 0.00003 * lt; U.lightsGain.value = 2.6; U.lightsKnee.value = 1.4;
+        U.birthOn.value = 1; U.sparkOn.value = 1; globe.setNight2(night2); U.cloudDetail.value = 0.5;
         // a clear night over the Rift: clouds thin out within ~6–16° of R_geo
         U.clearDir.value.copy(g); U.clearCos.value.set(Math.cos(6 * D2R), Math.cos(16 * D2R)); U.clearAmt.value = 1;
+        // the birth front tracks the frame: its radius stays ≈ 0.8 × the visible ground half-width
+        // (birth time 1.0 ≈ 3300 km of easy ground near R), after a 2.2 s start in which Nairobi and
+        // the highlands around it light up from the first lamp. It runs faster along the Nile and the
+        // coasts (birth.js), so the Nile thread shoots ahead to the top of the frame; by the last
+        // second everything on the visible hemisphere is lit (τ ≈ 1.12 at 9000 km).
         const tb = 95.25;
-        U.birthTau.value = t < tb ? -1 : 1.1 * ease.inQuad(clamp((t - tb) / 10.4, 0, 1)) + 0.0012;
+        const altNow = (pose.pos.length() - 1) * G.R_EARTH_KM;
+        const ramp = Math.pow(smoothstep(tb, tb + 2.2, t), 1.5);
+        U.birthTau.value = t < tb ? -1 : 1.246e-4 * altNow * ramp + 0.0012;
         U.birthSoft.value = 0.006;
         U.airglowGain.value = 0.22; U.airglowSig.value = 0.0012; U.termGain.value = 0.35; U.glowGain.value = 0.05; U.nightLand.value = 0.006;
         const altKm = (pose.pos.length() - 1) * G.R_EARTH_KM;
@@ -184,9 +201,10 @@ export async function create(ctx) {
         U.moonGain.value = shot.id === 'S22A' ? 0.35 : 0.12; U.nightLand.value = 0.008;
         // no clouds: a 10 km/texel cloud map magnified 50–100× only reads as murk at these altitudes
         U.cloudsGain.value = 0.0;
-        if (shot.id === 'S22A') { U.glintExp.value = 900; U.glintBroad.value = 0.01; U.moonGain.value = 0.16; }
+        if (shot.id === 'S22A') { U.glintExp.value = 260; U.glintBroad.value = 0.04; U.moonGain.value = 0.11; U.glintSlick.value = 1; }
         U.glowGain.value = 0.06;
         U.airglowGain.value = 0.4;
+        U.lightsKnee.value = shot.id === 'S22A' ? 8.0 : 3.0;   // the montage keeps its highlights (boats blaze)
       }
       globe.setPose(pose);
       G.applyPose(cam, pose);
@@ -196,8 +214,8 @@ export async function create(ctx) {
     },
     post(shot, f) {
       if (shot.id === 'S14') return { streak: 0.18, bloom: 0.7, vignette: 0.24 };
-      if (shot.id === 'S18') return { streak: 0.05, bloom: 0.7, vignette: 0.22 };
-      return { streak: 0.08, bloom: 0.85, vignette: 0.24, contrast: 1.04 };
+      if (shot.id === 'S18') return { streak: 0.05, bloom: 0.55, vignette: 0.22 };
+      return { streak: 0.08, bloom: 0.85, vignette: 0.24, contrast: 1.04, exposure: shot.id === 'S19' ? 1.15 : 1.0 };
     },
     _debug: { birth, s14 },
   };
