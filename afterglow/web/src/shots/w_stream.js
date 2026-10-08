@@ -373,12 +373,12 @@ export async function create(ctx) {
       }`,
   });
   const moon = new THREE.Mesh(new THREE.SphereGeometry(MOON_R, 96, 48), moonMat);
-  // place it so that at 130.35 it is at the upper right, ~10 R⊕ from the camera (→ ~50 px across)
+  // place it so that at 130.5 it is at the upper right, ~10 R⊕ from the camera (→ ~50 px across)
   // The camera recedes from the Earth at ~20 R⊕/s by now, so anything fixed streams towards P_E and
   // shrinks fast: the Moon swoops in from the right edge (~130.1), is ~57 px at 130.5 and ~28 px at
   // 131.0, below the stream. It is drawn several times across the shutter (cheap: it is small).
-  const T_M = 130.45;
-  const M_EARTH = dirOf(1660, 760, F18).multiplyScalar(12).addScaledVector(eHat, -Dof(T_M));   // Earth-centred position (camera axes)
+  const T_M = 130.5;
+  const M_EARTH = dirOf(1610, 470, F18).multiplyScalar(12).addScaledVector(eHat, -Dof(T_M));   // Earth-centred position (camera axes)
 
   const scene28 = new THREE.Scene();
   // the beam's core: the integrated light of words too far and too small to resolve — a faint warm
@@ -425,20 +425,32 @@ export async function create(ctx) {
   // =====================================================================================================
   // S29 — looking down the beam: words recede towards R
   // =====================================================================================================
-  const N2 = 760;
+  const N2 = 150;
   const AX = dirOf(RX, RY, F35);
   const Q1 = new THREE.Vector3().crossVectors(AX, new THREE.Vector3(0, 1, 0)).normalize();
   const Q2 = new THREE.Vector3().crossVectors(Q1, AX).normalize();
   const R2 = rng(55 * 1000 + 29);
   const bRect = new Float32Array(N2 * 4), bAsp = new Float32Array(N2), bZ0 = new Float32Array(N2), bLat = new Float32Array(N2 * 2), bSeed = new Float32Array(N2), bDie = new Float32Array(N2);
+  const placed = [[905 - 45, 650 - 45, 905 + 45, 650 + 45]];   // keep the last 「？」's start clear
   for (let i = 0; i < N2; i++) {
     const k = i % ORDER.length, rc = atlas.rects[k];
     bRect.set([rc[0], rc[1], rc[2], rc[3]], i * 4); bAsp[i] = rc[4];
     const u = (i + R2()) / N2;
-    const z0 = 2.6 * Math.pow(30, Math.pow(u, 0.45));
+    const z0 = 1.6 * Math.pow(38, Math.pow(u, 0.7));
     bZ0[i] = z0;
-    const rad = 0.17 * Math.sqrt(-2 * Math.log(Math.max(1e-6, R2()))) * 0.7, ang = R2() * 6.2831853;
-    bLat[i * 2] = Math.cos(ang) * rad * z0; bLat[i * 2 + 1] = Math.sin(ang) * rad * z0 * 0.8;
+    // a beam of finite width (slowly diverging), not a cone: as the words recede they converge on the
+    // axis — the vanishing point is R. Legible (near) words are placed so that they do not overlap on
+    // screen at 131.0 (deterministic rejection sampling; the far ones may pile up into the thread's end).
+    const wz = 0.42 + 0.012 * z0;                 // beam radius (world): ~0.25 rad near, ~0.02 rad far
+    for (let tries = 0; ; tries++) {
+      const rad = Math.sqrt(0.08 + 0.92 * R2()), ang = R2() * 6.2831853;     // uniform over the cross-section
+      const lx = Math.cos(ang) * rad * wz * 1.9, ly = Math.sin(ang) * rad * wz * 0.8;
+      const c = AX.clone().multiplyScalar(z0).addScaledVector(Q1, lx).addScaledVector(Q2, ly);
+      const [sx, sy] = project(c, F35), h = 0.062 * F35 / -c.z, w = h * rc[4];
+      const box = [sx - w / 2 - 8, sy - h / 2 - 5, sx + w / 2 + 8, sy + h / 2 + 5];
+      const hit = h > 9 && placed.some(b => box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1]);
+      if (!hit || tries > 40) { if (h > 9) placed.push(box); bLat[i * 2] = lx; bLat[i * 2 + 1] = ly; break; }
+    }
     bSeed[i] = R2();
     // words go out one by one: most are gone by 132, a few linger into 133
     bDie[i] = 131.25 + 1.5 * Math.pow(R2(), 1.6);
@@ -451,7 +463,7 @@ export async function create(ctx) {
   for (const g of [geo29, pt29]) { for (const [k, a] of Object.entries(inst2)) g.setAttribute(k, a); g.instanceCount = N2; }
   const U2 = {
     uAtlas: { value: atlas.texture }, uAx: { value: AX }, uQ1: { value: Q1 }, uQ2: { value: Q2 }, uTau: { value: 0 }, uT: { value: 0 },
-    uHW: { value: 0.12 }, uFy: { value: 1 }, uPx: { value: H / 1080 }, uCol: { value: new THREE.Vector3(...AMBER) }, uGain: { value: 1.5 }, uDim: { value: 1 },
+    uHW: { value: 0.062 }, uFy: { value: 1 }, uPx: { value: H / 1080 }, uCol: { value: new THREE.Vector3(...AMBER) }, uGain: { value: 1.5 }, uDim: { value: 1 },
   };
   const VS29 = /* glsl */ `
     attribute vec4 aRect; attribute float aAsp, aZ0, aSeed, aDie; attribute vec2 aLat;
@@ -542,7 +554,7 @@ export async function create(ctx) {
         earth.group.position.copy(U.uE.value); earth.update();
         renderer.render(scene28, cam18);
         if (t > 129.9) {
-          const n = 10;
+          const n = 28;
           moonMat.uniforms.uW.value = 1 / n;
           for (let k = 0; k < n; k++) {
             const tk = t + dt * ((k + 0.5) / n - 0.5);
