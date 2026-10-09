@@ -32,6 +32,10 @@ uniform float S;                           // pixel scale (H / 1080)
 // sprites: xy = px (top-left origin), z = radius px, w = shape (0 round, 1 rect 24×64 footprint)
 uniform vec4 spr[4]; uniform vec4 sprCol[4];
 uniform vec4 dimRect; uniform float dimAmt;   // card box (px, top-left origin): x0, y0, x1, y1
+// card box highlight limiter (S40): while the card is up (dimHi), everything the globe draws inside the
+// box is soft-limited to dimCap (the HDR limb / dawn crescent can no longer cut through the text) and
+// the stars already in the target are scaled by dimStar (through the blend alpha)
+uniform float dimHi, dimCap, dimStar;
 uniform float lightsColdOcean;               // unused hook (kept 0)
 // clear sky: clouds thinned inside a cap around clearDir (cos of inner / outer radius) — S18 opens on
 // a cloudless night over the Rift so the first lamps are crisp, the weather comes in with distance
@@ -151,11 +155,12 @@ void main(){
   vec2 frag = gl_FragCoord.xy;                       // bottom-left origin
   vec2 pix = vec2(frag.x, res.y - frag.y);           // top-left origin (screenplay convention)
   // card legibility (S40): a rounded box with a wide feather, so no rectangle is ever seen on the planet
-  float dimK = 1.0;
-  if (dimAmt < 1.0) {
+  float dimK = 1.0, boxW = 0.0;
+  if (dimAmt < 1.0 || dimHi > 0.0) {
     vec2 hc = 0.5 * (dimRect.xy + dimRect.zw), hh = 0.5 * (dimRect.zw - dimRect.xy);
     vec2 q = max(abs(pix - hc) - hh, 0.0);
-    dimK = mix(dimAmt, 1.0, smoothstep(0.0, 90.0 * S, length(q)));
+    boxW = 1.0 - smoothstep(0.0, 90.0 * S, length(q));
+    dimK = mix(1.0, dimAmt, boxW);
   }
   vec3 dc = normalize(vec3((frag.x - 0.5 * res.x) / fpx, (frag.y - 0.5 * res.y) / fpx, -1.0));
   vec3 rd = normalize(camR * dc.x + camU * dc.y + camB * dc.z);
@@ -310,8 +315,14 @@ void main(){
       sp += sprCol[i].rgb * (exp(-k) + 0.06 * exp(-k * 0.08));
     }
   }
-  vec3 outc = col * cov;
-  gl_FragColor = vec4(outc + atm * dimK + sp, cov);
+  vec3 outc = col * cov + atm * dimK;
+  float alphaOut = cov;
+  if (dimHi > 0.0) {
+    float wk = boxW * dimHi, m = max(outc.r, max(outc.g, outc.b));
+    outc *= mix(1.0, 1.0 / (1.0 + m / dimCap), wk);
+    alphaOut = 1.0 - (1.0 - cov) * mix(1.0, dimStar, wk);
+  }
+  gl_FragColor = vec4(outc + sp, alphaOut);
 }`;
 
 export function createGlobe(ctx, earth, { birthTex = null } = {}) {
@@ -336,7 +347,7 @@ export function createGlobe(ctx, earth, { birthTex = null } = {}) {
     spr: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) }, sprCol: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) },
     sparkOn: { value: 0 }, lightsKnee: { value: 1.6 }, cloudDetail: { value: 0 }, glintSlick: { value: 0 },
     clearDir: { value: new THREE.Vector3(0, 1, 0) }, clearCos: { value: new THREE.Vector2(1, 1) }, clearAmt: { value: 0 },
-    dimRect: { value: new THREE.Vector4(-1e4, -1e4, -1e4, -1e4) }, dimAmt: { value: 1 }, lightsColdOcean: { value: 0 },
+    dimRect: { value: new THREE.Vector4(-1e4, -1e4, -1e4, -1e4) }, dimAmt: { value: 1 }, dimHi: { value: 0 }, dimCap: { value: 0.1 }, dimStar: { value: 1 }, lightsColdOcean: { value: 0 },
   };
   const mat = new THREE.ShaderMaterial({
     vertexShader: VS, fragmentShader: GLSL.all + FRAG, uniforms: U,

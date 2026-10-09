@@ -10,6 +10,7 @@
 // that shows the most of the 64 next stars inside the 2.39 band at 43.0 without any of them passing
 // close to the lens, preferring a well spread constellation.
 import * as THREE from 'three';
+import { webPathPose, WEB } from '../_webgraph.js';
 
 export const FOCAL = 50;
 export const FPX = 960 / (18 / FOCAL);         // focal length in 1080p px (kit.filmCamera: 36 mm gauge)
@@ -70,11 +71,26 @@ export function solveCamera(I, { D0 = 26, zEnd = 6, count = 66 } = {}) {
     if (!best || score > best.score) best = { score, vis, spread, mx, sdx, sdy, u: u.clone(), D, rot: Rm.clone() };
   }
   const q = new THREE.Quaternion().setFromRotationMatrix(best.rot);
-  return { F, S, u: best.u, D0: best.D, quat: q, vis: best.vis, spread: best.spread, mx: best.mx, sdx: best.sdx, sdy: best.sdy, theta };
+  // Eye-trace match at the cut S09 → S10 (43.0): S10's first frame (WEB_PATH(0), 24 mm) sees the first
+  // star at pixel M. During the pull-back the camera pans uniformly (≈3°) so that on S09's last frame
+  // the first star sits on that same pixel M of the 50 mm frame: the brightest star of both frames
+  // stays put across the cut, and the cut reads as a lens change on the same, still-igniting star.
+  // (A fully concentric cut is impossible: WEB_PATH(0) looks at the web from the opposite side, ≈160°
+  // away, and no pose that ends there keeps the first star on R and the second on (1086, 422).)
+  const W0 = webPathPose(0);
+  const fpx24 = 960 / (18 / WEB.focalMM);
+  const cam24 = new THREE.Matrix4().lookAt(W0.pos, W0.target, W0.up);       // camera → world rotation
+  const fc = F.clone().sub(W0.pos).applyMatrix4(cam24.clone().transpose());
+  const M = [960 + fpx24 * fc.x / -fc.z, 540 - fpx24 * fc.y / -fc.z];
+  const qEnd = q.clone().multiply(new THREE.Quaternion().setFromUnitVectors(camDir(...M), a));
+  return { F, S, u: best.u, D0: best.D, quat: q, qEnd, M, vis: best.vis, spread: best.spread, mx: best.mx, sdx: best.sdx, sdy: best.sdy, theta };
 }
 
-// Pose of the S09 camera at global time t.
+// Pose of the S09 camera at global time t: locked until 39.0, then a uniform straight pull-back
+// (z = 1 → 6 along the first star's ray) with a uniform pan quat → qEnd (the eye-trace match above).
 export function firstStarPose(sol, t, zEnd = 6) {
-  const z = 1 + (zEnd - 1) * Math.min(1, Math.max(0, (t - 39) / 4));
-  return { pos: sol.F.clone().addScaledVector(sol.u, sol.D0 * z), quat: sol.quat, z };
+  const s = Math.min(1, Math.max(0, (t - 39) / 4));
+  const z = 1 + (zEnd - 1) * s;
+  const quat = sol.qEnd ? sol.quat.clone().slerp(sol.qEnd, s) : sol.quat;
+  return { pos: sol.F.clone().addScaledVector(sol.u, sol.D0 * z), quat, z };
 }

@@ -74,7 +74,9 @@ export async function create(ctx) {
         float peak = amp * mix(lo, 1.0, rise) * over;
         // dolly back: stars dim gently with distance (not 1/d²: they must stay stars, not vanish)
         float d = -mv.z;
-        peak *= pow(clamp(uRef / d, 0.05, 4.0), 0.55);
+        // (the first star dims a little faster, HDR 40 → 9 by 43.0, to meet its own brightness on S10's
+        // first frame — c_web boosts it there to the same value: the eye-trace anchor of the cut)
+        peak *= pow(clamp(uRef / d, 0.05, 4.0), isFirst > 0.5 ? 0.83 : 0.55);
         vI = peak * on;
         vStreak = isFirst > 0.5 ? 1.0 : clamp((amp - 8.0) / 14.0, 0.0, 1.0) * 0.7;
         vec3 bb = blackbody(temp); bb /= max(1e-3, dot(bb, vec3(0.2126, 0.7152, 0.0722)));

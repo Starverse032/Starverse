@@ -13,10 +13,13 @@
 //      (1800, 540) (24 mm, distance 160). 138.0–140.0 uniform yaw with 6-frame servo ramps, carrying
 //      the point onto R (the impostor R). 140.0 → 141.011 (the 4th pulse) uniform push-in 160 → 60
 //      with a zoom 24 → 50 mm, the point held on R the whole time; then still.
-//      Rhythm is told ONLY by exposure spikes: +1.5 EV on frame F_k, then +0.9, +0.35.
+//      Rhythm is told ONLY by exposure spikes: +1.5 EV on frame F_k, then +0.9, +0.35 — realised as
+//      exposure gain PLUS an additive veil and a soft PULSAR band sweeping across the lens (gain alone
+//      multiplies black and does not read). The remnant is lifted (×2.5 far, ×1.4 close) so it reads around the point.
 // S31  50 mm. 142.0–145.0 uniform pull-back ×6 with a lateral truck (camera orientation fixed), the
 //      pulsar recedes to (1700, 540) and keeps flashing; then still. R is empty. Far away each sweep
-//      is only a local flash of a cold point (+0.6 EV on the point, not the frame). Pulses
+//      is only a local flash of a cold point (+0.6 EV on the point, a small local glare, and only a
+//      breath of veil — not a frame flash). Pulses
 //      145.022 / 146.359 / 147.696 flash in silence; 147.75–148.0 fade to black (timeline).
 import * as THREE from 'three';
 import { hex, IRON_BLUE, OIII, SULFUR, HALPHA, PULSAR } from './c_supernova/shell.js';
@@ -46,12 +49,16 @@ export async function create(ctx) {
   const psiR = mm => -Math.atan((960 - R[0]) / fpxOf(mm));
   const psi1 = psiR(50);
   const T_PUSH0 = 140.0, T_PUSH1 = T0 + 3 * P;        // the push stops on the 4th pulse (141.011)
-  // S31: fixed orientation psi1; position from c0 to c1 (pull-back ×6 + truck) so the pulsar lands at x = 1700
+  // S31: fixed orientation psi1; pull-back ×6 + lateral truck so the pulsar goes from R (734) to x = 1700.
+  // Parameterised on the SCREEN, not in world space (a linear world-space lerp front-loads the screen
+  // motion: ~45 px/frame on the first frames, then ~2 px/frame): with s = servo(t, 142, 145, 6 frames)
+  //   depth(s) = depth0 · 6^s           (constant rate of apparent shrink: a uniform pull-back)
+  //   x(s)     = 734 + (1700 − 734) · s (constant screen speed ≈ 322 px/s, 6-frame ramps as in S30)
+  //   lateral  = depth · (x − 960) / f
   const fwd = new THREE.Vector3(-Math.sin(psi1), 0, -Math.cos(psi1)), right = new THREE.Vector3(Math.cos(psi1), 0, -Math.sin(psi1));
-  const c0 = new THREE.Vector3(0, 0, D1);
-  const depth1 = 6 * D1 * Math.cos(psi1);
-  const X1 = depth1 * (1700 - 960) / fpxOf(50);
-  const c1 = fwd.clone().multiplyScalar(-depth1).add(right.clone().multiplyScalar(-X1));
+  const depth0 = D1 * Math.cos(psi1);
+  const X_S0 = 960 + fpxOf(50) * Math.tan(psi1), X_S1 = 1700;   // X_S0 = R[0] = 734
+  const T_PULL0 = 142.0, T_PULL1 = 145.0;
   function pose(t) {
     let pos, psi, mm;
     if (t < 142.0) {
@@ -65,8 +72,10 @@ export async function create(ctx) {
       }
     } else {
       mm = 50; psi = psi1;
-      const u = Math.min(1, Math.max(0, (t - 142.0) / 3.0));   // uniform, then still
-      pos = c0.clone().lerp(c1, u);
+      const u = servo(t, T_PULL0, T_PULL1, 6 / FPS);           // uniform on screen, then still
+      const dep = depth0 * Math.pow(6, u);
+      const lat = dep * (X_S0 + (X_S1 - X_S0) * u - 960) / fpxOf(50);
+      pos = fwd.clone().multiplyScalar(-dep).add(right.clone().multiplyScalar(-lat));
     }
     return { pos, psi, mm };
   }
@@ -76,7 +85,7 @@ export async function create(ctx) {
   const scene = new THREE.Scene();
   const stars = kit.starfield({ count: 2600, seed: 55300, radius: 4000, H, brightness: 0.2, sizeScale: 0.75, warm: 0.2 });
   scene.add(stars);
-  const nsU = { uI: { value: 0 }, uRpx: { value: 1 }, uS: { value: S }, uHalf: { value: 40 }, uCol: { value: new THREE.Vector3(...PULSAR) } };
+  const nsU = { uI: { value: 0 }, uRpx: { value: 1 }, uS: { value: S }, uHalf: { value: 40 }, uGlare: { value: 0 }, uCol: { value: new THREE.Vector3(...PULSAR) } };
   const nsG = new THREE.BufferGeometry();
   // the star is drawn in screen space at 5 instants across a 180° shutter (analytic motion blur for
   // the yaw and the push: it moves up to ~22 px per frame)
@@ -87,7 +96,7 @@ export async function create(ctx) {
     transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, uniforms: nsU,
     vertexShader: /* glsl */ `uniform float uS, uHalf; void main(){ gl_Position = vec4(position.xy, 0.0, 1.0); gl_PointSize = 2.0 * uHalf * uS; }`,
     fragmentShader: /* glsl */ `
-      uniform float uI, uRpx, uHalf; uniform vec3 uCol;
+      uniform float uI, uRpx, uHalf, uGlare; uniform vec3 uCol;
       void main(){
         vec2 q = (gl_PointCoord - 0.5) * 2.0 * uHalf; float r = length(q);
         // a resolved sphere when it is a few px wide (white core, violet Fresnel rim), a PSF when not
@@ -99,7 +108,9 @@ export async function create(ctx) {
         // sub-pixel: energy-conserving gaussian core; plus a tight halo
         float psf = exp(-0.5 * r * r / 0.8) * clamp(1.4 - uRpx, 0.0, 1.0);
         float halo = 0.05 * exp(-r / (1.5 + 0.6 * rs));
-        gl_FragColor = vec4((c + uCol * (psf + halo)) * uI, 1.0);
+        // the far flash (S31): a local glare around the point, fading out before the sprite edge
+        float glare = uGlare * (0.6 * exp(-r / 5.0) + 0.12 * exp(-r / 22.0)) * smoothstep(uHalf, uHalf * 0.6, r);
+        gl_FragColor = vec4((c + uCol * (psf + halo)) * uI + mix(uCol, vec3(1.0), 0.35) * glare, 1.0);
       }`,
   });
   const ns = new THREE.Points(nsG, nsMat);
@@ -207,6 +218,25 @@ export async function create(ctx) {
     }`, beamU, { blending: THREE.AdditiveBlending, transparent: true });
   const comp = kit.compositor();
 
+  // ---- the beam crossing the lens (S30 pulse frames): a soft PULSAR band sweeping across the whole
+  // frame, oriented along the spin axis' image tilt (20° from vertical), moving perpendicular to it.
+  // Together with the veil (post flash) this is what makes the "+1.5 EV" spike read on a black frame:
+  // exposure gain alone multiplies black.
+  const bandU = { uRes: { value: new THREE.Vector2(W, H) }, uS: { value: S }, uC: { value: new THREE.Vector2(960, 540) },
+    uOff: { value: 0 }, uA: { value: 0 }, uCol: { value: new THREE.Vector3(...PULSAR) } };
+  const band = kit.fullscreen(/* glsl */ `
+    uniform vec2 uRes, uC; uniform float uS, uOff, uA; uniform vec3 uCol;
+    void main(){
+      vec2 p = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) / uS;
+      vec2 n = vec2(${Math.cos(20 * D2R).toFixed(5)}, ${Math.sin(20 * D2R).toFixed(5)});   // ⟂ to the tilted spin axis
+      float x = dot(p - uC, n) - uOff;
+      float b = exp(-0.5 * x * x / (300.0 * 300.0)) + 0.35 * exp(-0.5 * x * x / (90.0 * 90.0));
+      gl_FragColor = vec4(mix(uCol, vec3(1.0), 0.3) * uA * b, 1.0);
+    }`, bandU, { blending: THREE.AdditiveBlending, transparent: true });
+  const BAND_OFF = [-120, 520, 1160], BAND_A = [0.022, 0.010, 0.003];   // per frame of the spike
+  const VEIL30 = [0.0075, 0.0028, 0.0009];                              // additive HDR veil (pre-exposure)
+  const VEIL31 = [0.0016, 0.0007, 0.0002];                              // far: a breath, not a frame flash
+
   // beam geometry for time t and LOS ℓ (star → camera): spin axis Ω at 45° from ℓ, tilted 20° in the
   // image plane; magnetic axis m(φ) on the 45° cone around Ω with m(0) = ℓ
   const tmp = new THREE.Vector3();
@@ -248,6 +278,8 @@ export async function create(ctx) {
       if (sp >= 0 && shot.id === 'S31') I *= Math.pow(2, EV31[sp]) * 1.6;          // the local flash of the far point
       if (sp >= 0 && shot.id === 'S30') I *= [6.0, 2.5, 1.4][sp];            // the beam is in the lens
       nsU.uI.value = I / NSUB; nsU.uRpx.value = rpx; nsU.uHalf.value = 24 + 2 * rpx;
+      nsU.uGlare.value = 0;
+      if (sp >= 0 && shot.id === 'S31') { nsU.uGlare.value = [3.0, 1.3, 0.45][sp] / NSUB; nsU.uHalf.value = 72; }
       for (let k = 0; k < NSUB; k++) {
         placeCam(camP, pose(t + (0.5 / FPS) * ((k + 0.5) / NSUB - 0.5)));
         const v = new THREE.Vector3(0, 0, 0).project(camP);
@@ -259,7 +291,10 @@ export async function create(ctx) {
       renderer.setClearColor(0x000000, 1); renderer.clear();
       const ac = renderer.autoClear; renderer.autoClear = false;
       // nebula billboards (facing the original line of sight), full resolution: the wisps are fine
-      nebU.uGain.value = lit ? 0.18 * Math.min(1, (t - T0 + 0.5) / 1.5) : 0;
+      // lifted so the remnant reads (≈ 6–10/255 around the point) instead of sinking into black
+      // (×2.5 while it is small and far; only ×1.4 once the push-in fills the frame with it)
+      const nebK = 0.18 * (1.4 + 1.1 * Math.min(1, Math.max(0, (dist - 60) / 90)));
+      nebU.uGain.value = lit ? nebK * Math.min(1, (t - T0 + 0.5) / 1.5) : 0;
       renderer.render(nebScene, cam);
       renderer.render(scene, cam);
       renderer.render(nsScene, ortho);
@@ -278,14 +313,23 @@ export async function create(ctx) {
       }
       comp.material.uniforms.tex.value = low.texture; comp.material.uniforms.gain.value = 1;
       comp.render(renderer, f.target);
+      if (sp >= 0 && shot.id === 'S30') {
+        placeCam(camP, ps);
+        const v = new THREE.Vector3(0, 0, 0).project(camP);
+        bandU.uC.value.set((v.x * 0.5 + 0.5) * 1920, (0.5 - v.y * 0.5) * 1080);
+        bandU.uOff.value = BAND_OFF[sp]; bandU.uA.value = BAND_A[sp];
+        band.render(renderer, f.target);
+      }
       renderer.autoClear = ac;
     },
     post(shot, f) {
       const frame = Math.round(f.t * FPS);
       const sp = spike(frame);
       // S30: the rhythm is told only by whole-frame exposure spikes; S31: the far point flashes locally
+      // plus an additive veil (the beam in the lens): on black, exposure gain alone changes nothing
       const ev = shot.id === 'S30' && sp >= 0 ? EV30[sp] : 0;
-      return { exposure: Math.pow(2, ev), streak: 0.3, bloom: 0.8 };
+      const veil = sp < 0 ? 0 : (shot.id === 'S30' ? VEIL30[sp] : VEIL31[sp]);
+      return { exposure: Math.pow(2, ev), streak: 0.3, bloom: 0.8, flash: veil, flashColor: [0.86, 0.82, 1.0] };
     },
   };
 }

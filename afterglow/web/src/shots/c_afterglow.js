@@ -7,7 +7,8 @@
 //   S07 25.000–27.000  f600 point 1.5 at R (= S06's last frame) · f601 30 · f602 1e4 (expanding light)
 //                      f603–615 full-frame clipped warm white #FFF4E0 (dithered by post grain/dither)
 //                      f601–612 full-width anamorphic line at y = 540 (core 6 px, halo 60 px, #CFE0FF)
-//                      f616–647 the white "opens" onto the plasma: contrast 0 → 1, 6500 K → 4500 K
+//                      f616–647 the white "opens" onto the plasma: contrast 0 → 1 (outCubic from f615, no
+//                      over-exposure overshoot), 6500 K → 4500 K
 //   S08 27.000–35.000  24 mm, yaw +8° and roll 1.5° (uniform). Direction-space shader:
 //                      F_far  = band-pass Gaussian random field (sum of rotated simplex layers in a
 //                               narrow band, peak ≈ 1° ≈ 26 px, + a ×0.3 secondary peak), baked once
@@ -16,7 +17,8 @@
 //                               flowing with t_w = min(t, 30) (frozen at decoupling).
 //                      30.0–31.0 decoupling: fog contrast → 0, speckle blur σ 6 px → 1 px (mip LOD).
 //                      colour = blackbody(T·(1 + 0.12 (F − 0.5))) with T 4500 → 3000 (31) → 1500 K (34);
-//                      exposure 0 → −1 EV (31) → −7 EV (35), then a final roll-off so 35.0 is true black.
+//                      exposure 0 → −1 EV (31) → −7 EV (35) (C1: the two slopes blend over 30.6–31.6),
+//                      then a final roll-off so 35.0 is true black.
 //
 // Cost (1080p, SwiftShader): main pass ≈ 0.15 s, fog pass (half res) ≈ 0.1 s; bake ≈ 1.5 s in create().
 import * as THREE from 'three';
@@ -235,7 +237,7 @@ export async function create(ctx) {
     } else { s.P = 0; s.haloA = 0; }
     // full white f603–615; opening from f615 to ≈f628 (blend into the bright plasma)
     if (fr >= 2.5 && fr < 15) s.white = smoothstep(2.5, 3.0, fr);
-    else if (fr >= 15) s.white = 1 - smoothstep(15, 27, fr);
+    else if (fr >= 15) s.white = 1 - smoothstep(15, 21, fr);
     // anamorphic line: f601–612 at full strength, gone before f620
     if (fr >= 0.6 && fr < 19.5) s.line = smoothstep(0.6, 1.0, fr) * (1 - smoothstep(12, 19.5, fr)) * (fr < 3 ? [1.5, 2.5, 30][Math.min(2, Math.floor(fr))] : 30);
     return s;
@@ -253,15 +255,21 @@ export async function create(ctx) {
     else if (t < 34) T = logLerp(3000, 1500, (t - 31) / 3);
     else T = logLerp(1500, 1200, clamp(t - 34));
     // exposure: 0 EV (27) → −1 EV (31) → −7 EV (35); final roll-off so that 35.0 is black
-    let ev;
-    if (t < 31) ev = -(clamp(t - 27, 0, 4)) / 4;
-    else ev = -1 - 6 * clamp((t - 31) / 4);
+    // The slope −0.25 EV/s (27–31) blends into −1.5 EV/s (31–35) with a smoothstep over 30.6–31.6
+    // (C1, no sudden speed-up of the fade at 31.0): ev = a·(t−27) + (b−a)·w·∫smoothstep, closed form.
+    // ev(31) ≈ −1.06, ev(35) ≈ −6.9, then the roll-off below makes 35.0 black.
+    const ssInt = u => (u <= 0 ? 0 : u < 1 ? u * u * u - 0.5 * u * u * u * u : u - 0.5);
+    const tt = clamp(t - 27, 0, 8);
+    const ev = -0.25 * tt - 1.25 * ssInt((27 + tt - 30.6) / 1.0);
     const L0 = 1.1;
     let gain = L0 * Math.pow(2, ev) * (1 - smoothstep(34.2, 34.96, t));
-    // while white: the field is far over-exposed and blends with the white (opening f615–f647)
-    if (fr < 48) gain *= logLerp(OPEN_GAIN * 1.6, 1, smoothstep(15, 47, fr));
+    // while white: the field is exposed to the white's own luminance (OPEN_GAIN, no overshoot) and
+    // opens from f615: gain and contrast both follow an outCubic over f615–f647, so the plasma's
+    // structure is already visible by f618–620 and the opening is even instead of stuck-then-sudden
+    const open = util.ease.outCubic(clamp((fr - 15) / 32));
+    if (fr < 48) gain *= logLerp(OPEN_GAIN, 1, open);
     // contrast: 0 under the white, opens f616–f647 (S07), full by 27.0
-    const contrast = smoothstep(15, 48, fr);
+    const contrast = util.ease.outCubic(clamp((fr - 15) / 33));
     // decoupling 30–31: fog contrast → 0, speckle blur σ 6 px → 1 px
     const dec = util.ease.inOutCubic(clamp(t - T_DEC));
     const ampFog = 1 - dec;

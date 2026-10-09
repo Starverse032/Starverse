@@ -159,11 +159,16 @@ export async function create(ctx) {
       b1 = max(b1, covR(vec4(904.0, 186.0, 1012.0, 223.0), p));                      // lift housing
       b1 = max(b1, covR(vec4(958.5, 112.0, 960.5, 187.0), p));                        // mast
       b1 = max(b1, covR(vec4(1110.0, 208.0, 1160.0, 223.0), p));                      // a/c units
-      vec3 wall1 = skyc * 0.36 + SODIUM * 0.020 * street + vec3(0.0006, 0.0005, 0.0005);
+      // a pure silhouette: the wall is referenced to the sky seen ABOVE the roofline (not the brighter
+      // horizon sky behind it), with only a trace of street glow at the bottom, and clamped a few code
+      // values under that sky everywhere (no material, no window grid)
+      vec3 skyR1 = sky(vec2(p.x, roof - 30.0));
+      vec3 wall1 = min(skyR1 * 0.48 + SODIUM * 0.0045 * street, skyR1 * 0.66);
 
       // ---- building 2 (farther, right): roof at 372 ----------------------------------------------------
       float b2 = cov1(1262.0, 99999.0, p.x) * cov1(372.0, 99999.0, p.y);
-      vec3 wall2 = mix(skyc * 0.36, skyc, 0.42) + SODIUM * 0.012 * street;
+      vec3 skyR2 = sky(vec2(p.x, 342.0));
+      vec3 wall2 = min(skyR2 * 0.50 + SODIUM * 0.003 * street, skyR2 * 0.72);   // farther: a little closer to the sky
 
       col = mix(col, wall2, b2 * (1.0 - b1));
       col = mix(col, wall1, b1);
@@ -197,7 +202,7 @@ export async function create(ctx) {
           } else {
             w = windowAt(p, r, id, 0.0, lit);
           }
-          if (w.a < 0.0) col *= 1.0 + 0.13 * w.a; else col = col * (1.0 - w.a) + w.rgb;
+          if (w.a > 0.0) col = col * (1.0 - w.a) + w.rgb;   // unlit glass: nothing (pure silhouette)
           // sill catching the light, and a faint airy glow around lit windows
           float sill = covR(vec4(r.x - 2.0, r.w + 1.0, r.z + 2.0, r.w + 3.0), p);
           col += WINDOW * 0.035 * lit * sill;
@@ -215,14 +220,14 @@ export async function create(ctx) {
           float lit;
           vec4 w = windowAt(p, r, vec2(i, j), 1.0, lit);
           w.rgb *= 0.8;                                    // a little haze between us and it
-          if (w.a < 0.0) col *= 1.0 + 0.15 * w.a; else col = col * (1.0 - w.a) + w.rgb;
+          if (w.a > 0.0) col = col * (1.0 - w.a) + w.rgb;
           vec2 dq = max(abs(p - 0.5 * (r.xy + r.zw)) - 0.5 * (r.zw - r.xy), 0.0);
           float dd = length(dq);
           col += WINDOW * lit * 0.016 * exp(-dd / 6.0) * step(0.01, dd);
         }
       }
       // the night air in front of everything: sodium haze from the street
-      col += SODIUM * 0.010 * street * street;
+      col += SODIUM * 0.004 * street * street;
       gl_FragColor = vec4(col, 1.0);
     }`, U);
 

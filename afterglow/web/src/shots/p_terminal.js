@@ -362,7 +362,13 @@ export async function create(ctx) {
     const dx = (psi(X + e, Y) - psi(X - e, Y)) / (2 * e), dy = (psi(X, Y + e) - psi(X, Y - e)) / (2 * e);
     return [dy * 2.2, -dx * 2.2, (vn(X * 1.3 + 40, Y * 1.3) - 0.5) * 2]; };
   const pos = [], col = [], rnd = [], kind = [], flw = [];
+  // S04: each glyph opens into its own cluster — depth is per glyph (± a little per point), so a line
+  // under the tilted camera does not shear into one band. aRnd.x carries the glyph depth (≈ 0–1).
+  const rg = util.rng(55 * 1000 + 7), JIT = 12 / (0.8 * 520);          // ±6 px per point
   LINES.forEach((L, k) => {
+    pg.font = L.font;
+    const chars = [...L.text], edge = chars.map((_, c) => CUR.x0 + pg.measureText(chars.slice(0, c + 1).join('')).width);
+    const gDepth = chars.map(() => rg());
     pg.setTransform(1, 0, 0, 1, 0, 0); pg.clearRect(0, 0, pc.width, pc.height);
     pg.setTransform(SSK, 0, 0, SSK, -TX.x0 * SSK, -TX.y0 * SSK);
     pg.font = L.font; pg.fillStyle = '#fff'; pg.textBaseline = 'alphabetic';
@@ -381,6 +387,8 @@ export async function create(ctx) {
       pos.push(px, py, 0);                                                       // document-space pixels
       col.push(...lut[Math.round(64 * cov[((y / SSK) | 0) * bw + ((x / SSK) | 0)])]);
       rnd.push(r(), r(), r(), r()); kind.push(0); flw.push(...flow(px, py));
+      let g = 0; while (g < edge.length - 1 && px >= edge[g]) g++;
+      rnd[rnd.length - 4] = gDepth[g] + (rnd[rnd.length - 4] - 0.5) * JIT;
     }
   });
   const NTEXT = kind.length;
@@ -450,7 +458,7 @@ export async function create(ctx) {
           p = vec3(aP.x - 960.0, 540.0 - (aP.y - scroll), 0.0);
           // each glyph opens into a small cluster of stars: depth + a slow coherent drift
           float wob = 1.0 + 0.25 * sin(0.7 * ts + 6.2832 * aRnd.y);
-          p.z += (aRnd.x - 0.5) * 0.8 * 520.0 * spread;
+          p.z += (aRnd.x - 0.5) * 0.8 * 520.0 * spread;                    // aRnd.x = glyph depth ± jitter
           p += aFlow * vec3(14.0, 14.0, 60.0) * spread * wob;
           // magnitudes: a dust of faint points, ≈ 5 % faintly visible, ≈ 0.6 % bright (a few per glyph)
           float boost = mix(1.0, 0.012 + 3.2 * pow(aRnd.z, 36.0) + 40.0 * pow(aRnd.z, 380.0), colMix);
@@ -632,7 +640,10 @@ export async function create(ctx) {
       cy = LOG_Y0 + LOG_LH * (last + 1);
     }
     U.uCur.value.set(CUR.x0, cy - 18, CUR.x1, cy + 18);
-    U.uCurI.value = 1; U.uCurOn.value = F % 24 < 12 ? 1 : 0;
+    // blink = heartbeat (235, 236, 244, 246–249). While the system prints (237–243, one block per beat) the
+    // cursor stays lit and silent; it drops at 243.5 so the 244 heartbeat is a visible onset. 245 prints
+    // one block (lit on its tick), then the normal phase gives 246 its own onset.
+    U.uCurI.value = 1; U.uCurOn.value = (F >= ALT_IN * FPS && F < (ALT_IN + 6.5) * FPS) || F % 24 < 12 ? 1 : 0;
     U.uHudLine.value = 1; U.uHudOn.value = 1;
     drawHud(F >= 5999 ? 'frame 6000 / 6000' : 'frame ' + String(F + 1).padStart(4, '0'));
     renderer.setRenderTarget(f.target);

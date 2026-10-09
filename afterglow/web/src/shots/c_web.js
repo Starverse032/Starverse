@@ -24,15 +24,18 @@
 //   3. stars (full resolution): one point-spread star per node (core FWHM 2 px, faint wing), brightness
 //            ∝ mass; only the brightest carry their own short anamorphic streak (the post streak is
 //            off: it would streak every bright knot).
+//   Points sweeping fast across the frame (near the lens) fade out by their shutter path length
+//   (polish: no warp-speed streaks during the 49.0 graze — "an observation, not a flight").
 //   Motion blur (180° shutter) without sub-frame renders: every point is drawn as a capsule along its
 //   screen path over the shutter interval (camera poses at both ends → uVPa / uVPb), energy-conserving;
 //   two sub-intervals only during the hero-node whip (lt 6.0–7.6) to keep the capsules short.
 // Cost (1080p SwiftShader, incl. ≈0.4 s post): ≈ 1.0 s/frame, ≈ 1.9 s during the whip.
 import * as THREE from 'three';
 import { getWeb, sampleWebPoints, applyWebPose, webPathPose, WEB } from './_webgraph.js';
-import { ignition, PROP } from './c_web/ignition.js';
+import { ignition, PROP, T_FIRST } from './c_web/ignition.js';
 
 const T10 = 43.0, T11 = 52.0, FPS = 24;
+const G_END = 44.5;                               // end of the post-cut catch-up of the web (see gateT)
 const FPX = 960 / (18 / WEB.focalMM);             // 24 mm focal length in 1080p px (36 mm gauge) = 1280
 const N_DUST = 640000, N_GAS = 24000;
 const srgb = c => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
@@ -56,9 +59,15 @@ export async function create(ctx) {
   // nodes in _webgraph.js; its edges are given extra weight so it reads as THE filament of the frame
   const heroSet = new Set(web.hero.filament);
   const heroEdge = e => heroSet.has(edges[2 * e]) && heroSet.has(edges[2 * e + 1]);
+  // The cut S09 → S10 continues one process: at 43.0 only the ~66 point stars that S09 has lit are
+  // visible. Everything a lit node grows (its clump, cluster, halo and the ionisation fronts along its
+  // filaments) starts after the cut: node times before G_END are remapped monotonically from
+  // [37, G_END] onto [43, G_END] (gateT), so the web visibly lights up from the first star outwards
+  // over 43–47 while new stars keep igniting on the law. Star sprites keep their true ignition times.
+  const gateT = tt => (tt < G_END ? T10 + (tt - T_FIRST) * (G_END - T10) / (G_END - T_FIRST) : tt);
   const edgeLit = (e, u) => {
     const a = edges[2 * e], b = edges[2 * e + 1];
-    return Math.min(I.tIgn[a] + PROP * u, I.tIgn[b] + PROP * (1 - u));
+    return Math.min(gateT(I.tIgn[a]) + PROP * u, gateT(I.tIgn[b]) + PROP * (1 - u));
   };
 
   // ============================== 2. dust points ==============================================
@@ -73,19 +82,20 @@ export async function create(ctx) {
       w = Math.sqrt(mN(a) * mN(b)) * (heroEdge(e) ? 4.5 : 1);
     } else {
       const n = pts.nodeOf[i];
-      tl = I.tIgn[n] + 0.05 * r();
+      tl = gateT(I.tIgn[n]) + 0.05 * r();
       w = mN(n) * 0.8 * (n === web.hero.node ? 1.6 : 1) * Math.exp(0.5 * r.gauss());
     }
     const lum = 0.075 * Math.pow(Math.min(w, 16), 1.25) * Math.exp(0.7 * r.gauss());
     const T = 5000 + 7000 * Math.pow(r(), 0.8);
-    const flag = pts.kind[i] === 1 && pts.nodeOf[i] === first ? 1 : 0;
+    // flag 1 = clump of the R star (S11 collapse), 2 = clump of the hero node (49.0 graze fade)
+    const flag = pts.kind[i] === 1 && pts.nodeOf[i] === first ? 1 : pts.kind[i] === 1 && pts.nodeOf[i] === web.hero.node ? 2 : 0;
     aD.set([tl, Math.min(lum, 1.6), T, flag], 4 * i);
   }
   // + a dense river of stars along the hero filament (its 18 edges), so it reads as the filament
   const heroEdges = [];
   for (let e = 0; e < E; e++) if (heroEdge(e)) heroEdges.push(e);
   // + two rich clusters (Plummer profile, a = 0.8 u): the hero node and the R star's node
-  const CL = [[web.hero.node, 7000, 0], [first, 3500, 1]];
+  const CL = [[web.hero.node, 7000, 2], [first, 3500, 1]];
   const N_CL = CL.reduce((s, c) => s + c[1], 0);
   const N_HERO = 36000, nAll = nD + N_HERO + N_CL;
   const dPos = new Float32Array(nAll * 3), dA = new Float32Array(nAll * 4);
@@ -105,14 +115,14 @@ export async function create(ctx) {
     const rr = Math.min(7, 0.8 / Math.sqrt(Math.pow(Math.max(1e-4, r()), -2 / 3) - 1));
     const d = r.sphere();
     for (let j = 0; j < 3; j++) dPos[3 * o + j] = nodes[3 * n + j] + d[j] * rr;
-    dA.set([I.tIgn[n] + 0.1 * r(), 0.035 * Math.exp(0.9 * r.gauss()), 6000 + 9000 * r(), flag], 4 * o);
+    dA.set([gateT(I.tIgn[n]) + 0.1 * r(), 0.035 * Math.exp(0.9 * r.gauss()), 6000 + 9000 * r(), flag], 4 * o);
   }
   const gD = new THREE.BufferGeometry();
   gD.setAttribute('position', new THREE.BufferAttribute(dPos, 3));
   gD.setAttribute('aD', new THREE.BufferAttribute(dA, 4));
   const common = {
     uT: { value: 0 }, uS: { value: S }, uFpx: { value: FPX * S }, uGain: { value: 1 },
-    uCollapse: { value: 0 }, uFirst: { value: FIRST }, uFocus: { value: 24 }, uSub: { value: 1 }, uVPa: { value: new THREE.Matrix4() }, uVPb: { value: new THREE.Matrix4() },
+    uCollapse: { value: 0 }, uFirst: { value: FIRST }, uFocus: { value: 24 }, uSub: { value: 1 }, uFadeD: { value: new THREE.Vector2(5, 12) }, uFadeS: { value: new THREE.Vector2(24, 64) }, uFadeH: { value: new THREE.Vector2(5, 12) }, uFadeHS: { value: new THREE.Vector2(8, 18) }, uVPa: { value: new THREE.Matrix4() }, uVPb: { value: new THREE.Matrix4() },
   };
   const dustMat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
@@ -120,12 +130,12 @@ export async function create(ctx) {
     vertexShader: GLSL.common + /* glsl */ `
       attribute vec4 aD;
       uniform float uT, uS, uFpx, uGain, uSub, uCollapse, uFocus; uniform vec3 uFirst, uViolet;
-      uniform mat4 uVPa, uVPb;
+      uniform mat4 uVPa, uVPb; uniform vec2 uFadeD, uFadeH;
       varying vec3 vCol; varying float vI, vSig, vPs; varying vec2 vSeg;
       void main(){
         vec3 p = position;
         float boost = 1.0;
-        if (aD.w > 0.5 && uCollapse > 0.0) {
+        if (abs(aD.w - 1.0) < 0.5 && uCollapse > 0.0) {
           // S11: the R star's own clump falls into it (r → r (1 − c)²), heating as it falls
           float c = uCollapse, k = (1.0 - c) * (1.0 - c);
           p = uFirst + (p - uFirst) * k;
@@ -149,7 +159,16 @@ export async function create(ctx) {
         vec4 ca = uVPa * vec4(p, 1.0), cb = uVPb * vec4(p, 1.0);
         vec2 seg = (ca.w > 0.05 && cb.w > 0.05) ? (cb.xy / cb.w - ca.xy / ca.w) * vec2(960.0, 540.0) : vec2(0.0);
         float len = length(seg);
-        if (len > 90.0) { I *= 90.0 / len; seg *= 90.0 / len; len = 90.0; }
+        // "an observation, not a flight": a dust point that sweeps more than ~6–16 px over the 180°
+        // shutter (≥ 12–32 px/frame; the hero node's cluster 8–20 px — in practice only dust within a
+        // few units of the lens during the 49.0 graze) fades out instead of drawing a radial
+        // warp-speed streak; the knot slides off the right third and thins out
+        vec2 fd = aD.w > 1.5 ? uFadeH : uFadeD;
+        I *= 1.0 - smoothstep(fd.x, fd.y, len / uSub);
+        // …and what remains is drawn with a short capsule (≤ 6 px per frame's shutter, as with a faster
+        // shutter): the knot stays a knot of sharp points while it fades
+        float capD = 6.0 * uSub;
+        if (len > capD) { seg *= capD / len; len = capD; }
         I *= 6.2832 * vSig * vSig / (6.2832 * vSig * vSig + len * 2.5066 * vSig);
         vSeg = seg;
         vec3 bb = blackbody(aD.z); bb /= max(1e-3, luma(bb));
@@ -190,7 +209,7 @@ export async function create(ctx) {
     vertexShader: GLSL.common + /* glsl */ `
       attribute vec4 aS;
       uniform float uT, uS, uGain, uSub, uCollapse, uRStar; uniform vec3 uStar;
-      uniform mat4 uVPa, uVPb;
+      uniform mat4 uVPa, uVPb; uniform vec2 uFadeS, uFadeHS;
       varying vec3 vCol; varying float vI, vStreak, vHalf, vFirst; varying vec2 vSeg;
       void main(){
         vec4 mv = modelViewMatrix * vec4(position, 1.0);
@@ -218,7 +237,12 @@ export async function create(ctx) {
         vec4 ca = uVPa * vec4(position, 1.0), cb = uVPb * vec4(position, 1.0);
         vec2 seg = (ca.w > 0.05 && cb.w > 0.05) ? (cb.xy / cb.w - ca.xy / ca.w) * vec2(960.0, 540.0) : vec2(0.0);
         float len = length(seg);
-        if (len > 120.0) { vI *= 120.0 / len; seg *= 120.0 / len; len = 120.0; }
+        // node stars whipping past the lens fade (24–64 px over the shutter; the hero node's star with
+        // its cluster, 8–18 px) and their capsule is capped at 24 px: never a hyperspace line
+        vec2 fs = aS.w > 1.5 ? uFadeHS : uFadeS;           // the hero node's star fades with its cluster
+        vI *= 1.0 - smoothstep(fs.x, fs.y, len / uSub);
+        float cap = 24.0 * uSub;
+        if (len > cap) { vI *= cap / len; seg *= cap / len; len = cap; }
         vI *= 4.54 / (4.54 + len * 2.13);                   // core energy 2πσ² vs. capsule (σ 0.85)
         vSeg = seg;
         rad += 0.5 * len;
@@ -276,7 +300,7 @@ export async function create(ctx) {
   gR.setIndex(new THREE.BufferAttribute(rbIdx, 1));
   const ribbonMat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
-    uniforms: { ...common, uCol: { value: PAL.HAZE.clone().lerp(PAL.VIOLET, 0.5) }, uHot: { value: PAL.STAR.clone().lerp(PAL.VIOLET, 0.35) }, uProp: { value: PROP } },
+    uniforms: { ...common, uCol: { value: PAL.HAZE.clone().lerp(PAL.VIOLET, 0.5) }, uHot: { value: PAL.STAR.clone().lerp(PAL.VIOLET, 0.35) }, uProp: { value: PROP }, uT10: { value: T10 }, uTFirst: { value: T_FIRST }, uGEnd: { value: G_END } },
     vertexShader: GLSL.common + /* glsl */ `
       attribute vec3 aB; attribute vec4 aC; attribute vec2 aT;
       uniform float uT, uGain, uProp;
@@ -294,11 +318,13 @@ export async function create(ctx) {
         vU = aC.x; vS = aC.y; vA = aC.w * uGain; vD = -P.z; vL = length(dir); vTimes = aT;
       }`,
     fragmentShader: GLSL.common + /* glsl */ `
-      uniform float uT, uProp; uniform vec3 uCol, uHot;
+      uniform float uT, uProp, uT10, uTFirst, uGEnd; uniform vec3 uCol, uHot;
       varying float vU, vS, vA, vD, vL; varying vec2 vTimes;
       void main(){
         float prof = exp(-0.5 * (vS * 2.6) * (vS * 2.6));
-        float tl = min(vTimes.x + uProp * vU, vTimes.y + uProp * (1.0 - vU));
+        // gated node times (gateT, see create()); the raw times still seed the clump noise below
+        vec2 gT = mix(vTimes, uT10 + (vTimes - uTFirst) * (uGEnd - uT10) / (uGEnd - uTFirst), step(vTimes, vec2(uGEnd)));
+        float tl = min(gT.x + uProp * vU, gT.y + uProp * (1.0 - vU));
         float e = uT - tl;
         float lit = smoothstep(0.0, 0.45, e) * (1.0 + 0.6 * exp(-max(e, 0.0) / 0.4));
         float near = smoothstep(12.0, 40.0, vD) * exp(-vD / 170.0) * 1.25;
@@ -323,14 +349,14 @@ export async function create(ctx) {
   const hPos = new Float32Array(nH * 3), hA = new Float32Array(nH * 4);   // tLit, radius (u), amp, kind
   hPos.set(gp.pos, 0);
   for (let i = 0; i < gp.count; i++) {
-    const tl = gp.kind[i] === 0 ? edgeLit(gp.edgeOf[i], gp.along[i]) : I.tIgn[gp.nodeOf[i]];
+    const tl = gp.kind[i] === 0 ? edgeLit(gp.edgeOf[i], gp.along[i]) : gateT(I.tIgn[gp.nodeOf[i]]);
     hA.set([tl, 1.5 * (0.7 + 0.6 * r()), 0.02, 0], 4 * i);
   }
   for (let i = 0; i < N; i++) {
     const o = gp.count + i;
     hPos.set(nodes.subarray(3 * i, 3 * i + 3), 3 * o);
     const sig = (0.6 + 0.25 * degree[i]) * 0.9;
-    hA.set([I.tIgn[i], sig, 0.035 * Math.pow(Math.min(mN(i), 20), 0.85) * (i === first ? 2.5 : i === web.hero.node ? 2 : 1), i === first ? 2 : 1], 4 * o);
+    hA.set([gateT(I.tIgn[i]), sig, 0.035 * Math.pow(Math.min(mN(i), 20), 0.85) * (i === first ? 2.5 : i === web.hero.node ? 2 : 1), i === first ? 2 : 1], 4 * o);
   }
   const gH = new THREE.BufferGeometry();
   gH.setAttribute('position', new THREE.BufferAttribute(hPos, 3));
@@ -398,8 +424,12 @@ export async function create(ctx) {
       // the R star: bloated glow (σ 7 px) → needle point (σ → 0); its core settles to a point of HDR ~8
       const su = starMat.uniforms;
       su.uHaloR.value = 7 * (1 - ce) + 0.6 * ce;
-      su.uHaloA.value = 1 - ce;
-      su.uRStar.value = s11 ? util.lerp(1, 0.45, ce) : 1;
+      // (S10: the R star's glow grows in over 43.0–44.5 with its clump, so that on the cut it is the
+      // same sharp point as S09's last frame)
+      su.uHaloA.value = (1 - ce) * (s11 ? 1 : util.smoothstep(T10, G_END, t));
+      // S10: on the cut the R star (still ~105 u away) carries S09's last brightness (HDR ≈ 9, ×1.7),
+      // relaxing to its own over 43–47 as the web lights up around it
+      su.uRStar.value = s11 ? util.lerp(1, 0.45, ce) : 1 + 0.7 * (1 - util.smoothstep(T10, 47.0, t));
       hazeMat.uniforms.uRStar.value = 1;
       hazeMat.uniforms.uFpxQ.value = cam.projectionMatrix.elements[5] * gasRT.rt.height * 0.5;
 
