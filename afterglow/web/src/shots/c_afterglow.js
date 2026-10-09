@@ -17,8 +17,8 @@
 //                               flowing with t_w = min(t, 30) (frozen at decoupling).
 //                      30.0–31.0 decoupling: fog contrast → 0, speckle blur σ 6 px → 1 px (mip LOD).
 //                      colour = blackbody(T·(1 + 0.12 (F − 0.5))) with T 4500 → 3000 (31) → 1500 K (34);
-//                      exposure 0 → −1 EV (31) → −7 EV (35) (C1: the two slopes blend over 30.6–31.6),
-//                      then a final roll-off so 35.0 is true black.
+//                      exposure 0 → −1 EV (31) → black (35) (C1: the two slopes blend over 30.5–32.1, the
+//                      decoupling's mean shift compensated), then a final roll-off so 35.0 is true black.
 //
 // Cost (1080p, SwiftShader): main pass ≈ 0.15 s, fog pass (half res) ≈ 0.1 s; bake ≈ 1.5 s in create().
 import * as THREE from 'three';
@@ -259,14 +259,17 @@ export async function create(ctx) {
       T = 4500 * Math.exp(ka * (t - 27) + (kb - ka) * ssI(t - 30.5));
     }
     else T = logLerp(1500, 1200, clamp(t - 34));
-    // exposure: 0 EV (27) → −1 EV (31) → −7 EV (35); final roll-off so that 35.0 is black
-    // The slope −0.25 EV/s (27–31) blends into −1.5 EV/s (31–35) with a smoothstep over 30.6–31.6
-    // (C1, no sudden speed-up of the fade at 31.0): ev = a·(t−27) + (b−a)·w·∫smoothstep, closed form.
-    // ev(31) ≈ −1.06, ev(35) ≈ −6.9, then the roll-off below makes 35.0 black.
+    // exposure: 0 EV (27) → −1 EV (31) → black (35)
+    // The slope −0.25 EV/s (27–31) blends into −1.1 EV/s with a smoothstep over 30.5–32.1 (C1, no
+    // sudden speed-up of the fade at 31.0): ev = a·(t−27) + (b−a)·w·∫smoothstep, closed form.
+    // ev(31) ≈ −1.04. Tuned on the DISPLAYED mean (ACES toe + the cooling blackbody steepen the screen
+    // slope ×1.4–2): on screen the fade runs ≈ −0.45 EV/s to 30.75, then eases to a steady ≈ −2 EV/s
+    // (was a −2.8 EV/s plunge); the roll-off 34.0–34.96 then takes the last few code values to black.
     const tt = clamp(t - 27, 0, 8);
-    const ev = -0.25 * tt - 1.25 * ssI((27 + tt - 30.6) / 1.0);
+    const EV_B = 1.1, EV_T0 = 30.5, EV_W = 1.6;
+    const ev = -0.25 * tt - (EV_B - 0.25) * EV_W * ssI((27 + tt - EV_T0) / EV_W);
     const L0 = 1.1;
-    let gain = L0 * Math.pow(2, ev) * (1 - smoothstep(34.2, 34.96, t));
+    let gain = L0 * Math.pow(2, ev) * (1 - smoothstep(34.0, 34.96, t));
     // while white: the field is exposed to the white's own luminance (OPEN_GAIN, no overshoot) and
     // opens from f615: gain and contrast both follow an outCubic over f615–f647, so the plasma's
     // structure is already visible by f618–620 and the opening is even instead of stuck-then-sudden
@@ -276,6 +279,11 @@ export async function create(ctx) {
     const contrast = util.ease.outCubic(clamp((fr - 15) / 33));
     // decoupling 30–31: fog contrast → 0, speckle blur σ 6 px → 1 px
     const dec = util.ease.inOutCubic(clamp(t - T_DEC));
+    // the decoupling raises the field's mean (the fog's offset mean leaves, the far field sharpens and
+    // its luminance gain rises): measured +0.21 EV (linear) ∝ dec on the displayed band mean. Compensate,
+    // so the fade does not pause over 30.3–30.8 (the screen keeps its −0.45 EV/s through the decoupling)
+    // (the measured shift lags the dec curve by ≈ 0.07 s: the blur and fog fade read later than they ramp)
+    if (t > T_DEC) gain *= Math.pow(2, -0.21 * util.ease.inOutCubic(clamp(t - T_DEC - 0.07)));
     const ampFog = 1 - dec;
     const ampFar = lerp(0.55, 1.0, dec);
     const sigmaPx = lerp(6, 1, dec);

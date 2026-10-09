@@ -654,7 +654,9 @@ export function createMacro(ctx) {
       const sp = 0.25 + Math.pow(r(), 0.7) * 0.75;
       const d = [0.25 + 0.75 * r(), -0.95 + 0.9 * r(), -0.45 + 0.9 * r()];
       const L = Math.hypot(...d);
-      sparks.push({ p0: SP.map((x, j) => x + (r() - 0.5) * 0.006), v0: d.map(x => x / L * sp), tb: t0 - 0.040 + r() * 0.012, life: (6 + r() * 4) / 24, kind: 0, seed: r(), I0: gain * (34 + 60 * Math.pow(r(), 1.5)), T0: 2700 + 700 * r() });
+      // the off-frame pre-roll (t0 − tb) is added to the life: 6–10 frames on screen from the strike frame
+      const tb = t0 - 0.040 + r() * 0.012;
+      sparks.push({ p0: SP.map((x, j) => x + (r() - 0.5) * 0.006), v0: d.map(x => x / L * sp), tb, life: (6 + r() * 4) / 24 + (t0 - tb), kind: 0, seed: r(), I0: gain * (34 + 60 * Math.pow(r(), 1.5)), T0: 2700 + 700 * r() });
     }
     for (let i = 0; i < landers; i++) {            // aimed into the tinder: they end in the ember
       const tl = 0.16 + 0.03 * i;
@@ -717,8 +719,17 @@ export function createMacro(ctx) {
       void main(){
         float tau = uT - iA.w, life = iB.w;
         float alive = step(0.0, tau) * step(tau, life);
-        vec3 pa = posAt(iA, iB, iC, clamp(tau, 0.0, life)), pb = posAt(iA, iB, iC, clamp(tau - uShut, 0.0, life));
-        if (iC.x < 0.5 && pa.y < 0.0) alive = 0.0;          // into the soil
+        // a flint spark that reaches the soil does not vanish: it lands (time tl, bisection — its fall is
+        // monotonic) and cools where it lies for the rest of its 6–10 frames
+        float tl = life;
+        if (iC.x < 0.5 && posAt(iA, iB, iC, life).y < 0.0) {
+          float lo = 0.0, hi = life;
+          for (int k = 0; k < 12; k++) { float m = 0.5 * (lo + hi); if (posAt(iA, iB, iC, m).y < 0.0) hi = m; else lo = m; }
+          tl = lo;
+        }
+        vec3 pa = posAt(iA, iB, iC, min(clamp(tau, 0.0, life), tl)), pb = posAt(iA, iB, iC, min(clamp(tau - uShut, 0.0, life), tl));
+        float landed = step(tl, tau);
+        pa.y = max(pa.y, 0.0015); pb.y = max(pb.y, 0.0015);
         vec4 ca = handClip(uPV * vec4(pa, 1.0)), cb = handClip(uPV * vec4(pb, 1.0));
         vec2 sa = (ca.xy / ca.w * 0.5 + 0.5) * uRes, sb = (cb.xy / cb.w * 0.5 + 0.5) * uRes;
         float d = -(uV * vec4(pa, 1.0)).z;
@@ -726,7 +737,7 @@ export function createMacro(ctx) {
         float r0 = 0.9 * uS, rad = sqrt(r0 * r0 + coc * coc);
         float L = length(sa - sb);
         float u = clamp(tau / life, 0.0, 1.0);
-        float I = iC.z * (1.0 - u * u) * (0.75 + 0.25 * sin(tau * 70.0 + iC.y * 30.0));
+        float I = iC.z * (1.0 - u * u) * (0.75 + 0.25 * sin(tau * 70.0 + iC.y * 30.0)) * mix(1.0, 0.55 * exp(-6.0 * (tau - tl)), landed);
         vI = I * alive * (r0 * r0) / (rad * rad) * (2.5 * rad) / (2.5 * rad + L);
         vCol = blackbody(mix(iC.w, 1150.0, u));
         vRad = rad; vA = sa; vB = sb;
@@ -868,7 +879,9 @@ export function createMacro(ctx) {
       renderer.setRenderTarget(f.target);
     },
     post(shot, f) {
-      return { exposure: 1.0, bloom: 0.8, bloomThreshold: 1.0, streak: 0.05, streakTint: [1.0, 0.72, 0.45], vignette: 0.32, grain: 0.04 };
+      // 70.0–71.5 is black, as black as S14's fade: the grain floor only comes up into the first strike
+      const grain = 0.04 * ss(71.0, 71.5, f.t);
+      return { exposure: 1.0, bloom: 0.8, bloomThreshold: 1.0, streak: 0.05, streakTint: [1.0, 0.72, 0.45], vignette: 0.32, grain };
     },
   };
 }

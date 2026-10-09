@@ -684,7 +684,9 @@ export function createNight(ctx) {
     const gain = 0.75 + 0.25 * ss(0.0, 0.5, p.e);
     const invDF = (1 / FD) * (1 - ss(0.04, 0.26, p.e));         // focus pull: fire → infinity
     setSky(cam16, M16, gain, 2.2);
-    stars.uniforms.uFieldLow.value = 2.6;                       // stars down to the ridge (see sky.js)
+    // stars down to the ridge (see sky.js); ×2.8 through the tilt past the ridge (80.8–82.3), so the
+    // look up over the horizon lands in stars, not in a dark gap before the Milky Way enters
+    stars.uniforms.uFieldLow.value = 2.6 + 4.6 * ss(80.6, 81.0, t) * (1 - ss(82.0, 82.6, t));
     skyPass.render(renderer, f.target);
     stars.uniforms.uCoc.value = Math.min(6, COCK * invDF);
     renderer.setRenderTarget(f.target); renderer.render(starScene, cam16);

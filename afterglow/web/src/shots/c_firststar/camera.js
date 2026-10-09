@@ -1,96 +1,85 @@
-// S09 camera solve (deterministic, no randomness): a 50 mm camera whose image puts
-//   the first star (web.hero.first, rank 0)  exactly on R = (734, 540)       (pixel centre 734.5, 540.5)
-//   the second star (rank 1, ignites 39.0)  exactly on (1086, 422) at 39.0   (pixel centre 1086.5, 422.5)
-// and that then dollies straight back, uniformly, along the ray from the first star through the
-// camera: distance D(t) = D0·z, z = 1 → 6 over 39.0 → 43.0. Because the camera moves along that ray
-// with a fixed orientation, the first star stays pinned on R for the whole shot; the others drift in
-// parallax (the second star slides inward a little — it is nearer the lens than the first).
+// S09 camera solve (deterministic, no randomness).
 //
-// Among all camera directions u (Fibonacci sphere) whose subtended angle matches, choose the one
-// that shows the most of the 64 next stars inside the 2.39 band at 43.0 without any of them passing
-// close to the lens, preferring a well spread constellation.
+//   35.0–39.0  locked 50 mm camera at C39 whose image puts
+//              the first star (web.hero.first, rank 0)  exactly on R = (734, 540)      (pixel centre 734.5, 540.5)
+//              the second star (rank 1, ignites 39.0)  exactly on (1086, 422)         (pixel centre 1086.5, 422.5)
+//   39.0–43.0  a uniform pull-back 34.5 → 105 u from the first star on a slow arc around it (its
+//              direction turns by 55°, easing in; constant speed, settling to rest over the last second)
+//              with a zoom-out 50 → 24 mm (log-uniform in the same parameter): the framing scale
+//              shrinks ×6.3 (the screenplay's "z 1 → 6").
+//   43.0       the pose IS S10's opening pose WEB_PATH(0) (position, orientation, 24 mm). The hard cut
+//              S09 → S10 is therefore concentric: every star S09 has lit sits on the same pixel in S10's
+//              first frame (c_web draws S09's star layer over 43–45 and crossfades it into its own).
+//
+// C39 = F + D39·U39. WEB_PATH(0) looks at the first star from ≈ 55° away from any direction that can
+// hold the two-star constraint with a ×6 framing change, so the pull-back is also a slow arc around
+// the first star (parallax opens the constellation); U39 was chosen (offline search over 20 000
+// directions, scratch solve) for the smallest camera roll on the way (2.3°), a pull-back that moves
+// away from the first star monotonically, no lit star nearer than 10 u to the lens, and a framing
+// change ≈ ×6. D39 is re-solved here by bisection so both stars land on their pixels exactly.
+// Orientation: slerp q39 → q43, corrected every frame so the first star moves uniformly on screen
+// from R to its S10 pixel M (≈ frame centre) — no roll beyond the slerp's 2.3°.
 import * as THREE from 'three';
 import { webPathPose, WEB } from '../_webgraph.js';
 
-export const FOCAL = 50;
-export const FPX = 960 / (18 / FOCAL);         // focal length in 1080p px (kit.filmCamera: 36 mm gauge)
+export const FOCAL = 50;                         // S09 focal length 35–39 s (zooms to WEB.focalMM by 43.0)
+export const FPX = 960 / (18 / FOCAL);           // focal length in 1080p px (kit.filmCamera: 36 mm gauge)
 export const R_PX = [734.5, 540.5], P2_PX = [1086.5, 422.5];
-const camDir = (px, py) => new THREE.Vector3((px - 960) / FPX, -(py - 540) / FPX, -1).normalize();
+const U39 = new THREE.Vector3(-0.2403, -0.8890, 0.3897).normalize();
+const camDir = (px, py, fpx = FPX) => new THREE.Vector3((px - 960) / fpx, -(py - 540) / fpx, -1).normalize();
+const fpxOf = f => 960 / (18 / f);
 
-export function solveCamera(I, { D0 = 26, zEnd = 6, count = 66 } = {}) {
+export function solveCamera(I) {
   const { web, order } = I;
   const P = i => new THREE.Vector3(web.nodes[3 * i], web.nodes[3 * i + 1], web.nodes[3 * i + 2]);
   const F = P(order[0]), S = P(order[1]);
   const a = camDir(...R_PX), b = camDir(...P2_PX);
   const theta = a.angleTo(b);
-  const angleAt = (u, D) => { const C = F.clone().addScaledVector(u, D); return F.clone().sub(C).angleTo(S.clone().sub(C)); };
-  const rotFor = (C) => {
-    // rotation R (camera → world) with R·a = dir(F), R·b ≈ dir(S): orthonormal triads
-    const wa = F.clone().sub(C).normalize(), wb = S.clone().sub(C).normalize();
-    const tri = (x, y) => { const e1 = x.clone(); const e3 = x.clone().cross(y).normalize(); const e2 = e3.clone().cross(e1); return new THREE.Matrix4().makeBasis(e1, e2, e3); };
-    const Mc = tri(a, b), Mw = tri(wa, wb);
-    return Mw.multiply(Mc.clone().transpose());
-  };
-  const stars = Array.from(order.slice(0, count), P);
-  let best = null;
-  const n = 6000, ga = Math.PI * (3 - Math.sqrt(5));
-  for (let k = 0; k < n; k++) {
-    const y = 1 - 2 * (k + 0.5) / n, r = Math.sqrt(1 - y * y), ph = k * ga;
-    const u = new THREE.Vector3(r * Math.cos(ph), y, r * Math.sin(ph));
-    // bisection on D in [0.55, 1.8]·D0 for the exact angle (angle shrinks as D grows, mostly)
-    let lo = 0.55 * D0, hi = 1.8 * D0, alo = angleAt(u, lo) - theta, ahi = angleAt(u, hi) - theta;
-    if (alo * ahi > 0) continue;
-    for (let it = 0; it < 40; it++) { const m = 0.5 * (lo + hi), am = angleAt(u, m) - theta; if (am * alo > 0) { lo = m; alo = am; } else hi = m; }
-    const D = 0.5 * (lo + hi);
-    const C0 = F.clone().addScaledVector(u, D);
-    if (S.clone().sub(C0).length() < 8) continue;
-    const Rm = rotFor(C0);
-    const inv = Rm.clone().transpose();
-    // score at 43.0 (z = zEnd) and check the dolly path for near passes
-    let vis = 0, near = false, sx = 0, sy = 0, sxx = 0, syy = 0;
-    for (let z = 1; z <= zEnd + 1e-6; z += 0.5) {
-      const C = F.clone().addScaledVector(u, D * z);
-      for (let s = 1; s < stars.length; s++) {
-        const q = stars[s].clone().sub(C).applyMatrix4(inv);
-        const dist = q.length();
-        if (dist < 9 && q.z < 0) near = true;
-        if (z === zEnd && q.z < -1) {
-          const px = 960 + FPX * q.x / -q.z, py = 540 - FPX * q.y / -q.z;
-          if (px > 40 && px < 1880 && py > 160 && py < 920) { vis++; sx += px; sy += py; sxx += px * px; syy += py * py; }
-        }
-      }
-      if (near) break;
-    }
-    if (near || vis < 8) continue;
-    const mx = sx / vis, my = sy / vis;
-    const sdx = Math.sqrt(Math.max(0, sxx / vis - mx * mx)), sdy = Math.sqrt(Math.max(0, syy / vis - my * my));
-    const spread = sdx / 1920 + sdy / 804;
-    // a constellation that fills the 2.39 frame: wide horizontal spread, centred a little right of R
-    // (the first star on the left golden line, the cascade opening into the frame)
-    const score = vis + 60 * sdx / 1920 + 14 * sdy / 804 - 0.012 * Math.abs(mx - 900);
-    if (!best || score > best.score) best = { score, vis, spread, mx, sdx, sdy, u: u.clone(), D, rot: Rm.clone() };
-  }
-  const q = new THREE.Quaternion().setFromRotationMatrix(best.rot);
-  // Eye-trace match at the cut S09 → S10 (43.0): S10's first frame (WEB_PATH(0), 24 mm) sees the first
-  // star at pixel M. During the pull-back the camera pans uniformly (≈3°) so that on S09's last frame
-  // the first star sits on that same pixel M of the 50 mm frame: the brightest star of both frames
-  // stays put across the cut, and the cut reads as a lens change on the same, still-igniting star.
-  // (A fully concentric cut is impossible: WEB_PATH(0) looks at the web from the opposite side, ≈160°
-  // away, and no pose that ends there keeps the first star on R and the second on (1086, 422).)
+  const angleAt = D => { const C = F.clone().addScaledVector(U39, D); return F.clone().sub(C).angleTo(S.clone().sub(C)); };
+  let lo = 30, hi = 40, alo = angleAt(lo) - theta;
+  for (let it = 0; it < 60; it++) { const m = 0.5 * (lo + hi), am = angleAt(m) - theta; if (am * alo > 0) { lo = m; alo = am; } else hi = m; }
+  const D0 = 0.5 * (lo + hi);
+  const C39 = F.clone().addScaledVector(U39, D0);
+  // rotation (camera → world) with R·a = dir(F), R·b = dir(S): orthonormal triads
+  const tri = (x, y) => { const e1 = x.clone(); const e3 = x.clone().cross(y).normalize(); const e2 = e3.clone().cross(e1); return new THREE.Matrix4().makeBasis(e1, e2, e3); };
+  const wa = F.clone().sub(C39).normalize(), wb = S.clone().sub(C39).normalize();
+  const q39 = new THREE.Quaternion().setFromRotationMatrix(tri(wa, wb).multiply(tri(a, b).transpose()));
+  // S10's first frame
   const W0 = webPathPose(0);
-  const fpx24 = 960 / (18 / WEB.focalMM);
-  const cam24 = new THREE.Matrix4().lookAt(W0.pos, W0.target, W0.up);       // camera → world rotation
-  const fc = F.clone().sub(W0.pos).applyMatrix4(cam24.clone().transpose());
-  const M = [960 + fpx24 * fc.x / -fc.z, 540 - fpx24 * fc.y / -fc.z];
-  const qEnd = q.clone().multiply(new THREE.Quaternion().setFromUnitVectors(camDir(...M), a));
-  return { F, S, u: best.u, D0: best.D, quat: q, qEnd, M, vis: best.vis, spread: best.spread, mx: best.mx, sdx: best.sdx, sdy: best.sdy, theta };
+  const C43 = W0.pos.clone();
+  const m43 = new THREE.Matrix4().lookAt(W0.pos, W0.target, W0.up);
+  const q43 = new THREE.Quaternion().setFromRotationMatrix(m43);
+  const fc = F.clone().sub(C43).applyMatrix4(m43.clone().transpose());
+  const f43 = fpxOf(WEB.focalMM);
+  const M = [960 + f43 * fc.x / -fc.z, 540 - f43 * fc.y / -fc.z];
+  const U43 = C43.clone().sub(F), D1 = U43.length(); U43.divideScalar(D1);
+  return { F, S, D0, D1, U39: U39.clone(), U43, C39, C43, q39, q43, M, focal0: FOCAL, focal1: WEB.focalMM };
 }
 
-// Pose of the S09 camera at global time t: locked until 39.0, then a uniform straight pull-back
-// (z = 1 → 6 along the first star's ray) with a uniform pan quat → qEnd (the eye-trace match above).
-export function firstStarPose(sol, t, zEnd = 6) {
-  const s = Math.min(1, Math.max(0, (t - 39) / 4));
-  const z = 1 + (zEnd - 1) * s;
-  const quat = sol.qEnd ? sol.quat.clone().slerp(sol.qEnd, s) : sol.quat;
-  return { pos: sol.F.clone().addScaledVector(sol.u, sol.D0 * z), quat, z };
+// Pose of the S09 camera at global time t: locked until 39.0; 39 → 43 uniform pull-back + zoom-out,
+// ending exactly on WEB_PATH(0). zoom = FOCAL / focal (1 → 2.08): the stars' brightness law uses the
+// framing distance d·zoom, so the fade of the stars is the same as with a pure ×6 pull-back.
+const _q = new THREE.Quaternion(), _d = new THREE.Vector3(), _w = new THREE.Vector3();
+// Uniform from 39.0; the last second (42–43) decelerates to rest (quadratic, C1), so S09's last frame
+// f1031 is within 1/4 px of the final pose and every lit star sits on its S10 pixel across the cut
+// (S10 then dollies forward at 9 u/s from its first frame: ≤ 0.4 % scale change per frame).
+const EASE_T1 = 0.75, EASE_K = 1 / (EASE_T1 + (1 - EASE_T1) / 2);
+const moveS = tau => (tau <= 0 ? 0 : tau >= 1 ? 1 : tau < EASE_T1 ? EASE_K * tau
+  : 1 - EASE_K * (1 - EASE_T1) / 2 * Math.pow((1 - tau) / (1 - EASE_T1), 2));
+export function firstStarPose(sol, t) {
+  const s = moveS((t - 39) / 4);
+  // an arc around the first star: its distance grows uniformly (34.5 → 105 u) while its direction
+  // turns U39 → U43 (55°) with an ease-in (∝ s²): the parallax that turns the constellation then
+  // starts gently after the second star's ignition and is spread over the pull-back (≤ 15 px/frame)
+  const ang = sol.U39.angleTo(sol.U43), sa = s * s;
+  const dir = sol.U39.clone().multiplyScalar(Math.sin((1 - sa) * ang)).addScaledVector(sol.U43, Math.sin(sa * ang)).divideScalar(Math.sin(ang));
+  const pos = sol.F.clone().addScaledVector(dir.normalize(), sol.D0 + (sol.D1 - sol.D0) * s);
+  const focal = sol.focal0 * Math.pow(sol.focal1 / sol.focal0, s);
+  const qr = sol.q39.clone().slerp(sol.q43, s);
+  // the first star moves uniformly on screen from R to M
+  const px = R_PX[0] + (sol.M[0] - R_PX[0]) * s, py = R_PX[1] + (sol.M[1] - R_PX[1]) * s;
+  _d.copy(camDir(px, py, fpxOf(focal))).applyQuaternion(qr);
+  _w.copy(sol.F).sub(pos).normalize();
+  const quat = _q.setFromUnitVectors(_d, _w).clone().multiply(qr);
+  return { pos, quat, focal, zoom: sol.focal0 / focal };
 }

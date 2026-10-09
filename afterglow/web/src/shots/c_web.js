@@ -8,6 +8,9 @@
 //      · lt = 9 s (52.0): the first star (web.hero.first, S09's star at R) lands exactly on R
 //      The S09 ignition law continues (c_web/ignition.js: same nodes, same instants); the ionisation
 //      front runs from every lit node along its filaments (PROP s per edge) — fully lit by 47.0.
+//      The cut 43.0 is concentric: S09 ends exactly on WEB_PATH(0) (c_firststar/camera.js) and S10 draws
+//      S09's own star layer (c_firststar/stars.js) on its first frame, crossfading it into the node
+//      stars over 43–45: every star lit in S09 keeps its pixel and its brightness across the cut.
 // S11  the dolly stops: pose = WEB_PATH(9.0) (S10's last frame). f1248–1259 the R star collapses to a
 //      needle point (its own clump falls into it, the halo shrinks), the rest of the web dims by 30%;
 //      f1260–1271 one point at R, absolutely still. Hard cut → S12 (c_supernova) explodes that point.
@@ -33,9 +36,12 @@
 import * as THREE from 'three';
 import { getWeb, sampleWebPoints, applyWebPose, webPathPose, WEB } from './_webgraph.js';
 import { ignition, PROP, T_FIRST } from './c_web/ignition.js';
+import { solveCamera } from './c_firststar/camera.js';
+import { createFirstStars, COUNT as S09_COUNT } from './c_firststar/stars.js';
 
 const T10 = 43.0, T11 = 52.0, FPS = 24;
 const T_FULL = 47.0;                              // the web is fully lit (screenplay: 47.0 全亮)
+const T_HAND = 45.0;                              // S09's star layer has handed over to the node stars
 const FPX = 960 / (18 / WEB.focalMM);             // 24 mm focal length in 1080p px (36 mm gauge) = 1280
 const N_DUST = 640000, N_GAS = 24000;
 const srgb = c => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
@@ -126,7 +132,7 @@ export async function create(ctx) {
   gD.setAttribute('aD', new THREE.BufferAttribute(dA, 4));
   const common = {
     uT: { value: 0 }, uS: { value: S }, uFpx: { value: FPX * S }, uGain: { value: 1 },
-    uCollapse: { value: 0 }, uFirst: { value: FIRST }, uFocus: { value: 24 }, uSub: { value: 1 }, uFadeD: { value: new THREE.Vector2(5, 12) }, uFadeS: { value: new THREE.Vector2(6, 16) }, uFadeH: { value: new THREE.Vector2(5, 12) }, uFadeHS: { value: new THREE.Vector2(8, 18) }, uVPa: { value: new THREE.Matrix4() }, uVPb: { value: new THREE.Matrix4() },
+    uCollapse: { value: 0 }, uFirst: { value: FIRST }, uFocus: { value: 24 }, uSub: { value: 1 }, uFadeD: { value: new THREE.Vector2(5, 12) }, uFadeS: { value: new THREE.Vector2(5, 12) }, uFadeH: { value: new THREE.Vector2(5, 12) }, uFadeHS: { value: new THREE.Vector2(8, 18) }, uVPa: { value: new THREE.Matrix4() }, uVPb: { value: new THREE.Matrix4() },
   };
   const dustMat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
@@ -204,15 +210,19 @@ export async function create(ctx) {
     if (i === web.hero.node) { amp = Math.max(amp, 12); flag = 2; }
     aS.set([I.tIgn[i], amp, 9000 + 16000 * r(), flag], 4 * i);
   }
+  // 1 = one of S09's first stars (rank < S09_COUNT): drawn by S09's own sprite layer at the cut
+  const aR = new Float32Array(N);
+  for (let i = 0; i < N; i++) aR[i] = I.rank[i] < S09_COUNT ? 1 : 0;
   const gS = new THREE.BufferGeometry();
   gS.setAttribute('position', new THREE.BufferAttribute(nodes, 3));
   gS.setAttribute('aS', new THREE.BufferAttribute(aS, 4));
+  gS.setAttribute('aR', new THREE.BufferAttribute(aR, 1));
   const starMat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
-    uniforms: { ...common, uStar: { value: PAL.STAR }, uHaloR: { value: 1 }, uHaloA: { value: 1 }, uRStar: { value: 1 } },
+    uniforms: { ...common, uStar: { value: PAL.STAR }, uHaloR: { value: 1 }, uHaloA: { value: 1 }, uRStar: { value: 1 }, uHand: { value: 1 } },
     vertexShader: GLSL.common + /* glsl */ `
-      attribute vec4 aS;
-      uniform float uT, uS, uGain, uSub, uCollapse, uRStar; uniform vec3 uStar;
+      attribute vec4 aS; attribute float aR;
+      uniform float uT, uS, uGain, uSub, uCollapse, uRStar, uHand; uniform vec3 uStar;
       uniform mat4 uVPa, uVPb; uniform vec2 uFadeS, uFadeHS;
       varying vec3 vCol; varying float vI, vStreak, vHalf, vFirst; varying vec2 vSeg;
       void main(){
@@ -228,6 +238,9 @@ export async function create(ctx) {
         float g = (vFirst > 0.5 ? uRStar : uGain) * uSub;
         float I = aS.y * mix(0.04, 1.0, rise) * over * on * g * pow(30.0 / max(d, 0.5), 1.15);
         I *= smoothstep(0.4, 2.0, d) * (1.0 - smoothstep(330.0, 430.0, d));
+        // S09's first stars: on the cut they are S09's own sprites (same pixels, same brightness);
+        // their node stars fade in as that layer fades out over 43–45 (uHand 0 → 1)
+        I *= mix(1.0, uHand, aR);
         vI = I;
         vStreak = clamp((I - 5.0) / 20.0, 0.0, 1.0);
         if (vFirst > 0.5) vStreak = max(vStreak, 0.45);     // the needle point keeps a thin streak
@@ -241,13 +254,13 @@ export async function create(ctx) {
         vec4 ca = uVPa * vec4(position, 1.0), cb = uVPb * vec4(position, 1.0);
         vec2 seg = (ca.w > 0.05 && cb.w > 0.05) ? (cb.xy / cb.w - ca.xy / ca.w) * vec2(960.0, 540.0) : vec2(0.0);
         float len = length(seg);
-        // node stars whipping past the lens fade (6–16 px over the shutter ≈ 12–32 px/frame; the hero
-        // node's star with its cluster, 8–18 px) and their capsule is capped at 12 px (the hero node's
-        // star 6 px: a bright knot sliding off the right third, not a dash): never a hyperspace line,
-        // no stray bright dashes after the graze
+        // node stars whipping past the lens fade exactly as the dust around them (5–12 px over the
+        // shutter ≈ 10–24 px/frame; the hero node's star with its cluster, 8–18 px) and their capsule
+        // is capped at 6 px: a near star reads as a point like the dust, never a hyperspace line, and
+        // no stray bright dashes remain after the graze (≈ 50.4: they were 16–18 px with a 12 px cap)
         vec2 fs = aS.w > 1.5 ? uFadeHS : uFadeS;           // the hero node's star fades with its cluster
         vI *= 1.0 - smoothstep(fs.x, fs.y, len / uSub);
-        float cap = (aS.w > 1.5 ? 6.0 : 12.0) * uSub;
+        float cap = 6.0 * uSub;
         if (len > cap) { vI *= cap / len; seg *= cap / len; len = cap; }
         vI *= 4.54 / (4.54 + len * 2.13);                   // core energy 2πσ² vs. capsule (σ 0.85)
         vSeg = seg;
@@ -402,8 +415,15 @@ export async function create(ctx) {
   });
   const haze = new THREE.Points(gH, hazeMat); haze.frustumCulled = false;
 
+  // S09's star layer (c_firststar/stars.js), seen from S10's camera: on S10's first frame
+  // (WEB_PATH(0) = S09's final pose, 24 mm) it reproduces S09's last frame star for star; it crossfades
+  // into the node stars over 43–45 while the web lights up around it
+  const sol9 = solveCamera(I);
+  const FS = createFirstStars(ctx, I, { uRef: sol9.D0 });
+  FS.uni.uZoom.value = sol9.focal0 / sol9.focal1;
+
   const sceneGas = new THREE.Scene(); sceneGas.add(ribbons); sceneGas.add(haze);
-  const scene = new THREE.Scene(); scene.add(dust); scene.add(stars);
+  const scene = new THREE.Scene(); scene.add(dust); scene.add(stars); scene.add(FS.points);
   const cam = kit.filmCamera(W, H, { focalMM: WEB.focalMM, near: 0.05, far: 5000 });
   const camH = kit.filmCamera(W, H, { focalMM: WEB.focalMM, near: 0.05, far: 5000 });   // shutter-interval poses
   const gasRT = new kit.LowRes(W, H, 0.5);
@@ -437,6 +457,11 @@ export async function create(ctx) {
       // relaxing to its own over 43–47 as the web lights up around it
       su.uRStar.value = s11 ? util.lerp(1, 0.45, ce) : 1 + 0.7 * (1 - util.smoothstep(T10, 47.0, t));
       hazeMat.uniforms.uRStar.value = 1;
+      // the S09 → S10 hand-over of the first stars (43–45)
+      const hand = s11 ? 1 : util.smoothstep(T10, T_HAND, t);
+      su.uHand.value = hand;
+      FS.uni.uT.value = t; FS.uni.uGain.value = 1 - hand;
+      FS.points.visible = hand < 1;
       hazeMat.uniforms.uFpxQ.value = cam.projectionMatrix.elements[5] * gasRT.rt.height * 0.5;
 
       const ac = renderer.autoClear;

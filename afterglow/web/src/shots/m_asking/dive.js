@@ -1,7 +1,7 @@
 // m_asking/dive.js — S26 俯冲 (112.5 → 113.0, 12 frames, f2700–2711).
 //
 // Straight down onto the city at R (Nairobi, R_geo): 35 mm, looking at the nadir, the city centre held
-// on R. The log of the altitude falls with a gentle ease-in, 100 km → 2.4 km in 0.5 s: f2700 a cluster of light with its satellite towns; f2707 the street grid fills the frame;
+// on R. The log of the altitude falls with a gentle ease-in, 100 km → 2.4 km in 0.5 s: f2700 a cluster of light with its satellite towns; f2707 the street network fills the frame;
 // f2708–2711 the amber flash (the timeline's transitionOut flash + a ramp in post(), peaking ≈ 85 %,
 // never clipped) while the camera punches through a hole in a thin cloud deck (8.5 km) lit from below.
 //
@@ -9,8 +9,8 @@
 // detail that appears is the detail that was there): L0 200 km (49 m/texel), L1 25 km (6.1 m),
 // L2 6 km (1.5 m). Light field: a population surface (core + eight satellite towns + highway corridors,
 // domain-warped and patchy, the national park south of the centre left dark) × street hierarchy
-// (radial highways, arterial Voronoi 1.3 km, collector Voronoi 330 m, local grids rotated per block,
-// building lights on a 22 m lattice); sodium #FFB45A outside, LED white #E8F0FF in the dense core.
+// (radial highways, arterial Voronoi 1.8 km, then the S20–S22 street generator: collector Voronoi 420 m +
+// local Voronoi 170 m through a domain warp, no rotated grids; building lights jittered on a 38 m lattice); sodium #FFB45A outside, LED white #E8F0FF in the dense core.
 // Every line is band-limited to the texel it is baked into (sub-texel families bake as their mean).
 // Per frame the shader picks the finest valid level by pixel footprint and integrates the radial
 // motion of the zoom along a 45° shutter (8 taps; see the note on the shutter in createDive).
@@ -33,13 +33,16 @@ const CITY = /* glsl */ `
 uniform float uExt, uTexel;
 const vec3 SOD = vec3(${hex(0xFFB45A).map(v => v.toFixed(4)).join(', ')});
 const vec3 LED = vec3(${hex(0xE8F0FF).map(v => v.toFixed(4)).join(', ')});
-// street lamps: a street is a dotted line (one lamp every per metres); sub-texel → its mean (0.246)
-#define LAMPS(s, per) mix(pow(0.5 + 0.5 * cos(6.2832 * (s) / (per)), 6.0), 0.246, smoothstep(0.15 * (per), 0.45 * (per), uTexel))
+// street lamps: a street is a gently beaded line (one lamp every per metres, ¼ of the light in the lamp
+// pattern: under the radial smear a fully dotted line reads as a ladder of dashes); sub-texel → its mean (0.246)
+// (band-limited to the footprint the level is seen at, ≈ 2.5 texels per pixel: no beaded sub-pixel dots)
+#define LAMPS(s, per) mix(pow(0.5 + 0.5 * cos(6.2832 * (s) / (per)), 6.0), 0.246, max(0.75, smoothstep(0.15 * (per), 0.45 * (per), 2.5 * uTexel)))
 float gss(vec2 p, vec2 c, vec2 s){ vec2 d = (p - c) / s; return exp(-dot(d, d)); }
 // band-limited line of width w (m) at distance d (m)
 float bline(float d, float w){ float we = max(w, uTexel * 1.25); return (w / we) * smoothstep(0.5 * we + 0.5 * uTexel, max(0.5 * we - 0.5 * uTexel, 0.0), d); }
 // a family of lines with spacing s: when the texel approaches the spacing, bake its mean coverage
-float family(float d, float w, float s){ float m = clamp(w * 1.7 / s, 0.0, 1.0); float k = smoothstep(0.12 * s, 0.4 * s, uTexel); return mix(bline(d, w), m, k); }
+// (keyed to the on-screen footprint ≈ 2.5 texels: resolved above ~8 px spacing, its mean below ~4 px)
+float family(float d, float w, float s){ float m = clamp(w * 1.7 / s, 0.0, 1.0); float k = smoothstep(0.125 * s, 0.25 * s, 2.5 * uTexel); return mix(bline(d, w), m, k); }
 // Voronoi: F1, F2, id
 vec3 vor(vec2 p){
   vec2 i = floor(p), f = fract(p); float d1 = 8.0, d2 = 8.0, id = 0.0;
@@ -49,6 +52,22 @@ vec3 vor(vec2 p){
     if (d < d1){ d2 = d1; d1 = d; id = hash12(c + 0.5); } else if (d < d2) d2 = d;
   }
   return vec3(sqrt(d1), sqrt(d2), id);
+}
+// Voronoi with the exact distance to the cell border (two-pass, as e_earth/patches.js) and the border's
+// direction: (border distance, cell id, coordinate along the border, id of the border) in cell units
+vec4 vorB(vec2 x, float sd){
+  vec2 n = floor(x), f = fract(x), mg = vec2(0.0), mr = vec2(0.0); float md = 8.0;
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
+    vec2 g = vec2(float(i), float(j)); vec2 r = g + 0.1 + 0.8 * hash22(n + g + sd) - f; float d = dot(r, r);
+    if (d < md) { md = d; mr = r; mg = g; }
+  }
+  md = 8.0; vec2 nb = vec2(1.0, 0.0), ng = mg;
+  for (int j = -2; j <= 2; j++) for (int i = -2; i <= 2; i++) {
+    vec2 g = mg + vec2(float(i), float(j)); vec2 r = g + 0.1 + 0.8 * hash22(n + g + sd) - f;
+    if (dot(mr - r, mr - r) > 1e-5) { vec2 nn = normalize(r - mr); float dd = dot(0.5 * (mr + r), nn); if (dd < md) { md = dd; nb = nn; ng = g; } }
+  }
+  float i1 = hash12(n + mg + sd * 1.7), i2 = hash12(n + ng + sd * 1.7);
+  return vec4(md, i1, dot(x, vec2(-nb.y, nb.x)), fract((i1 + i2) * 37.7 + i1 * i2 * 11.3));
 }
 float segD(vec2 p, vec2 a, vec2 b){ vec2 ab = b - a; float h = clamp(dot(p - a, ab) / dot(ab, ab), 0.0, 1.0); return length(p - a - ab * h); }
 // population surface (0..~1.2); q in km
@@ -103,33 +122,33 @@ vec3 cityLight(vec2 p){
     float led = smoothstep(0.62, 0.95, rho) * 0.8 + step(0.8, vd.z) * 0.35 * smoothstep(0.2, 0.5, rho);
     vec3 cc = mix(SOD, LED, clamp(led, 0.0, 0.9));
     col += mix(SOD, cc, 0.5) * 1.5 * family(dArt, 22.0, 1800.0) * smoothstep(0.02, 0.2, rho) * LAMPS(vd.x * 1800.0 * 3.0, 40.0);
-    float ang = vd.z * 3.1416;
-    vec2 r = mat2(cos(ang), -sin(ang), sin(ang), cos(ang)) * wp;
-    // main streets of the district grid; each street its own brightness (some unlit)
-    float spM = 170.0 + 100.0 * fract(vd.z * 7.31);
-    vec2 gm = abs(fract(r / spM) - 0.5) * spM;
-    vec2 si = floor(r / spM + 0.5);
-    bool vert = gm.x < gm.y;
-    float sb = hash12(vec2(vert ? si.x : si.y, vert ? 1.0 : 2.0) + vd.z * 57.0);
-    float sbr = sb < 0.15 ? 0.1 : 0.45 + 0.9 * sb;
+    // streets (no rotated grids: the S20–S22 generator of e_earth/patches.js): two density-seeded Voronoi
+    // networks seen through a fine domain warp — collectors (420 m cells) everywhere in town, local streets
+    // (170 m cells) faded in with density — so streets bend and meet at irregular angles, never graph paper
+    vec2 ws = wp + (vec2(fbm(p / 300.0 + 11.0, 2), fbm(p / 300.0 + 5.0, 2)) - 0.5) * 90.0;
+    vec4 vc = vorB(ws / 420.0, 31.0), vl = vorB(ws / 170.0, 47.0);
+    float dC = vc.x * 420.0, dL = vl.x * 170.0;
     float g2 = smoothstep(0.06, 0.35, rho);
-    col += cc * 2.2 * family(min(gm.x, gm.y), 11.0, spM) * g2 * sbr * LAMPS(vert ? r.y : r.x, 32.0);
-    // blocks: some dark (yards, works, parks), lights in the rest; lanes only in the dense parts
-    float spm = spM / 3.0;
-    vec2 rm = r / spm; vec2 bi = floor(rm);
-    vec2 gq = abs(fract(rm) - 0.5) * spm;
-    float blk = hash12(bi + vd.z * 131.0);
+    float sbC = vc.w < 0.12 ? 0.15 : 0.5 + 0.8 * fract(vc.w * 13.1);           // each street its own brightness
+    col += cc * 2.2 * family(dC, 11.0, 420.0) * g2 * sbC * LAMPS(vc.z * 420.0, 34.0);
+    // blocks (= the local cells): some dark (yards, works, parks), lights in the rest
+    float blk = vl.y;
     float lit = smoothstep(0.1, 0.8, blk) * step(blk, 0.88) * smoothstep(0.15, 0.45, fbm(wp / 600.0 + 3.0, 3) + rho * 0.4);
-    float g3 = smoothstep(0.3, 0.75, rho);
-    col += cc * 0.35 * family(min(gq.x, gq.y), 5.0, spm) * g3 * lit * LAMPS(gq.x < gq.y ? rm.y * spm : rm.x * spm, 26.0);
-    // building lights: a jittered lattice, 4 per block
-    vec2 bq = r / (spm * 0.5); vec2 bj = floor(bq); vec2 bf = fract(bq) - 0.5;
-    float h = hash12(bj + 3.7 + vd.z * 17.0);
-    float on = step(h, (0.2 + 0.5 * rho) * lit);
-    vec2 o = (hash22(bj + 9.1) - 0.5) * 0.45;
-    float pd = length(bf - o) * spm * 0.5;
+    float wl = smoothstep(0.25, 0.7, rho);
+    float sbL = vl.w < 0.15 ? 0.1 : 0.35 + 0.65 * fract(vl.w * 7.7);
+    col += cc * 1.1 * family(dL, 6.0, 170.0) * wl * sbL * (0.35 + 0.65 * lit) * LAMPS(vl.z * 170.0, 28.0);
+    // building lights: jittered points inside the blocks (kept off the streets)
+    vec2 bq = ws / 38.0; vec2 bj = floor(bq); vec2 bf = fract(bq);
+    float h = hash12(bj + 3.7);
+    // unresolved (the lattice spans only a few texels): the expected light, not one 38 m square per point
+    float kb = smoothstep(0.125 * 38.0, 0.25 * 38.0, 2.5 * uTexel);
+    // (and the block-to-block on/off is softened there: a flat-shaded mosaic of Voronoi cells is no city)
+    float litS = mix(0.45, 1.0, 0.5 * lit + 0.5 * smoothstep(0.15, 0.45, fbm(wp / 600.0 + 3.0, 3) + rho * 0.4)) * (0.6 + 0.8 * fbm(ws / 90.0 + 7.0, 2));
+    float on = mix(step(h, (0.2 + 0.5 * rho) * lit), (0.2 + 0.5 * rho) * 0.4 * mix(lit, litS, 0.55), kb) * smoothstep(7.0, 16.0, min(dL, dC));
+    vec2 o = 0.1 + 0.8 * hash22(bj + 9.1);
+    float pd = length(bf - o) * 38.0;
     vec3 bc = mix(vec3(1.0, 0.60, 0.28), vec3(0.95, 0.96, 1.0), step(0.72, fract(h * 13.0)));
-    col += bc * 2.2 * on * family(pd, 4.5, spm * 0.5) * (0.3 + 0.7 * fract(h * 31.0)) * smoothstep(0.03, 0.3, rho);
+    col += mix(bc, vec3(0.99, 0.70, 0.42), kb) * 2.2 * on * family(pd, 4.5, 38.0) * mix(0.3 + 0.7 * fract(h * 31.0), 0.65, kb) * smoothstep(0.03, 0.3, rho);
   }
   return col;
 }`;
@@ -168,11 +187,11 @@ export function createDive(ctx) {
     uL0: { value: levels[0] }, uL1: { value: levels[1] }, uL2: { value: levels[2] }, uCloud: { value: cloudTex },
     uExt: { value: new THREE.Vector3(LV[0][0], LV[1][0], LV[2][0]) },
     uTex: { value: new THREE.Vector3(...LV.map(([e, n]) => 2 * e / n)) },
-    uAlt: { value: [0, 0, 0, 0, 0, 0] }, uRot: { value: 0 },
+    uAlt: { value: new Array(9).fill(0) }, uRot: { value: 0 }, uJit: { value: 0 },
   };
   const NT = 8;
   const pass = kit.fullscreen(/* glsl */ `
-    uniform vec2 uRes; uniform float uS, uRot; uniform float uAlt[${NT}];
+    uniform vec2 uRes; uniform float uS, uRot, uJit; uniform float uAlt[${NT + 1}];
     uniform sampler2D uL0, uL1, uL2, uCloud; uniform vec3 uExt, uTex;
     vec3 dec(vec4 e){ return ${ENC.toFixed(1)} * pow(e.rgb, vec3(2.2)); }
     vec3 city(vec2 g, float fp){
@@ -189,8 +208,12 @@ export function createDive(ctx) {
       vec2 d = (px - vec2(${RX.toFixed(1)}, ${RY.toFixed(1)})) * vec2(1.0, -1.0);
       d = mat2(cos(uRot), sin(uRot), -sin(uRot), cos(uRot)) * d;
       vec3 acc = vec3(0.0);
+      // stratified shutter: every pixel takes its NT taps at its own offset inside the NT strata
+      // (interleaved-gradient noise, a pure function of pixel and frame), so the smear is continuous
+      // instead of NT stroboscopic copies of each street (the "fishnet")
+      float jit = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))) + uJit);
       for (int k = 0; k < ${NT}; k++){
-        float alt = uAlt[k], fp = alt / ${FPX.toFixed(2)};
+        float alt = exp(mix(log(uAlt[k]), log(uAlt[k + 1]), jit)), fp = alt / ${FPX.toFixed(2)};
         vec2 g = d * fp;
         vec3 c = city(g, fp);
         // the light dome: the air over the city scatters its glow (only while there is air below us)
@@ -226,7 +249,8 @@ export function createDive(ctx) {
       const key = fr + ':' + f.barPx.toFixed(2);
       if (cacheKey !== key) {
         const span = 0.125 / 24;
-        for (let k = 0; k < NT; k++) U.uAlt.value[k] = alt(tc + span * ((k + 0.5) / NT - 0.5));
+        for (let k = 0; k <= NT; k++) U.uAlt.value[k] = alt(tc + span * (k / NT - 0.5));
+        U.uJit.value = (fr * 0.6180339887) % 1;
         U.uRot.value = 0.09 * (tc - T0) / (T1 - T0);
         renderer.setRenderTarget(cache); renderer.setClearColor(0x000000, 1); renderer.clear();
         pass.render(renderer, cache);
@@ -241,7 +265,7 @@ export function createDive(ctx) {
       // totals ≈ 0.35 / 0.64 / 0.91 / 1.10 → ACES peak ≈ 85 % amber, never clipped
       const fr = Math.round(f.t * 24);
       const ramp = { 2708: 0.35, 2709: 0.60, 2710: 0.60, 2711: 0.05 }[fr] ?? 0;
-      return { exposure: 1.6, bloom: 0.85, bloomThreshold: 0.95, streak: 0.12, streakTint: [1.0, 0.75, 0.5], vignette: 0.3, grain: 0.04, flash: ramp, flashColor: [1.0, 0.70, 0.42] };
+      return { exposure: 1.6, bloom: 0.85, bloomThreshold: 0.95, streak: 0.12, streakTint: [1.0, 0.75, 0.5], vignette: 0.3, grain: 0.04, flash: ramp, flashColor: [1.0, 0.40, 0.11] };
     },
   };
 }
