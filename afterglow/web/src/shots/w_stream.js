@@ -33,6 +33,9 @@
 // Earth and the Moon leave the frame in the zoom. At 132 only a few words remain. The last 「？」 (an
 // independent instance) slides up the beam axis, decelerating (easeOutCubic), and comes to rest on R
 // at 133.0, then fades 133.0–134.5 (easeInSine). Then black: a few very faint distant stars.
+// The lead goes out first, 130.8 → 131.25 (LEAD_DIE), before the zoom can lift it into the top bar; every
+// other phrase over ~8 px fades as its ink box nears either letterbox edge (as in w_sea), so nothing
+// bright is ever sliced by the matte.
 // S28 past 131.0 (the dissolve tail) renders exactly the same picture, so any S28→S29 dissolve is a no-op.
 import * as THREE from 'three';
 import { createEarth } from '../lib/earth.js';
@@ -55,6 +58,9 @@ const G = t => { if (t <= T_R) return t; const T = T_STOP - T_R, u = Math.min((t
 const ZOOM1 = 132.25;
 const focalPx = t => { const u = Math.min(Math.max((t - T29) / (ZOOM1 - T29), 0), 1); return F18 * Math.pow(35 / 18, 0.5 - 0.5 * Math.cos(Math.PI * u)); };
 const dispAt = t => 1 + 0.8 * Math.pow(Math.max(t - T29, 0), 1.5);          // S29: the cross-section widens
+const LEAD_DIE = 130.8;                              // the lead fades 130.8 → 131.25, before the zoom lifts it into the bar
+// (the layout pass still reserves the lead's room until its former exit, 131.35 + 0.3: a conservative
+//  superset, and it keeps the reviewed layout of every other phrase exactly as it was)
 const dieOf = (seed, lead) => (lead ? 131.35 : 131.15 + 1.45 * Math.pow(seed * 7.31 - Math.floor(seed * 7.31), 1.6));
 const THETA = 14 * Math.PI / 180;                   // beam axis vs. the camera→Earth line
 const R_GEO = [36.8, -1.3];
@@ -312,12 +318,12 @@ export async function create(ctx) {
     uFy: { value: 1 }, uPx: { value: H / 1080 }, uCol: { value: new THREE.Vector3(...AMBER) }, uGain: { value: 1.5 }, uDot: { value: 0.3 },
     uThT: { value: 0 }, uThTp: { value: 0 }, uSth: { value: S_TH }, uThGain: { value: 1 },
     uLeadNdc: { value: new THREE.Vector2(9, 9) }, uFocus: { value: 0 }, uAspect: { value: W / H },
-    uT: { value: 0 }, uDisp: { value: 1 }, uDim: { value: 1 },
+    uT: { value: 0 }, uDisp: { value: 1 }, uDim: { value: 1 }, uBar: { value: 138.3 },
   };
   const VS_COMMON = /* glsl */ `
     attribute vec4 aRect; attribute float aAsp, aPhi0, aSeed, aLead; attribute vec2 aOff;
     uniform vec3 uE, uEp, uB, uP1, uP2, uLeadOff; uniform float uD, uDp, uPhiT, uPhiTp, uLeadPhi, uLeadPhiP;
-    uniform vec2 uLeadNdc; uniform float uFocus, uAspect, uT, uDisp, uDim;
+    uniform vec2 uLeadNdc; uniform float uFocus, uAspect, uT, uDisp, uDim, uBar;
     uniform float uLmax, uCtot, uCk, uEk, uRho, uUH, uTau, uFy, uPx, uThT, uThTp, uSth, uThGain;
     float Lof(float phi){ float c = (1.0 - phi) * uCtot;
       return uLmax - (c < uCk ? log(1.0 + c * ${A1.toFixed(4)}) / ${A1.toFixed(4)} : ${VK.toFixed(4)} + log(1.0 + (c - uCk) * ${A2.toFixed(4)} / uEk) / ${A2.toFixed(4)}); }
@@ -358,7 +364,7 @@ export async function create(ctx) {
       vis *= smoothstep(0.0, 0.05, sNow);
       // S29: the words go out one by one (the same law as the layout pass in JS), and dim with 1/d²
       float fs = fract(aSeed * 7.31);
-      float die = (aLead > 0.5 && aLead < 1.5) ? 131.35 : 131.15 + 1.45 * pow(fs, 1.6);
+      float die = (aLead > 0.5 && aLead < 1.5) ? ${LEAD_DIE.toFixed(3)} : 131.15 + 1.45 * pow(fs, 1.6);
       vis *= (1.0 - smoothstep(die, die + 0.45, uT)) * uDim;
       vis *= 0.8 + 0.4 * fract(aSeed * 13.7);                       // a little life in the brightness
       // around 129 the eye is given to the lead: its neighbours on screen step back (dimmer)
@@ -382,13 +388,37 @@ export async function create(ctx) {
         vec3 Y = normalize(cross(V, X));
         float ds = max(dot(C - Cp, X), 0.0);                        // smear along the baseline (motion ∥ beam)
         float trail = ds / w;
+        // at the hard cut (123.0) the near words sweep past fastest: a full-shutter smear turns them into
+        // blocks (garbled glyphs). For the first ~0.5 s the smear is held to 0.04 h — the words are sharp
+        // letters at the cut — and the fastest of them are held back in brightness (the beam resolves into
+        // letters rather than strobing); both ease back to the true 180° values over 123.45 → 123.95
+        float relax = smoothstep(123.45, 123.95, uT);
+        float capT = 0.04 / max(aAsp, 1e-3);
+        float hold = mix(mix(1.0, 0.4, smoothstep(0.1, 0.6, trail * aAsp)), 1.0, relax);
+        trail = mix(min(trail, capT), trail, relax);
         float lx = mix(-trail, 1.0, position.x);
         vec3 p = C + X * (lx - 0.5) * w + Y * (position.y - 0.5) * hW;
         gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
         float q = smoothstep(2.2, 3.6, hPx);                        // < 3 px: hand over to the point sprite
         vL = vec2(lx, position.y); vTrail = trail; vRect = aRect;
         vTaps = clamp(ceil(trail * hPx * aAsp / 1.2), 1.0, 40.0);
-        vI = vis * q / (1.0 + trail);
+        vI = vis * q * hold / (1.0 + trail);
+        // letterbox guard (as in w_sea): a phrase whose ink box (incl. its smear; the card is PH tall with
+        // the text middle-aligned at 0.62 PH, so the ink spans ≈ 0.2 … 0.8 of it) reaches towards the matte
+        // edge (visible band uBar … 1080 − uBar, 1080p px) fades out before it gets there — nothing bright
+        // is sliced by the bar. Words under ~8 px are left alone (the thread, the far points).
+        if (vI > 0.0) {
+          float yTop = 1e5, yBot = -1e5;
+          for (int c = 0; c < 4; c++) {
+            float cx = c < 2 ? -trail : 1.0, cy = mod(float(c), 2.0) * 0.6 + 0.2;
+            vec4 cc = projectionMatrix * viewMatrix * vec4(C + X * (cx - 0.5) * w + Y * (cy - 0.5) * hW, 1.0);
+            float y = (1.0 - cc.y / max(cc.w, 1e-6)) * 540.0;
+            yTop = min(yTop, y); yBot = max(yBot, y);
+          }
+          float guard = smoothstep(uBar + 8.0, uBar + 48.0, yTop) * (1.0 - smoothstep(1080.0 - uBar - 48.0, 1080.0 - uBar - 8.0, yBot));
+          // (not the lead: its box corners reach far beyond its ink; it has its own exit, LEAD_DIE)
+          vI *= mix(1.0, guard, smoothstep(6.0, 10.0, hPx) * (aLead > 0.5 && aLead < 1.5 ? 0.0 : 1.0));
+        }
         if (q <= 0.0 || vis <= 0.0) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
       }`,
     fragmentShader: /* glsl */ `
@@ -396,18 +426,21 @@ export async function create(ctx) {
       varying vec2 vL; varying float vTrail, vTaps, vI; varying vec4 vRect;
       void main(){
         float a = 0.0;
+        // vTaps is constant per card but arrives interpolated (2.9999… / 3.0000…): round it, or some
+        // pixels take one tap more than they divide by (a per-frame shimmer on the smeared words)
+        float taps = floor(vTaps + 0.5);
         float j = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));   // IGN dither
         // gradients taken once, outside the (divergent) loop, so the mip level stays right
         vec2 uv0 = vec2(mix(vRect.x, vRect.z, vL.x), mix(vRect.w, vRect.y, vL.y));
         vec2 gx = dFdx(uv0), gy = dFdy(uv0);
         float du = vRect.z - vRect.x;
         for (int k = 0; k < 40; k++) {
-          if (float(k) >= vTaps) break;
-          float o = vTrail * (float(k) + j) / vTaps, x = vL.x + o;
+          if (float(k) >= taps) break;
+          float o = vTrail * (float(k) + j) / taps, x = vL.x + o;
           float inside = step(0.0, x) * step(x, 1.0);
           a += inside * textureGrad(uAtlas, uv0 + vec2(o * du, 0.0), gx, gy).a;
         }
-        a /= vTaps;
+        a /= taps;
         a *= (1.0 + vTrail);                                        // energy is spread, not lost
         gl_FragColor = vec4(uCol * uGain * vI * a, 1.0);
       }`,
@@ -563,7 +596,7 @@ export async function create(ctx) {
   const POST29 = { bloom: 0.8, bloomThreshold: 1.0, streak: 0.06, streakTint: [1.0, 0.8, 0.6], vignette: 0.24, grain: 0.035 };
 
   // one world, one camera: S28 and S29 (and S28's dissolve tail past 131.0) are the same function of t
-  function renderWorld(t, target) {
+  function renderWorld(t, target, barPx) {
     const ac = renderer.autoClear; renderer.autoClear = false;
     renderer.setRenderTarget(target); renderer.setClearColor(0x000000, 1); renderer.clear();
     const s29 = t >= T29;
@@ -583,7 +616,7 @@ export async function create(ctx) {
     const g = NU * (G(t) - T_R), gp = NU * (G(t - dt) - T_R);
     U.uPhiT.value = g; U.uPhiTp.value = gp;
     U.uLeadPhi.value = PHI_R + g; U.uLeadPhiP.value = PHI_R + gp;
-    U.uT.value = t; U.uDisp.value = dispAt(t);
+    U.uT.value = t; U.uDisp.value = dispAt(t); U.uBar.value = barPx * 1080 / H;
     U.uDim.value = s29 ? Math.pow(Math.min(1, Math.pow(alt(T29) / alt(t), 2)), 0.35) : 1;
     cam.near = 0.01 * D; cam.far = 6 * D + 60; cam.updateProjectionMatrix(); cam.updateMatrixWorld();
     U.uFy.value = cam.projectionMatrix.elements[5] * H / 2;
@@ -619,7 +652,7 @@ export async function create(ctx) {
 
   const exports = {
     msaa: false,
-    render(shot, f) { renderWorld(f.t, f.target); },
+    render(shot, f) { renderWorld(f.t, f.target, f.barPx); },
     post(shot, f) {
       const m = sstep(T29, 132.0, f.t), o = {};
       for (const k of Object.keys(POST28)) o[k] = Array.isArray(POST28[k]) ? POST28[k] : POST28[k] + (POST29[k] - POST28[k]) * m;

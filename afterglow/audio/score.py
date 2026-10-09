@@ -234,6 +234,11 @@ class Scene:
         linear-amplitude points (cosine in amplitude — a natural fade-out to true zero)."""
         self.post.append(('lin' if linear else 'win', stems, points))
 
+    def low_drain(self, stems, points, fc=160.0):
+        """Time-varying low shelf on dry + wet: the band below fc (zero-phase crossover, so the two
+        bands sum back to the input exactly) follows the dB points; the band above is untouched."""
+        self.post.append(('drain', stems, points, fc))
+
     def render(self):
         out = {}
         for stem in set(list(self.dry) + [k[0] for k in self.send]):
@@ -256,6 +261,11 @@ class Scene:
                 elif op[0] == 'soft':
                     c = np.float32(10 ** (op[2] / 20))
                     y = (c * np.tanh(y / c)).astype(np.float32)
+                elif op[0] == 'drain':
+                    sos = signal.butter(4, op[3], 'low', fs=SR, output='sos')
+                    lo = signal.sosfiltfilt(sos, y, axis=0).astype(np.float32)
+                    g = dbenv(op[2], self.i0, self.n)[:, None].astype(np.float32)
+                    y = (y - lo) + lo * g
                 elif op[0] == 'win':
                     y *= dbenv(op[2], self.i0, self.n)[:, None].astype(np.float32)
                 else:
@@ -385,7 +395,14 @@ def bigbang_parts():
     return _BB['timp'], _BB['air']
 
 
-TIMP_BB_DB = -7.2     # dry peak; with its R_void send the S07 note peaks at −6 dBFS
+# verify (S26 vs S07): the locked rule says the f2708 E landing is the loudest moment ("the human question is
+# louder than the Big Bang"), but at −7.2 the Big Bang tied it on 100 ms and beat it on momentary loudness
+# in both masters. The landing cannot get much louder in the web master (it already meets the −1 dBTP
+# ceiling, and its 400 ms window includes the breath before it), so the cold note gives way:
+# −7.2 → −10.7 (S07 peak ≈ −9.5 dBFS instead of −6). The landing is now ≥ 2 LU louder than the Big Bang
+# on 100 ms and momentary loudness in both masters. The air keeps its level: its tail is the CMB hiss.
+TIMP_BB_DB = -10.7    # dry peak
+TIMP_REV_DB = -7.2    # the #15 reverse-reverb source keeps its v1.2 timp/air balance (it is normalised anyway)
 AIR_BB_DB = -24.0
 
 
@@ -409,7 +426,7 @@ def scene_prologue():
     # --- #15 reverse reverb: the 25.333 note's R_void tail, reversed, 3 s, peaking on 24.000
     timp, air = bigbang_parts()
     src = np.zeros((n_samples(3.2), 2), np.float32)
-    src[:len(timp[:len(src)])] += mono2st(timp[:len(src)]) * db(TIMP_BB_DB)
+    src[:len(timp[:len(src)])] += mono2st(timp[:len(src)]) * db(TIMP_REV_DB)
     src[:len(air)] += air * db(AIR_BB_DB) * 4.0
     wet = conv(np.pad(src, ((0, n_samples(1.0)), (0, 0))), ir('void'))
     a0 = int(np.flatnonzero(np.abs(wet).max(axis=1) > 1e-3 * np.abs(wet).max())[0])
@@ -812,6 +829,20 @@ def scene_converge():
 
 A4_SEND = 0.12
 
+# verify (S38, 199–202, f4776–4847): "chord below −24 dB; only the heartbeat remains (−32 dB)". The chord
+# used to sit at −7 → −10 dB with its D2/A2/D3 strings and the organ bed right in the lub's 80–300 Hz band,
+# so the three hesitation beats were 30–40 dB under the music there and the mix stayed ≈ −22 dBFS (web).
+# Now the answer drains away from the floor up over 197.5 → 199.0: the bass voices and the warm bed go
+# first (ANSWER_DRAIN_PTS), the upper voices sink to −15 dB, the Asker's D5 steps back 5–7 dB — so the
+# heartbeat is what is left; the −8 cent sag is untouched, and 202.0 still cuts what remains of the chord
+# cleanly, leaving the D5, which swells back for the 203.0 slide up to E5.
+ANSWER_ASKER_AMP = [(194.0, 0), (195.0, 0), (197.5, -4), (199.0, -10), (200.0, -12.5), (202.0, -12.5), (203.0, -6),
+                    (204.0, -5)]
+ANSWER_CHORD_PTS = [(194.667, 0), (195.2, 0), (197.5, -6), (199.0, -13), (201.9, -15)]
+ANSWER_DRAINED = ('D2', 'A2', 'D3')
+ANSWER_DRAIN_PTS = [(194.667, 0), (197.5, 0), (199.0, -20)]
+ANSWER_FLOOR_PTS = [(194.667, 0), (197.5, 0), (199.0, -30)]   # below 160 Hz, dry + hall tail (Scene.low_drain)
+
 
 def scene_answer():
     """M9: 194.000 ♯C5 – 194.333 E5↘D5 – 194.667 D major (the only one) → decays 8 cents flat →
@@ -823,26 +854,29 @@ def scene_answer():
     n = fs(204.75) - i_on
     ev = [(fs(194.0), N('C#5'), 0), (fs(194.333), N('E5'), 0.03), (xs(194.458), N('D5'), 0.06),
           (fs(203.0), N('E5'), 0.333)]
-    amp = [(194.0, 0), (195.0, 0), (199.0, -5), (202.0, -6), (203.0, -5), (204.0, -5)]
-    asker_line(sc, i_on, n, ev, amp, -24.0, seed=SEED + 194, attack=0.04, release_at=fs(204.0),
+    asker_line(sc, i_on, n, ev, ANSWER_ASKER_AMP, -24.0, seed=SEED + 194, attack=0.04, release_at=fs(204.0),
                release=0.75, rev=H3)
     # the D-major chord: strings D2–A2–D3–F♯3–A3–D4–F♯4 + warm organ bed, mf, 0.8 s attack; sinks 8 c
     t_c = 194.667
     i_c = fs(t_c)
     flat = lambda n: 2 ** (-8.0 / 1200 * np.clip(((i_c + np.arange(n)) / SR - 195.0) / 4.0, 0, 1))
-    chord_pts = [(t_c, 0), (195.2, 0), (199.0, -7), (201.9, -10)]
+    chord_pts = ANSWER_CHORD_PTS
     for k, (nm, lv) in enumerate((('D2', -31.0), ('A2', -32.0), ('D3', -32.0), ('F#3', -33.0), ('A3', -33.0),
                                   ('D4', -34.0), ('F#4', -35.0))):
         hold = fs(202.0) - i_c
         nn = hold + n_samples(0.1)
         dyn = note_env(nn, 0.8, hold, 0.1) * dbenv(chord_pts, i_c, nn)
+        if nm in ANSWER_DRAINED:
+            dyn = dyn * dbenv(ANSWER_DRAIN_PTS, i_c, nn)
         clip = I.string_section(nn, N(nm) * flat(nn), dyn, seed=SEED + 1950 + k, vib=True, cut_hi=2800)
         sc.add('strings', clip, i_c, gain=db(lv) * K_STR, rev=H3)
     for k, nm in enumerate(('D3', 'F#3', 'A3', 'D4')):
         nn = fs(202.0) - i_c + n_samples(0.1)
         o = I.organ(N(nm), nn / SR, stops=(1.0, 0.35, 0.12, 0.06, 0.0, 0.0), chiff=0.0, seed=SEED + 1960 + k)
         o = o * dbenv(chord_pts, i_c, len(o)).astype(np.float32) * note_env(len(o), 0.8, len(o) - n_samples(0.1), 0.1)
+        o = o * dbenv(ANSWER_DRAIN_PTS, i_c, len(o)).astype(np.float32)     # the warm bed drains first
         sc.add('strings', I.sos_lp(o, 1800), i_c, gain=db(-38.0) * 3.0, pan=-0.3 + 0.2 * k, rev=H3)
+    sc.low_drain(('strings',), ANSWER_FLOOR_PTS)
     sc.cut(202.0, stems=('strings',), fade=480)
     # #32 the reversed ♯C5: the 194.000 ♯C5 + 0.4 s of R_hall, time-reversed, 0.625 s, ends on 204.000
     nn = n_samples(0.333 + 0.6)

@@ -129,7 +129,9 @@ def heartbeat_schedule(tl):
     ev += [(t, -36.0, x_ans) for t in (195, 196, 197, 198)]
     ev += [(t, -32.0, x_ans) for t in (199, 200, 201)]
     x_q = R_X + 4 * CELL  # cursor after 「有人吗？」
-    ev += [(t, -38.0, x_q) for t in (212, 213, 214)]
+    # verify: at −38 the 212/213/214 lubs were fully masked by the choir and Dsus2 (click 20–26 dB under the bed
+    # in 1–4 kHz); at −32 (the level of the 199–201 beats) the pulse is felt under the choir, not on top of it
+    ev += [(t, -32.0, x_q) for t in (212, 213, 214)]
     ev += [(float(t), -30.0, None) for t in (235, 236, 244, 246, 247, 248, 249)]
     # cross-check with timeline rules
     want = set()

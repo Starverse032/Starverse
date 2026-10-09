@@ -9,8 +9,8 @@ Masters: build/audio/mix.wav (web, −18 LUFS) and build/audio/mix_festival.wav 
 Parts (each a module exposing `render(tl) -> dict[str, np.ndarray]` of full-length stereo stems):
   score.py  — music (leitmotif, pads, choir, piano, low end, hits)
   sfx.py    — sound design (UI, cosmos, fire, city, radio, typing, impacts, room tone)
-The mix stage applies stem gains, ducks music under key sfx moments, glues, limits to -1 dBTP
-and normalises to the target loudness.
+The mix stage applies stem gains, ducks music under key sfx moments, glues, limits to -1 dBTP (true peak,
+4× oversampled) and normalises to the target loudness.
 """
 from __future__ import annotations
 
@@ -115,6 +115,45 @@ def mix(stems, tl, n):
 WEB_COMP = dict(threshold_db=-11, ratio=2.0, attack=0.01, release=0.25)   # v1.2: −14 → −11, only the landing is touched
 
 
+TP_OS = 4   # true-peak oversampling (ITU-R BS.1770-4 Annex 2: ≥ 4× at 48 kHz)
+
+
+def true_peak_env(x, os_=TP_OS):
+    """Per-sample true-peak magnitude (max over channels and over the os_ interpolated points around
+    each sample), from a polyphase-FIR os_× upsampling."""
+    from scipy.signal import resample_poly
+    u = np.abs(resample_poly(x.astype(np.float64), os_, 1, axis=0)).max(axis=1)
+    u = u[:len(x) * os_].reshape(len(x), os_).max(axis=1)
+    return np.maximum(u, np.abs(x).max(axis=1))
+
+
+def true_peak_db(x):
+    return float(20 * np.log10(true_peak_env(x).max() + 1e-12))
+
+
+def tp_limiter(x, ceiling_db=-1.0, lookahead=0.004, release=0.12):
+    """dsp.limiter's look-ahead / release law, but the gain is computed from the 4× oversampled (true)
+    peak, so the −1 dBTP spec holds between samples too (the plain limiter only bounds sample peaks).
+    One refinement pass catches the residue of the gain ripple itself. Unity everywhere the true peak
+    is below the ceiling."""
+    from scipy.ndimage import minimum_filter1d
+    from scipy import signal as ss
+    ceiling = 10 ** (ceiling_db / 20)
+    y = x.astype(np.float64)
+    a = np.exp(-1 / (release * dsp.SR))
+    la = dsp.n_samples(lookahead)
+    for margin in (1.0, 0.998):
+        tp = true_peak_env(y)
+        req = np.minimum(1.0, ceiling * margin / (tp + 1e-12))
+        if req.min() >= 1.0:
+            break
+        req = minimum_filter1d(req, size=2 * la + 1)
+        smooth = ss.lfilter([1 - a], [1, -a], req, zi=[req[0] * a])[0]
+        g = np.minimum(req, smooth)
+        y = y * g[:, None]
+    return np.clip(y, -ceiling, ceiling).astype(np.float32)
+
+
 def frame_sample(t, fps=24):
     """Frame-exact sample index (silences and cuts are defined on frames: sample = frame × 2000)."""
     return int(round(t * fps)) * (dsp.SR // fps)
@@ -138,11 +177,13 @@ def master(m, tl, kind='web'):
         r = np.linspace(0, 1, pad, dtype=np.float32)
         w[:pad] = r; w[-pad:] = r[::-1]
         out[lo:hi] = seg * (1 - w[:, None]) + comp * w[:, None]
-    out = dsp.limiter(out, ceiling_db=spec.get('truePeak_dBTP', -1.0), lookahead=0.004, release=0.12)
+    # verify: the old dsp.limiter bounded the sample peak only (web: −0.88 dBTP at 25.643); now true peak
+    out = tp_limiter(out, ceiling_db=spec.get('truePeak_dBTP', -1.0), lookahead=0.004, release=0.12)
     for z in tl.get('silences', []):
         if z.get('type', 'digital') == 'digital':
             out[frame_sample(z['start']):frame_sample(z['end'])] = 0.0
-    print(f'[master:{kind}] mix {loud:.1f} LUFS → {dsp.lufs(out):.1f} LUFS (target {target}), peak {dsp.peak_db(out):.1f} dBFS')
+    print(f'[master:{kind}] mix {loud:.1f} LUFS → {dsp.lufs(out):.1f} LUFS (target {target}), '
+          f'peak {dsp.peak_db(out):.2f} dBFS, true peak {true_peak_db(out):.2f} dBTP')
     return out
 
 

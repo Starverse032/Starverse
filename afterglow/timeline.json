@@ -689,14 +689,21 @@
    "transitionOut": {
     "type": "flash",
     "dur": 0.167,
-    "strength": 1.4
+    "strength": 1.4,
+    "note": "verify: S26 post tint [1,0.92,0.8] + saturation 1.08 keep the amber flash f2708–2711 ≈ (209–218,148–161,67–77), continuous with S27's flash-in f2712 (199,141,74); without it ACES pushes the flash toward yellow-cream"
    },
    "post": {
     "flashColor": [
      1.0,
      0.4,
      0.11
-    ]
+    ],
+    "tint": [
+     1.0,
+     0.92,
+     0.8
+    ],
+    "saturation": 1.08
    },
    "motionBlur": 4,
    "tc": "01:52.12 → 01:53.00"
