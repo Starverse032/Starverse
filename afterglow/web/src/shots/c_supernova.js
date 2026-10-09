@@ -9,8 +9,8 @@
 //      and cools into its element colours. 35 mm, the camera is pushed back by the blast,
 //      distance 10 → 40 (easeOutExpo); a shift lens keeps the blast centre pinned on R at every
 //      distance. 4 motion-blur sub-frames (timeline).
-// S13  85 mm, locked. The shell's light front waits below the frame through the 0.5 s dissolve from
-//      S12, then rises from 57.5 (easeOutCubic) and stops at
+// S13  85 mm, locked. Hard cut from S12; the shell's light front starts just below the frame
+//      (under the bar) and rises from 57.0 (easeOutCubic) and stops at
 //      61.0 EXACTLY on the conic C = anchors.arc (S14's horizon), then holds for 3 s. The front is a
 //      screen-space shader on the distance |Q|/|∇Q| to C: a sharp outer edge, a 3 px white-blue core and
 //      a 30 px inward exponential glow (the same profile S14's airglow line uses, measured against
@@ -28,7 +28,7 @@ const R = [734, 540];
 const T12 = 53.0, T13 = 57.0, T_STOP = 61.0;
 // the front only starts rising once S12's dissolve (0.5 s) is over: the dissolve goes shell → empty
 // starfield, so the fading shell never sits on (and is never cut by) the rising arc
-const T_RISE = 57.5;
+const T_RISE = 57.0;
 
 // apex-relative conic: A x² + B xy + C y² + Dx x + Ey y + F0 with x = u − 960, y = v − 430
 function apexConic(coef, ax = 960, ay = 430) {
@@ -244,7 +244,7 @@ export async function create(ctx) {
   const cam13 = kit.filmCamera(W, H, { focalMM: 85, near: 0.5, far: 6000 });
   cam13.position.set(0, 0, 0); cam13.lookAt(0.3, 0.45, -1); cam13.updateMatrixWorld();
 
-  // front offset δ(t): below the frame (apex at y 990, under the 942 bar) until 57.5, then up to 0 at
+  // front offset δ(t): starts below the frame (apex at y 990, under the 942 bar) at 57.0, then up to 0 at
   // 61.0 (easeOutCubic)
   const DELTA0 = 560;
   const deltaAt = t => { const u = Math.min(1, Math.max(0, (t - T_RISE) / (T_STOP - T_RISE))); return DELTA0 * Math.pow(1 - u, 3); };
