@@ -113,7 +113,7 @@ export async function create(ctx) {
     uRes: bgU.uRes, uS: bgU.uS, uR: { value: new THREE.Vector2(RX, RY) }, uU: { value: u.clone() },
     uDR: { value: DR }, uCz: { value: 0 }, uDxy: { value: Dxy }, uDz: { value: Dz }, uF: { value: F }, uWB: { value: WB },
     uT: { value: 0 }, uHead: { value: 3000 }, uBits: { value: bitTex }, uSEntry: { value: sEntry },
-    uCol: { value: new THREE.Vector3(1.0, 0.47, 0.17) }, uNeb: { value: nebTex }, uNebP: bgU.uNebP, uScratch: { value: 0 },
+    uCol: { value: new THREE.Vector3(1.0, 0.43, 0.115) }, uNeb: { value: nebTex }, uNebP: bgU.uNebP, uScratch: { value: 0 },
     uSNeb: { value: S_NEB },
   };
   const beam = kit.fullscreen(/* glsl */ `

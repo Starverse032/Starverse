@@ -112,6 +112,9 @@ def mix(stems, tl, n):
     return m
 
 
+WEB_COMP = dict(threshold_db=-11, ratio=2.0, attack=0.01, release=0.25)   # v1.2: −14 → −11, only the landing is touched
+
+
 def frame_sample(t, fps=24):
     """Frame-exact sample index (silences and cuts are defined on frames: sample = frame × 2000)."""
     return int(round(t * fps)) * (dsp.SR // fps)
@@ -130,7 +133,7 @@ def master(m, tl, kind='web'):
         pad = dsp.n_samples(0.25)
         lo, hi = max(0, a - pad), min(len(out), b + pad)
         seg = out[lo:hi]
-        comp = dsp.compress(seg, threshold_db=-14, ratio=2.0, attack=0.01, release=0.25)
+        comp = dsp.compress(seg, **WEB_COMP)
         w = np.ones(hi - lo, np.float32)
         r = np.linspace(0, 1, pad, dtype=np.float32)
         w[:pad] = r; w[-pad:] = r[::-1]

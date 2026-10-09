@@ -14,27 +14,48 @@
 // the frame edge, ~67 px at R, points far away). The flow is stationary in the camera's frame:
 // φ_i(t) = frac(φ0_i + ν t) maps to L through the inverse CDF of that density — far words creep,
 // near words sweep past (with an analytic along-the-baseline smear instead of sub-frames).
-// The lead phrase 「有人吗？」 (the lane nearest the lens) crosses R at exactly 129.0. 130.0–131.0
-// the Moon (baked fbm maria, Lommel–Seeliger shading, lit from the right) sweeps in from the upper
-// right. Earth = lib/earth.js (read-only), lights fully on, a thin sunlit crescent on its far limb.
+// The lead phrase 「有人吗？」 (the lane nearest the lens) crosses R at exactly 129.0. From 129.0 the
+// camera starts to match the stream's speed: the flow relative to the lens decelerates (velocity
+// (1−u)^3.2, u over 129 → 133) and stops at 133.0 — so the lead, the head of the stream, stays in
+// the frame instead of sweeping into the top bar. The screen axis P_E → R is laid exactly on S27's
+// beam (R → (1268,160)), so the S27→S28 dissolve reads as one beam resolving into letters.
+// Large phrases are laid out at create() by deterministic rejection sampling (lateral offset, spiral
+// phase, a little phase jitter) so that no two of them (≥ 34 px tall) overlap on screen anywhere in
+// 123.0–131.75 (oriented boxes, each inflated by 0.1 h → ≥ 1.2 h between stacked lines), and none
+// crosses the Moon. 130.0–131.0 the Moon (baked fbm maria, Lommel–Seeliger shading, lit from the
+// right, opaque) drifts in from the top-right corner at 7 px/frame, 58 → 46 px across.
+// Earth = lib/earth.js (read-only), lights fully on, a thin sunlit crescent on its far limb.
 //
-// S29 · 35 mm, reverse angle: looking down the beam, the axis vanishing point is R. The camera rode
-// with the front (relative velocity 0 at 131.0) and brakes to a stop at 133.0 (easeOutCubic); the
-// words keep going, disperse (speed ∝ distance^0.5 → spacing ∝ s^1.5), dim with 1/d² (capped) and go
-// out one by one; under 3 px they cross-fade to point sprites. At 132 only a few remain. The last
-// 「？」 (an independent instance) drifts onto the axis and reaches R at 133.0, recedes, and fades
-// 133.0–134.5 (easeInSine). Then black: a few very faint distant stars, no Milky Way.
+// S29 · the same world and the same camera — the shot continues S28 (its 131.0 frame is S28's pose):
+// over 131.0 → 132.25 the lens zooms 18 → 35 mm about R (a matching yaw keeps R fixed), the flow
+// keeps decelerating and stops at 133.0, the words disperse (their cross-section offsets grow),
+// dim with 1/d² (capped) and go out one by one (under 3 px they hand over to point sprites); the
+// Earth and the Moon leave the frame in the zoom. At 132 only a few words remain. The last 「？」 (an
+// independent instance) slides up the beam axis, decelerating (easeOutCubic), and comes to rest on R
+// at 133.0, then fades 133.0–134.5 (easeInSine). Then black: a few very faint distant stars.
+// S28 past 131.0 (the dissolve tail) renders exactly the same picture, so any S28→S29 dissolve is a no-op.
 import * as THREE from 'three';
 import { createEarth } from '../lib/earth.js';
 import { phraseAtlas } from '../lib/textatlas.js';
 import { QUESTIONS, FONT_FOR, RTL } from '../data/voices.js';
 
-const T28 = 123.0, T29 = 131.0, T_R = 129.0;
+const T28 = 123.0, T29 = 131.0, T_R = 129.0, T_STOP = 133.0;
 const RX = 734.5, RY = 540.5;                       // R as a pixel centre (1080p)
 const KM = 1 / 6371;                                // world unit = one Earth radius
 const alt = t => 6000 * KM * Math.exp(0.49 * (t - T28));   // d(t), in Earth radii
 const F18 = 960 * 18 / 18, F35 = 960 * 35 / 18;     // 1080p focal length in px (36 mm gauge)
-const P_E = [205, 850];                             // the Earth's (fixed) screen position in S28
+// the Earth's (fixed) screen position in S28: 613 px from R, on the extension of S27's beam (R → VP27)
+const VP27 = [1268, 160];
+const P_E = (() => { const d = Math.hypot(205 - RX, 850 - RY), u = [VP27[0] - RX, VP27[1] - RY], l = Math.hypot(u[0], u[1]);
+  return [RX - d * u[0] / l, RY - d * u[1] / l]; })();
+// flow time: the stream's motion relative to the lens decelerates from 129.0 and stops at 133.0
+const FLOW_N = 3.2;
+const G = t => { if (t <= T_R) return t; const T = T_STOP - T_R, u = Math.min((t - T_R) / T, 1); return T_R + T * (1 - Math.pow(1 - u, FLOW_N + 1)) / (FLOW_N + 1); };
+// S29 lens: 18 → 35 mm over 131.0 → 132.25 (easeInOutSine in log focal length)
+const ZOOM1 = 132.25;
+const focalPx = t => { const u = Math.min(Math.max((t - T29) / (ZOOM1 - T29), 0), 1); return F18 * Math.pow(35 / 18, 0.5 - 0.5 * Math.cos(Math.PI * u)); };
+const dispAt = t => 1 + 0.8 * Math.pow(Math.max(t - T29, 0), 1.5);          // S29: the cross-section widens
+const dieOf = (seed, lead) => (lead ? 131.35 : 131.15 + 1.45 * Math.pow(seed * 7.31 - Math.floor(seed * 7.31), 1.6));
 const THETA = 14 * Math.PI / 180;                   // beam axis vs. the camera→Earth line
 const R_GEO = [36.8, -1.3];
 
@@ -181,6 +202,96 @@ export async function create(ctx) {
     aRect.set([rc[0], rc[1], rc[2], rc[3]], i * 4); aAsp[i] = rc[4];
     aPhi0[i] = (j + R1()) / N_TH; aOff[i * 2] = gauss(R1) * 0.5; aOff[i * 2 + 1] = gauss(R1) * 0.5; aSeed[i] = R1(); aLead[i] = 2;
   }
+
+  // ---- the camera (shared by S28 and S29) and the Moon's path, in the S28 camera frame -------------
+  const camQ = t => new THREE.Quaternion().setFromUnitVectors(dirOf(RX, RY, focalPx(t)), rHat);   // R stays on R
+  const MOON_R = 1737 / 6371;
+  const M0 = [1945, 165], MV = 7 * 24;                        // enters at the top-right corner, 7 px/frame
+  const mDir = (() => { const d = [P_E[0] - M0[0], P_E[1] - M0[1]], l = Math.hypot(d[0], d[1]); return [d[0] / l, d[1] / l]; })();   // drifting towards the Earth: we recede
+  const moonDiam = t => Math.max(58 - 12 * (t - 130.0), 38);
+  const moonPos = t => { const u = t - 130.0, x = M0[0] + mDir[0] * MV * u, y = M0[1] + mDir[1] * MV * u;
+    return dirOf(x, y, F18).multiplyScalar(2 * MOON_R * F18 / moonDiam(t)); };
+  const MOON_T0 = 129.95, MOON_T1 = 131.8;
+
+  // ---- layout: no two large phrases overlap on screen, none crosses the Moon -----------------------
+  // A JS mirror of the vertex shader (posAt / evalInst) evaluated on the S28/S29 camera; oriented
+  // screen boxes are tested with the separating-axis theorem.
+  const fr = x => x - Math.floor(x);
+  const evalBox = (lead, phi0, ox, oy, seed, asp, t, hMin) => {
+    const g = NU * (G(t) - T_R);
+    const phi = lead ? PHI_R + g : fr(phi0 + g);
+    if (lead && phi >= 0.9999) return null;
+    if (t > dieOf(seed, lead) + 0.3) return null;
+    const L = Lof(Math.min(phi, 0.99999)), eL = Math.exp(L), D = Dof(t), r = eL * D, s = Math.max(r - 1, 0);
+    if (s < 0.02) return null;
+    const k = Math.pow(eL / XR, OFF_EXP) * (dispAt(t) + (1 - dispAt(t)) * sstep(-1.5, -0.6, L));
+    const C = eHat.clone().multiplyScalar(D).addScaledVector(B, r);
+    if (lead) C.addScaledVector(LEAD_OFF, LEAD_K * RHO * s * k);
+    else { const a = TAU * L + seed * 6.2831853, c = Math.cos(a), sn = Math.sin(a);
+      C.addScaledVector(P1, (c * ox - sn * oy) * RHO * s * k).addScaledVector(P2, (sn * ox + c * oy) * RHO * s * k); }
+    const hW = UH * Math.max(s, 0.01) * Math.pow(eL / XR, SIZE_EXP);
+    const V = C.clone().negate().normalize();
+    const X = B.clone().addScaledVector(V, -B.dot(V)).normalize();
+    let F = F18, Cv = C, Xv = X;
+    if (t >= T29) { const qi = camQ(t).invert(); F = focalPx(t); Cv = C.clone().applyQuaternion(qi); Xv = X.clone().applyQuaternion(qi); }
+    if (Cv.z > -1e-3) return null;
+    const hPx = hW * F / -Cv.z;
+    if (hPx < hMin) return null;
+    const cx = 960 + F * Cv.x / -Cv.z, cy = 540 - F * Cv.y / -Cv.z;
+    const P2v = Cv.clone().addScaledVector(Xv, hW);
+    const ex = 960 + F * P2v.x / -P2v.z - cx, ey = 540 - F * P2v.y / -P2v.z - cy, el = Math.hypot(ex, ey) || 1;
+    const hw = 0.5 * hPx * asp;
+    if (cx + hw < -40 || cx - hw > 1960 || cy + hPx < 120 || cy - hPx > 960) return null;   // off screen
+    return { cx, cy, ux: ex / el, uy: ey / el, hw, hh: 0.5 * hPx, h: hPx };
+  };
+  const obbHit = (a, b) => {
+    const ea0 = a.hw + 0.1 * a.h, ea1 = a.hh + 0.1 * a.h, eb0 = b.hw + 0.1 * b.h, eb1 = b.hh + 0.1 * b.h;
+    const dx = b.cx - a.cx, dy = b.cy - a.cy;
+    for (const [nx, ny] of [[a.ux, a.uy], [-a.uy, a.ux], [b.ux, b.uy], [-b.uy, b.ux]]) {
+      const ra = ea0 * Math.abs(a.ux * nx + a.uy * ny) + ea1 * Math.abs(-a.uy * nx + a.ux * ny);
+      const rb = eb0 * Math.abs(b.ux * nx + b.uy * ny) + eb1 * Math.abs(-b.uy * nx + b.ux * ny);
+      if (Math.abs(dx * nx + dy * ny) > ra + rb) return false;
+    }
+    return true;
+  };
+  const TS = []; for (let f = Math.round(T28 * 24); f <= Math.round(131.75 * 24); f += 2) TS.push(f / 24);
+  const H_MIN = 34;                                          // phrases this tall must never overlap
+  const occ = TS.map(() => []);                                // placed boxes per sample time
+  // the Moon (a square around its disc, + margin)
+  TS.forEach((t, j) => {
+    if (t < MOON_T0 || t > MOON_T1) return;
+    const p = moonPos(t); let F = F18, v = p;
+    if (t >= T29) { v = p.clone().applyQuaternion(camQ(t).invert()); F = focalPx(t); }
+    const rr = 0.5 * moonDiam(t) * F / F18 + 14;
+    occ[j].push({ cx: 960 + F * v.x / -v.z, cy: 540 - F * v.y / -v.z, ux: 1, uy: 0, hw: rr, hh: rr, h: 0 });
+  });
+  const boxesOf = (i, phi0, ox, oy, seed) => TS.map(t => evalBox(aLead[i] === 1, phi0, ox, oy, seed, aAsp[i], t, H_MIN));
+  const fits = bx => bx.every((b, j) => !b || !occ[j].some(o => obbHit(b, o)));
+  const cand = [];
+  for (let i = 0; i < slots.length; i++) {
+    let hmax = 0;
+    for (let j = 0; j < TS.length; j += 2) { const b = evalBox(aLead[i] === 1, aPhi0[i], aOff[i * 2], aOff[i * 2 + 1], aSeed[i], aAsp[i], TS[j], 12); if (b) hmax = Math.max(hmax, b.h); }
+    if (hmax > H_MIN - 4) cand.push([i, aLead[i] === 1 ? 1e9 : hmax]);
+  }
+  cand.sort((a, b) => b[1] - a[1]);
+  const RL = rng(55 * 1000 + 280);
+  let nMoved = 0, nHidden = 0;
+  for (const [i] of cand) {
+    let par = [aPhi0[i], aOff[i * 2], aOff[i * 2 + 1], aSeed[i]], bx = boxesOf(i, ...par), ok = aLead[i] === 1 || fits(bx);
+    for (let tr = 0; !ok && tr < 400; tr++) {
+      // stay inside the stream's own cross-section (the original distribution, |o| ≤ 1): the beam
+      // must stay a beam — what does not fit is dropped rather than pushed out of it
+      let ox = gauss(RL) * 0.5, oy = gauss(RL) * 0.5; const ol = Math.hypot(ox, oy); if (ol > 1) { ox /= ol; oy /= ol; }
+      par = [aPhi0[i] + (RL() - 0.5) * (tr < 200 ? 0.7 : 1.6) / N, ox, oy, RL()];
+      bx = boxesOf(i, ...par); ok = fits(bx);
+      if (ok) nMoved++;
+    }
+    if (!ok) { aLead[i] = -1; nHidden++; continue; }          // no room for it: it is not drawn
+    [aPhi0[i], aOff[i * 2], aOff[i * 2 + 1], aSeed[i]] = par;
+    bx.forEach((b, j) => { if (b) occ[j].push(b); });
+  }
+  const LAYOUT_DIAG = `layout: ${cand.length} large phrases, ${nMoved} re-laned, ${nHidden} dropped`;
+
   const inst = {
     aRect: new THREE.InstancedBufferAttribute(aRect, 4), aAsp: new THREE.InstancedBufferAttribute(aAsp, 1),
     aPhi0: new THREE.InstancedBufferAttribute(aPhi0, 1), aOff: new THREE.InstancedBufferAttribute(aOff, 2),
@@ -201,11 +312,12 @@ export async function create(ctx) {
     uFy: { value: 1 }, uPx: { value: H / 1080 }, uCol: { value: new THREE.Vector3(...AMBER) }, uGain: { value: 1.5 }, uDot: { value: 0.3 },
     uThT: { value: 0 }, uThTp: { value: 0 }, uSth: { value: S_TH }, uThGain: { value: 1 },
     uLeadNdc: { value: new THREE.Vector2(9, 9) }, uFocus: { value: 0 }, uAspect: { value: W / H },
+    uT: { value: 0 }, uDisp: { value: 1 }, uDim: { value: 1 },
   };
   const VS_COMMON = /* glsl */ `
     attribute vec4 aRect; attribute float aAsp, aPhi0, aSeed, aLead; attribute vec2 aOff;
     uniform vec3 uE, uEp, uB, uP1, uP2, uLeadOff; uniform float uD, uDp, uPhiT, uPhiTp, uLeadPhi, uLeadPhiP;
-    uniform vec2 uLeadNdc; uniform float uFocus, uAspect;
+    uniform vec2 uLeadNdc; uniform float uFocus, uAspect, uT, uDisp, uDim;
     uniform float uLmax, uCtot, uCk, uEk, uRho, uUH, uTau, uFy, uPx, uThT, uThTp, uSth, uThGain;
     float Lof(float phi){ float c = (1.0 - phi) * uCtot;
       return uLmax - (c < uCk ? log(1.0 + c * ${A1.toFixed(4)}) / ${A1.toFixed(4)} : ${VK.toFixed(4)} + log(1.0 + (c - uCk) * ${A2.toFixed(4)} / uEk) / ${A2.toFixed(4)}); }
@@ -214,7 +326,9 @@ export async function create(ctx) {
     vec3 posAt(float L, vec3 E, float D, out float s){
       float r = exp(L) * D; s = max(r - 1.0, 0.0);
       // the cross-section widens faster than s far out (divergence grows), so the far stream is a thread
-      float k = pow(exp(L) / ${XR.toFixed(4)}, ${OFF_EXP.toFixed(2)});
+      // S29 dispersion: the far stream sprays out; the words near the lens keep their lanes (widening
+      // those would push them into the lens)
+      float k = pow(exp(L) / ${XR.toFixed(4)}, ${OFF_EXP.toFixed(2)}) * mix(uDisp, 1.0, smoothstep(-1.5, -0.6, L));
       vec3 off;
       if (aLead > 0.5 && aLead < 1.5) off = uLeadOff * uRho;
       else { float a = uTau * L + aSeed * 6.2831853; vec2 o = vec2(cos(a) * aOff.x - sin(a) * aOff.y, sin(a) * aOff.x + cos(a) * aOff.y);
@@ -222,10 +336,10 @@ export async function create(ctx) {
       return E + uB * r + off * s * k;
     }
     // shared per-instance evaluation: centre now/prev, height, 1080p pixel height, visibility
-    vec3 C, Cp; float hW, hPx, vis, sNow;
+    vec3 C, Cp, Cv; float hW, hPx, vis, sNow;
     void evalInst(){
       float L, Lp;
-      vis = 1.0;
+      vis = aLead < -0.5 ? 0.0 : 1.0;                               // -1: no room on screen (layout)
       if (aLead > 1.5) {
         float u = fract(aPhi0 + uThT), up = fract(aPhi0 + uThTp); if (up > u) up = u;
         L = Lthread(u, uD); Lp = Lthread(up, uDp);
@@ -238,13 +352,18 @@ export async function create(ctx) {
         if (aLead > 0.5) vis = 1.6 * step(phi, 0.9999);
       }
       float sp; C = posAt(L, uE, uD, sNow); Cp = posAt(Lp, uEp, uDp, sp);
+      Cv = (viewMatrix * vec4(C, 1.0)).xyz;                         // C is in the S28 camera frame (= world)
       hW = uUH * max(sNow, 0.01) * pow(exp(L) / ${XR.toFixed(4)}, ${SIZE_EXP.toFixed(2)});
-      hPx = hW * uFy / max(-C.z, 1e-4) / uPx;                       // 1080p px
+      hPx = hW * uFy / max(-Cv.z, 1e-4) / uPx;                      // 1080p px
       vis *= smoothstep(0.0, 0.05, sNow);
+      // S29: the words go out one by one (the same law as the layout pass in JS), and dim with 1/d²
+      float fs = fract(aSeed * 7.31);
+      float die = (aLead > 0.5 && aLead < 1.5) ? 131.35 : 131.15 + 1.45 * pow(fs, 1.6);
+      vis *= (1.0 - smoothstep(die, die + 0.45, uT)) * uDim;
       vis *= 0.8 + 0.4 * fract(aSeed * 13.7);                       // a little life in the brightness
       // around 129 the eye is given to the lead: its neighbours on screen step back (dimmer)
       if (aLead < 0.5 && uFocus > 0.0) {
-        vec4 cc = projectionMatrix * vec4(C, 1.0);
+        vec4 cc = projectionMatrix * vec4(Cv, 1.0);
         vec2 d = (cc.xy / cc.w - uLeadNdc) * vec2(uAspect, 1.0) * 540.0;   // ≈ 1080p px
         vis *= 1.0 - 0.7 * uFocus * (1.0 - smoothstep(90.0, 260.0, length(d)));
       }
@@ -265,7 +384,7 @@ export async function create(ctx) {
         float trail = ds / w;
         float lx = mix(-trail, 1.0, position.x);
         vec3 p = C + X * (lx - 0.5) * w + Y * (position.y - 0.5) * hW;
-        gl_Position = projectionMatrix * vec4(p, 1.0);
+        gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
         float q = smoothstep(2.2, 3.6, hPx);                        // < 3 px: hand over to the point sprite
         vL = vec2(lx, position.y); vTrail = trail; vRect = aRect;
         vTaps = clamp(ceil(trail * hPx * aAsp / 1.2), 1.0, 40.0);
@@ -299,7 +418,7 @@ export async function create(ctx) {
       varying float vI;
       void main(){
         evalInst();
-        gl_Position = projectionMatrix * vec4(C, 1.0);
+        gl_Position = projectionMatrix * vec4(Cv, 1.0);
         float q = smoothstep(2.2, 3.6, hPx);
         // energy-conserving: a phrase of hPx × (hPx·asp) px with ~20 % ink coverage, spread over the sprite
         float energy = hPx * hPx * aAsp * 0.2;
@@ -354,31 +473,29 @@ export async function create(ctx) {
         gl_FragColor = vec4(vec3(a) * vec3(1.0, 0.97, 0.93), 1.0);
       }`,
   });
-  const MOON_R = 1737 / 6371;
   const moonMat = new THREE.ShaderMaterial({
     // (the Moon gets its own light from the right — "右侧日照" — a half-lit disc reads at 40–60 px, the
     //  physically consistent hairline crescent would not; at this scale nobody can triangulate the sun)
-    uniforms: { tex: { value: moonTex }, sun: { value: new THREE.Vector3(0.62, 0.25, 0.74).normalize() }, uW: { value: 1 } },
-    transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false,
+    // Opaque and drawn last: nothing shows through it, and the layout keeps the phrases off it.
+    uniforms: { tex: { value: moonTex }, sun: { value: new THREE.Vector3(0.62, 0.25, 0.74).normalize() } },
+    transparent: false, blending: THREE.NoBlending, depthWrite: false, depthTest: false,
     vertexShader: /* glsl */ `varying vec3 vN; varying vec3 vP; varying vec3 vO;
       void main(){ vO = normalize(position); vN = normalize(mat3(modelMatrix) * normal); vec4 wp = modelMatrix * vec4(position, 1.0); vP = wp.xyz; gl_Position = projectionMatrix * viewMatrix * wp; }`,
-    fragmentShader: /* glsl */ `uniform sampler2D tex; uniform vec3 sun; uniform float uW; varying vec3 vN; varying vec3 vP; varying vec3 vO;
+    fragmentShader: /* glsl */ `uniform sampler2D tex; uniform vec3 sun; varying vec3 vN; varying vec3 vP; varying vec3 vO;
       void main(){
         vec3 n = normalize(vN), v = normalize(cameraPosition - vP);
         vec2 uv = vec2(atan(vO.x, vO.z) / 6.2831853 + 0.5, asin(clamp(vO.y, -1.0, 1.0)) / 3.14159265 + 0.5);
         float alb = texture2D(tex, uv).r;
         float mu0 = max(dot(n, sun), 0.0), mu = max(dot(n, v), 0.0);
         float ls = mu0 / (mu0 + mu + 1e-4);                     // Lommel–Seeliger: the flat, dusty Moon
-        gl_FragColor = vec4(vec3(1.0, 0.97, 0.94) * alb * ls * 9.0 * uW, 1.0);
+        float es = 0.035 * mu;                                  // a trace of earthshine: the night side is a disc, not a hole
+        gl_FragColor = vec4(vec3(1.0, 0.97, 0.94) * alb * (ls * 9.0 + es), 1.0);
       }`,
   });
   const moon = new THREE.Mesh(new THREE.SphereGeometry(MOON_R, 96, 48), moonMat);
-  // place it so that at 130.5 it is at the upper right, ~10 R⊕ from the camera (→ ~50 px across)
-  // The camera recedes from the Earth at ~20 R⊕/s by now, so anything fixed streams towards P_E and
-  // shrinks fast: the Moon swoops in from the right edge (~130.1), is ~57 px at 130.5 and ~28 px at
-  // 131.0, below the stream. It is drawn several times across the shutter (cheap: it is small).
-  const T_M = 130.5;
-  const M_EARTH = dirOf(1610, 470, F18).multiplyScalar(12).addScaledVector(eHat, -Dof(T_M));   // Earth-centred position (camera axes)
+  moon.frustumCulled = false;
+  // the Moon is spun so that the maria face us, lit side to the right
+  moon.rotation.set(0.25, 2.2, 0.1);
 
   const scene28 = new THREE.Scene();
   // the beam's core: the integrated light of words too far and too small to resolve — a faint warm
@@ -398,9 +515,9 @@ export async function create(ctx) {
         float r = exp(L) * uD, s = max(r - 1.0, 0.0);
         vec3 c = uE + uB * r;
         vec3 side = normalize(cross(normalize(-c), uB));
-        float pxPerUnit = uFy / max(-c.z, 1e-4) / uPx;
+        float pxPerUnit = uFy / max(-(viewMatrix * vec4(c, 1.0)).z, 1e-4) / uPx;
         float halfW = max(uRho * 0.35 * s, 2.2 / pxPerUnit);          // ≥ 2.2 px, else the cross-section
-        gl_Position = projectionMatrix * vec4(c + side * position.y * halfW * 2.5, 1.0);
+        gl_Position = projectionMatrix * viewMatrix * vec4(c + side * position.y * halfW * 2.5, 1.0);
         vAcross = position.y * 2.5;
         // flux conservation across the widening: brightness ∝ 1/width (px), fading out along the beam
         vI = min(1.0, 2.2 / (halfW * pxPerUnit)) * (1.0 - smoothstep(0.0, 1.0, position.x)) * smoothstep(0.0, 0.02, s);
@@ -411,105 +528,26 @@ export async function create(ctx) {
   core.frustumCulled = false; core.renderOrder = 8;
   scene28.add(earth.group, core, points, quads);
   const moonScene = new THREE.Scene(); moonScene.add(moon);
-  const cam18 = kit.filmCamera(W, H, { focalMM: 18, near: 0.01, far: 1000 });
-  cam18.position.set(0, 0, 0); cam18.quaternion.identity(); cam18.updateMatrixWorld();
+  const cam = kit.filmCamera(W, H, { focalMM: 18, near: 0.01, far: 1000 });
+  cam.position.set(0, 0, 0);
 
-  // stars at infinity (separate scene so the planet's near/far planes do not matter)
+  // stars at infinity (separate scene so the planet's near/far planes do not matter); S29 hands over
+  // from S28's field to a much sparser, dimmer one
   const stars28 = kit.starfield({ count: 2600, seed: 2828, radius: 5e4, H, sizeScale: 0.8, brightness: 0.55, warm: 0.12 });
   const stars29 = kit.starfield({ count: 380, seed: 2929, radius: 5e4, H, sizeScale: 0.65, brightness: 0.16, warm: 0.1 });
   const starScene28 = new THREE.Scene(); starScene28.add(stars28);
   const starScene29 = new THREE.Scene(); starScene29.add(stars29);
-  const starCam18 = kit.filmCamera(W, H, { focalMM: 18, near: 1, far: 1e5 });
-  const starCam35 = kit.filmCamera(W, H, { focalMM: 35, near: 1, far: 1e5 });
+  const starCam = kit.filmCamera(W, H, { focalMM: 18, near: 1, far: 1e5 });
 
-  // =====================================================================================================
-  // S29 — looking down the beam: words recede towards R
-  // =====================================================================================================
-  const N2 = 150;
-  const AX = dirOf(RX, RY, F35);
-  const Q1 = new THREE.Vector3().crossVectors(AX, new THREE.Vector3(0, 1, 0)).normalize();
-  const Q2 = new THREE.Vector3().crossVectors(Q1, AX).normalize();
-  const R2 = rng(55 * 1000 + 29);
-  const bRect = new Float32Array(N2 * 4), bAsp = new Float32Array(N2), bZ0 = new Float32Array(N2), bLat = new Float32Array(N2 * 2), bSeed = new Float32Array(N2), bDie = new Float32Array(N2);
-  const placed = [[905 - 45, 650 - 45, 905 + 45, 650 + 45]];   // keep the last 「？」's start clear
-  for (let i = 0; i < N2; i++) {
-    const k = i % ORDER.length, rc = atlas.rects[k];
-    bRect.set([rc[0], rc[1], rc[2], rc[3]], i * 4); bAsp[i] = rc[4];
-    const u = (i + R2()) / N2;
-    const z0 = 1.6 * Math.pow(38, Math.pow(u, 0.7));
-    bZ0[i] = z0;
-    // a beam of finite width (slowly diverging), not a cone: as the words recede they converge on the
-    // axis — the vanishing point is R. Legible (near) words are placed so that they do not overlap on
-    // screen at 131.0 (deterministic rejection sampling; the far ones may pile up into the thread's end).
-    const wz = 0.42 + 0.012 * z0;                 // beam radius (world): ~0.25 rad near, ~0.02 rad far
-    for (let tries = 0; ; tries++) {
-      const rad = Math.sqrt(0.08 + 0.92 * R2()), ang = R2() * 6.2831853;     // uniform over the cross-section
-      const lx = Math.cos(ang) * rad * wz * 1.9, ly = Math.sin(ang) * rad * wz * 0.8;
-      const c = AX.clone().multiplyScalar(z0).addScaledVector(Q1, lx).addScaledVector(Q2, ly);
-      const [sx, sy] = project(c, F35), h = 0.062 * F35 / -c.z, w = h * rc[4];
-      const box = [sx - w / 2 - 8, sy - h / 2 - 5, sx + w / 2 + 8, sy + h / 2 + 5];
-      const hit = h > 9 && placed.some(b => box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1]);
-      if (!hit || tries > 40) { if (h > 9) placed.push(box); bLat[i * 2] = lx; bLat[i * 2 + 1] = ly; break; }
-    }
-    bSeed[i] = R2();
-    // words go out one by one: most are gone by 132, a few linger into 133
-    bDie[i] = 131.25 + 1.5 * Math.pow(R2(), 1.6);
-  }
-  const geo29 = new THREE.InstancedBufferGeometry();
-  geo29.setAttribute('position', quadGeo.getAttribute('position')); geo29.setIndex(quadGeo.getIndex());
-  const pt29 = new THREE.InstancedBufferGeometry(); pt29.setAttribute('position', ptGeo.getAttribute('position'));
-  const inst2 = { aRect: new THREE.InstancedBufferAttribute(bRect, 4), aAsp: new THREE.InstancedBufferAttribute(bAsp, 1), aZ0: new THREE.InstancedBufferAttribute(bZ0, 1),
-    aLat: new THREE.InstancedBufferAttribute(bLat, 2), aSeed: new THREE.InstancedBufferAttribute(bSeed, 1), aDie: new THREE.InstancedBufferAttribute(bDie, 1) };
-  for (const g of [geo29, pt29]) { for (const [k, a] of Object.entries(inst2)) g.setAttribute(k, a); g.instanceCount = N2; }
-  const U2 = {
-    uAtlas: { value: atlas.texture }, uAx: { value: AX }, uQ1: { value: Q1 }, uQ2: { value: Q2 }, uTau: { value: 0 }, uT: { value: 0 },
-    uHW: { value: 0.062 }, uFy: { value: 1 }, uPx: { value: H / 1080 }, uCol: { value: new THREE.Vector3(...AMBER) }, uGain: { value: 1.5 }, uDim: { value: 1 },
-  };
-  const VS29 = /* glsl */ `
-    attribute vec4 aRect; attribute float aAsp, aZ0, aSeed, aDie; attribute vec2 aLat;
-    uniform vec3 uAx, uQ1, uQ2; uniform float uTau, uT, uHW, uFy, uPx, uDim;
-    vec3 C; float hPx, vis;
-    void evalInst(){
-      float z = aZ0 + 2.2 * pow(aZ0 / 2.6, 0.5) * uTau;            // dispersion: speed ∝ distance^0.5
-      C = uAx * z + uQ1 * aLat.x + uQ2 * aLat.y;
-      hPx = uHW * uFy / max(-C.z, 1e-4) / uPx;
-      vis = uDim * (1.0 - smoothstep(aDie, aDie + 0.45, uT)) * (0.8 + 0.4 * fract(aSeed * 13.7));
-    }`;
-  const quad29 = new THREE.Mesh(geo29, new THREE.ShaderMaterial({
-    uniforms: U2, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
-    vertexShader: VS29 + /* glsl */ `
-      varying vec2 vL; varying float vI; varying vec4 vRect;
-      void main(){
-        evalInst();
-        float w = uHW * aAsp;
-        vec3 p = C + vec3((position.x - 0.5) * w, (position.y - 0.5) * uHW, 0.0);
-        gl_Position = projectionMatrix * vec4(p, 1.0);
-        float q = smoothstep(2.2, 3.6, hPx);
-        vL = position.xy; vRect = aRect; vI = vis * q;
-        if (vI <= 0.0) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
-      }`,
-    fragmentShader: /* glsl */ `
-      uniform sampler2D uAtlas; uniform vec3 uCol; uniform float uGain; varying vec2 vL; varying float vI; varying vec4 vRect;
-      void main(){ float a = texture2D(uAtlas, vec2(mix(vRect.x, vRect.z, vL.x), mix(vRect.w, vRect.y, vL.y))).a;
-        gl_FragColor = vec4(uCol * uGain * vI * a, 1.0); }`,
-  }));
-  const pts29 = new THREE.Points(pt29, new THREE.ShaderMaterial({
-    uniforms: U2, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
-    vertexShader: VS29 + /* glsl */ `
-      varying float vI;
-      void main(){
-        evalInst();
-        gl_Position = projectionMatrix * vec4(C, 1.0);
-        float q = smoothstep(2.2, 3.6, hPx);
-        float ps = 2.6; gl_PointSize = ps * uPx;
-        vI = vis * (1.0 - q) * hPx * hPx * aAsp * 0.2 / (ps * ps * 0.32);
-        if (vI <= 1e-5) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
-      }`,
-    fragmentShader: /* glsl */ `uniform vec3 uCol; uniform float uGain; varying float vI;
-      void main(){ vec2 d = gl_PointCoord - 0.5; gl_FragColor = vec4(uCol * uGain * vI * exp(-dot(d, d) * 14.0), 1.0); }`,
-  }));
-  quad29.frustumCulled = pts29.frustumCulled = false;
-  // the last 「？」
+  // ---- the last 「？」 ----------------------------------------------------------------------------------
+  // On the beam axis (no cross-section offset): from beside the planet at 131.0 it slides up the axis,
+  // decelerating (easeOutCubic in L), and comes to rest on R at 133.0; it holds there and fades out.
+  const qPos = (L, D) => eHat.clone().multiplyScalar(D).addScaledVector(B, Math.exp(L) * D);
+  const projAt = (p, t) => { let F = F18, v = p; if (t >= T29) { v = p.clone().applyQuaternion(camQ(t).invert()); F = focalPx(t); } return [960 + F * v.x / -v.z, 540 - F * v.y / -v.z, -v.z]; };
+  const Q_L0 = Math.log(1.6 / Dof(T29));
+  let Q_L1; { let lo = Q_L0, hi = 0.0; for (let i = 0; i < 60; i++) { const m = (lo + hi) / 2; if (projAt(qPos(m, Dof(T_STOP)), T_STOP)[0] < RX) lo = m; else hi = m; } Q_L1 = (lo + hi) / 2; }
+  const Q_PX = 48;                                                       // ？ height on R at 133.0 (1080p px)
+  const Q_H = Q_PX * projAt(qPos(Q_L1, Dof(T_STOP)), T_STOP)[2] / F35;    // world height
   const qU = { tex: { value: qTex.tex }, uCol: { value: new THREE.Vector3(...AMBER) }, uI: { value: 1 } };
   const qMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.ShaderMaterial({
     uniforms: qU, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
@@ -518,78 +556,84 @@ export async function create(ctx) {
       void main(){ gl_FragColor = vec4(uCol * uI * texture2D(tex, vUv).a, 1.0); }`,
   }));
   qMesh.frustumCulled = false;
-  const scene29 = new THREE.Scene(); scene29.add(pts29, quad29, qMesh);
-  const cam35 = kit.filmCamera(W, H, { focalMM: 35, near: 0.05, far: 1000 });
-  cam35.updateMatrixWorld();
-  // the separation between the camera and the words: the camera brakes from the stream's speed to 0
-  // over 131 → 133 (easeOutCubic position), the words keep their speed
-  const tau29 = t => { const T = 2.0, u = clamp((t - T29) / T); return (t - T29) - (T / 3) * (1 - Math.pow(1 - u, 3)); };
-  const Q_START = [905, 650], Q_Z0 = 2.6, Q_H = 0.105;
-  const qLat0 = (() => { const d = dirOf(Q_START[0], Q_START[1], F35); const p = d.multiplyScalar(Q_Z0 / -d.z); return p.sub(AX.clone().multiplyScalar(Q_Z0 / -AX.z)); })();
+  const qScene = new THREE.Scene(); qScene.add(qMesh);
+
+  // post: S28's values, easing to S29's over 131 → 132 (so the join is invisible whatever the edit does)
+  const POST28 = { bloom: 0.8, bloomThreshold: 1.0, streak: 0.08, streakTint: [1.0, 0.8, 0.6], vignette: 0.22, grain: 0.035 };
+  const POST29 = { bloom: 0.8, bloomThreshold: 1.0, streak: 0.06, streakTint: [1.0, 0.8, 0.6], vignette: 0.24, grain: 0.035 };
+
+  // one world, one camera: S28 and S29 (and S28's dissolve tail past 131.0) are the same function of t
+  function renderWorld(t, target) {
+    const ac = renderer.autoClear; renderer.autoClear = false;
+    renderer.setRenderTarget(target); renderer.setClearColor(0x000000, 1); renderer.clear();
+    const s29 = t >= T29;
+    const F = focalPx(t);
+    cam.setFocalLength(18 * F / F18); starCam.setFocalLength(18 * F / F18);
+    if (s29) { const q = camQ(t); cam.quaternion.copy(q); starCam.quaternion.copy(q); }
+    else { cam.quaternion.identity(); starCam.quaternion.identity(); }
+    starCam.updateMatrixWorld();
+    const st = sstep(131.2, 132.6, t);
+    if (st < 1) { stars28.material.uniforms.opacity.value = 1 - st; renderer.render(starScene28, starCam); }
+    if (st > 0) { stars29.material.uniforms.opacity.value = st; renderer.render(starScene29, starCam); }
+    renderer.clearDepth();
+    const dt = 0.5 / 24;                                            // 180° shutter for the smear
+    const D = Dof(t), Dp = Dof(t - dt);
+    U.uD.value = D; U.uDp.value = Dp;
+    U.uE.value.copy(eHat).multiplyScalar(D); U.uEp.value.copy(eHat).multiplyScalar(Dp);
+    const g = NU * (G(t) - T_R), gp = NU * (G(t - dt) - T_R);
+    U.uPhiT.value = g; U.uPhiTp.value = gp;
+    U.uLeadPhi.value = PHI_R + g; U.uLeadPhiP.value = PHI_R + gp;
+    U.uT.value = t; U.uDisp.value = dispAt(t);
+    U.uDim.value = s29 ? Math.pow(Math.min(1, Math.pow(alt(T29) / alt(t), 2)), 0.35) : 1;
+    cam.near = 0.01 * D; cam.far = 6 * D + 60; cam.updateProjectionMatrix(); cam.updateMatrixWorld();
+    U.uFy.value = cam.projectionMatrix.elements[5] * H / 2;
+    coreU.uLo.value = Math.log(1 / D);
+    const fade29 = 1 - sstep(T29, 131.8, t);                        // the thread and the core go out first
+    coreU.uI.value = 0.5 * fade29;
+    { const ph = PHI_R + g;
+      if (ph < 0.99999 && !s29) { const lc = posJS(Lof(ph), t, true).applyMatrix4(cam.projectionMatrix); U.uLeadNdc.value.set(lc.x, lc.y); }
+      U.uFocus.value = sstep(127.6, 128.6, t) * (1 - sstep(129.9, 130.6, t)); }
+    // the thread flows out at 0.09/s of its length; it dims as 1/D² once the planet is small (its
+    // light merges into the root's point)
+    U.uThT.value = 0.09 * (t - T28); U.uThTp.value = 0.09 * (t - dt - T28);
+    U.uThGain.value = 0.2 * Math.min(1, Math.pow(Dof(T28 + 1.5) / D, 2)) * fade29;
+    earth.group.position.copy(U.uE.value); earth.update();
+    renderer.render(scene28, cam);
+    if (t > MOON_T0 && t < MOON_T1) {
+      const p = moonPos(t), pr = projAt(p, t), rp = 0.5 * moonDiam(t) * F / F18;
+      if (pr[0] > -rp && pr[0] < 1920 + rp && pr[1] > -rp && pr[1] < 1080 + rp) { moon.position.copy(p); renderer.render(moonScene, cam); }
+    }
+    if (s29) {
+      const u = clamp((t - T29) / (T_STOP - T29)), e = 1 - Math.pow(1 - u, 3);
+      const Dq = Dof(Math.min(t, T_STOP));
+      qMesh.position.copy(qPos(Q_L0 + (Q_L1 - Q_L0) * e, Dq));
+      qMesh.quaternion.copy(cam.quaternion);
+      qMesh.scale.set(Q_H, Q_H, 1);
+      const uq = clamp((t - T_STOP) / 1.5);
+      qU.uI.value = 1.55 * sstep(T29, 131.35, t) * Math.cos(uq * Math.PI / 2);
+      if (uq < 1) renderer.render(qScene, cam);
+    }
+    renderer.autoClear = ac;
+    renderer.setRenderTarget(target);
+  }
 
   const exports = {
     msaa: false,
-    render(shot, f) {
-      const t = f.t;
-      const ac = renderer.autoClear; renderer.autoClear = false;
-      renderer.setRenderTarget(f.target); renderer.setClearColor(0x000000, 1); renderer.clear();
-      if (shot.id === 'S28') {
-        renderer.render(starScene28, starCam18);
-        renderer.clearDepth();
-        const dt = 0.5 / 24;                                          // 180° shutter for the smear
-        const D = Dof(t), Dp = Dof(t - dt);
-        U.uD.value = D; U.uDp.value = Dp;
-        U.uE.value.copy(eHat).multiplyScalar(D); U.uEp.value.copy(eHat).multiplyScalar(Dp);
-        U.uPhiT.value = NU * (t - T_R); U.uPhiTp.value = NU * (t - dt - T_R);
-        U.uLeadPhi.value = PHI_R + NU * (t - T_R); U.uLeadPhiP.value = PHI_R + NU * (t - dt - T_R);
-        cam18.near = 0.01 * D; cam18.far = 6 * D + 60; cam18.updateProjectionMatrix();
-        U.uFy.value = cam18.projectionMatrix.elements[5] * H / 2;
-        coreU.uLo.value = Math.log(1 / D);
-        { const ph = PHI_R + NU * (t - T_R); const lc = posJS(Lof(Math.min(ph, 0.99999)), t, true).applyMatrix4(cam18.projectionMatrix);
-          U.uLeadNdc.value.set(lc.x, lc.y); U.uFocus.value = sstep(127.6, 128.6, t) * (1 - sstep(129.9, 130.6, t)); }
-        // the thread flows out at 0.09/s of its length; it dims as 1/D² once the planet is small (its
-        // light merges into the root's point)
-        U.uThT.value = 0.09 * (t - T28); U.uThTp.value = 0.09 * (t - dt - T28);
-        U.uThGain.value = 0.2 * Math.min(1, Math.pow(Dof(T28 + 1.5) / D, 2));
-        earth.group.position.copy(U.uE.value); earth.update();
-        renderer.render(scene28, cam18);
-        if (t > 129.9) {
-          const n = 28;
-          moonMat.uniforms.uW.value = 1 / n;
-          for (let k = 0; k < n; k++) {
-            const tk = t + dt * ((k + 0.5) / n - 0.5);
-            moon.position.copy(M_EARTH).addScaledVector(eHat, Dof(tk));
-            if (moon.position.z < -0.5) renderer.render(moonScene, cam18);
-          }
-        }
-      } else {
-        renderer.render(starScene29, starCam35);
-        const tau = tau29(t);
-        U2.uTau.value = tau; U2.uT.value = t;
-        U2.uDim.value = Math.pow(Math.min(1, Math.pow(alt(T29) / alt(t), 2)), 0.35);
-        U2.uFy.value = cam35.projectionMatrix.elements[5] * H / 2;
-        // the 「？」: drifts onto the axis by 133.0, then recedes along it (stays on R), fades 133.0 → 134.5
-        const zq = Q_Z0 + 1.15 * tau;
-        const lat = 1 - sstep(T29, 133.0, t);
-        qMesh.position.copy(AX).multiplyScalar(zq / -AX.z).addScaledVector(qLat0, lat * zq / Q_Z0);
-        qMesh.scale.set(Q_H, Q_H, 1);
-        const uq = clamp((t - 133.0) / 1.5);
-        qU.uI.value = 1.55 * Math.cos(uq * Math.PI / 2);
-        qMesh.visible = uq < 1;
-        renderer.render(scene29, cam35);
-      }
-      renderer.autoClear = ac;
-      renderer.setRenderTarget(f.target);
-    },
+    render(shot, f) { renderWorld(f.t, f.target); },
     post(shot, f) {
-      if (shot.id === 'S28') return { bloom: 0.8, bloomThreshold: 1.0, streak: 0.08, streakTint: [1.0, 0.8, 0.6], vignette: 0.22, grain: 0.035 };
-      return { bloom: 0.8, bloomThreshold: 1.0, streak: 0.06, streakTint: [1.0, 0.8, 0.6], vignette: 0.24, grain: 0.035 };
+      const m = sstep(T29, 132.0, f.t), o = {};
+      for (const k of Object.keys(POST28)) o[k] = Array.isArray(POST28[k]) ? POST28[k] : POST28[k] + (POST29[k] - POST28[k]) * m;
+      return o;
     },
   };
   // diagnostics for the report
-  console.log(`w_stream diag (not a WARNing): L_R=${L_R.toFixed(4)} L_EXIT=${L_EXIT.toFixed(3)} LMIN=${LMIN.toFixed(3)} NU=${NU.toExponential(3)} N=${N} lead@129 → ${project(posJS(L_R, T_R, true), F18).map(v => v.toFixed(2))}`);
-  { const path = []; for (const t of [123, 124, 125, 126, 127, 128, 129, 129.5, 130, 130.5]) { const ph = PHI_R + NU * (t - T_R); if (ph >= 1) break;
-      const L = Lof(ph); const q = project(posJS(L, t, true), F18); path.push(`${t}:(${q[0].toFixed(0)},${q[1].toFixed(0)}) r=${(Math.exp(L) * Dof(t)).toFixed(2)}`); }
-    console.log('w_stream diag (not a WARNing) lead path ' + path.join(' ') + ` GAP=${GAP} NI=${NI}`); }
+  console.log(`w_stream diag (not a WARNing): P_E=${P_E.map(v => v.toFixed(1))} L_R=${L_R.toFixed(4)} L_EXIT=${L_EXIT.toFixed(3)} LMIN=${LMIN.toFixed(3)} NU=${NU.toExponential(3)} N=${N} lead@129 → ${project(posJS(L_R, T_R, true), F18).map(v => v.toFixed(2))} ${LAYOUT_DIAG}`);
+  { const path = []; for (const t of [123, 125, 127, 128, 129, 129.5, 130, 130.5, 131, 131.5, 132]) { const ph = PHI_R + NU * (G(t) - T_R); if (ph >= 1) break;
+      const L = Lof(ph); const q = projAt(posJS(L, t, true), t); path.push(`${t}:(${q[0].toFixed(0)},${q[1].toFixed(0)})`); }
+    console.log('w_stream diag (not a WARNing) lead path ' + path.join(' ') + ` GAP=${GAP} NI=${NI}`);
+    const mp = []; for (const t of [130, 130.5, 130.958, 131, 131.25, 131.5]) { const q = projAt(moonPos(t), t); mp.push(`${t}:(${q[0].toFixed(0)},${q[1].toFixed(0)}) ⌀${(moonDiam(t) * focalPx(t) / F18).toFixed(0)}`); }
+    console.log('w_stream diag (not a WARNing) moon ' + mp.join(' '));
+    const qp = []; for (const t of [131, 131.5, 132, 132.5, 133]) { const e = 1 - Math.pow(1 - clamp((t - T29) / 2), 3); const p = qPos(Q_L0 + (Q_L1 - Q_L0) * e, Dof(t)); const q = projAt(p, t); qp.push(`${t}:(${q[0].toFixed(0)},${q[1].toFixed(0)}) h${(Q_H * focalPx(t) / q[2]).toFixed(0)}`); }
+    console.log('w_stream diag (not a WARNing) last ？ ' + qp.join(' ')); }
   return exports;
 }

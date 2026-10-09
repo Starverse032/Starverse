@@ -3,26 +3,30 @@
 //        The whole sea of words flows into the human line 「有人吗？」 (Noto Serif CJK SC SemiBold
 //        128 px, left 722, centre y 410) with S05's spiral law applied to every word's offset from
 //        its own landing place: r = r₀(1 − u)², θ = θ₀ + 10u³ (so each lands softly, and the
-//        differential rotation draws the spiral arms). Departures staggered by distance, all landed
-//        by 188.0. Legible layer: real graphemes of voices.js sentences, 6–9 px, 10–15 px in flight
-//        (shrinking only in the last 0.5 s); dust layer ≤ 3 px; ~700 words gather into the cursor
+//        differential rotation draws the spiral arms), re-timed so that every word spends its last
+//        1.2 s within 30 px of its place (≤ ≈ 7 px/frame). Arrivals spread over 186.0–188.0.
+//        Legible layer (v1.2): ≈ 450 real graphemes of voices.js sentences, 9.5–12 px landed,
+//        12–15 px in flight (shrinking only in the last 0.5 s), one chain of readable words per
+//        stroke; dust layer ≤ 3 px at ≈ 0.35 (dim in flight); the absorbed sea goes out as it nears
+//        the line (no glowing ball); ~700 words gather into the cursor
 //        block at R. Breathing = 0.25 Hz brightness + ±3.5 px flow along the stroke tangent.
 //        191.0 the cursor block condenses into solid warm white.
 //        Motion blur: the timeline's 4 sub-frames would draw each fast word as four stepped copies
 //        (a column of repeated words — "character rain"). Every sub-frame is snapped to the frame
 //        time (one memoised render) and each word is integrated analytically along its own spiral
-//        over a 180° shutter in the shader (lexicon.js `streak`): smooth arcs of light.
+//        over a 108° shutter in the shader (lexicon.js `streak`): smooth arcs of light.
 //   S38 我在。/ 有人吗？ 191.0–216.0  locked. Frame-exact per the screenplay table:
 //        194.0 我 · 194.333 在 · 194.667 。 (one key per 8 frames) — the AI's own voice, Noto Sans Mono
 //        CJK SC 64 px, CURSOR HDR 1.6, centre y 540.
 //        195–199 every legible glyph of the human line flips (card-flip, one by one by hash) into the
-//        same monospace 「我」/「在」: AMBER → (warm-white flash) → ASH, breathing and flow freeze;
-//        dust 1.0 → 0.45 and greys. 202.0 / 203.0 / 204.0 the three deletions flip them back
+//        same monospace 「我」/「在」: AMBER → (2-frame warm-white tick) → ASH × 0.3, breathing and
+//        flow freeze; dust 1.0 → 0.4 and greys: the line's mean luma halves by 199.5. 202.0 / 203.0 / 204.0 the three deletions flip them back
 //        (hash < 0.3 / < 0.7 / all — a ripple from the deleted character), 204.0 surge 1.15 → 1.0 by 206.
 //        205/206/207 silent blinks. 208/209/210/211 有 人 吗 ？ one key per beat. 211–214 the AI's
 //        strokes dissolve into ~700 micro mono 「有」「人」「吗」 + 5000 motes that breathe in the
 //        same rhythm as the human line but stay CURSOR warm white (never AMBER). 215.0 carriage
-//        return: both lines up 130 px in 6 frames (easeOutCubic), the cursor back on R.
+//        return: both lines up 130 px in 6 frames (easeOutCubic); the cursor drops to the head of
+//        the new line (130 px below) and rides the scroll up onto R (exactly on R from 215.25).
 //
 // World space = 1080p pixel space on the plane z = 0 (X = px − 960, Y = 540 − py); the 50 mm camera
 // sits at the focal distance FPX50 so that 1 unit = 1 px. Cursor block = x 722–746, y 508–572.
@@ -115,10 +119,10 @@ function inkMask(text, font, x, yMid, { cell = 0, region }) {
   return { at, tangent, ink, region };
 }
 // points inside the ink: jittered grid (spacing s) or uniform rejection sampling (count n)
-function gridInk(M, s, r, thr = 0.5) {
+function gridInk(M, s, r, thr = 0.5, jit = 1) {
   const [x0, y0, w, h] = M.region, out = [];
   for (let y = y0; y < y0 + h; y += s) for (let x = x0; x < x0 + w; x += s) {
-    const px = x + r() * s, py = y + r() * s;
+    const px = x + (0.5 + (r() - 0.5) * jit) * s, py = y + (0.5 + (r() - 0.5) * jit) * s;
     if (M.at(px, py) > thr) out.push([px, py]);
   }
   return out;
@@ -141,13 +145,14 @@ export async function create(ctx) {
   // =========================================================================================
   // The human line: legible layer + dust + cursor words + the rest of the sea (drain)
   const HM = inkMask(HUMAN.text, HUMAN.font, HUMAN.x, HUMAN.y, { region: [700, 318, 600, 190] });
-  // legible: jittered grid; coverage ≈ 2.5 glyph cells per ink pixel at em 6–9 px (≈ 7.5 px)
-  // legible layer: ~1600 graphemes of 6–8.5 px. Nominal cell coverage ≈ 6 per ink px, i.e. ≈ 1.5–2
-  // layers of actual glyph ink (a glyph inks ~25 % of its cell): strokes read solid, glyphs still
-  // separate at their edges. Spacing solved from the measured ink area of the line.
-  const EM = [6, 8.5], N_LEG = 1600;
-  const spacing = Math.sqrt(HM.ink / N_LEG) * 0.93;
-  const legible = gridInk(HM, spacing, r, 0.5);
+  // legible layer: a micrography, not a texture. ≈ 450 graphemes of 9.5–12 px (readable at 1080p),
+  // on an evenly spaced grid (jitter 0.35 of the spacing, so they do not pile up): ≈ 1.5 glyph
+  // cells across a 14-px stroke, each stroke a chain of words; the dust layer underneath (≈ 0.35)
+  // only fills the stroke so the letterforms of the glyphs show at its edges. (v1: 1600 × 6–8.5 px
+  // stacked ~10 deep — at full resolution the line read as noise and no glyph was ever legible.)
+  const EM = [9.5, 12], N_LEG = 450;
+  const spacing = Math.sqrt(HM.ink / N_LEG);
+  const legible = gridInk(HM, spacing, r, 0.5, 0.35);
   console.log(`WARN q_apex: ink ${HM.ink.toFixed(0)} px², legible ${legible.length} (spacing ${spacing.toFixed(2)})`);
   // tokens: graphemes of real sentences, interleaved across scripts, written in reading order
   const byLang = new Map();
@@ -159,7 +164,7 @@ export async function create(ctx) {
     const s = L[Math.floor(k / langs.length) % L.length];
     stream.push(...s.glyphs);
   }
-  legible.sort((a, b) => (Math.floor(a[1] / 9) - Math.floor(b[1] / 9)) || (a[0] - b[0]));   // reading order
+  legible.sort((a, b) => (Math.round(a[1] / spacing) - Math.round(b[1] / spacing)) || (a[0] - b[0]));   // reading order
   const dust = randInk(HM, N_DUST, r, 0.45);
   const curPts = []; for (let i = 0; i < N_CUR; i++) curPts.push([722 + 1 + 22 * r(), 508 + 1 + 62 * r()]);
   const drainPts = randInk(HM, N_DRAIN, r, 0.3);
@@ -209,17 +214,19 @@ export async function create(ctx) {
       iB.set([tg[0], tg[1], G.kind, 0], 4 * i);
       const h1 = r(), h2 = r();
       let tok, em, b;
-      if (G.kind === 0) { tok = stream[tIdx[k] % stream.length]; em = EM[0] + (EM[1] - EM[0]) * r(); b = 0.5 * Math.exp(0.3 * r.gauss()); }
+      if (G.kind === 0) { tok = stream[tIdx[k] % stream.length]; em = EM[0] + (EM[1] - EM[0]) * r(); b = 0.66 * Math.exp(0.3 * r.gauss()); }
       else if (G.kind === 1) { tok = stream[Math.floor(r() * stream.length)]; em = 1.4 + 0.5 * r(); b = 0.42 * Math.exp(0.3 * r.gauss()); }
       else if (G.kind === 2) { tok = seaShort[Math.floor(r() * seaShort.length)]; em = 1.9 + 0.5 * r(); b = 0.6; }
       else { tok = seaShort[Math.floor(r() * seaShort.length)]; em = 4 + 4 * r(); b = Math.min(8, 1.1 * Math.exp(0.8 * r.gauss())); }
       // two spiral arms (log spiral in the start offsets) — brighter words trace the arms, so the
       // vortex reads as a forming galaxy, then winds up into the sentence
+      // (flight only for the words that land in the line — iPos.z carries the factor; the landed
+      // line is evenly lit — but for good for the sea that is absorbed)
       if (G.kind !== 2) {
         const a0 = Math.atan2(s[1] - CEN[1], s[0] - CEN[0]), r0 = Math.hypot(s[0] - CEN[0], s[1] - CEN[1]) + 60;
         const arm = Math.pow(0.5 + 0.5 * Math.cos(2 * a0 - 2.4 * Math.log(r0 / 300)), 2.5);
-        b *= 0.35 + 1.6 * arm;
-      }
+        if (G.kind === 3) b *= 0.35 + 1.6 * arm; else iPos[3 * i + 2] = 0.35 + 1.6 * arm;
+      } else iPos[3 * i + 2] = 1;
       iRect.set(lex.rects.subarray(tok * 4, tok * 4 + 4), 4 * i);
       const mono = h2 < 0.5 ? lex.mono['我'] : lex.mono['在'];
       iRect2.set(lex.rects.subarray(mono * 4, mono * 4 + 4), 4 * i);
@@ -228,12 +235,22 @@ export async function create(ctx) {
     }
     o += n;
   }
-  // departures: near first (the line nucleates), all landed by 188.0
-  for (let i = 0; i < total; i++) {
-    const dn = Math.min(1, iC[4 * i + 3] / maxD), h = iA[4 * i + 2];
-    const ts = T37 + 0.15 + 0.75 * dn + 0.25 * h;
-    const te = Math.min(188.0, 186.4 + 1.45 * dn + 0.15 * h);
-    iC[4 * i + 3] = ts; iB[4 * i + 3] = te;
+  // departures: near first (the line nucleates). Arrivals of the words that land in the line are
+  // spread evenly over 186.0–188.0 by distance rank (+ hash), so at every moment of the last two
+  // seconds some words are seen settling into the strokes; the absorbed sea keeps its old law.
+  {
+    const rank = new Float32Array(total);
+    for (let a = 0, g = 0; g < groups.length; a += groups[g].pts.length, g++) {
+      const n = groups[g].pts.length, idx = Array.from({ length: n }, (_, k) => a + k).sort((p, q) => iC[4 * p + 3] - iC[4 * q + 3]);
+      idx.forEach((i, k) => { rank[i] = (k + 0.5) / n; });
+    }
+    for (let i = 0; i < total; i++) {
+      const dn = Math.min(1, iC[4 * i + 3] / maxD), h = iA[4 * i + 2], kind = iB[4 * i + 2];
+      let ts = T37 + 0.15 + 0.75 * dn + 0.25 * h;
+      const te = kind < 2.5 ? 186.0 + 2.0 * Math.min(1, Math.max(0, 0.75 * rank[i] + 0.25 * h)) : Math.min(188.0, 186.4 + 1.45 * dn + 0.15 * h);
+      if (kind < 2.5) ts = Math.max(T37 + 0.1, Math.min(ts, te - 2.2));   // ≥ 1 s of flight before the last 1.2 s
+      iC[4 * i + 3] = ts; iB[4 * i + 3] = te;
+    }
   }
   const HOPTS = {
     streak: 28,          // (max taps) analytic motion blur along each word's own path (see lexicon.js)
@@ -247,18 +264,34 @@ export async function create(ctx) {
     vertexBody: /* glsl */ `
       float kind = iB.z, ts = iC.w, te = iB.w;
       float s0 = clamp((time - ts) / max(1e-3, te - ts), 0.0, 1.0);
-      float u = s0 * s0 * (3.0 - 2.0 * s0);      // soft departure, soft landing
-      float k1 = (1.0 - u) * (1.0 - u), phi = 10.0 * u * u * u;
       vec2 off = iC.xy - iPos.xy;
+      float u;
+      if (kind < 2.5) {
+        // the spiral law r = r0 (1 − u)², θ = 10u³, re-timed in two C¹ pieces: the flight brings the
+        // word to ≈ 30 px from its place 1.2 s before it lands (Hermite, soft start); the last 1.2 s
+        // close those 30 px with an ease-out (≤ ≈ 7 px/frame, falling to 0) — the eye can follow the
+        // word into the stroke, and in-flight blur is only the shutter's few px
+        float r0 = length(vec3(off, iC.z));
+        float ua = clamp(1.0 - sqrt(30.0 / max(r0, 31.0)), 0.0, 0.985);
+        float f = clamp(1.2 / max(1e-3, te - ts), 0.2, 0.7);
+        float m1 = min(2.5 * ua, 2.0 * (1.0 - ua) * (1.0 - f) / f);
+        if (s0 < 1.0 - f) { float x = s0 / (1.0 - f); u = (3.0 * x * x - 2.0 * x * x * x) * ua + (x * x * x - x * x) * m1; }
+        else { float x = (s0 - (1.0 - f)) / f; u = ua + (1.0 - ua) * (1.0 - (1.0 - x) * (1.0 - x)); }
+      } else u = s0 * s0 * (3.0 - 2.0 * s0);      // the absorbed sea: soft departure, soft landing
+      float k1 = (1.0 - u) * (1.0 - u), phi = 10.0 * u * u * u;
       float cph = cos(phi), sph = sin(phi);
       p = vec3(iPos.xy + vec2(cph * off.x - sph * off.y, sph * off.x + cph * off.y) * k1, iC.z * k1);
-      float fl = kind < 0.5 ? 0.6 : kind < 1.5 ? 1.6 : kind < 2.5 ? 3.2 : 0.0;
+      float fl = kind < 0.5 ? 0.3 : kind < 1.5 ? 1.6 : kind < 2.5 ? 1.4 : 0.0;
       hW *= 1.0 + fl * (1.0 - smoothstep(te - 0.5, te, time));
       float landed = smoothstep(0.92, 1.0, u);
+      // the arms of the vortex are bright only in flight; the landed line is evenly lit
+      if (kind < 2.5) b *= mix(iPos.z, 1.0, smoothstep(0.55, 1.0, u));
       float ph = iPos.x * 0.011 + iA.w * 1.1;
       float tau = time;
       if (kind < 0.5) {
-        // the answer: flip to the AI's mono 我/在 (195 + 4·hash), back on the deletions (by hash)
+        // the answer: flip to the AI's mono 我/在 (195 + 4·hash), back on the deletions (by hash).
+        // Each flip is a 2-frame warm-white tick, then the glyph is ASH and dim (≈ half the light):
+        // the question goes grey and stops breathing. The way back is the same tick, then AMBER.
         float tF = 195.0 + 4.0 * iA.z;
         float rip = length(iPos.xy - uRipple.xy) * uRipple.z;
         float tB = (iA.z < 0.3 ? uRevert.x : (iA.z < 0.7 ? uRevert.y : uRevert.z)) + rip;
@@ -267,24 +300,28 @@ export async function create(ctx) {
         sel = step(0.5, fA) * (1.0 - step(0.5, fB));
         if (fA > 0.0 && fA < 1.0) sx = max(0.06, abs(cos(3.14159 * fA)));
         if (fB > 0.0 && fB < 1.0) sx = max(0.06, abs(cos(3.14159 * fB)));
-        float since = time - tF - 0.09;
-        vec3 fc = mix(uCur * 1.6, uAsh * 0.95, smoothstep(0.0, 0.55, since));
+        float since = time - tF - 0.09, back = time - tB - 0.09;
+        vec3 fc = mix(uCur * 2.2, uAsh * 0.3, smoothstep(0.06, 0.11, since));
         col = mix(col, fc, sel);
-        float back = time - tB - 0.09;
-        col *= 1.0 + 0.55 * exp(-max(back, 0.0) * 5.0) * step(0.0, back) * (1.0 - sel);
+        col = mix(col, uCur * 2.2, step(0.0, back) * (1.0 - smoothstep(0.06, 0.11, back)) * (1.0 - sel));
         b *= 1.0 + 0.2 * breath(tau, ph) * landed * (1.0 - sel);
-        b *= mix(1.0, 0.92, sel);
       } else if (kind < 1.5) {
         tau = uTauD;
+        // dust: only density under the words (≈ 0.35 of v1), dim in flight so the converging mass
+        // never reads as a glowing ball; fully up only once the words have landed
+        b *= 0.35 * mix(0.45, 1.0, smoothstep(186.8, 188.0, time));
         b *= uDust * (1.0 + 0.2 * (1.0 - 0.9 * uFrac) * breath(tau, ph) * landed);
         col = mix(col, uAsh * 1.6, 0.6 * uFrac);
       } else if (kind < 2.5) {
         // the cursor's words: amber, then condensing to warm white; gone when the block is solid
-        b *= (1.0 + 1.3 * smoothstep(189.6, 191.0, time)) * (1.0 - step(191.0, time));
+        b *= mix(0.55, 1.0, landed) * (1.0 + 1.3 * smoothstep(189.6, 191.0, time)) * (1.0 - step(191.0, time));
         col = mix(col, uCur, smoothstep(189.8, 191.0, time));
         b *= 1.0 + 0.15 * breath(time, ph) * landed;
       } else {
-        b *= 1.0 - smoothstep(0.78, 0.995, u);     // the rest of the sea pours in and is absorbed
+        // the rest of the sea pours in and is absorbed: it goes out as it nears the line, so the
+        // converging mass never piles up into a bright ellipse around it
+        b *= 1.0 - smoothstep(0.78, 0.995, u);
+        b *= smoothstep(220.0, 760.0, length(vec3(off, iC.z)) * k1);
       }
       if (kind < 1.5) p.xy += iB.xy * 3.5 * sin(6.28318 * 0.25 * tau + 0.7 * ph + 3.0 * iA.z) * landed * (kind < 0.5 ? 1.0 : 1.0 - 0.9 * uFrac);
       b *= uSurge;
@@ -384,14 +421,16 @@ export async function create(ctx) {
     cam.position.set(0, 0, D); cam.lookAt(0, 0, 0); cam.updateMatrixWorld();
     const shift = 130 * outCubic((t - 215.0) / 0.25) * (t >= 215.0 - EPS ? 1 : 0);
     HU.time.value = t; HU.focus.value = D; HU.aperture.value = 5;
-    HU.shutter.value = (t > 184.6 && t < 188.4) ? 0.5 / 24 : 0;   // 180° shutter while the words fly
+    // 108° shutter while the words fly: arcs of light in the fast vortex, but a word settling into
+    // its stroke (≤ 7 px/frame) smears ≤ 2 px and stays readable
+    HU.shutter.value = (t > 184.6 && t < 188.4) ? 0.3 / 24 : 0;
     // the far sea is a starfield of words (sub-legible words are points of light, as in S34–S35);
     // as the words come close and land they are words again
     const mk = smooth(186.2, 187.2, t);
     HU.moteRange.value = [6.5 + (-2 - 6.5) * mk, 12 + (-1 - 12) * mk];
     HU.uShift.value = shift;
     const fr = flipFrac(t);
-    HU.uFrac.value = fr; HU.uDust.value = 1 - 0.55 * fr; HU.uTauD.value = tauDust(t);
+    HU.uFrac.value = fr; HU.uDust.value = 1 - 0.6 * fr; HU.uTauD.value = tauDust(t);
     HU.uSurge.value = 1 + 0.15 * smooth(204.0, 204.12, t) * (1 - smooth(204.3, 206.0, t));
     // the absorbed sea (drain, last in the arrays) is no longer drawn once it has landed
     const nSmall = t > 188.05 ? total - nL - drainPts.length : total - nL;
@@ -414,7 +453,10 @@ export async function create(ctx) {
     if (cursorOn(t)) {
       const n = L.returned ? 0 : L.n;
       const x0 = AI.x + AI.cell * n;
-      cursor.material.uniforms.rect.value.set(x0, 508, x0 + 24, 572);
+      // carriage return: the cursor drops to the head of the new line (130 px below, under the AI
+      // line) and rides the scroll up with both lines, so it lands on R exactly as shift reaches 130
+      const y0 = 508 + (L.returned ? 130 - shift : 0);
+      cursor.material.uniforms.rect.value.set(x0, y0, x0 + 24, y0 + 64);
       draw(overlay, ortho, target, false);
     }
   }

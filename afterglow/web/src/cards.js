@@ -33,7 +33,7 @@ export class Cards {
   // envelope 0..1 with eased fade in/out
   env(item, t) {
     const fi = item.fadeIn ?? 1.0, fo = item.fadeOut ?? 1.0;
-    if (t < item.start || t > item.end) return 0;
+    if (t < item.start || t >= item.end) return 0;   // half-open: back-to-back items never overlap on the shared frame
     const a = fi > 0 ? ease.inOutSine(clamp((t - item.start) / fi)) : 1;
     const b = fo > 0 ? ease.inOutSine(clamp((item.end - t) / fo)) : 1;
     return Math.min(a, b);
@@ -41,7 +41,7 @@ export class Cards {
 
   // Draws all active items at time t. Returns the texture, or null if nothing is visible.
   draw(t, bar) {
-    const active = this.items.filter(it => t >= it.start && t <= it.end && it.style !== 'ui_terminal' && it.render !== 'module');
+    const active = this.items.filter(it => t >= it.start && t < it.end && it.style !== 'ui_terminal' && it.render !== 'module');
     const g = this.g;
     if (!active.length) { this._dirty && g.clearRect(0, 0, this.W, this.H); this._dirty = false; return null; }
     g.clearRect(0, 0, this.W, this.H);

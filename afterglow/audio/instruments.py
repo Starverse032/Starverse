@@ -344,12 +344,17 @@ def seat_for(freq):
 
 def string_section(n, f_curve, dyn, seed=0, players=7, detune=7.0, vib=False, vib_delay=1.0,
                    cut_lo=1200.0, cut_hi=2500.0, bow_db=-30.0, pan=None, spread=0.5, ensemble=True,
-                   body=True):
+                   body=True, drift_cents=2.6, offset=True, phase0=None, vib_rate=None, vib_depth=None):
     """Section strings (§6.4-2): `players` detuned band-limited saws (±detune cents), 2nd-order LP
     between cut_lo..cut_hi driven by dynamics, 0.07 Hz LFO ±200 Hz on the cutoff, 3 ensemble delays
     12–20 ms modulated at 0.3 Hz, bow noise around the harmonics (−30 dB). `dyn` = per-sample
     amplitude (already the envelope; brightness follows it). Optional human vibrato 4.5 Hz ±6 c
-    fading in after vib_delay. Stereo."""
+    fading in after vib_delay. Stereo.
+    Tuning overrides (the defaults leave every existing note sample-identical; the rng draws are kept):
+    drift_cents (slow per-player pitch walk), offset=False (no random ±1.5 c player offset), phase0
+    (saw start phase in cycles), vib_rate / vib_depth (Hz / cents instead of the random 4.2–4.9 Hz,
+    4.5–7 c). A player meant to sit in unison on another voice gets that voice's exact pitch curve,
+    no drift and no offset; otherwise the two beat slowly (S27)."""
     r = dsp.rng(seed)
     t = np.arange(n) / SR
     f0 = np.asarray(f_curve, dtype=np.float64)
@@ -363,13 +368,17 @@ def string_section(n, f_curve, dyn, seed=0, players=7, detune=7.0, vib=False, vi
         players += 2                                  # low sections: more, closer players → no pumping
     detune = detune * float(np.clip(fm / 200.0, 0.45, 1.0))
     for v in range(players):
-        c = ((v / max(1, players - 1)) - 0.5) * 2 * detune + r.uniform(-1.5, 1.5)
-        mult = 2 ** (c / 1200) * 2 ** (2.6 / 1200 * smooth_noise(n, 0.12, seed * 13 + v))
+        c = ((v / max(1, players - 1)) - 0.5) * 2 * detune + r.uniform(-1.5, 1.5) * (1.0 if offset else 0.0)
+        mult = 2 ** (c / 1200) * 2 ** (drift_cents / 1200 * smooth_noise(n, 0.12, seed * 13 + v))
         if vib:
             onset = np.clip((t - vib_delay) / 1.2, 0, 1)
             rate = r.uniform(4.2, 4.9)
-            mult = mult * 2 ** (r.uniform(4.5, 7.0) / 1200 * onset * np.sin(2 * np.pi * rate * t + r.uniform(0, 6.28)))
-        s = blsaw(f0 * mult, r.uniform(0, 1))
+            depth = r.uniform(4.5, 7.0)
+            rate = rate if vib_rate is None else vib_rate
+            depth = depth if vib_depth is None else vib_depth
+            mult = mult * 2 ** (depth / 1200 * onset * np.sin(2 * np.pi * rate * t + r.uniform(0, 6.28)))
+        ph0 = r.uniform(0, 1)
+        s = blsaw(f0 * mult, ph0 if phase0 is None else phase0)
         s *= 1 + 0.06 * smooth_noise(n, 0.6, seed * 17 + v)   # bow pressure
         p = np.clip(pan + ((v / max(1, players - 1)) - 0.5) * 2 * spread, -1, 1)
         a = (p + 1) * np.pi / 4
@@ -404,11 +413,11 @@ def string_section(n, f_curve, dyn, seed=0, players=7, detune=7.0, vib=False, vi
     return (y * dn[:, None]).astype(np.float32)
 
 
-def solo_violin(n, f_curve, dyn, seed=0, vib=True):
+def solo_violin(n, f_curve, dyn, seed=0, vib=True, **kw):
     """Solo violin for S27's E5 (§6.4-1): ONE saw (single player), bow noise −24 dB, body, human
-    vibrato. Stereo, narrow."""
+    vibrato. Stereo, narrow. **kw: string_section tuning overrides (drift_cents, offset, phase0, ...)."""
     return string_section(n, f_curve, dyn, seed=seed, players=1, detune=0.0, vib=vib, vib_delay=0.4,
-                          cut_lo=2200, cut_hi=4200, bow_db=-24.0, pan=-0.12, spread=0.0, ensemble=False)
+                          cut_lo=2200, cut_hi=4200, bow_db=-24.0, pan=-0.12, spread=0.0, ensemble=False, **kw)
 
 
 # ------------------------------------------------------------------ Karplus–Strong pluck

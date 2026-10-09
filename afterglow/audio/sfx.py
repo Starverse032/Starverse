@@ -649,14 +649,16 @@ def render_radio(tl, n):
     y = L.fade_edges(y + hz, fin=0.02)
     y[-72:] *= np.linspace(1, 0, 72)[:, None]  # cut at 113.000 (1.5 ms)
     place(buf, y.astype(np.float32), t_idx(a))
-    # --- #18 receiver hiss (void): 133.0 fade in, −62 dB LP 2 kHz; continues under the pulsar;
-    #     143.75 → −80 dB over 3 s (exponential), gone before 148.0
-    a, b = 133.0, 148.0
+    # --- #18 receiver hiss (void): fades in under the last Morse '?' (132.7 → 133.4, cosine in amplitude;
+    #     v1.2, was 133.0 → 134.2 in dB, which left 0.4 s of dead air after the Morse), −62 dB LP 2 kHz;
+    #     continues under the pulsar; 143.75 → −80 dB over 3 s (exponential), gone before 148.0
+    a, b = 132.7, 148.0
     sec = b - a
     h = L.follow_unit(dsp.lowpass(L.pink_st(sec, SEED + 51), 2000, order=2), 0.3)
     tt = a + np.arange(len(h)) / SR
-    lvl = np.interp(tt, [133.0, 134.2, 143.75, 146.75, 147.9, 148.0], [-95, -62, -62, -80, -110, -140])
-    place(buf, (h * db(lvl)[:, None]).astype(np.float32), t_idx(a))
+    lvl = np.interp(tt, [133.4, 143.75, 146.75, 147.9, 148.0], [-62, -62, -80, -110, -140])
+    g = db(lvl) * np.where(tt < 133.4, L.ease_in_out_sine((tt - a) / 0.7), 1.0)
+    place(buf, (h * g[:, None]).astype(np.float32), t_idx(a))
     # --- #28 pulsar: ONE sample, t_k = 137.000 + 1.337 k (k = 0…5 audible), −24 dB peak;
     #     k = 4 the same sample at −3 dB; k = 5 the same sample −6 dB, LP 1.5 kHz
     ps = L.peak_to(L.pulsar_sample(), -24)
@@ -681,7 +683,10 @@ def pulsar_indices():
 # =================================================================== probe
 def render_probe(tl, n):
     buf = np.zeros((n, 2), np.float32)
-    # --- #29 servo 149.0–152.5: filtered saw 80 → 95 Hz, BP 300–900 Hz, −44 dB (structure-borne)
+    # --- #29 servo 149.0–152.5: filtered saw 80 → 95 Hz, BP 300–900 Hz, very light (structure-borne).
+    #     v1.2: it read −42 dBFS RMS / −30 dBFS peak pre-normalisation, peaking above the 152.0 golden-record
+    #     bell, and jumped in at 45 % in 40 ms after a second of silence. Now 5 dB lower, it spins up
+    #     from nothing over 0.3 s, and the scan motor under the bell (152.0–152.5) is 3 dB lighter.
     a, b = 149.0, 152.5
     sec = b - a
     m = int(sec * SR)
@@ -695,11 +700,11 @@ def render_probe(tl, n):
     s = L.bp(s, 300, 900, 2)
     s = s + L.peak_res(s, 410, 9, 0.6) + L.peak_res(s, 640, 12, 0.4)
     speed = np.sin(np.pi * u)
-    env = np.where(tt < 3.0, 0.45 + 0.55 * speed, 0.5)
-    env *= np.clip(tt / 0.04, 0, 1)
+    env = np.where(tt < 3.0, 0.45 + 0.55 * speed, 0.35)  # 152.0–152.5 scan motor: under the bell (was 0.5)
+    env *= L.ease_in_out_sine(tt / 0.3)  # spin-up from rest
     env *= np.where((tt > 2.92) & (tt < 3.04), 0.6, 1.0)
     s = s * env
-    s = L.rms_to(s, -44)
+    s = L.rms_to(s, -49)
     s[-48:] *= np.linspace(1, 0, 48)  # stops dead on the stop click (152.5)
     s = L.verb(s, 'probe', 0.25)[:m]
     place(buf, s.astype(np.float32), t_idx(a))
@@ -737,10 +742,11 @@ def render_probe(tl, n):
 def render_words(tl, n):
     buf = np.zeros((n, 2), np.float32)
     r = dsp.rng(SEED + 70)
-    # --- #30 word granules 165.0 → 180.0 (cut): 5–20 ms sine grains on D/E/F/A/C (octaves 6–7),
-    #     200 → 400 grains/s, stereo spread, −40 → −34 dB
+    # --- #30 word granules 165.0 → 180.0: 5–20 ms sine grains on D/E/F/A/C (octaves 6–7),
+    #     200 → 400 grains/s, stereo spread, −40 → −34 dB. v1.2: S36 dissolves in over 180.0–180.5,
+    #     so the grains run on to 180.5 and fade on the dissolve curve (inOutSine) instead of a 12 ms cut
     pitch = [dsp.note(x) for x in ('D6', 'E6', 'F6', 'A6', 'C7', 'D7', 'E7', 'F7', 'A7')]
-    a, b = 165.0, 180.0
+    a, b = 165.0, 180.5
     m = int((b - a) * SR)
     seg = np.zeros((m + SR, 2), np.float32)
     t = a
@@ -762,7 +768,7 @@ def render_words(tl, n):
     tt = a + np.arange(m) / SR
     lvl = np.interp(tt, [165.0, 166.5, 171.0, 172.5, 179.98, 180.0], [-70, -40, -40, -34, -34, -34])
     seg = L.smooth_limit(seg * db(lvl)[:, None], -24.0)
-    seg[-int(0.012 * SR):] *= L.raised_ramp(int(0.012 * SR))[::-1, None]  # out on the 180.0 cut
+    seg *= (1.0 - L.ease_in_out_sine((tt - 180.0) / 0.5))[:, None]  # out with the 180.0–180.5 dissolve
     place(buf, seg.astype(np.float32), t_idx(a))
     # --- #31 breathing of the words 188.5 → 216.0
     place(buf, breathing(), t_idx(188.5))

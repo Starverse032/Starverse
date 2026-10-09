@@ -24,6 +24,10 @@ const FPX = 960 / (18 / 35);                       // 1080p px per unit tangent 
 const LV = [[100000, 4096], [12500, 4096], [3000, 4096]];   // [half extent m, texels]
 const ZC = 8500;                                   // cloud deck altitude (m)
 const ENC = 6.0;                                   // 8-bit encoding: c = ENC · e^2.2
+// The zoom's fixed point is R, so R must sit on the city's bright core, not on the abstract origin of the
+// light field: the domain warp of the population surface moves the core ≈ 3–4 km off the origin. All three
+// levels are baked centred on CORE (m, east/north) and the frame centre R looks straight down on it.
+const CORE = [2080, 2650];
 
 const CITY = /* glsl */ `
 uniform float uExt, uTexel;
@@ -137,11 +141,12 @@ export function createDive(ctx) {
   // ---- bake the three levels (8-bit, γ-encoded: c = ENC·e^2.2) ------------------------------------------
   const levels = LV.map(([ext, n]) => kit.bake(renderer, {
     w: n, h: n, float: false, mipmaps: true, wrap: THREE.ClampToEdgeWrapping,
-    uniforms: { uExt: { value: ext }, uTexel: { value: 2 * ext / n } },
+    uniforms: { uExt: { value: ext }, uTexel: { value: 2 * ext / n }, uC: { value: new THREE.Vector2(...CORE) } },
     frag: CITY + /* glsl */ `
+      uniform vec2 uC;
       void main(){
         vec2 p = (vUv - 0.5) * 2.0 * uExt;
-        vec3 c = cityLight(p);
+        vec3 c = cityLight(p + uC);
         gl_FragColor = vec4(pow(clamp(c / ${ENC.toFixed(1)}, 0.0, 1.0), vec3(1.0 / 2.2)), 1.0);
       }`,
   }));

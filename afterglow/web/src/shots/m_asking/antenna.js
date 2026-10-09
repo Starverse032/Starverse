@@ -1,12 +1,12 @@
 // m_asking/antenna.js — S23 天线 (112.083 → 112.5, 10 frames, f2690–2699).
 //
 // A radio dish standing in a karst sinkhole, seen from the sinkhole floor, 50 mm, looking up ≈ 14°.
-// Pure silhouette: the bowl (a real paraboloid, D = 64 m, f/D 0.38, its axis 15° off the zenith,
-// leaning towards us so the rim is a thin ellipse and the feed stands clear above it), its tower, the four feed legs and the feed cabin, all near
-// black, cut out of the Milky Way (the shared f_fire galaxy bake) and the airglow. The only light on
-// the structure is the sky catching the rim: a single elliptical line (screen-space ribbon, analytic
-// coverage, 1.3 px) — and at the feed, the red indicator lamp (FEED #FF4A3A, HDR 2): the first lamp
-// people ever pointed at the sky. No beam, no cables, no platform.
+// Pure silhouette: the bowl (a real paraboloid, D = 64 m, f/D 0.38, its axis 19° off the zenith,
+// leaning towards us so the rim is a thin ellipse) on its mount and tower, all near black, cut out of the
+// Milky Way (the shared f_fire galaxy bake) and the airglow. The only light on the structure is the sky
+// catching the rim: a single elliptical line (screen-space ribbon, analytic coverage, 1.3 px) — and at
+// the heart of the dish, the centre of that ellipse, the red indicator lamp (FEED #FF4A3A, HDR 2) on R:
+// the first lamp people ever pointed at the sky. No beam, no feed legs, no cabin, no cables, no platform.
 //
 // Karst cones (fengcong) ring the sinkhole in four layers (sinkhole floor 120 m, walls 600 m, cones
 // 1.5 km and 3.5 km): profiles baked once (CPU, deterministic) as elevation(azimuth), drawn per pixel
@@ -25,12 +25,15 @@ const FEED = hex(0xFF4A3A), AIRGLOW = hex(0x7FE3C2);
 
 // dish (metres, world y up; camera on the sinkhole floor looking towards −z)
 const DISH_D = 64, DISH_F = 24.3;                  // diameter, focal length (f/D 0.38)
-const VTX = new THREE.Vector3(-4, 34, -212);        // vertex of the paraboloid (top of the mount)
-// the axis leans 15° towards us (and a little left): the rim plane is seen almost edge-on, a thin
-// ellipse with the feed standing above it
-const AX = new THREE.Vector3(-Math.sin(15 * D2R) * Math.sin(18 * D2R), Math.cos(15 * D2R), Math.sin(15 * D2R) * Math.cos(18 * D2R)).normalize();
 const DEPTH = (DISH_D / 2) ** 2 / (4 * DISH_F);   // 10.5 m
-const LAMP = VTX.clone().addScaledVector(AX, DISH_F + 2.1);
+const axis = lean => new THREE.Vector3(-Math.sin(lean * D2R) * Math.sin(18 * D2R), Math.cos(lean * D2R), Math.sin(lean * D2R) * Math.cos(18 * D2R)).normalize();
+// the lamp sits at the centre of the aperture (the "heart" of the dish), at the same point in the world
+// as the v1 feed lamp, so the camera aim, the sky and the hills are unchanged; the dish is raised to put
+// its aperture there. The axis leans 19° towards us (and a little left): from the floor the rim plane is
+// seen almost edge-on, a thin ellipse around the lamp.
+const LAMP = new THREE.Vector3(-4, 34, -212).addScaledVector(axis(15), DISH_F + 2.1);
+const AX = axis(19);
+const VTX = LAMP.clone().addScaledVector(AX, -(DEPTH + 0.05));   // vertex of the paraboloid (top of the mount)
 
 // hills: [distance m, haze 0..1] for the four layers (R, G, B, A of the profile texture)
 const LAYERS = [[600, 0.16], [1500, 0.34], [3500, 0.6], [120, 0.0]];
@@ -163,7 +166,7 @@ export function createAntenna(ctx) {
         vec3 c = vec3(0.00030, 0.00036, 0.00052) * (0.5 + 1.2 * up * up);
         vec3 Rf = reflect(-V, n);
         if (Rf.y > 0.0) c += (vec3(0.0026, 0.0036, 0.0062) + vec3(0.006, 0.010, 0.009) * exp(-Rf.y / 0.2)) * 0.45;
-        // the feed lamp licks the cabin it sits on
+        // the lamp's spill on the steel around it (negligible beyond a few metres)
         float dl = length(vW - uLamp);
         c += uFeed * 0.08 / (1.0 + dl * dl * 1.2) * max(dot(n, normalize(uLamp - vW)), 0.0);
         gl_FragColor = vec4(c, 1.0);
@@ -181,21 +184,13 @@ export function createAntenna(ctx) {
     // the back-up structure: a shallow cone behind the vertex (what makes a dish read as engineered)
     const hub = new THREE.Mesh(new THREE.CylinderGeometry(6.5, 2.5, 4.0, 48, 1, false), darkMat);
     hub.quaternion.copy(q); hub.position.copy(VTX).addScaledVector(AX, -1.6);
-    // the feed cabin
-    const cab = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.3, 3.6, 24), darkMat);
-    cab.quaternion.copy(q); cab.position.copy(VTX).addScaledVector(AX, DISH_F + 0.2);
-    // the mount: alt-az head and a tapered tower down to the floor
-    const head = new THREE.Mesh(new THREE.BoxGeometry(11, 6, 8), darkMat);
-    head.position.set(VTX.x, VTX.y - 6.2, VTX.z); head.rotation.y = 0.35;
-    const yokeL = new THREE.Mesh(new THREE.BoxGeometry(1.6, 8, 5), darkMat), yokeR = yokeL.clone();
-    yokeL.position.set(VTX.x - 5.2, VTX.y - 2.6, VTX.z); yokeR.position.set(VTX.x + 5.2, VTX.y - 2.6, VTX.z);
-    yokeL.rotation.y = yokeR.rotation.y = 0.35;
-    const tower = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 5.0, VTX.y - 9, 40), darkMat);
-    tower.position.set(VTX.x, (VTX.y - 9) / 2, VTX.z);
-    meshScene.add(bowl, hub, cab, head, yokeL, yokeR, tower);
+    // the mount: one slender tapered pedestal from the floor up into the hub (a clean silhouette)
+    const tower = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 4.6, VTX.y - 2.0, 40), darkMat);
+    tower.position.set(VTX.x, (VTX.y - 2.0) / 2, VTX.z);
+    meshScene.add(bowl, hub, tower);
   }
 
-  // ---- lines: rim highlight + the four feed legs, as screen-space ribbons with analytic coverage ------
+  // ---- lines: the rim highlight, as screen-space ribbons with analytic coverage ------
   // Each segment = a quad; the vertex shader projects both ends, offsets by the screen normal by
   // (half width + 1 px), the fragment shader turns the signed distance into coverage. Width below
   // 1 px fades intensity instead of thinning (no crawling, no stair steps).
@@ -205,15 +200,6 @@ export function createAntenna(ctx) {
   const rimP = a => rimC.clone().addScaledVector(e1, Math.cos(a) * (DISH_D / 2 + 0.25)).addScaledVector(e2, Math.sin(a) * (DISH_D / 2 + 0.25));
   const NR = 256;
   for (let i = 0; i < NR; i++) { const a = rimP(i / NR * 2 * Math.PI), b = rimP((i + 1) / NR * 2 * Math.PI); segs.push([...a.toArray(), ...b.toArray(), 0.12, 0]); }
-  const cabBot = VTX.clone().addScaledVector(AX, DISH_F - 1.6);
-  for (let k = 0; k < 4; k++) {
-    const a = rimP((45 + 90 * k + 20) * D2R).addScaledVector(AX, -0.6);
-    const n = 12;
-    for (let j = 0; j < n; j++) {
-      const p0 = a.clone().lerp(cabBot, j / n), p1 = a.clone().lerp(cabBot, (j + 1) / n);
-      segs.push([...p0.toArray(), ...p1.toArray(), 0.55 - 0.2 * (j / n), 1]);
-    }
-  }
   const NS = segs.length;
   const lineGeo = new THREE.InstancedBufferGeometry();
   lineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, -1, 0, 1, -1, 0, 0, 1, 0, 1, 1, 0]), 3));

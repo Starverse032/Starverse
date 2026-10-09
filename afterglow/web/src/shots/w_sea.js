@@ -7,7 +7,9 @@
 //               glyphs on the SAME web graph (seed 1990), far ones ignite first, near ones last.
 //               Violet filament fog (cold) + amber words (warm): the first time they mix.
 //        165.25–169.25 card ④ (cards.js): words under the card thinned to 40 %.
-//        169.5  the cursor, instead of blinking off, breaks into 400 tiny words that join the sea.
+//        169.5  the cursor, instead of blinking off, breaks into 400 tiny words that join the sea:
+//               it crumbles cell by cell (≈ 7 frames) as each grain takes its cell's light, and the
+//               grains drift (ease-out, on screen) into the sea by 170.5.
 //   S35 文字之海  171.0–180.0  WEB_PATH, 9 u/s from the first frame, no roll: frame-identical to S10.
 //        Four readable lines (canvas2D planes, full resolution, racked into focus on their frame):
 //        174.75「遂古之初，谁传道之？」(2.0 s, 40–64 px) · 176.75 Is anyone there? · 177.75
@@ -177,6 +179,7 @@ export async function create(ctx) {
     .addScaledVector(P.right, (px - 960) / FPX24 * d).addScaledVector(P.up, -(py - 540) / FPX24 * d);
   const shortToks = lex.sea.filter(k => lex.rowAspect(k) < 2.2);
   const rg = rng(169);
+  const grainDelay = new Uint8Array(N_GRAIN * 4);      // per cell of the block: when its grain leaves
   for (let k = 0; k < N_GRAIN; k++) {
     const i = pts.count + k;
     const gx = k % 10, gy = Math.floor(k / 10);
@@ -192,13 +195,14 @@ export async function create(ctx) {
     iA.set([0.16 * Math.exp(0.2 * rg.gauss()), b, rg(), rg()], i * 4);
     iB.set([0, 0, 0, 2], i * 4);
     iC.set([s.x, s.y, s.z, 0.22 * Math.pow(rg(), 1.5)], i * 4);
+    grainDelay[4 * k] = Math.round(iC[i * 4 + 3] / 0.25 * 255); grainDelay[4 * k + 3] = 255;
     iCol.set(pickCol(rg(), b), 3 * i);
   }
   const GRAIN_H0 = 2.4 * 6 / FPX24;   // start height: a 2.4-px grain at depth 6
 
   const seaF = glyphField(n, { iPos, iRect, iA, iB, iC, iCol }, {
-    uniforms: { uCard: { value: 0 }, uClear: { value: new T.Vector4(0, 0, 0, 0) }, uClearK: { value: 0 }, uGrainH: { value: GRAIN_H0 }, uCurCol: { value: new T.Vector3(...PAL.CURSOR) }, uFlowT0: { value: T34 } },
-    header: /* glsl */ `uniform float uCard, uGrainH, uFlowT0, uClearK; uniform vec3 uCurCol; uniform vec4 uClear;`,
+    uniforms: { uCard: { value: 0 }, uClear: { value: new T.Vector4(0, 0, 0, 0) }, uClearK: { value: 0 }, uGrainH: { value: GRAIN_H0 }, uCamC: { value: P0.pos.clone() }, uCamF: { value: P0.forward.clone() }, uCurCol: { value: new T.Vector3(...PAL.CURSOR) }, uFlowT0: { value: T34 } },
+    header: /* glsl */ `uniform float uCard, uGrainH, uFlowT0, uClearK; uniform vec3 uCurCol, uCamC, uCamF; uniform vec4 uClear;`,
     vertexBody: /* glsl */ `
       float kind = iB.w;
       vec3 flow = iB.xyz * (time - uFlowT0);
@@ -208,13 +212,25 @@ export async function create(ctx) {
         b *= smoothstep(0.0, 0.32, age) * (1.0 + 1.5 * exp(-max(age, 0.0) * 4.5));   // ignites like a star
         b *= 0.88 + 0.12 * sin(time * (0.5 + 1.6 * iA.z) + iA.w * 40.0);              // breathing
       } else {
-        // a grain of the cursor: from the block (169.5) out into the sea
-        float u = clamp((time - 169.5 - iC.w) / 1.05, 0.0, 1.0);
-        float e = 1.0 - pow(1.0 - u, 3.0);
-        p = mix(iC.xyz, p, e);
-        hW = mix(uGrainH, hW, e);
-        col = mix(uCurCol, col, smoothstep(0.05, 0.85, u));
-        b = mix(1.8, b, smoothstep(0.0, 0.9, u)) * step(169.5, time);
+        // a grain of the cursor: its cell of the block goes out (169.5 + delay, 2 frames) and the
+        // grain takes over the cell's light (cursor white, HDR ≈ the block's energy), then drifts
+        // out into the sea, every grain arriving by 170.5 (ease-out: it drifts, never bursts),
+        // cooling to amber and dimming to its sea level on the way
+        float dt = time - 169.5 - iC.w;
+        float u = clamp(dt / (1.0 - iC.w), 0.0, 1.0);
+        float e = 1.0 - (1.0 - u) * (1.0 - u);
+        // interpolated on screen (the ray) and in depth separately — a straight world-space mix
+        // would be dominated by the near end and jump half-way across the screen in 2 frames
+        vec3 rs = iC.xyz - uCamC, rq = p - uCamC;
+        float ds = dot(rs, uCamF), dq = dot(rq, uCamF);
+        float dd = mix(ds, dq, e);
+        p = uCamC + mix(rs / ds, rq / dq, e) * dd;
+        float hRest = hW;
+        hW = mix(uGrainH * dd / ds, hRest, e * e);
+        col = mix(uCurCol, col, smoothstep(0.25, 1.0, u));
+        // the block's energy (HDR ≈ 4 in a 2.4-px grain), spread as the grain grows into a word
+        float gr = (uGrainH / ds) / max(1e-6, hW / dd);
+        b = max(b, 4.2 * gr * gr) * smoothstep(0.0, 0.083, dt);
       }
       // card ④: words in the lower 260 px of the band thinned to 40 % (by hash; no dark halo)
       vec4 cp = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
@@ -226,7 +242,14 @@ export async function create(ctx) {
       float xPx = (0.5 + 0.5 * cp.x / max(cp.w, 1e-4)) * 1920.0;
       float inR = smoothstep(uClear.x - 18.0, uClear.x, xPx) * (1.0 - smoothstep(uClear.z, uClear.z + 18.0, xPx))
                 * smoothstep(uClear.y - 14.0, uClear.y, yPx) * (1.0 - smoothstep(uClear.w, uClear.w + 14.0, yPx));
-      b *= 1.0 - uClearK * inR;`,
+      b *= 1.0 - uClearK * inR;
+      // near-field words (≥ 14 px rows) never blow out into a bloom blob (HDR ≤ 1.4), and a big word
+      // whose box reaches under the letterbox edge (band 138–942) fades out before it gets there —
+      // nothing bright lives on the bar edge
+      float hPx = hW * projectionMatrix[1][1] * 540.0 / max(cp.w, 1e-4);
+      b = min(b, mix(1e4, 1.4, smoothstep(10.0, 20.0, hPx)));
+      float edgeK = smoothstep(150.0, 190.0, yPx - 0.5 * hPx) * (1.0 - smoothstep(890.0, 930.0, yPx + 0.5 * hPx));
+      b *= mix(1.0, edgeK, smoothstep(7.0, 15.0, hPx));`,
   });
   const sea = seaF.pts;
   sea.material.uniforms.res.value.set(W, H);
@@ -357,6 +380,17 @@ export async function create(ctx) {
   }
   // cursor (screen space, exact pixels)
   const cursor = screenRect(); cursor.material.uniforms.color.value.set(...PAL.CURSOR.map(v => v * 2.0));
+  // 169.5: the block goes out cell by cell (10 × 40 cells of 2.4 × 1.6 px), each cell at the moment
+  // its grain leaves (fade 2 frames) — the light is handed over, the bloom never drops out
+  const delayTex = new T.DataTexture(grainDelay, 10, 40, T.RGBAFormat); delayTex.needsUpdate = true;
+  delayTex.minFilter = delayTex.magFilter = T.NearestFilter; delayTex.flipY = false;
+  cursor.material.uniforms.uDelay = { value: delayTex }; cursor.material.uniforms.uT = { value: 0 };
+  cursor.material.vertexShader = cursor.material.vertexShader.replace('uniform vec4 rect;', 'uniform vec4 rect; varying vec2 vC;').replace('vec2 c = position.xy * 0.5 + 0.5;', 'vec2 c = position.xy * 0.5 + 0.5; vC = c;');
+  cursor.material.fragmentShader = /* glsl */ `uniform vec3 color; uniform sampler2D uDelay; uniform float uT; varying vec2 vC;
+    void main(){ vec2 cell = (floor(clamp(vC, 0.0, 0.9999) * vec2(10.0, 40.0)) + 0.5) / vec2(10.0, 40.0);
+      float dl = texture2D(uDelay, cell).r * 0.25;
+      float k = 1.0 - smoothstep(0.0, 0.083, uT - 169.5 - dl);
+      gl_FragColor = vec4(color * k, 1.0); }`;
   const overlay = new T.Scene(); overlay.add(cursor);
   const ortho = new T.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
@@ -386,7 +420,7 @@ export async function create(ctx) {
     // focus: S34 deep focus; S35 racks to the line that is being read
     let focus = 40, ap = 0.006;
     if (!s34) {
-      const L = LINES.find(l => t < l.t1 + 0.3) || LINES[LINES.length - 1];
+      const L = LINES.find((l, i) => t < l.t1 + (i === LINES.length - 1 ? 0.3 : -0.12)) || LINES[LINES.length - 1];
       focus = Math.max(4, L.mesh.position.distanceTo(P.pos)); ap = 0.014;
     }
     U.focus.value = focus; U.aperture.value = ap;
@@ -408,11 +442,15 @@ export async function create(ctx) {
       an.visible = true;
     } else an.visible = false;
     // readable lines: blurred glow → rack to focus at t0 (the celesta frame) → hold → defocus out
-    for (const L of LINES) {
-      const u = L.mesh.material.uniforms;
+    for (let li = 0; li < LINES.length; li++) {
+      const L = LINES[li], u = L.mesh.material.uniforms;
       // before its window a line is only a soft warm smear (a light not yet a sentence): one line
-      // readable at a time
-      const pre = smooth(L.t0 - 1.4, L.t0 - 0.4, t), focusIn = smooth(L.t0 - 0.33, L.t0, t), out = smooth(L.t1, L.t1 + 0.4, t);
+      // readable at a time. At a handover the outgoing line is already racked out (≈ 6 frames,
+      // ending 1 frame before the boundary) while the next one racks in over the last 5 frames, so
+      // the two are never sharp together; the last line (no successor) defocuses after its window.
+      const last = li === LINES.length - 1;
+      const pre = smooth(L.t0 - 1.4, L.t0 - 0.4, t), focusIn = smooth(L.t0 - (li ? 0.21 : 0.33), L.t0, t);
+      const out = last ? smooth(L.t1, L.t1 + 0.4, t) : smooth(L.t1 - 0.30, L.t1 - 0.04, t);
       u.bias.value = 5.6 * (1 - focusIn) + 5.0 * out;
       u.gain.value = (0.07 * pre + 1.33 * focusIn) * (1 - out);
       L.mesh.visible = !s34 && u.gain.value > 0.002;
@@ -448,8 +486,9 @@ export async function create(ctx) {
       const ac = renderer.autoClear; renderer.autoClear = false; comp.render(renderer, f.target); renderer.autoClear = ac;
     }
     if (PROF) console.log(`WARN w_sea t=${t.toFixed(2)} words ${seaC.count}+${seaC.bigCount} motes ${moteC.count}`);
-    // the cursor: blinking at R until 169.5 (then it is the grains)
-    const on = s34 && t < 169.5 && (t - Math.floor(t)) < 0.5 - 1e-6;
+    // the cursor: blinking at R until 169.5, then it crumbles into the grains (≈ 7 frames)
+    const on = s34 && ((t < 169.5 && (t - Math.floor(t)) < 0.5 - 1e-6) || (t >= 169.5 - 1e-6 && t < 169.84));
+    cursor.material.uniforms.uT.value = t;
     if (on) {
       cursor.material.uniforms.rect.value.set(...CURSOR_RECT);
       draw(overlay, ortho, f.target, false);
@@ -495,7 +534,8 @@ function buildS36(ctx, lex, canvasTex, planeMat) {
   // bokeh — never a wallpaper of equal discs.
   //   far    (6–60 u)   ~110 round discs 45–80 px: single signs, so the aperture shape stays round
   //   mid    (3.1–5 u)  ~34 signs, 20–40 px discs: the sea right behind the line
-  //   plane  (2.3–2.9 u) a dozen words almost in focus above / below the line: it sits among words
+  //   words  (3.4–4.4 u) a dozen words above / below the line, out of focus (CoC ≈ 1–2 × their height):
+//                      only the line itself is sharp — everything else is bokeh
   //   front  (0.7–1.4 u) 5 huge, very faint discs drifting through the lens
   // A clear pocket around the line and the subtitle: discs whose footprint would cross them are
   // dimmed (×0.1 / ×0.3) — legibility first, and the line reads as the one lamp in the room.
@@ -512,7 +552,7 @@ function buildS36(ctx, lex, canvasTex, planeMat) {
     let d, sx, sy;
     if (layer === 0) d = 6 * Math.pow(10, Math.pow(r(), 1.3));
     else if (layer === 1) d = 3.1 + 1.9 * r();
-    else if (layer === 2) d = 2.3 + 0.6 * r();
+    else if (layer === 2) d = 3.4 + 1.0 * r();     // behind the focus plane: soft capsules, never sharp
     else d = 0.7 + 0.7 * r();
     // screen position (1080p px); plane-layer words stay out of the line's rows
     sx = -80 + 2080 * r(); sy = 120 + 840 * r();
@@ -544,6 +584,8 @@ function buildS36(ctx, lex, canvasTex, planeMat) {
   });
   const U = bok.material.uniforms;
   U.res.value.set(W, H); U.focus.value = DF; U.aperture.value = AP; U.minPx.value = 1.2; U.nearFade.value = [0.3, 0.6];
+  // a defocused sign is a round aperture disc (a capsule for a word), never a blurred glyph box
+  U.discRange.value = [0.2, 0.6];
   // the lamp: a very faint warm light around the line (the bloom of a small night-light in air)
   const glowMat = new T.ShaderMaterial({
     transparent: true, depthTest: false, depthWrite: false, blending: T.AdditiveBlending,

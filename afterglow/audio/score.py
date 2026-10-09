@@ -224,6 +224,11 @@ class Scene:
         """Silence everything (dry + reverb) from t (a 2 ms fade ends exactly on t) [until t2]."""
         self.post.append(('cut', stems, xs(t_abs) if exact else fs(t_abs), fade, until))
 
+    def soft(self, stems, ceil_db):
+        """Soft-clip (tanh knee) dry + wet at ceil_db dBFS: shaves the crest of a dense tutti so it
+        can be louder under the master limiter without being squashed by it."""
+        self.post.append(('soft', stems, ceil_db))
+
     def window(self, stems, points, linear=False):
         """Gain automation applied to dry + wet (absolute seconds): dB points (cosine in dB), or
         linear-amplitude points (cosine in amplitude — a natural fade-out to true zero)."""
@@ -248,6 +253,9 @@ class Scene:
                         a = max(0, i - fade)
                         y[a:i] *= I.raised(i - a)[::-1, None].astype(np.float32)
                         y[i:j] = 0.0
+                elif op[0] == 'soft':
+                    c = np.float32(10 ** (op[2] / 20))
+                    y = (c * np.tanh(y / c)).astype(np.float32)
                 elif op[0] == 'win':
                     y *= dbenv(op[2], self.i0, self.n)[:, None].astype(np.float32)
                 else:
@@ -343,11 +351,11 @@ def radio(x, hp=800.0, lp=3000.0, drive=2.0):
 
 
 def sub(sc, f, t_on, t_off, level, attack=1.0, release=2.0, pts=None, h2=-10.0, seed=0, stem='low', rev=None,
-        pitch=None):
+        pitch=None, shape=1.0):
     i_on = fs(t_on)
     hold = fs(t_off) - i_on
     n = hold + n_samples(release)
-    dyn = note_env(n, attack, hold, release)
+    dyn = note_env(n, attack, hold, release, shape)
     if pts:
         dyn = dyn * dbenv(pts, i_on, n)
     fc = pitch_curve(pitch, i_on, n, 0.3) if pitch else np.full(n, float(f))
@@ -580,18 +588,40 @@ def scene_supernova_to_lamps():
             if 'glass' in inst or inst == 'all':
                 if N(root) >= N('D4'):
                     q_glass(root, t0, step, -32.0, sd + 2, sustain=(i % 2 == 0), pan=-pn)
-    # ======== 112.833 (f2708): everyone lands on E — E3…E6 — the loudest moment, no brass ========
+    sub(sc, J['D1'], 107.0, 112.833, -27.0, attack=2.0, release=0.05, pts=[(107, -6), (112.5, 0)], seed=SEED + 3031)
+    # the stretto bed (everything in this scene) gives way 3–4 dB over its last seconds, so the E landing
+    # (scene_landing, not windowed) is an accent of its own instead of a wall the limiter flattens
+    sc.window(None, STRETTO_TRIM)
+    sc.cut(113.0)
+    return sc
+
+
+# v1.2 (review: the f2708 landing had no accent; the web limiter held −1 dBFS from 110.5 and took
+# ~4 dB at the landing): the bed gives way 1.5 → 2.5 dB over 111–112.4 and dips to −7 dB in the last
+# 80 ms (the breath before the shout); the landing is re-voiced denser and less peaky — plucks −3 dB
+# and strummed over 15 ms after the beat (never before it), strings +6 dB, sub +3 dB, tanh-shaved
+# at −10 dBFS — so it lands ≥ 3 dB above the preceding 0.5 s in both masters with the limiter at
+# ≲ 2 dB, and the climax still peaks ≈ +9 LU (short-term) over the film's integrated loudness.
+STRETTO_TRIM = [(107.0, 0.0), (109.0, -0.5), (111.0, -1.5), (112.4, -2.5), (112.75, -7.0)]
+LAND = dict(pluck=-21.0, strum=0.015, strings=-18.0, bells=-20.0, sub=-21.0, soft=-10.0)
+
+
+def scene_landing():
+    """112.833 (f2708): everyone lands on E (E3…E6), the loudest moment, no brass; cut at 113.000."""
+    sc = Scene('landing', 112.833, 113.0, tail=0.2)
     t_e = 112.833
     for k, nm in enumerate(('E3', 'E4', 'E5', 'E6')):
         for j in range(2):
-            pluck(sc, N(nm), t_e, -18.0, sec=1.0, seed=SEED + 3000 + 2 * k + j,
-                  pan=(-0.35 + 0.7 * j) * (0.4 + 0.2 * k), bright=0.85)
-        strings_note(sc, N(nm), t_e, 113.0, -24.0, attack=0.025, release=0.12, seed=SEED + 3010 + k, vib=True,
-                     cut_hi=4200, cut_lo=2600)
+            clip = I.ks_pluck(N(nm), 1.0, bright=0.85, seed=SEED + 3000 + 2 * k + j)
+            sc.add('plucks', clip, fs(t_e) + n_samples(LAND['strum'] * (2 * k + j) / 7), gain=db(LAND['pluck']),
+                   pan=(-0.35 + 0.7 * j) * (0.4 + 0.2 * k), rev={'room': 0.25, 'hall': 0.22})
+        strings_note(sc, N(nm), t_e, 113.0, LAND['strings'], attack=0.025, release=0.12, seed=SEED + 3010 + k,
+                     vib=True, cut_hi=4200, cut_lo=2600)
         if k >= 2:
-            bell(sc, N(nm), t_e, -20.0, sec=1.5, seed=SEED + 3020 + k, pan=0.3 - 0.6 * (k - 2))
-    sub(sc, N('E2'), t_e, 113.0, -24.0, attack=0.02, release=0.1, seed=SEED + 3030)
-    sub(sc, J['D1'], 107.0, 112.833, -27.0, attack=2.0, release=0.05, pts=[(107, -6), (112.5, 0)], seed=SEED + 3031)
+            bell(sc, N(nm), t_e, LAND['bells'], sec=1.5, seed=SEED + 3020 + k, pan=0.3 - 0.6 * (k - 2))
+    sub(sc, N('E2'), t_e, 113.0, LAND['sub'], attack=0.02, release=0.1, seed=SEED + 3030)
+    if LAND.get('soft') is not None:
+        sc.soft(('strings', 'plucks'), LAND['soft'])
     sc.cut(113.0)
     return sc
 
@@ -650,16 +680,24 @@ def scene_solo():
     key = np.zeros(n)
     ramp = n_samples(0.004)
     up = I.raised(ramp)
-    for a, b in [(113.0, 124.82)] + els + [(132.74 + 0.42, 136.0)]:
+    for a, b in [(113.0, 124.82)] + els:
         ia, ib = max(0, xs(a) - i_on), min(n, xs(b) - i_on)
         key[ia:ib] = 1.0
         if a > 113.0:
             key[ia:ia + ramp] = up
         if ib < n:
             key[ib - ramp:ib] = up[::-1]
-    ev = [(i_on, E5, 0)]
+    # after the last '?' (132.74) the unkeyed carrier comes back one Morse unit later as a slow swell
+    # (0.30 s, no click), already far away: held ≈ −61 dBFS in the web master (≈ −64 pre-normalisation,
+    # 13 dB under the last element), then the whole scene fades out (cosine, 134.3 → 135.000) under the
+    # receiver hiss, which now fades in from 132.7 (sfx #18) so the junction has no dead air.
+    T_RE, SWELL, TAIL_DB = 132.80, 0.30, -39.0
+    tail = np.zeros(n)
+    ia = xs(T_RE) - i_on
+    tail[ia:] = 10 ** (TAIL_DB / 20)
+    tail[ia:ia + n_samples(SWELL)] *= I.raised(n_samples(SWELL))
     f = np.full(n, E5)
-    y = asker_h(n, f, amp * key, harm, None, SEED + 113)
+    y = asker_h(n, f, amp * key + tail, harm, None, SEED + 113)
     clean_w = harm
     radio_w = 1 - harm
     yr = radio(y.astype(np.float64))
@@ -668,10 +706,22 @@ def scene_solo():
     # the solo violin: one player, bow noise −24 dB, vibrato; exits ∝ min(1, 10 000 km / d), gone by 125.5
     vd = np.minimum(1.0, 1e4 / dist_km(t)) * np.clip((125.5 - t) / 1.0, 0, 1) ** 1.5
     vd[:n_samples(0.004)] *= I.raised(n_samples(0.004))
-    vio = I.solo_violin(n, np.full(n, E5), vd, seed=SEED + 114)
+    # In true unison with the Asker: the violin plays the Asker's exact pitch curve (same E5, same slow
+    # drift, no player offset) and only adds its own vibrato (5 Hz, ±8 c), phase-aligned so the two
+    # reinforce. Before, the violin sat ~2.5 c flat and drifted on its own → a 0.95 Hz beat that swung
+    # the mix by 11 dB, a pseudo-heartbeat under card ③ (S27 must have none).
+    f_v = E5 * 2 ** (1.2 / 1200 * I.smooth_noise(n, 0.15, SEED + 113 + 1))     # = asker_h's drift
+    vio = I.solo_violin(n, f_v, vd, seed=SEED + 114, drift_cents=0.0, offset=False, phase0=VIO_PHASE,
+                        vib_rate=5.0, vib_depth=8.0)
     sc.add('strings', vio, i_on, gain=db(-32.0) * K_STR, rev={'hall': 0.3})
-    sc.cut(135.0, exact=False)
+    # in phase the unison is ~2.4 dB louder than the old beating pair averaged; give that back until the
+    # violin leaves (123–125), so S27 keeps its mp and the Morse (125+) keeps its written level
+    sc.window(('asker', 'strings'), [(113.0, -2.4), (123.0, -2.4), (125.0, 0.0)])
+    sc.window(None, [(134.3, 1.0), (135.0, 0.0)], linear=True)      # carrier and tails out by 135.000
     return sc
+
+
+VIO_PHASE = 0.8125   # saw start phase (cycles) of the S27 violin; chosen so its E5 sits in phase with the Asker
 
 
 def scene_golden():
@@ -686,13 +736,15 @@ def scene_golden():
 
 def scene_words():
     """M8: 164 𒀭 D6; 165 Dm(add9) (the first third: F); 166–168 celesta Q; 171–180 the many askers;
-    180 everything out but a bowed-glass A4; 184 all voices slide to E5 unison, fading; 189 silence."""
+    180 everything out but a bowed-glass A4; 184 all voices slide to E5 unison, fading; 189 silence.
+    v1.2: S36 now dissolves in (180.0–180.5), so the texture no longer stops on 180.000: the notes hold
+    to 180.5 and the whole scene (dry + hall) fades on the dissolve curve (inOutSine 180.0 → 180.5)."""
     sc = Scene('words', 161.0, 189.0, tail=0.3)
     bell(sc, N('D6'), 164.0, -40.0, sec=5.0, seed=SEED + 164, pan=-0.1, rev={'hall3': 0.4})
     # Dm(add9): D2–A2–F3–C4–E4, pp → mp (≈174) → pp, out on the 180.0 cut
     dm = [(165.0, -6), (168.0, -3), (174.0, 4), (178.0, 0), (179.9, -2)]
     for k, (nm, lv) in enumerate((('D2', -38.0), ('A2', -39.0), ('F3', -39.0), ('C4', -40.0), ('E4', -41.0))):
-        strings_note(sc, N(nm), 165.0, 180.0, lv, attack=3.0, release=0.03, seed=SEED + 165 + k, vib=True, pts=dm,
+        strings_note(sc, N(nm), 165.0, WORDS_OUT, lv, attack=3.0, release=0.03, seed=SEED + 165 + k, vib=True, pts=dm,
                      rev={'hall3': 0.35})
     # celesta Q 166/167/168 and the four legible lines
     for k, (nm, t) in enumerate((('D6', 166.0), ('A6', 167.0), ('E7', 168.0), ('E6', 174.75), ('A6', 176.75),
@@ -714,15 +766,18 @@ def scene_words():
                     evs.append((fs(tj), f0 * 2 ** (iv / 12), 0.09))
             t += 3 * step + r.uniform(0.6, 1.6) * step
         i_on = fs(t0)
-        n = fs(180.0) - i_on
+        n = fs(WORDS_OUT) - i_on
         fc = pitch_curve(evs, i_on, n, 0.09)
         dyn = note_env(n, 0.6, n - n_samples(0.03), 0.03) * rearticulate(n, i_on, [e[0] for e in evs[1:]], 0.5, 0.25)
         dyn *= dbenv([(t0, -4), (175.0, 0), (179.0, -2)], i_on, n)
         lv = -40.0 + 2.0 * (v % 3 == 0)
         sc.add('glass', I.glass_bowed(n, fc, dyn, seed=SEED + 1710 + v, pan=-0.6 + 1.2 * v / 7), i_on,
                gain=db(lv) * K_GLS, rev={'hall3': 0.45})
-    sc.cut(180.0, fade=1440)
+    sc.window(None, [(180.0, 1.0), (WORDS_OUT, 0.0)], linear=True)      # = the S35→S36 dissolve
     return sc
+
+
+WORDS_OUT = 180.5
 
 
 def scene_converge():
@@ -733,8 +788,12 @@ def scene_converge():
     n = fs(189.0) - i_on
     ev = [(i_on, N('A4'), 0), (fs(184.0), N('E5'), 3.6)]
     dyn = note_env(n, 1.2, n - n_samples(1.2), 1.2) * dbenv([(178.5, -2), (180.2, 0), (184.0, 0), (188.6, -14)], i_on, n)
+    # v1.2: hall3 send 0.4 → A4_SEND. A held sine sent hot into a 6 s hall cancels against its own wet
+    # field whenever the slow pitch walk crosses a null of the hall's fine phase response: R dipped
+    # 20 dB at 183.95, right on the S36→S37 dissolve. With the wet ~16 dB under the dry the worst
+    # case is ±2–3 dB (the 3 Hz tremolo itself is ±1.5 dB); overall RMS is unchanged (the dry dominates).
     sc.add('glass', I.glass_bowed(n, pitch_curve(ev, i_on, n), dyn, seed=SEED + 1800, pan=0.05), i_on,
-           gain=db(-39.0) * K_GLS, rev={'hall3': 0.4})
+           gain=db(-39.0) * K_GLS, rev={'hall3': A4_SEND})
     # 184: the others come back from where they were and converge on E5, fading
     for v, (st, dl) in enumerate((('D4', 0.0), ('B4', 0.3), ('E4', 0.5), ('A5', 0.8), ('D5', 1.0), ('G4', 1.3), ('E5', 1.5))):
         t0 = 184.0 + dl
@@ -744,8 +803,14 @@ def scene_converge():
         dyn = note_env(n, 1.5, n - n_samples(1.0), 1.0) * dbenv([(t0, -4), (186.0, 0), (188.6, -16)], i_on, n)
         sc.add('glass', I.glass_bowed(n, pitch_curve(ev, i_on, n), dyn, seed=SEED + 1810 + v, pan=-0.5 + v / 6),
                i_on, gain=db(-43.0) * K_GLS, rev={'hall3': 0.45})
-    sc.window(None, [(187.0, 0), (188.9, -100)])
+    # v1.2: the old dB-cosine window (187.0 → 188.9) had the cue below −80 dBFS by 187.75: ~0.85 s of
+    # dead air before the word-breath (188.5). Now the unison holds and fades linearly in amplitude
+    # 188.4 → 189.0, overlapping the breath's entry; near-silence (breath only) from 189.0.
+    sc.window(None, [(188.4, 1.0), (189.0, 0.0)], linear=True)
     return sc
+
+
+A4_SEND = 0.12
 
 
 def scene_answer():
@@ -823,9 +888,14 @@ def scene_question():
     for k, (nm, lv) in enumerate((('A1', -28.0), ('E2', -29.5))):      # the new ground: A1, E2 swell in 0.5 s
         strings_note(sc, N(nm), 216.0, 236.0, lv, attack=0.5, release=0.5, seed=SEED + 2160 + k, vib=True,
                      pts=fin, rev=H3)
-    # sub: D1 from 215.0 (gently), released over 6 frames at 216.0; A1 0.5 s in
+    # sub: D1 from 215.0 (gently), released over 6 frames at 216.0; A1 0.5 s in.
+    # v1.2: the A1 used `fin` (−6 dB at 216) and a plain raised-cosine attack, so the summed sub-bass fell
+    # ~12 dB at the D → A change and only recovered ~2 s later as the strings' hall built up. Now the A1
+    # comes in on a front-loaded 0.5 s attack (raised cosine ^0.3: crosses the D1's 6-frame release within
+    # −3 dB) a little above the D1's level, and eases back to `fin` while the strings' hall builds up,
+    # so the ground shifts under the melody but does not drop out.
     sub(sc, N('D1'), 215.0, 216.0, -27.0, attack=0.8, release=0.25, seed=SEED + 215)
-    sub(sc, N('A1'), 216.0, 236.0, -27.0, attack=0.5, release=0.5, pts=fin, seed=SEED + 216)
+    sub(sc, N('A1'), 216.0, 236.0, -27.0, attack=0.5, release=0.5, pts=A1_PTS, seed=SEED + 216, shape=0.3)
     # overtones E6, B6 (ppp) above the Asus2
     for k, nm in enumerate(('E6', 'B6')):
         glass_note(sc, N(nm), 217.0 + k, 236.0, -46.0 - 2 * k, attack=3.0, release=0.5, seed=SEED + 2170 + k,
@@ -859,13 +929,18 @@ def scene_question():
     dynb = note_env(nb, 1.5, nb - n_samples(0.5), 0.5) * dbenv(cpts, i_b, nb)
     bas = [np.full(nb, N('A3') * 2 ** (dsp.rng(j).uniform(-4, 4) / 1200)) for j in range(4)]
     sc.add('choir', I.choir_section(nb, bas, dynb, False, SEED + 2104, pan=0.35), i_b, gain=db(-33.0) * K_CH, rev=H3)
-    # ---------------- 229.0 glass bell A6 (−36 dB): the light on the road, the last time
-    bell(sc, 1760.0, 229.0, -36.0, sec=6.0, seed=SEED + 229, pan=0.1, rev={'hall3': 0.3, 'void': 0.3})
+    # ---------------- 229.0 glass bell A6: the light on the road, the last time. v1.2: −36 → BELL229_DB;
+    # at −36 it sat ~20 dB under the still-loud Asus2 and was masked on the title flash
+    bell(sc, 1760.0, 229.0, BELL229_DB, sec=6.0, seed=SEED + 229, pan=0.1, rev={'hall3': 0.3, 'void': 0.3})
     sc.window(None, [(208.0, 1.0), (233.5, 1.0), (236.2, 0.0)], linear=True)
     return sc
 
 
-SCENES = (scene_prologue, scene_bigbang, scene_druid, scene_supernova_to_lamps, scene_solo, scene_golden,
+A1_PTS = [(216.0, 1.5), (216.6, 1.5), (219.0, -5.0), (224.0, -3.0), (228.5, -3.5, 'lin'), (236.0, -26.0)]
+BELL229_DB = -28.0
+
+
+SCENES = (scene_prologue, scene_bigbang, scene_druid, scene_supernova_to_lamps, scene_landing, scene_solo, scene_golden,
           scene_words, scene_converge, scene_answer, scene_question)
 
 

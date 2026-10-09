@@ -97,10 +97,11 @@ export async function create(ctx) {
       U.dimRect.value.set(card.x0 * S, card.y0 * S, card.x1 * S, card.y1 * S);
       U.dimAmt.value = 1 - 0.5 * cardA;
       // the pull-back sweeps the HDR limb / dawn crescent and the stars through the card: inside the box
-      // (90 px feather) the globe is soft-limited to HDR 0.06 and the stars × 0.25, led in a little
+      // (90 px feather) the globe is soft-limited to HDR 0.015 and the stars × 0.08 (at 0.06 / 0.25 the limb
+      // still read as a grey line through 'Still' and stars survived inside the line), led in a little
       // ahead of the card's own fade so the text never appears over a bright arc
       U.dimHi.value = smoothstep(223.8, 224.5, t) * (1 - smoothstep(226.9, 227.6, t));
-      U.dimCap.value = 0.06; U.dimStar.value = 0.25;
+      U.dimCap.value = 0.015; U.dimStar.value = 0.08;
       // ---- merge: the planet and its question fade into one warm-white point at R
       const m = smoothstep(T_MERGE - 0.3, T_MERGE + 0.15, t);
       U.lightsGain.value *= 1 - m; U.dayGain.value *= 1 - m; U.moonGain.value *= 1 - m; U.atmoGain.value *= 1 - m; U.airglowGain.value *= 1 - m;
