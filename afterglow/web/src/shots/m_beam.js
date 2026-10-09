@@ -101,7 +101,8 @@ export async function create(ctx) {
       vec2 nu = (px - uNebP.xy) / uNebP.zw;
       if (nu.x > 0.0 && nu.x < 1.0 && nu.y > 0.0 && nu.y < 1.0) {
         vec2 n = texture2D(uNeb, vec2(nu.x, 1.0 - nu.y)).rg;
-        col += mix(uIron, uOIII, n.g) * n.r * 0.085;
+        float fe = smoothstep(0.0, 0.15, nu.x) * smoothstep(1.0, 0.85, nu.x) * smoothstep(0.0, 0.2, nu.y) * smoothstep(1.0, 0.8, nu.y);
+        col += mix(uIron, uOIII, n.g) * n.r * fe * 0.12;
       }
       gl_FragColor = vec4(col, a);
     }`, bgU, { blending: THREE.CustomBlending, transparent: true });
@@ -112,7 +113,7 @@ export async function create(ctx) {
     uRes: bgU.uRes, uS: bgU.uS, uR: { value: new THREE.Vector2(RX, RY) }, uU: { value: u.clone() },
     uDR: { value: DR }, uCz: { value: 0 }, uDxy: { value: Dxy }, uDz: { value: Dz }, uF: { value: F }, uWB: { value: WB },
     uT: { value: 0 }, uHead: { value: 3000 }, uBits: { value: bitTex }, uSEntry: { value: sEntry },
-    uCol: { value: new THREE.Vector3(1.0, 0.80, 0.56) }, uNeb: { value: nebTex }, uNebP: bgU.uNebP, uScratch: { value: 0 },
+    uCol: { value: new THREE.Vector3(1.0, 0.47, 0.17) }, uNeb: { value: nebTex }, uNebP: bgU.uNebP, uScratch: { value: 0 },
     uSNeb: { value: S_NEB },
   };
   const beam = kit.fullscreen(/* glsl */ `
@@ -131,27 +132,39 @@ export async function create(ctx) {
         float sg = max(sig, 0.75), flux = min(sig / 0.75, 1.0);
         float headF = smoothstep(uHead, uHead * 0.78, s);     // the front, softly
         float prof = exp(-0.5 * dp * dp / (sg * sg));
-        float I = 2.6 * flux * headF;
-        col += uCol * I * prof;
-        col += vec3(1.0, 0.72, 0.45) * I * 0.05 * exp(-dp / (4.0 * sg));   // soft skirt
-        // ② particles flowing outwards: one every 9 units, 60 units/s; bright where the bit is 1
-        float sp = 9.0, flow = s - 60.0 * uT;
-        float k = floor(flow / sp + 0.5), fr = flow - k * sp;
-        float bit = texelFetch(uBits, ivec2(int(mod(k, 1679.0)), 0), 0).r;
-        float along = fr / (sp * 0.3);
+        // ② the flow inside the core: the 1679 Arecibo bits, one every SP units, travelling outwards at
+        // V units/s (≈ 300 px/s at R). Each bit is a soft Gaussian bead (σ 0.45·SP), so runs of 1s merge
+        // into bright packets and runs of 0s into gaps: the core's brightness breathes ±25 % with the
+        // message. The rhythm fades out where a bit shrinks below ~4 px (no aliasing towards the head).
+        float sp = 45.0, flow = s - 515.0 * uT;
+        float kc = floor(flow / sp + 0.5), m = 0.0;
+        for (int j = -1; j <= 1; j++) {
+          float k = kc + float(j), x = (flow - k * sp) / (0.45 * sp);
+          m += texelFetch(uBits, ivec2(int(mod(k + 1679.0 * 64.0, 1679.0)), 0), 0).r * exp(-0.5 * x * x);
+        }
+        m = min(m, 1.0);
         float ds = (uF * uDxy * (uDR + uCz)) / (depth * depth);             // px per unit along the beam
-        // the beads are a little wider than the core, so their rhythm reads in the glow around it
-        float pl = exp(-0.5 * along * along) * exp(-0.5 * dp * dp / (sg * sg * 1.7));
-        col += vec3(1.0, 0.86, 0.66) * pl * mix(0.04, 1.0, bit) * 0.8 * flux * headF * smoothstep(0.6, 2.0, sp * ds);
+        float vis = smoothstep(2.5, 6.0, sp * ds);
+        float mod1 = 1.0 + 0.25 * (2.0 * m - 1.0) * vis;
+        // the core: a warm (AMBER) thread, HDR ≈ 1.3 (±25 %) — below the ACES shoulder, never a white plateau
+        float I = 1.3 * flux * headF;
+        col += uCol * I * prof * mod1;
+        // a thin sheath (σ × 2.4) carries the same rhythm more strongly, so the flow reads in the air
+        // around the thread without fattening it
+        float sh = exp(-0.5 * dp * dp / (sg * sg * 5.76));
+        col += vec3(1.0, 0.52, 0.22) * I * 0.08 * sh * (1.0 + 0.6 * (2.0 * m - 1.0) * vis);
+        col += vec3(1.0, 0.60, 0.32) * I * 0.025 * exp(-dp / (4.0 * sg));  // soft skirt
         // ① the air around the root: closed-form single scattering of a line source (≈ 1/√(d₃² + r₀²))
         float rho = exp(-(s - uSEntry + 260.0) / 240.0);
         float d3 = dp * depth / uF, r0 = 3.0;
-        col += vec3(1.0, 0.66, 0.38) * 0.9 * rho * r0 / sqrt(d3 * d3 + r0 * r0) * smoothstep(-40.0, 0.0, -dp + 400.0);
-        // ③ the warm scratch the head leaves in the cold nebula
+        col += vec3(1.0, 0.60, 0.30) * 0.30 * rho * r0 / sqrt(d3 * d3 + r0 * r0) * smoothstep(-40.0, 0.0, -dp + 400.0);
+        // ③ the warm scratch the head leaves in the cold nebula: the nebula's own density, lit by the
+        // beam where it crosses it — a flare as the head passes (≈119.0), settling to a lasting trace
         vec2 nu = (px - uNebP.xy) / uNebP.zw;
         if (uScratch > 0.0 && nu.x > 0.0 && nu.x < 1.0 && nu.y > 0.0 && nu.y < 1.0 && s < uHead) {
           float n = texture2D(uNeb, vec2(nu.x, 1.0 - nu.y)).r;
-          col += vec3(1.0, 0.62, 0.32) * n * uScratch * (exp(-dp / 2.5) * 1.2 + exp(-dp / 12.0) * 0.5);
+          n *= smoothstep(0.0, 0.15, nu.x) * smoothstep(1.0, 0.85, nu.x) * smoothstep(0.0, 0.2, nu.y) * smoothstep(1.0, 0.8, nu.y);
+          col += vec3(1.0, 0.55, 0.24) * n * uScratch * (exp(-dp / 2.0) * 2.4 + exp(-dp / 9.0) * 0.9 + exp(-dp / 30.0) * 0.2);
         }
       }
       gl_FragColor = vec4(col, 1.0);
@@ -167,13 +180,14 @@ export async function create(ctx) {
       beamU.uT.value = lt;
       beamU.uCz.value = 0.05 * DR * util.clamp(lt / 10, 0, 1.2);
       beamU.uHead.value = head(f.t);
-      beamU.uScratch.value = util.smoothstep(118.6, 119.6, f.t);
+      // the scratch: flares as the head crosses the nebula (≈ 119.0), holds ~2 s, settles to a trace
+      beamU.uScratch.value = util.smoothstep(118.6, 119.3, f.t) * (0.35 + 0.65 * Math.exp(-Math.max(0, f.t - 120.3) / 1.2));
       beam.render(renderer, f.target);
       renderer.autoClear = ac;
       renderer.setRenderTarget(f.target);
     },
     post(shot, f) {
-      return { bloom: 0.8, bloomThreshold: 1.0, streak: 0.06, streakTint: [1.0, 0.8, 0.6], vignette: 0.24, grain: 0.035 };
+      return { bloom: 0.35, bloomThreshold: 0.9, streak: 0.04, streakTint: [1.0, 0.8, 0.6], vignette: 0.24, grain: 0.035 };
     },
   };
 }

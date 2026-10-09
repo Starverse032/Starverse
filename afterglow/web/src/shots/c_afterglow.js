@@ -249,18 +249,22 @@ export async function create(ctx) {
     const u = clamp((t - T_FIELD) / (T_END - T_FIELD));
     const yaw = THREE.MathUtils.degToRad(8 * u), roll = THREE.MathUtils.degToRad(1.5 * u);
     // temperature: 6500 K at f616 → 4500 K at 27.0 → 3000 K at 31 → 1500 K at 34 → 1200 K
+    // (the 31.0 kink of log T, −0.10/s → −0.23/s, is blended C1 over 30.5–31.5 like the exposure below;
+    // the window is symmetric, so T is exactly the piecewise curve outside it: 3000 K at 31, 1500 K at 34)
+    const ssI = u => (u <= 0 ? 0 : u < 1 ? u * u * u - 0.5 * u * u * u * u : u - 0.5);
     let T;
     if (t < T_FIELD) T = logLerp(6500, 4500, smoothstep(16, 48, fr));
-    else if (t < 31) T = logLerp(4500, 3000, (t - 27) / 4);
-    else if (t < 34) T = logLerp(3000, 1500, (t - 31) / 3);
+    else if (t < 34) {
+      const ka = Math.log(3000 / 4500) / 4, kb = Math.log(1500 / 3000) / 3;
+      T = 4500 * Math.exp(ka * (t - 27) + (kb - ka) * ssI(t - 30.5));
+    }
     else T = logLerp(1500, 1200, clamp(t - 34));
     // exposure: 0 EV (27) → −1 EV (31) → −7 EV (35); final roll-off so that 35.0 is black
     // The slope −0.25 EV/s (27–31) blends into −1.5 EV/s (31–35) with a smoothstep over 30.6–31.6
     // (C1, no sudden speed-up of the fade at 31.0): ev = a·(t−27) + (b−a)·w·∫smoothstep, closed form.
     // ev(31) ≈ −1.06, ev(35) ≈ −6.9, then the roll-off below makes 35.0 black.
-    const ssInt = u => (u <= 0 ? 0 : u < 1 ? u * u * u - 0.5 * u * u * u * u : u - 0.5);
     const tt = clamp(t - 27, 0, 8);
-    const ev = -0.25 * tt - 1.25 * ssInt((27 + tt - 30.6) / 1.0);
+    const ev = -0.25 * tt - 1.25 * ssI((27 + tt - 30.6) / 1.0);
     const L0 = 1.1;
     let gain = L0 * Math.pow(2, ev) * (1 - smoothstep(34.2, 34.96, t));
     // while white: the field is exposed to the white's own luminance (OPEN_GAIN, no overshoot) and

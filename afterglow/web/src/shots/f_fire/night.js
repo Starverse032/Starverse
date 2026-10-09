@@ -625,20 +625,28 @@ export function createNight(ctx) {
       float glow = exp(-length(d) / 5.0) * 0.045 + exp(-length(d) / 18.0) * 0.009;
       gl_FragColor = vec4(uCol * uI * (core + glow) + vec3(0.25, 0.18, 0.08) * uI * core * core, 1.0);
     }`, { uCol: { value: new THREE.Vector3(...C_FIRE17) }, uI: { value: 5 }, uR: { value: new THREE.Vector2(RX, RY) } });
-  const smokeSpr = sprite(560, 90, 1060, 548, /* glsl */ `
+  // the wisp of smoke: a thin ribbon rising from the fire at R into the Milky Way, leaning a little to
+  // the right in the upper air and meandering slowly; warm where the flame lights it (first ~40 px),
+  // a faint cool grey above (lit by the sky), thinning as it spreads; it also dims what is behind it
+  const smokeSpr = sprite(600, 70, 940, 548, /* glsl */ `
     uniform float uT; uniform sampler2D uNoise; uniform vec3 uFire; uniform vec2 uR;
     void main(){
       float h = uR.y - vPx.y;                                    // px above the fire
       if (h < -2.0) discard;
-      float xc = uR.x + 0.00055 * h * h + 7.0 * sin(h * 0.011 - uT * 0.25) * smoothstep(20.0, 160.0, h);
-      float wd = 2.2 + 0.085 * h + 0.00012 * h * h;
+      float sway = 11.0 * sin(h * 0.011 - uT * 0.30) * smoothstep(20.0, 180.0, h)
+                 + 3.0 * sin(h * 0.031 - uT * 0.55 + 1.3) * smoothstep(5.0, 60.0, h);
+      float xc = uR.x + 0.00055 * h * h + sway;
+      float wd = 1.8 + 0.075 * h + 0.00012 * h * h;
       float xn = (vPx.x - xc) / wd;
-      vec2 q = vec2(xn * 0.09 + h * 0.0011, h * 0.0045 - uT * 0.028);
-      vec3 n1 = texture2D(uNoise, q).rgb, n2 = texture2D(uNoise, q * 2.7 + (n1.rg - 0.5) * 0.12 + vec2(0.0, -uT * 0.03)).rgb;
-      float body = exp(-xn * xn * (1.4 + 0.8 * n1.r));
-      float dens = body * smoothstep(0.25, 0.75, n1.g * 0.8 + n2.b * 0.5) * smoothstep(-2.0, 10.0, h) * exp(-h / 210.0);
-      float a = clamp(dens * 0.36, 0.0, 0.5);
-      vec3 emi = uFire * 0.10 * exp(-h / 18.0) * dens + vec3(0.0036, 0.0040, 0.0052) * dens;
+      vec2 q = vec2(xn * 0.05 + h * 0.0013, h * 0.0042 - uT * 0.03);
+      vec3 n1 = texture2D(uNoise, q).rgb, n2 = texture2D(uNoise, q * 2.7 + (n1.rg - 0.5) * 0.12 + vec2(0.0, -uT * 0.025)).rgb;
+      float body = exp(-xn * xn * (1.6 + 0.8 * n1.r));
+      float brk = smoothstep(0.2, 0.7, n1.g * 0.8 + n2.b * 0.5);
+      float dens = body * mix(0.12, 1.0, brk) * smoothstep(-2.0, 6.0, h) * smoothstep(470.0, 280.0, h)
+                 * clamp(9.0 / (wd + 6.0), 0.0, 1.0);
+      float a = clamp(dens * 0.5, 0.0, 0.35);
+      vec3 emi = uFire * (0.30 * exp(-h / 14.0) + 0.030 * exp(-h / 45.0)) * dens
+               + vec3(0.0240, 0.0275, 0.0340) * dens * smoothstep(10.0, 90.0, h);
       gl_FragColor = vec4(emi, a);
     }`, { uT: { value: 0 }, uNoise: { value: noiseTex }, uFire: { value: new THREE.Vector3(...C_FIRE17) }, uR: { value: new THREE.Vector2(RX, RY) } }, 'over');
   const guestSpr = sprite(G17[0] - 260, G17[1] - 260, G17[0] + 260, G17[1] + 260, /* glsl */ `
@@ -670,9 +678,13 @@ export function createNight(ctx) {
   function renderS16(t, f) {
     const p = setCam16(t);
     setHand(hand, breath(util, t, { px: 1.5, deg: 0.15, hz: 0.3, seed: 15 }));
-    const gain = 0.6 + 0.4 * ss(0.08, 0.7, p.e);
-    const invDF = (1 / FD) * (1 - ss(0.12, 0.6, p.e));         // focus pull: fire → infinity
+    // the sky must already be there when the ridge crosses the frame (pitch +8° → +20°, e ≈ 0.2–0.37):
+    // the focus pull (fire → infinity) lands by e ≈ 0.26 and the sky gain is ≥ 85 % by then, so the
+    // ridge silhouettes against stars instead of against black
+    const gain = 0.75 + 0.25 * ss(0.0, 0.5, p.e);
+    const invDF = (1 / FD) * (1 - ss(0.04, 0.26, p.e));         // focus pull: fire → infinity
     setSky(cam16, M16, gain, 2.2);
+    stars.uniforms.uFieldLow.value = 2.6;                       // stars down to the ridge (see sky.js)
     skyPass.render(renderer, f.target);
     stars.uniforms.uCoc.value = Math.min(6, COCK * invDF);
     renderer.setRenderTarget(f.target); renderer.render(starScene, cam16);
@@ -699,6 +711,7 @@ export function createNight(ctx) {
   function renderS17(t, f) {
     setHand(hand, breath(util, t, { px: 0.5, deg: 0.05, hz: 0.3, seed: 17, zeroAt: 95.25 }));
     setSky(cam17, M17, 1.0, 1.9);
+    stars.uniforms.uFieldLow.value = 1.0;
     skyPass.render(renderer, f.target);
     stars.uniforms.uCoc.value = 0;
     renderer.setRenderTarget(f.target); renderer.render(starScene, cam17);

@@ -645,13 +645,16 @@ export function createMacro(ctx) {
   const G = 4.9, KD = 3.2, SHUT = 0.5 / 24;
   const SP = [-0.050, 0.092, 0.024];                   // flint strike point (above the band, left)
   const sparks = [];
+  // sync: the flint sound is sample-synced to t0 (71.5 / 72.5 / 73.5 = f1716 / f1740 / f1764). The strike
+  // point is above the frame, and a spark needs ≈ 40 ms to fly into the band, so the spray is released
+  // 28–40 ms before t0: its first visible pixels land on the strike frame itself, with the sound
   const strike = (t0, n, seed, landers, gain = 1) => {
     const r = util.rng(seed);
     for (let i = 0; i < n; i++) {
       const sp = 0.25 + Math.pow(r(), 0.7) * 0.75;
       const d = [0.25 + 0.75 * r(), -0.95 + 0.9 * r(), -0.45 + 0.9 * r()];
       const L = Math.hypot(...d);
-      sparks.push({ p0: SP.map((x, j) => x + (r() - 0.5) * 0.006), v0: d.map(x => x / L * sp), tb: t0 + r() * 0.03, life: (6 + r() * 4) / 24, kind: 0, seed: r(), I0: gain * (34 + 60 * Math.pow(r(), 1.5)), T0: 2700 + 700 * r() });
+      sparks.push({ p0: SP.map((x, j) => x + (r() - 0.5) * 0.006), v0: d.map(x => x / L * sp), tb: t0 - 0.040 + r() * 0.012, life: (6 + r() * 4) / 24, kind: 0, seed: r(), I0: gain * (34 + 60 * Math.pow(r(), 1.5)), T0: 2700 + 700 * r() });
     }
     for (let i = 0; i < landers; i++) {            // aimed into the tinder: they end in the ember
       const tl = 0.16 + 0.03 * i;

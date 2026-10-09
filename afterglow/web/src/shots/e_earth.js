@@ -14,11 +14,12 @@
 //       come from a nested pair of HDR night maps (nightmap.js: the wide map + a 0.8 km/texel East
 //       Africa map with 3× finer sprawl) through a soft film knee (no bloom balls), and a soft radial
 //       Nairobi patch (park, district mottling) for the first, lowest seconds.
-//  S19–S22A  4096² regional detail patches (shots/e_earth/patches.js): Nile delta lotus (4600 farm
-//       villages), the Gulf of Naples necklace (dark Vesuvius), Paris (district street grids, ring,
-//       arterials, the Seine), the Rhine–Ruhr/Benelux highway web, and two squid-fishing fleet lanes
-//       off Korea composed to cross the frame over a moonlit, wind-slicked sea. Every patch is
-//       mip-mapped and footprint-blended, so nothing shimmers at 14–36 frames per cut.
+//  S19–S22A  4096² regional detail patches (shots/e_earth/patches.js): Nile delta lotus (north up;
+//       villages as point lights strung along the branches and canals), the Gulf of Naples necklace
+//       (dark Vesuvius), Paris (warped Voronoi street mesh, ring, arterials, the Seine as a soft dark
+//       band), the Rhine–Ruhr/Benelux highway web, and two squid-fishing fleet lanes off Korea composed
+//       to cross the frame — sodium FISHING lamps on a black sea. Every patch is mip-mapped and
+//       footprint-blended, so nothing shimmers at 14–36 frames per cut.
 import * as THREE from 'three';
 import { createEarth } from '../lib/earth.js';
 import { ease, clamp, lerp, smoothstep } from '../lib/util.js';
@@ -122,8 +123,10 @@ export async function create(ctx) {
     return G.dirLonLat(p);
   };
   const MONTAGE = {
-    // S19 Nile delta: vertical, north pointing right-up so the lotus opens across the 2.39 frame; drifting east
-    S19: lt => { const [lon, lat] = drift(31.0, 30.85, 7 * lt, 0); return { pose: groundCam({ lon, lat, altKm: 720, focal: 85, upAz: -80 }), patch: 'delta' }; },
+    // S19 Nile delta: vertical, north UP (polish note 3) — the lotus: Cairo and the stem at the bottom of
+    // the band, the fan of lit branches opening upward to the coast at the top; 1050 km so the whole
+    // 160 km apex-to-coast height fits the 804 px band; drifting east
+    S19: lt => { const [lon, lat] = drift(31.05, 30.72, 7 * lt, 0); return { pose: groundCam({ lon, lat, altKm: 1050, focal: 85, upAz: 0 }), patch: 'delta' }; },
     // S20 Gulf of Naples necklace: oblique, looking NW across the bay, drifting back along the coast
     S20: lt => { const [lon, lat] = drift(14.30, 40.80, -3.2 * lt, 1.4 * lt); return { pose: groundCam({ lon, lat, altKm: 260, focal: 85, tilt: 40, heading: 340 }), patch: 'naples' }; },
     // S21 Paris: 135 mm vertical; radial arterials, LED core, sodium rings
@@ -198,13 +201,16 @@ export async function create(ctx) {
         // local midnight under every montage camera (sun at the antipode of its sub-point)
         U.sunDir.value.copy(pose.pos).normalize().negate();
         U.moonDir.value.copy(shot.id === 'S22A' ? fishMoon : G.lonLatDir(-60, 10));
-        U.moonGain.value = shot.id === 'S22A' ? 0.35 : 0.12; U.nightLand.value = 0.008;
+        U.moonGain.value = 0.12; U.nightLand.value = 0.008;
         // no clouds: a 10 km/texel cloud map magnified 50–100× only reads as murk at these altitudes
         U.cloudsGain.value = 0.0;
-        if (shot.id === 'S22A') { U.glintExp.value = 260; U.glintBroad.value = 0.04; U.moonGain.value = 0.11; U.glintSlick.value = 1; }
+        // S22A (polish note 1): sodium on a BLACK sea — the moonlit, wind-slicked sea read ~5× brighter than
+        // its neighbours; moonlight cut by 4 stops (only a faint smooth sheen survives), no slick texture
+        if (shot.id === 'S22A') { U.glintExp.value = 260; U.glintBroad.value = 0.04; U.moonGain.value = 0.11 / 16; U.glintSlick.value = 0; }
         U.glowGain.value = 0.06;
         U.airglowGain.value = 0.4;
-        U.lightsKnee.value = shot.id === 'S22A' ? 8.0 : 3.0;   // the montage keeps its highlights (boats blaze)
+        // the montage keeps its highlights; S22A's boats are knee'd low so the cores stay FISHING yellow (no white clip)
+        U.lightsKnee.value = shot.id === 'S22A' ? 2.0 : 3.0;
       }
       globe.setPose(pose);
       G.applyPose(cam, pose);
@@ -215,7 +221,7 @@ export async function create(ctx) {
     post(shot, f) {
       if (shot.id === 'S14') return { streak: 0.18, bloom: 0.7, vignette: 0.24 };
       if (shot.id === 'S18') return { streak: 0.05, bloom: 0.55, vignette: 0.22 };
-      return { streak: 0.08, bloom: 0.85, vignette: 0.24, contrast: 1.04, exposure: shot.id === 'S19' ? 1.15 : 1.0 };
+      return { streak: 0.08, bloom: 0.85, vignette: 0.24, contrast: 1.04, exposure: shot.id === 'S19' ? 1.5 : 1.0 };   // S19: the point-light delta carries less flux than the old blobs
     },
     _debug: { birth, s14 },
   };

@@ -170,7 +170,7 @@ export function makeStars(ctx, galTex, { count = 420000, seed = 1616 } = {}) {
   g.setAttribute('temp', new THREE.BufferAttribute(temp, 1));
   g.setAttribute('cls', new THREE.BufferAttribute(cls, 2));
   const uniforms = {
-    uDens: { value: 0.02 },
+    uDens: { value: 0.02 }, uFieldLow: { value: 1.0 },
     uGal: { value: galTex }, uL: { value: L_SPAN }, uB: { value: B_SPAN }, uS: { value: H / 1080 },
     uGain: { value: 1 }, uCoc: { value: 0 }, uExt: { value: 0.25 },
     uHand: { value: new THREE.Vector4(0, 0, 1, 0) }, uHandC: { value: new THREE.Vector2(734.5, 540.5) },
@@ -178,7 +178,7 @@ export function makeStars(ctx, galTex, { count = 420000, seed = 1616 } = {}) {
   const mat = new THREE.ShaderMaterial({
     uniforms, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
     vertexShader: GLSL.common + HAND_GLSL + SKY_GLSL + /* glsl */ `
-      attribute float lum, temp; attribute vec2 cls; uniform sampler2D uGal; uniform float uL, uB, uS, uGain, uCoc, uExt, uDens;
+      attribute float lum, temp; attribute vec2 cls; uniform sampler2D uGal; uniform float uL, uB, uS, uGain, uCoc, uExt, uDens, uFieldLow;
       varying vec3 vCol; varying float vSig, vRad, vI, vSize;
       void main(){
         vec3 g = normalize(position);
@@ -196,6 +196,8 @@ export function makeStars(ctx, galTex, { count = 420000, seed = 1616 } = {}) {
         float el = asin(clamp(wd.y, -1.0, 1.0));
         vec3 ext = el < -0.01 ? vec3(0.0) : extinction(el, uExt);
         gl_Position = handClip(projectionMatrix * modelViewMatrix * vec4(position, 1.0));
+        // uFieldLow (S16): field stars low in the sky keep their density against the extinction
+        if (cls.x < 0.5) boost *= mix(uFieldLow, 1.0, smoothstep(0.17, 0.61, el));
         float L = lum * tr * uGain * boost;
         float sig = (0.62 + 0.28 * clamp(log2(1.0 + L), 0.0, 4.0)) * uS;
         float R = uCoc * uS;

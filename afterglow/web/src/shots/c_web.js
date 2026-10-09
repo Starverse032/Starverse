@@ -35,7 +35,7 @@ import { getWeb, sampleWebPoints, applyWebPose, webPathPose, WEB } from './_webg
 import { ignition, PROP, T_FIRST } from './c_web/ignition.js';
 
 const T10 = 43.0, T11 = 52.0, FPS = 24;
-const G_END = 44.5;                               // end of the post-cut catch-up of the web (see gateT)
+const T_FULL = 47.0;                              // the web is fully lit (screenplay: 47.0 全亮)
 const FPX = 960 / (18 / WEB.focalMM);             // 24 mm focal length in 1080p px (36 mm gauge) = 1280
 const N_DUST = 640000, N_GAS = 24000;
 const srgb = c => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
@@ -61,10 +61,14 @@ export async function create(ctx) {
   const heroEdge = e => heroSet.has(edges[2 * e]) && heroSet.has(edges[2 * e + 1]);
   // The cut S09 → S10 continues one process: at 43.0 only the ~66 point stars that S09 has lit are
   // visible. Everything a lit node grows (its clump, cluster, halo and the ionisation fronts along its
-  // filaments) starts after the cut: node times before G_END are remapped monotonically from
-  // [37, G_END] onto [43, G_END] (gateT), so the web visibly lights up from the first star outwards
-  // over 43–47 while new stars keep igniting on the law. Star sprites keep their true ignition times.
-  const gateT = tt => (tt < G_END ? T10 + (tt - T_FIRST) * (G_END - T10) / (G_END - T_FIRST) : tt);
+  // filaments) starts after the cut: node times are remapped monotonically from [37, tMax] onto
+  // [43, T_FULL − PROP] by a pure quadratic (gateT), so the web lights up from the first star outwards
+  // over 43–47 at an even, accelerating pace (lit nodes ≈ 4 · 17 · 72 · 260 · 820 · 2300 · all 4981 at
+  // 43.5 … 46.5) — no burst (a linear remap onto 43–44.5 squeezed ranks 65–513 into 0.3 s at 44.3).
+  // New stars keep igniting on the law: star sprites keep their true ignition times.
+  let tMax = T_FIRST; for (let i = 0; i < N; i++) tMax = Math.max(tMax, I.tIgn[i]);
+  const GB = (T_FULL - PROP - T10) / ((tMax - T_FIRST) * (tMax - T_FIRST));
+  const gateT = tt => T10 + GB * (tt - T_FIRST) * (tt - T_FIRST);
   const edgeLit = (e, u) => {
     const a = edges[2 * e], b = edges[2 * e + 1];
     return Math.min(gateT(I.tIgn[a]) + PROP * u, gateT(I.tIgn[b]) + PROP * (1 - u));
@@ -122,7 +126,7 @@ export async function create(ctx) {
   gD.setAttribute('aD', new THREE.BufferAttribute(dA, 4));
   const common = {
     uT: { value: 0 }, uS: { value: S }, uFpx: { value: FPX * S }, uGain: { value: 1 },
-    uCollapse: { value: 0 }, uFirst: { value: FIRST }, uFocus: { value: 24 }, uSub: { value: 1 }, uFadeD: { value: new THREE.Vector2(5, 12) }, uFadeS: { value: new THREE.Vector2(24, 64) }, uFadeH: { value: new THREE.Vector2(5, 12) }, uFadeHS: { value: new THREE.Vector2(8, 18) }, uVPa: { value: new THREE.Matrix4() }, uVPb: { value: new THREE.Matrix4() },
+    uCollapse: { value: 0 }, uFirst: { value: FIRST }, uFocus: { value: 24 }, uSub: { value: 1 }, uFadeD: { value: new THREE.Vector2(5, 12) }, uFadeS: { value: new THREE.Vector2(6, 16) }, uFadeH: { value: new THREE.Vector2(5, 12) }, uFadeHS: { value: new THREE.Vector2(8, 18) }, uVPa: { value: new THREE.Matrix4() }, uVPb: { value: new THREE.Matrix4() },
   };
   const dustMat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
@@ -165,9 +169,9 @@ export async function create(ctx) {
         // warp-speed streak; the knot slides off the right third and thins out
         vec2 fd = aD.w > 1.5 ? uFadeH : uFadeD;
         I *= 1.0 - smoothstep(fd.x, fd.y, len / uSub);
-        // …and what remains is drawn with a short capsule (≤ 6 px per frame's shutter, as with a faster
-        // shutter): the knot stays a knot of sharp points while it fades
-        float capD = 6.0 * uSub;
+        // …and what remains is drawn with a very short capsule (≤ 3 px over the shutter, as with a faster
+        // shutter): the knot stays a knot of sharp points while it fades — dots, not radial dashes
+        float capD = 3.0 * uSub;
         if (len > capD) { seg *= capD / len; len = capD; }
         I *= 6.2832 * vSig * vSig / (6.2832 * vSig * vSig + len * 2.5066 * vSig);
         vSeg = seg;
@@ -237,11 +241,13 @@ export async function create(ctx) {
         vec4 ca = uVPa * vec4(position, 1.0), cb = uVPb * vec4(position, 1.0);
         vec2 seg = (ca.w > 0.05 && cb.w > 0.05) ? (cb.xy / cb.w - ca.xy / ca.w) * vec2(960.0, 540.0) : vec2(0.0);
         float len = length(seg);
-        // node stars whipping past the lens fade (24–64 px over the shutter; the hero node's star with
-        // its cluster, 8–18 px) and their capsule is capped at 24 px: never a hyperspace line
+        // node stars whipping past the lens fade (6–16 px over the shutter ≈ 12–32 px/frame; the hero
+        // node's star with its cluster, 8–18 px) and their capsule is capped at 12 px (the hero node's
+        // star 6 px: a bright knot sliding off the right third, not a dash): never a hyperspace line,
+        // no stray bright dashes after the graze
         vec2 fs = aS.w > 1.5 ? uFadeHS : uFadeS;           // the hero node's star fades with its cluster
         vI *= 1.0 - smoothstep(fs.x, fs.y, len / uSub);
-        float cap = 24.0 * uSub;
+        float cap = (aS.w > 1.5 ? 6.0 : 12.0) * uSub;
         if (len > cap) { vI *= cap / len; seg *= cap / len; len = cap; }
         vI *= 4.54 / (4.54 + len * 2.13);                   // core energy 2πσ² vs. capsule (σ 0.85)
         vSeg = seg;
@@ -300,7 +306,7 @@ export async function create(ctx) {
   gR.setIndex(new THREE.BufferAttribute(rbIdx, 1));
   const ribbonMat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
-    uniforms: { ...common, uCol: { value: PAL.HAZE.clone().lerp(PAL.VIOLET, 0.5) }, uHot: { value: PAL.STAR.clone().lerp(PAL.VIOLET, 0.35) }, uProp: { value: PROP }, uT10: { value: T10 }, uTFirst: { value: T_FIRST }, uGEnd: { value: G_END } },
+    uniforms: { ...common, uCol: { value: PAL.HAZE.clone().lerp(PAL.VIOLET, 0.5) }, uHot: { value: PAL.STAR.clone().lerp(PAL.VIOLET, 0.35) }, uProp: { value: PROP }, uT10: { value: T10 }, uTFirst: { value: T_FIRST }, uGB: { value: GB } },
     vertexShader: GLSL.common + /* glsl */ `
       attribute vec3 aB; attribute vec4 aC; attribute vec2 aT;
       uniform float uT, uGain, uProp;
@@ -318,12 +324,12 @@ export async function create(ctx) {
         vU = aC.x; vS = aC.y; vA = aC.w * uGain; vD = -P.z; vL = length(dir); vTimes = aT;
       }`,
     fragmentShader: GLSL.common + /* glsl */ `
-      uniform float uT, uProp, uT10, uTFirst, uGEnd; uniform vec3 uCol, uHot;
+      uniform float uT, uProp, uT10, uTFirst, uGB; uniform vec3 uCol, uHot;
       varying float vU, vS, vA, vD, vL; varying vec2 vTimes;
       void main(){
         float prof = exp(-0.5 * (vS * 2.6) * (vS * 2.6));
         // gated node times (gateT, see create()); the raw times still seed the clump noise below
-        vec2 gT = mix(vTimes, uT10 + (vTimes - uTFirst) * (uGEnd - uT10) / (uGEnd - uTFirst), step(vTimes, vec2(uGEnd)));
+        vec2 gT = uT10 + uGB * (vTimes - uTFirst) * (vTimes - uTFirst);
         float tl = min(gT.x + uProp * vU, gT.y + uProp * (1.0 - vU));
         float e = uT - tl;
         float lit = smoothstep(0.0, 0.45, e) * (1.0 + 0.6 * exp(-max(e, 0.0) / 0.4));
@@ -426,7 +432,7 @@ export async function create(ctx) {
       su.uHaloR.value = 7 * (1 - ce) + 0.6 * ce;
       // (S10: the R star's glow grows in over 43.0–44.5 with its clump, so that on the cut it is the
       // same sharp point as S09's last frame)
-      su.uHaloA.value = (1 - ce) * (s11 ? 1 : util.smoothstep(T10, G_END, t));
+      su.uHaloA.value = (1 - ce) * (s11 ? 1 : util.smoothstep(T10, 44.5, t));
       // S10: on the cut the R star (still ~105 u away) carries S09's last brightness (HDR ≈ 9, ×1.7),
       // relaxing to its own over 43–47 as the web lights up around it
       su.uRStar.value = s11 ? util.lerp(1, 0.45, ce) : 1 + 0.7 * (1 - util.smoothstep(T10, 47.0, t));
