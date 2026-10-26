@@ -212,3 +212,74 @@ export function hopDistances(web, start) {
   for (let h = 0; h < q.length; h++) for (const j of adj[q[h]]) if (d[j] < 0) { d[j] = d[q[h]] + 1; q.push(j); }
   return d;
 }
+
+// --- WEB_PATH_A (v2, E6; A1 a_origin team) -------------------------------------------------------
+// Long take A's approach to the first star.  A straight line through the pose WEB_PATH(9.0) towards
+// web.hero.first, with the camera ORIENTATION FIXED to WEB_PATH(9.0)'s (same forward / up, no roll):
+// hero.first lies on the camera ray through R = (734.5, 540.5) of that pose, so moving along this line
+// keeps hero.first exactly on R and makes R the focus of expansion — the shift-lens framing
+// (equivalent to aiming at hero.first with setViewOffset), with no rotation at all.
+// At frame WEB_PATH_A.frame9 (f1128) the pose IS WEB_PATH(9.0) (the composition w_sea reuses).
+// The distance to hero.first is set by a per-frame magnification schedule (screenplay S02 rates):
+//   < f960  0.4 %/frame (S02-a/b) · f960–990 → 1 % · f1128–1176 1 → 2 % · f1176–1196 2 → 5 % (sprint)
+//   f1204–1224 5 → 2.2 % (substitution ①, not rate-limited) · f1224–1296 2.2 → 1.0 % (default for A2)
+// d(fr) = d(1128) · exp(−∫ ln(1 + m)), strictly decreasing, never reaching hero.first.
+//   import { webPathAPose, applyWebPathA, WEB_PATH_A } from './_webgraph.js';
+//   applyWebPathA(cam, fr);       // fr = f.t * 24 (fractional ok); cam = kit.filmCamera(W, H, { focalMM: 24 })
+//   WEB_PATH_A.rate(fr)           // per-frame magnification at R (fraction) · WEB_PATH_A.distance(fr)
+const _s5 = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * t * (t * (t * 6 - 15) + 10); };
+function rateA(fr) {
+  if (fr < 960) return 0.004;
+  if (fr < 1128) return 0.004 + 0.006 * _s5(960, 990, fr);
+  if (fr < 1176) return 0.010 + 0.010 * _s5(1128, 1176, fr);
+  if (fr < 1204) return 0.020 + 0.030 * _s5(1176, 1196, fr);
+  if (fr < 1224) return 0.050 - 0.028 * _s5(1204, 1224, fr);
+  return 0.022 - 0.012 * _s5(1224, 1296, fr);
+}
+const A_F0 = 560, A_F1 = 1440, A_STEP = 1 / 16;
+let A_TAB = null;
+function aTable() {
+  if (A_TAB) return A_TAB;
+  const n = Math.round((A_F1 - A_F0) / A_STEP) + 1, L = new Float64Array(n);
+  for (let i = 1; i < n; i++) {
+    const fa = A_F0 + (i - 1) * A_STEP, fb = fa + A_STEP;
+    L[i] = L[i - 1] + 0.5 * (Math.log1p(rateA(fa)) + Math.log1p(rateA(fb))) * A_STEP;
+  }
+  A_TAB = L; return L;
+}
+function aLog(fr) {        // ∫_{A_F0}^{fr} ln(1 + m) d frame
+  const L = aTable();
+  if (fr <= A_F0) return (fr - A_F0) * Math.log1p(rateA(A_F0));
+  if (fr >= A_F1) return L[L.length - 1] + (fr - A_F1) * Math.log1p(rateA(A_F1));
+  const x = (fr - A_F0) / A_STEP, i = Math.floor(x), u = x - i;
+  return L[i] + (L[Math.min(i + 1, L.length - 1)] - L[i]) * u;
+}
+let A_GEOM = null;
+function aGeom() {
+  if (A_GEOM) return A_GEOM;
+  const web = getWeb(), n = web.hero.first;
+  const F = new THREE.Vector3(web.nodes[3 * n], web.nodes[3 * n + 1], web.nodes[3 * n + 2]);
+  const P9 = webPathPose(WEB.duration);
+  const D9 = F.distanceTo(P9.pos);
+  const dir = F.clone().sub(P9.pos).normalize();        // unit vector camera → hero.first
+  A_GEOM = { F, P9, D9, dir };
+  return A_GEOM;
+}
+export const WEB_PATH_A = {
+  frame9: 1128,
+  rate: rateA,
+  distance(fr) { const G = aGeom(); return G.D9 * Math.exp(-(aLog(fr) - aLog(1128))); },
+  get first() { return aGeom().F.clone(); },
+};
+export function webPathAPose(fr) {
+  const G = aGeom();
+  const d = WEB_PATH_A.distance(fr);
+  const pos = G.F.clone().addScaledVector(G.dir, -d);
+  return { pos, target: pos.clone().add(G.P9.forward), forward: G.P9.forward.clone(), right: G.P9.right.clone(), up: G.P9.up.clone(), roll: 0, d, first: G.F.clone() };
+}
+export function applyWebPathA(cam, fr) {
+  const P = webPathAPose(fr);
+  cam.position.copy(P.pos); cam.up.copy(P.up); cam.lookAt(P.target);
+  cam.updateMatrixWorld();
+  return P;
+}

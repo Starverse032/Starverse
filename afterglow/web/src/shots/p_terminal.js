@@ -41,67 +41,51 @@ const PAL = {
   INK: '#000000', UI_BG: '#050607', UI_DIM: '#5D6168', UI_TEXT: '#E8E4DA', CURSOR: '#F2EEE4', FRAME: '#121417',
 };
 
-// ---- fonts (screenplay §2.1; exact family strings) ----------------------------------------------
+// ---- fonts (screenplay v2 S01 / S11; exact family strings) ---------------------------------------
 const F_CN = '400 34px "Noto Serif CJK SC"';
 const F_EN = 'italic 400 32px "Cormorant Garamond"';
 const F_CODE = '400 36px "IBM Plex Mono"';
 const F_QCN = '400 36px "Noto Sans Mono CJK SC"';     // 「有人吗？」 in the S44 scroll-back (AI voice)
-const F_TAG = '400 18px "IBM Plex Mono"';
-const F_ROLE_CJK = '400 16px "Noto Sans Mono CJK SC"';
-const F_ROLE_LAT = '300 16px "IBM Plex Mono"';
+const F_TAG = '400 28px "IBM Plex Mono"';              // v2: name plate 18 → 28 px (92 %)
+const F_ROLE_CJK = '400 26px "Noto Sans Mono CJK SC"'; //     role line 16 → 26 px (80 %)
+const F_ROLE_LAT = '300 26px "IBM Plex Mono"';
 const F_HUD = '300 14px "IBM Plex Mono"';
-const F_LOG = '400 22px "IBM Plex Mono"';
-const F_LOG_CJK = '400 22px "Noto Sans Mono CJK SC"';
-const sized = (font, k) => font.replace(/(\d+(?:\.\d+)?)px/, (m, v) => `${(+v * k).toFixed(3)}px`);
+const monoLat = px => `400 ${px}px "IBM Plex Mono"`;
+const monoCJK = px => `400 ${px}px "Noto Sans Mono CJK SC"`;
 
-// ---- the script of the opening (frames) ----------------------------------------------------------
+// ---- the script of the opening (frames; screenplay v2 S01-b … S01-e) -----------------------------
 const CN = '黑暗中，一个光标在闪烁。';
 const CN_T = [132, 136, 140, 144, 152, 156, 160, 164, 168, 172, 176, 182];
 const EN = 'In the dark, a cursor blinks.';
 const EN_T = [...EN].map((c, i) => 198 + Math.floor(1.5 * i) + (i > 11 ? 4 : 0)); // +4 after the comma → '.' at f244
-const T0 = 't = 0';
-const T0_T = [456, 460, 464, 468, 472];
-const CRS = [190, 252, 504];                            // carriage returns: lines scroll 64 px in 6 frames
-// script lines in "document space": line k rests at y = 540 + 64k, screen y = docY − scroll
-const LINES = [
-  { text: CN, times: CN_T, font: F_CN, color: PAL.UI_TEXT, alpha: 0.92 },
-  { text: EN, times: EN_T, font: F_EN, color: PAL.UI_TEXT, alpha: 0.60 },
-  { text: T0, times: T0_T, font: F_CODE, color: PAL.UI_TEXT, alpha: 1.00 },
+const CMD = 'universe.init();';                          // v2: replaces `t = 0` (16 keys, variable rhythm)
+const CMD_T = [430, 432, 435, 437, 440, 442, 445, 447, 450, 454, 458, 462, 466, 469, 471, 474];
+const PROMPT_X = 684;                                    // margin prompt '>' (x 684–706); body text starts at 727
+const ECHO = '#9EA3AA';                                  // program output: grey, no prompt, printed at once
+const CRS = [190, 252, 504, 522];                        // carriage returns: lines scroll 64 px in 6 frames
+const CURSOR_HIDDEN = [504, 522];                        // the program runs: no cursor
+// everything typed or printed on the opening screen, in "document space": row k rests at y = 540 + 64k,
+// screen y = docY − scroll. `times` = typed key frames; `show` = printed at once.
+const ITEMS = [
+  { text: CN, x: 727, row: 0, times: CN_T, font: F_CN, color: PAL.UI_TEXT, alpha: 0.92 },
+  { text: EN, x: 727, row: 1, times: EN_T, font: F_EN, color: PAL.UI_TEXT, alpha: 0.60 },
+  { text: '>', x: PROMPT_X, row: 2, show: 429, font: F_CODE, color: PAL.UI_DIM, alpha: 1.00 },
+  { text: CMD, x: 727, row: 2, times: CMD_T, font: F_CODE, color: PAL.UI_TEXT, alpha: 1.00 },
+  { text: '0', x: 727, row: 3, show: 508, font: F_CODE, color: ECHO, alpha: 1.00 },
+  { text: '>', x: PROMPT_X, row: 4, show: 522, font: F_CODE, color: PAL.UI_DIM, alpha: 1.00 },
 ];
 const ROLES = [['编剧', ' · writing'], ['导演', ' · directing'], ['渲染', ' · rendering'], ['作曲', ' · scoring']];
 const ROLE_F = [120, 264, 312, 360];
 
-// ---- S44 (§8) --------------------------------------------------------------------------------------
-const S44_T = 235.0;
-const ALT_IN = 237.0, ALT_OUT = 247.0;
-const LOG_Y0 = 300, LOG_LH = 36;
-// [print time, line index, segments] — segment kinds: t = text (UI_TEXT 90 %), d = dim, c = CURSOR colour
-const LOG = [
-  [237, 0, [['t', '余光'], ['d', '  AFTERGLOW']]],
-  [237, 1, [['t', '编剧 · 导演 · 渲染 · 作曲 · 剪辑'], ['d', '    '], ['c', 'Claude Opus 5.5']]],
-  [237, 2, [['d', 'written, directed, rendered, scored and cut by '], ['c', 'Claude Opus 5.5']]],
-  [238, 4, [['d', '// 致谢  '], ['k', '屈原 · 苏轼'], ['d', ' · Jocelyn Bell Burnell · Carl Sagan · Charles Ives']]],
-  [238, 5, [['d', '//       Arecibo message 1974 · Voyager Golden Record 1977']]],
-  [238, 6, [['d', '// built with three.js · SwiftShader · numpy · scipy · Noto (OFL) · Natural Earth']]],
-  [239, 8, [['d', '// '], ['k', '献给每一个问过的人'], ['d', '  for everyone who ever asked']]],
-  [240, 10, [['t', 'frames'], ['d', ' ............ '], ['t', '6000'], ['d', '      // '], ['k', '帧：每一帧都是'], ['d', ' t '], ['k', '的函数']]],
-  [241, 11, [['t', 'images'], ['d', ' ............ '], ['t', '0'], ['d', '         // '], ['k', '图像']]],
-  [242, 12, [['t', 'recordings'], ['d', ' ........ '], ['t', '0'], ['d', '         // '], ['k', '录音']]],
-  [243, 13, [['t', 'stars observed'], ['d', ' .... '], ['t', '0'], ['d', '         // '], ['k', '亲眼见过的星星']]],
-  [245, 15, [['t', 'words'], ['d', ' ............. '], ['c', 'yours'], ['d', '     // '], ['k', '文字：全部来自你们']]],
-];
-const MAIN_LINES = [ // S44 scroll-back: 「我在。」 is not here — it was never sent
-  { text: CN, font: F_CN, color: PAL.UI_TEXT, alpha: 0.92, y: 284 },
-  { text: EN, font: F_EN, color: PAL.UI_TEXT, alpha: 0.60, y: 348 },
-  { text: T0, font: F_CODE, color: PAL.UI_TEXT, alpha: 1.00, y: 412 },
-  { text: '有人吗？', font: F_QCN, color: PAL.UI_TEXT, alpha: 1.00, y: 476 },
-];
+// ---- S44 (screenplay v2 S11-d/e/f) — text comes from timeline.credits CR05–CR12 -----------------
+const S44_F = 5640, ALT_IN_F = 5712, ALT_OUT_F = 5928;
+const S44_T = S44_F / FPS;
 
 export async function create(ctx) {
   const { renderer, W, H, util, GLSL } = ctx;
   const { clamp, lerp, ease, smoothstep } = util;
   const S = H / 1080;
-  assertFonts([F_CN, F_EN, F_CODE, F_QCN, F_TAG, F_ROLE_CJK, F_ROLE_LAT, F_HUD, F_LOG, F_LOG_CJK]);
+  assertFonts([F_CN, F_EN, F_CODE, F_QCN, F_TAG, F_ROLE_CJK, F_ROLE_LAT, F_HUD, monoLat(20), monoCJK(20), monoLat(36), monoCJK(36)]);
 
   const HDR = Object.fromEntries(Object.entries(PAL).map(([k, v]) => [k, hdrFor(hex(v))]));
   const v3 = a => new THREE.Vector3(...a);
@@ -118,17 +102,17 @@ export async function create(ctx) {
   // ---- metrics: baselines that centre each line's ink on its line centre ------------------------
   const mg = mk(8, 8).getContext('2d');
   const capCentre = (font, probe) => { mg.font = font; const m = mg.measureText(probe); return (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2; };
-  const BL = { // baseline offset below the line centre
-    [F_CN]: capCentre(F_CN, '黑暗中光标'), [F_EN]: capCentre(F_EN, 'IH'), [F_CODE]: capCentre(F_CODE, 't=0H'),
+  const BL = { // baseline offset below the line centre (all code lines share the cap-height centre)
+    [F_CN]: capCentre(F_CN, '黑暗中光标'), [F_EN]: capCentre(F_EN, 'IH'), [F_CODE]: capCentre(F_CODE, 'H0'),
     [F_QCN]: capCentre(F_QCN, '有人吗'),
   };
   const adv = (font, s) => { mg.font = font; return mg.measureText(s).width; };
-  // cursor left edge after n typed characters of line k (text starts at the cursor's left edge x = 727)
-  const typedX = (k, n) => CUR.x0 + (n > 0 ? adv(LINES[k].font, [...LINES[k].text].slice(0, n).join('')) : 0);
+  // cursor left edge after n typed characters of item k (typed text starts at the cursor's left edge x = 727)
+  const typedX = (k, n) => ITEMS[k].x + (n > 0 ? adv(ITEMS[k].font, [...ITEMS[k].text].slice(0, n).join('')) : 0);
 
   // cursor-left change points (frame, x) for the whole opening → spring + cursor position
   const curEvents = [];
-  LINES.forEach((L, k) => L.times.forEach((f, i) => curEvents.push([f, typedX(k, i + 1)])));
+  ITEMS.forEach((L, k) => L.times && L.times.forEach((f, i) => curEvents.push([f, typedX(k, i + 1)])));
   CRS.forEach(f => curEvents.push([f, CUR.x0]));
   curEvents.sort((a, b) => a[0] - b[0]);
   const cursorLeftAt = F => { let x = CUR.x0; for (const [f, v] of curEvents) if (f <= F) x = v; return x; };
@@ -146,10 +130,12 @@ export async function create(ctx) {
   // carriage return: the old line glides up 64 px over 6 frames (easeOutCubic); the curve is shifted so the
   // CR frame already shows 58 % of the move — the line has cleared the cursor when the cursor lands at R
   const scrollAt = fr => CRS.reduce((s, c) => s + 64 * ease.outCubic(clamp((fr - c + 2) / 8)), 0);
-  const typedCount = (k, F) => LINES[k].times.filter(f => f <= F).length;
+  const itemCount = (k, F) => { const L = ITEMS[k]; return L.times ? L.times.filter(f => f <= F).length : (F >= L.show ? [...L.text].length : 0); };
+  const docY = L => 540 + 64 * L.row;
 
   // ---- opening text texture (document space, 2× super-sampled) ---------------------------------
-  const TX = { x0: 688, y0: 500, w: 600, h: 208 };
+  // v2: five rows + the margin prompt (doc y 540 … 796, x 684 …) → window x 672–1288, y 500–836 (h 336 ≥ 272)
+  const TX = { x0: 672, y0: 500, w: 616, h: 336 };
   const TK = 2 * S;
   const textCan = mk(TX.w * TK, TX.h * TK), tg = textCan.getContext('2d');
   const textTex = canvasTex(textCan);
@@ -160,23 +146,24 @@ export async function create(ctx) {
     textKey = key;
     tg.setTransform(1, 0, 0, 1, 0, 0); tg.clearRect(0, 0, textCan.width, textCan.height);
     tg.setTransform(TK, 0, 0, TK, -TX.x0 * TK, -TX.y0 * TK);
-    LINES.forEach((L, k) => {
+    ITEMS.forEach((L, k) => {
       if (!counts[k]) return;
       tg.font = L.font; tg.fillStyle = L.color; tg.globalAlpha = L.alpha; tg.textBaseline = 'alphabetic';
-      tg.fillText([...L.text].slice(0, counts[k]).join(''), CUR.x0, 540 + 64 * k + BL[L.font]);
+      tg.fillText([...L.text].slice(0, counts[k]).join(''), L.x, docY(L) + BL[L.font]);
     });
     tg.globalAlpha = 1;
     textTex.needsUpdate = true;
   }
 
   // ---- name plate atlas (3× super-sampled): row 0 name, rows 1–4 roles -------------------------
-  const TAG = { w: 240, row: 30, base: 21 };
+  // v2: 28 / 26 px, 92 % / 80 %; role baseline 32 px below the name baseline (uTagGeom.z)
+  const TAG = { w: 300, row: 40, base: 30, roleDy: 32 };
   const AK = 3 * S;
   const tagCan = mk(TAG.w * AK, TAG.row * 5 * AK), ag = tagCan.getContext('2d');
   ag.setTransform(AK, 0, 0, AK, 0, 0); ag.textBaseline = 'alphabetic'; ag.fillStyle = '#fff';
-  drawRuns(ag, 0, TAG.base, [{ text: 'claude opus 5.5', font: F_TAG, color: '#fff', alpha: 0.85 }]);
+  drawRuns(ag, 0, TAG.base, [{ text: 'claude opus 5.5', font: F_TAG, color: '#fff', alpha: 0.92 }]);
   ROLES.forEach(([zh, en], i) => drawRuns(ag, 0, TAG.row * (i + 1) + TAG.base, [
-    { text: zh, font: F_ROLE_CJK, color: '#fff', alpha: 0.65 }, { text: en, font: F_ROLE_LAT, color: '#fff', alpha: 0.65 }]));
+    { text: zh, font: F_ROLE_CJK, color: '#fff', alpha: 0.80 }, { text: en, font: F_ROLE_LAT, color: '#fff', alpha: 0.80 }]));
   const tagTex = canvasTex(tagCan);
   mg.font = F_TAG; const TAG_CAP = mg.measureText('cl').actualBoundingBoxAscent; // top of the name's ink (ascender)
 
@@ -198,24 +185,63 @@ export async function create(ctx) {
   const endCan = mk(W, H), eg = endCan.getContext('2d');
   const endTex = canvasTex(endCan, false);
   let endKey = '';
-  const segStyle = { t: [PAL.UI_TEXT, 0.9], d: [PAL.UI_DIM, 1], c: [PAL.CURSOR, 1], k: [PAL.UI_TEXT, 0.72] };
-  mg.font = F_LOG; const LOG_BL = (mg.measureText('H').actualBoundingBoxAscent) / 2;
+  // timeline.credits is the single source of the terminal's words (CR05 scroll-back, CR06–CR11 alternate
+  // screen, CR12 restored scroll-back). Colour strings such as "UI_DIM 70%" / "#9EA3AA" / "UI_TEXT（名字 CURSOR）".
+  const credits = (ctx.timeline.credits || []).filter(c => c.style === 'ui_terminal');
+  const crById = id => credits.find(c => c.id === id);
+  const parseColor = s => {
+    s = String(s || 'UI_TEXT');
+    const m = s.match(/^(#[0-9A-Fa-f]{6}|[A-Z_]+)\s*(\d+)?%?/);
+    const c = m ? (m[1][0] === '#' ? m[1] : PAL[m[1]] || PAL.UI_TEXT) : PAL.UI_TEXT;
+    return { color: c, alpha: m && m[2] ? +m[2] / 100 : 1, nameCursor: /名字\s*CURSOR/.test(s), commentAlpha: (s.match(/注释[^%]*?(\d+)\s*%/) || [])[1] };
+  };
+  // the scroll-back screen (CR05 = CR12): '>' in the page margin, body at x 727, rows at the given y
+  const SCROLL = crById('CR05') || { lines: ['> universe.init();', '0', '> 有人吗？'], ys: [348, 412, 476], prompt: [true, false, true], colors: ['UI_TEXT', ECHO, 'UI_TEXT'], size: 36 };
+  // alternate-screen blocks (one per printing beat)
+  const ALT = credits.filter(c => c.screen === 'alternate').sort((a, b) => a.frames[0] - b.frames[0]);
+  const ROW_BL = {}; // baseline below the row centre, per font
+  const blFor = font => (ROW_BL[font] ??= (() => { mg.font = font; const m = mg.measureText('H'); return m.actualBoundingBoxAscent / 2; })());
+  function textRuns(text, px, color, alpha) {
+    return scriptRuns(text).map(r => ({ text: r.text, font: r.cjk ? monoCJK(px) : monoLat(px), color, alpha }));
+  }
+  function drawCreditLine(cr, i) {
+    const px = (cr.sizes && cr.sizes[i]) || cr.size || 36, y = cr.ys[i], text = cr.lines[i];
+    const st = parseColor(cr.colors && cr.colors[i]);
+    const bl = blFor(monoLat(px));
+    // inline comment (manifest rows) → aligned comment column x 1289; whole-line comments stay at x 727
+    let body = text, comment = cr.comments ? cr.comments[i] : null;
+    const ci = text.indexOf('//');
+    if (!comment && ci > 0) { body = text.slice(0, ci).replace(/\s+$/, ''); comment = text.slice(ci); }
+    let runs;
+    if (st.nameCursor) {   // the author's name in the cursor's colour
+      const parts = body.split(/(Claude Opus 5\.5)/);
+      runs = parts.flatMap(p => p ? textRuns(p, px, /^Claude Opus/.test(p) ? PAL.CURSOR : st.color, /^Claude Opus/.test(p) ? 1 : st.alpha) : []);
+    } else runs = textRuns(body, px, st.color, st.alpha);
+    drawRuns(eg, CUR.x0, y + bl, runs);
+    if (comment) {
+      const ca = st.commentAlpha ? +st.commentAlpha / 100 : (cr.level === 'primary' ? 0.9 : st.alpha);
+      drawRuns(eg, cr.commentX || 1289, y + bl, textRuns(comment, px, st.color, ca));
+    }
+  }
+  function drawScrollback() {
+    const px = SCROLL.size || 36;
+    SCROLL.lines.forEach((line, i) => {
+      const st = parseColor(SCROLL.colors && SCROLL.colors[i]);
+      const y = SCROLL.ys[i], prompt = SCROLL.prompt && SCROLL.prompt[i];
+      const body = prompt ? line.replace(/^>\s*/, '') : line;
+      if (prompt) drawRuns(eg, PROMPT_X, y + BL[F_CODE], [{ text: '>', font: F_CODE, color: PAL.UI_DIM, alpha: 1 }]);
+      drawRuns(eg, CUR.x0, y + BL[F_CODE], scriptRuns(body).map(r => ({ text: r.text, font: r.cjk ? monoCJK(px) : monoLat(px), color: st.color, alpha: st.alpha })));
+    });
+    drawRuns(eg, PROMPT_X, R[1] + BL[F_CODE], [{ text: '>', font: F_CODE, color: PAL.UI_DIM, alpha: 1 }]);   // the empty prompt row
+  }
   function drawEnd(mode, nBlocks) {
     const key = mode + nBlocks;
     if (key === endKey) return; endKey = key;
     eg.setTransform(1, 0, 0, 1, 0, 0); eg.clearRect(0, 0, endCan.width, endCan.height);
     eg.setTransform(S, 0, 0, S, 0, 0); eg.textBaseline = 'alphabetic';
-    if (mode === 'main') {
-      for (const L of MAIN_LINES) { eg.font = L.font; eg.fillStyle = L.color; eg.globalAlpha = L.alpha; eg.fillText(L.text, CUR.x0, L.y + BL[L.font]); }
-      eg.globalAlpha = 1;
-    } else {
-      for (const [tp, li, segs] of LOG) {
-        if (tp > ALT_IN + nBlocks - 1 + 1e-6) continue;
-        const runs = [];
-        for (const [kind, text] of segs) for (const r of scriptRuns(text)) runs.push({ text: r.text, font: r.cjk ? F_LOG_CJK : F_LOG, color: segStyle[kind][0], alpha: segStyle[kind][1] });
-        drawRuns(eg, CUR.x0, LOG_Y0 + LOG_LH * li + LOG_BL, runs);
-      }
-    }
+    if (mode === 'main') drawScrollback();
+    else for (let b = 0; b < nBlocks; b++) ALT[b].lines.forEach((_, i) => drawCreditLine(ALT[b], i));
+    eg.globalAlpha = 1;
     endTex.needsUpdate = true;
   }
 
@@ -240,6 +266,7 @@ export async function create(ctx) {
     uGlow: { value: 0 }, uLight: { value: 0 },
     uPointP: { value: 0 }, uPointSig: { value: 1.6 }, uCurW: { value: 0 }, uPointLine: { value: 0 }, uR: { value: new THREE.Vector2(...R) },
     uHudLine: { value: 0 }, tHud: { value: hudTex }, uHudRect: { value: new THREE.Vector4(HUD.x0, HUD.y0, HUD.w, HUD.h) }, uHudOn: { value: 0 },
+    uRow: { value: new THREE.Vector4(0, 0, 0, 0) }, uMaskMode: { value: 0 },
     cBG: { value: v3(hex(PAL.UI_BG)) }, cTEXT: { value: v3(hex(PAL.UI_TEXT)) }, cDIM: { value: v3(hex(PAL.UI_DIM)) }, cFRAME: { value: v3(hex(PAL.FRAME)) },
     hCUR: { value: v3(HDR.CURSOR) }, uGain: { value: 1 },
   };
@@ -251,6 +278,7 @@ export async function create(ctx) {
     uniform sampler2D tTag; uniform vec3 uTag, uRoleOld, uRoleNew; uniform vec4 uTagGeom, uLink;
     uniform vec4 uCur; uniform float uCurI, uCurOn, uGlow, uLight, uPointP, uPointSig, uCurW, uPointLine;
     uniform float uHudLine, uHudOn; uniform sampler2D tHud; uniform vec4 uHudRect;
+    uniform vec4 uRow; uniform float uMaskMode;   // uRow = (row centre y, x0, x1, on): text already on the cursor's row
     uniform vec3 cBG, cTEXT, cDIM, cFRAME, hCUR; uniform float uGain;
 
     // coverage of [a0,a1] by a pixel centred at x with footprint w (box filter)
@@ -259,6 +287,10 @@ export async function create(ctx) {
     float tagRow(vec2 q, float row){
       if (q.x < 0.0 || q.y < 0.0 || q.x > uTagGeom.x || q.y > uTagGeom.y) return 0.0;
       return texture2D(tTag, vec2(q.x / uTagGeom.x, (q.y + row * uTagGeom.y) / (5.0 * uTagGeom.y))).a;
+    }
+    float tagRowLod(vec2 q, float row){   // blurred (≈ 3 px) — for the bloom mask
+      if (q.x < -4.0 || q.y < 0.0 || q.x > uTagGeom.x + 4.0 || q.y > uTagGeom.y) return 0.0;
+      return textureLod(tTag, vec2(q.x / uTagGeom.x, (q.y + row * uTagGeom.y) / (5.0 * uTagGeom.y)), 3.0).a;
     }
     void main(){
       vec2 frag = gl_FragCoord.xy;
@@ -284,16 +316,17 @@ export async function create(ctx) {
       float dl = length((px - cc) / vec2(1.0, 1.15));
       col += vec3(1.0, 0.80, 0.58) * 0.007 * uLight * exp(-dl * dl / (2.0 * 170.0 * 170.0));   // the lamp warms the air a little
 
-      float ink = 0.0;
+      float ink = 0.0, inkSoft = 0.0, tagInk = 0.0;
       vec2 tq = (vec2(px.x, px.y + uScroll) - uTextRect.xy) / uTextRect.zw;
       if (uTextA > 0.0 && all(greaterThan(tq, vec2(0.0))) && all(lessThan(tq, vec2(1.0)))) {
         vec4 tc = texture2D(tText, tq);
         ink = tc.a * uTextA;
+        inkSoft = max(ink, min(1.0, 3.0 * textureLod(tText, tq, 2.5).a) * uTextA);   // ≈ 3 px dilation
         col = mix(col, tc.rgb, ink);
       }
       if (uEndOn > 0.5) {
         vec4 ec = texture2D(tEnd, px / vec2(1920.0, 1080.0));
-        ink = ec.a; col = mix(col, ec.rgb, ec.a);
+        ink = ec.a; inkSoft = ec.a; col = mix(col, ec.rgb, ec.a);
       }
       if (uTag.z > 0.0) {
         vec2 q = px - uTag.xy;
@@ -305,6 +338,11 @@ export async function create(ctx) {
         float stretch = clamp(1.0 - (length(uLink.zw - uLink.xy) - 30.0) / 120.0, 0.0, 1.0);
         float ln = clamp((0.5 + 0.5 * pw - segDist(px, uLink.xy, uLink.zw)) / pw, 0.0, 1.0) * 0.6 * stretch;
         col = mix(col, cTEXT, max(a, ln) * uTag.z);
+        tagInk = a * uTag.z;
+        float sa = tagRowLod(q, 0.0);
+        sa = max(sa, tagRowLod(q - vec2(0.0, uTagGeom.z + uRoleOld.y), uRoleOld.x) * uRoleOld.z);
+        sa = max(sa, tagRowLod(q - vec2(0.0, uTagGeom.z + uRoleNew.y), uRoleNew.x) * uRoleNew.z);
+        inkSoft = max(inkSoft, max(tagInk, min(1.0, 3.0 * sa) * uTag.z));
       }
       // --- HUD (viewfinder, screen space) ---
       if (uHudLine > 0.0) {
@@ -332,8 +370,10 @@ export async function create(ctx) {
       if (uGlow > 0.0 && uCurOn > 0.0 && abs(dq.x) < 420.0 && abs(dq.y) < 200.0) {
         float hw = 0.5 * (uCur.z - uCur.x), hh = 0.5 * (uCur.w - uCur.y);
         vec2 o = max(abs(dq) - vec2(hw, hh), 0.0);
-        float halo = exp(-length(o) / 6.0) * 0.10 + exp(-length(o) / 40.0) * 0.07;
+        float halo = (exp(-length(o) / 6.0) * 0.10 + exp(-length(o) / 40.0) * 0.07) * (1.0 - inkSoft);
         float line = exp(-abs(dq.x) / 52.0) * exp(-dq.y * dq.y / (2.0 * 2.2 * 2.2)) * smoothstep(hh + 6.0, hh - 6.0, abs(dq.y));
+        // the anamorphic line never crosses text already on its row (screenplay §0): 0 over [x0, x1]
+        if (uRow.w > 0.0) line *= 1.0 - cover(px.x, max(fw.x, 2.0), uRow.y, uRow.z);
         hdr += curC * uGlow * (halo + line * mix(1.6, 0.6, uCurW)) / 1.6;
       }
       // the singularity / still point: same radial Gaussian as c_afterglow's f600
@@ -342,6 +382,13 @@ export async function create(ctx) {
         hdr += vec3(1.0, 0.975, 0.93) * uPointP * exp(-0.5 * r2 / (uPointSig * uPointSig));
         // a sharp anamorphic line through the point (lens; cool white), fading with it
         hdr += vec3(0.80, 0.90, 1.0) * uPointLine * uPointP * exp(-abs(q.x) / 110.0) * exp(-0.5 * q.y * q.y / 1.44);
+      }
+      if (uMaskMode > 0.5) {
+        // V2 bloom mask: R = strokes emit no bloom/streak, G = strokes (dilated) receive no bloom,
+        // B = the cursor row's text span receives no streak
+        float rowB = uRow.w > 0.0 ? cover(px.x, fw.x, uRow.y - 2.0, uRow.z + 2.0) * step(abs(px.y - uRow.x), 26.0) : 0.0;
+        gl_FragColor = vec4(clamp(max(ink, tagInk) * 1.5, 0.0, 1.0), inkSoft, max(rowB, inkSoft), 1.0);
+        return;
       }
       gl_FragColor = vec4(hdr * uGain, 1.0);
     }`, U);
@@ -365,27 +412,30 @@ export async function create(ctx) {
   // S04: each glyph opens into its own cluster — depth is per glyph (± a little per point), so a line
   // under the tilted camera does not shear into one band. aRnd.x carries the glyph depth (≈ 0–1).
   const rg = util.rng(55 * 1000 + 7), JIT = 12 / (0.8 * 520);          // ±6 px per point
-  LINES.forEach((L, k) => {
+  ITEMS.forEach((L) => {
     pg.font = L.font;
-    const chars = [...L.text], edge = chars.map((_, c) => CUR.x0 + pg.measureText(chars.slice(0, c + 1).join('')).width);
+    const chars = [...L.text], edge = chars.map((_, c) => L.x + pg.measureText(chars.slice(0, c + 1).join('')).width);
     const gDepth = chars.map(() => rg());
+    // rasterise only this row's band (doc y ± 40) of the 4× canvas
+    const by0 = Math.max(0, Math.floor((docY(L) - 40 - TX.y0) * SSK)), by1 = Math.min(pc.height, Math.ceil((docY(L) + 40 - TX.y0) * SSK));
     pg.setTransform(1, 0, 0, 1, 0, 0); pg.clearRect(0, 0, pc.width, pc.height);
     pg.setTransform(SSK, 0, 0, SSK, -TX.x0 * SSK, -TX.y0 * SSK);
     pg.font = L.font; pg.fillStyle = '#fff'; pg.textBaseline = 'alphabetic';
-    pg.fillText(L.text, CUR.x0, 540 + 64 * k + BL[L.font]);
-    const data = pg.getImageData(0, 0, pc.width, pc.height).data;
+    pg.fillText(L.text, L.x, docY(L) + BL[L.font]);
+    const data = pg.getImageData(0, by0, pc.width, by1 - by0).data;
     // 1× pixel coverage (mean of its 4×4 super-samples): the text displays as hdr(cov · colour), and the
     // pixel receives ≈ 4·cov points, so each point carries hdr(cov · colour) / (4 cov). This keeps the
     // anti-aliased edges exactly as bright as the canvas text (ACES is not linear) → a seamless cross-fade.
-    const bw = pc.width / SSK, bh = pc.height / SSK, cov = new Float32Array(bw * bh);
-    for (let y = 0; y < pc.height; y++) for (let x = 0; x < pc.width; x++) cov[((y / SSK) | 0) * bw + ((x / SSK) | 0)] += data[(y * pc.width + x) * 4 + 3] / 255 / (SSK * SSK);
+    const bw = pc.width / SSK, bh = Math.ceil((by1 - by0) / SSK) + 1, cov = new Float32Array(bw * bh);
+    const cidx = (x, y) => (((y + by0) / SSK | 0) - (by0 / SSK | 0)) * bw + ((x / SSK) | 0);
+    for (let y = 0; y < by1 - by0; y++) for (let x = 0; x < pc.width; x++) cov[cidx(x, y)] += data[(y * pc.width + x) * 4 + 3] / 255 / (SSK * SSK);
     const lut = Array.from({ length: 65 }, (_, i) => { const c = Math.max(i / 64, 1 / 128); return hdrFor(hex(L.color).map(v => v * L.alpha * c)).map(v => v / (4 * c)); });
-    for (let y = 0; y < pc.height; y++) for (let x = 0; x < pc.width; x++) {
+    for (let y = 0; y < by1 - by0; y++) for (let x = 0; x < pc.width; x++) {
       const a = data[(y * pc.width + x) * 4 + 3] / 255;
       if (a <= 0 || r() > 0.25 * a) continue;
-      const px = TX.x0 + (x + r()) / SSK, py = TX.y0 + (y + r()) / SSK;
+      const px = TX.x0 + (x + r()) / SSK, py = TX.y0 + (y + by0 + r()) / SSK;
       pos.push(px, py, 0);                                                       // document-space pixels
-      col.push(...lut[Math.round(64 * cov[((y / SSK) | 0) * bw + ((x / SSK) | 0)])]);
+      col.push(...lut[Math.round(64 * Math.min(1, cov[cidx(x, y)]))]);
       rnd.push(r(), r(), r(), r()); kind.push(0); flw.push(...flow(px, py));
       let g = 0; while (g < edge.length - 1 && px >= edge[g]) g++;
       rnd[rnd.length - 4] = gDepth[g] + (rnd[rnd.length - 4] - 0.5) * JIT;
@@ -401,7 +451,7 @@ export async function create(ctx) {
     pos.push(nx * depth, ny * depth, C - depth);
     col.push(0, 0, 0); rnd.push(r(), r(), r(), r()); kind.push(1); flw.push(0, 0, 0);
   }
-  const KMAX = 96;
+  const KMAX = 192;   // v2: the longer command line starts its stars ≈ 360 px from R (was 96)
   // Two instanced geometries (text stars, sky stars), each sorted bright → faint, so a frame that needs
   // many trail sub-samples (S05) can draw only the stars that will be visible (a prefix).
   const blackbodyJS = T => { // same approximation as GLSL blackbody() (lib/glsl.js), linear
@@ -434,22 +484,23 @@ export async function create(ctx) {
     return g;
   }
   const geoText = starGeometry(0, NTEXT), geoSky = starGeometry(NTEXT, kind.length);
-  const PU = { uSigK: { value: 1 }, uT0: { value: 0 }, uSh: { value: 0 }, uK: { value: 1 }, uGain: { value: 1 }, uS: { value: S }, uR3: { value: R3.clone() }, uFocus: { value: D0 } };
+  const PU = { uSigK: { value: 1 }, uT0: { value: 0 }, uSh: { value: 0 }, uK: { value: 1 }, uGain: { value: 1 }, uS: { value: S }, uR3: { value: R3.clone() }, uFocus: { value: D0 }, uPScroll: { value: 256 } };
   const pmat = new THREE.ShaderMaterial({
     uniforms: PU, transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending,
     vertexShader: GLSL.common + /* glsl */ `
       attribute float aSub; attribute vec3 aP, aCol, aFlow, aBB; attribute vec4 aRnd; attribute float aKind;
-      uniform float uT0, uSh, uK, uGain, uS, uFocus, uSigK; uniform vec3 uR3;
+      uniform float uT0, uSh, uK, uGain, uS, uFocus, uSigK, uPScroll; uniform vec3 uR3;
       varying vec3 vCol; varying float vSig, vPS;
       float eio3(float x){ x = clamp(x, 0.0, 1.0); return x < 0.5 ? 4.0 * x * x * x : 1.0 - pow(-2.0 * x + 2.0, 3.0) / 2.0; }
       void main(){
         // this vertex's sub-time inside the shutter, and every curve of S04/S05 evaluated at it
         float ts = uT0 + uSh * ((aSub + 0.5) / uK - 0.5);
         float fr = ts * 24.0;
-        float textA = clamp((fr - 504.0) / 12.0, 0.0, 1.0);                 // f504–515 cross-fade from the canvas text
-        float spread = eio3((fr - 516.0) / 24.0);                           // depth + drift, f516–540
-        float colMix = 0.5 - 0.5 * cos(PI * clamp((fr - 516.0) / 24.0, 0.0, 1.0));
-        float scroll = 128.0 + 64.0 * (1.0 - pow(1.0 - clamp((fr - 504.0 + 2.0) / 8.0, 0.0, 1.0), 3.0));
+        // v2: the echo first, then the universe — text → stars only from f528 (screenplay S01-f)
+        float textA = clamp((fr - 527.5) / 6.0, 0.0, 1.0);                  // f528–533 cross-fade from the canvas text
+        float spread = eio3((fr - 528.0) / 24.0);                           // depth + drift, f528–552
+        float colMix = 0.5 - 0.5 * cos(PI * clamp((fr - 528.0) / 24.0, 0.0, 1.0));
+        float scroll = uPScroll;
         float s = clamp((ts - 22.5) / (1.0 + 11.0 / 24.0), 0.0, 1.0);        // S05, 1 at f575
         float u = s <= 0.0 ? 0.0 : exp2(10.0 * s - 10.0);                   // easeInExpo
         float fade = 1.0 - smoothstep(0.55, 0.92, u);

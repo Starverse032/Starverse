@@ -536,7 +536,8 @@ PEDAL_DB = -40.0
 def scene_pedal():
     sc = Scene('pedal', F(888), 122.0, tail=0.3)
     strings_note(sc, J['D2'], F(888), F(2924), PEDAL_DB, attack=3.0, release=0.12, seed=SEED + 40,
-                 pts=PEDAL_PTS, rev={'void': 0.12, 'hall': 0.08}, stem='pedal', cut_hi=2200)
+                 pts=PEDAL_PTS, rev={'void': 0.035, 'hall': 0.025}, stem='pedal', cut_hi=2200)
+    # nearly dry: a hot R_void send kept the mf D2 ringing ≈ −38 dB after the f1332 drop (spec −42)
     sc.cut(122.0)
     return sc
 
@@ -626,6 +627,8 @@ def scene_lamps():
 
     def q_pluck(root, frames, lv, seed, pan=0.0, sec=None, decay=0.996, bright=0.6):
         for j, (iv, f) in enumerate(zip((0, 7, 14), frames)):
+            if f >= 2924:          # cut g: its E is the f2924 landing (scene_landing), not doubled here
+                continue
             tj = F(f)
             pluck(sc, N(root) * 2 ** (iv / 12), tj, lv + 2.0 + cres(tj), sec=sec, seed=seed + j, pan=pan,
                   decay=decay, bright=bright)
@@ -634,17 +637,21 @@ def scene_lamps():
         f0 = N(root)
         ev = [(fs(F(frames[0])), f0, 0), (fs(F(frames[1])), f0 * 2 ** (7 / 12), 0.08),
               (fs(F(frames[2])), f0 * 2 ** (14 / 12), 0.08)]
+        if frames[2] >= 2924:      # cut g: the arco holds its A into the landing
+            ev = ev[:2]
         t0 = F(frames[0])
         pts = [(t0, cres_s(t0)), (121.5, cres_s(121.5))]
         strings_note(sc, f0, t0, T_LAND, lv, attack=attack, release=0.12, seed=seed, vib=True, pts=pts, pitch=ev,
-                     artic=[ev[1][0], ev[2][0]], pan=pan)
+                     artic=[e[0] for e in ev[1:]], pan=pan)
 
     def q_glass(root, frames, lv, seed, sustain=True, pan=0.0):
         for j, (iv, f) in enumerate(zip((0, 7, 14), frames)):
+            if f >= 2924:
+                continue
             tj = F(f)
             bell(sc, N(root) * 2 ** (iv / 12), tj, lv - 3.0 + cres(tj), sec=4.0, seed=seed + j, pan=pan,
                  rev={'hall': 0.35, 'void': 0.15})
-        if sustain:
+        if sustain and frames[2] < 2924:
             te = F(frames[2])
             glass_note(sc, N(root) * 2 ** (14 / 12), te, T_LAND, lv - 6 + cres(te), attack=0.8, release=0.12,
                        seed=seed + 9, pan=pan, pts=[(te, 0), (121.5, cres(121.5) - cres(te))])
