@@ -599,13 +599,15 @@ def choir_voice_src(n, f_curve, seed, vib_delay=0.5):
     return s / 0.12
 
 
-def choir_section(n, voices, dyn, women=True, seed=0, pan=0.0, breath_db=-20.0):
+def choir_section(n, voices, dyn, women=True, seed=0, pan=0.0, breath_db=-20.0, voice_gain=None):
     """A choir section singing "aah": `voices` = per-sample f curves (one per singer). Each singer's
     −12 dB/oct glottal source gets lip radiation (+6 dB/oct), then the section's formants as a
     PARALLEL band-pass bank (women F1–F4 = 850/1220/2810/3500, men 700/1100/2600/3300, bandwidths
     80/90/120/130 Hz, + a weak F5) over a −30 dB source floor — a cascade with no higher-pole
     correction would cut everything above F4 and sound muffled. Two sub-groups with ±4 % formant
-    shift = different singers. Breath noise through the same formants, −20 dB. Stereo."""
+    shift = different singers. Breath noise through the same formants, −20 dB. Stereo.
+    voice_gain (optional, v2): one per-sample gain per singer, applied to that singer's source only —
+    staggered entries and individual breaths (None keeps every singer at the section's `dyn`)."""
     r = dsp.rng(seed)
     fm = FORMANTS_F if women else FORMANTS_M
     gains = (0.0, -4.0, -17.0, -21.0) if women else (0.0, -5.0, -15.0, -21.0)
@@ -615,7 +617,8 @@ def choir_section(n, voices, dyn, women=True, seed=0, pan=0.0, breath_db=-20.0):
         src = np.zeros(n)
         for k, fc in enumerate(voices):
             if k % 2 == g:
-                src += choir_voice_src(n, fc, seed * 31 + k * 7 + g)
+                v = choir_voice_src(n, fc, seed * 31 + k * 7 + g)
+                src += v if voice_gain is None else v * np.asarray(voice_gain[k])
         # breath: pink-ish (−3 dB/oct) noise, so that after lip radiation it is not a white hiss
         nz = lp1(r.standard_normal(n), 900.0) * 10 ** (breath_db / 20) * 3.0
         x = src + nz

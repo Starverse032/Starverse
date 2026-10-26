@@ -4,6 +4,7 @@
   python3 audio/build.py                 # → build/audio/mix.wav (+ stems/)
   python3 audio/build.py --only score    # re-render one part (others are read from cache)
   python3 audio/build.py --from 60 --to 90 --out build/audio/clip.wav   # excerpt of the mix
+  python3 audio/build.py --timeline build/review/v2/sound/timeline.test.json   # build against a local copy
 
 Masters: build/audio/mix.wav (web, −18 LUFS) and build/audio/mix_festival.wav (EBU R128, −23 LUFS).
 Parts (each a module exposing `render(tl) -> dict[str, np.ndarray]` of full-length stereo stems):
@@ -11,6 +12,11 @@ Parts (each a module exposing `render(tl) -> dict[str, np.ndarray]` of full-leng
   sfx.py    — sound design (UI, cosmos, fire, city, radio, typing, impacts, room tone)
 The mix stage applies stem gains, ducks music under key sfx moments, glues, limits to -1 dBTP (true peak,
 4× oversampled) and normalises to the target loudness.
+
+v2: --timeline PATH builds against any timeline file (default timeline.json); the web master's ≤2:1
+compressor window is read from timeline.mix.masters.web.compWindow (default 120.0–122.0 s, the f2924
+landing); build.py warns when timeline.silences (type = digital) differ from the four zeros the score
+is written for (Z0, Z1, Z4, Z7), since the mix would otherwise hard-clear music at the wrong place.
 """
 from __future__ import annotations
 
@@ -31,9 +37,23 @@ import dsp  # noqa: E402
 OUT = os.path.join(ROOT, 'build', 'audio')
 
 
-def load_timeline():
-    with open(os.path.join(ROOT, 'timeline.json'), encoding='utf-8') as f:
+def load_timeline(path=None):
+    with open(path or os.path.join(ROOT, 'timeline.json'), encoding='utf-8') as f:
         return json.load(f)
+
+
+def check_silences(tl):
+    """Warn when the timeline's digital silences are not the ones the score/sfx are written against."""
+    try:
+        import score
+        want = sorted(score.EXPECTED_DIGITAL_SILENCES)
+    except Exception:          # pragma: no cover
+        return
+    have = sorted((int(round(z['start'] * 24)), int(round(z['end'] * 24)))
+                  for z in tl.get('silences', []) if z.get('type', 'digital') == 'digital')
+    if have != want:
+        print(f'[build] WARNING timeline digital silences (frames) {have} != score v2 {want}: '
+              f'the mix will hard-clear exactly what the timeline says')
 
 
 def fit(x, n):
@@ -48,6 +68,12 @@ def render_part(name, tl, n):
     mod = importlib.import_module(name)
     stems = mod.render(tl)
     os.makedirs(os.path.join(OUT, 'stems'), exist_ok=True)
+    for f in os.listdir(os.path.join(OUT, 'stems')):          # drop stems this part no longer makes (v2: pulsar, probe)
+        if f.startswith(name + '.') and f.endswith('.wav') and f[len(name) + 1:-4] not in stems:
+            os.remove(os.path.join(OUT, 'stems', f))
+    if hasattr(mod, 'NOTES'):
+        with open(os.path.join(OUT, f'{name}_notes.json'), 'w', encoding='utf-8') as fh:
+            json.dump({'sr': dsp.SR, 'notes': mod.NOTES}, fh)
     for k, v in stems.items():
         dsp.write_wav(os.path.join(OUT, 'stems', f'{name}.{k}.wav'), fit(v, n))
     print(f'[{name}] {len(stems)} stems in {time.time() - t0:.1f}s: {", ".join(stems)}')
@@ -159,16 +185,20 @@ def frame_sample(t, fps=24):
     return int(round(t * fps)) * (dsp.SR // fps)
 
 
+WEB_COMP_WINDOW = (120.0, 122.0)    # v2: the f2924 landing (v1: 111.0–113.0)
+
+
 def master(m, tl, kind='web'):
     """Delivery masters per timeline.mix.masters: festival = EBU R128 −23 LUFS with no extra processing;
-    web = −18 LUFS with a smooth ≤2:1 compressor only over the climax (111–113 s). Both get a −1 dBTP
-    safety limiter, and digital silences are forced to exact zero on frame-exact samples."""
+    web = −18 LUFS with a smooth ≤2:1 compressor only over the climax (compWindow, default 120–122 s).
+    Both get a −1 dBTP safety limiter, and digital silences are forced to exact zero on frame-exact samples."""
     spec = ((tl.get('mix') or {}).get('masters') or {}).get(kind, {})
     target = spec.get('integratedLUFS', -23 if kind == 'festival' else -18)
     loud = dsp.lufs(m)
     out = m * (10 ** ((target - loud) / 20)) if loud > -70 else m.copy()
     if kind == 'web':
-        a, b = frame_sample(111.0), frame_sample(113.0)
+        w0, w1 = spec.get('compWindow', WEB_COMP_WINDOW)
+        a, b = frame_sample(w0), frame_sample(w1)
         pad = dsp.n_samples(0.25)
         lo, hi = max(0, a - pad), min(len(out), b + pad)
         seg = out[lo:hi]
@@ -194,8 +224,11 @@ def main():
     ap.add_argument('--from', dest='t0', type=float, default=None)
     ap.add_argument('--to', dest='t1', type=float, default=None)
     ap.add_argument('--out', default=os.path.join(OUT, 'mix.wav'))
+    ap.add_argument('--timeline', default=None, help='timeline file (default: timeline.json at the project root)')
     a = ap.parse_args()
-    tl = load_timeline()
+    tl = load_timeline(a.timeline)
+    print('[build] timeline:', os.path.relpath(a.timeline, ROOT) if a.timeline else 'timeline.json')
+    check_silences(tl)
     n = dsp.n_samples(tl['duration'])
     stems = {}
     for part in ('score', 'sfx'):

@@ -447,3 +447,236 @@ def smooth_limit(x, ceil_db, win=0.004):
     g = np.minimum(g, 1.0)
     y = x * (g[:, None] if x.ndim == 2 else g)
     return y.astype(np.float32)
+
+
+# ------------------------------------------------------------------ v2: echo / print tick
+def echo_tick(seed=508):
+    """Program echo `0` (f508) and every terminal print in S11 — ONE sample (screenplay S01-e):
+    4 kHz sine 5 ms + 2 ms noise. Sample 0 is the onset."""
+    r = dsp.rng(seed)
+    k = int(0.005 * SR)
+    t = np.arange(k) / SR
+    s = np.sin(2 * np.pi * 4000 * t) * onset_env(k, 6, k / 2.5)
+    kn = int(0.002 * SR)
+    nz = np.zeros(k, np.float32)
+    nz[:kn] = r.standard_normal(kn) * onset_env(kn, 2, kn / 3)
+    nz = bp(nz, 2500, 9000, 2)
+    x = s + 0.45 * nz / (np.abs(nz).max() + 1e-12)
+    x = np.concatenate([x, np.zeros(int(0.004 * SR))]).astype(np.float32)
+    x = fade_out_tail(x, 0.003)
+    x[0] = x[0] if abs(x[0]) > 1e-4 else 1e-4
+    return x
+
+
+# ------------------------------------------------------------------ v2: S04 light-carrier materials
+# One restrained sound per lighting / extinguishing (screenplay S04-a…e). All mono, sample 0 = onset.
+def _click(r, n, ms, lo, hi):
+    k = max(4, int(ms / 1000 * SR))
+    x = np.zeros(n, np.float32)
+    x[:k] = r.standard_normal(k) * onset_env(k, 2, k / 3)
+    x = bp(x, lo, hi, 2)
+    return x / (np.abs(x).max() + 1e-12)
+
+
+def ember_collapse(seed=2340):
+    """S04-a f2340: the fire slumps onto its bed — "沙": noise LP 800 Hz, 0.25 s, with a few sandy grains."""
+    r = dsp.rng(seed)
+    n = int(0.42 * SR)
+    t = np.arange(n) / SR
+    body = dsp.lowpass(r.standard_normal(n).astype(np.float32), 800, order=2)
+    body = body / (np.std(body) + 1e-12) * np.minimum(1, (np.arange(n) + 1) / (0.012 * SR)) * np.exp(-t / 0.09)
+    sand = np.zeros(n, np.float32)
+    for _ in range(26):
+        i = int(r.uniform(0, 0.22) * SR)
+        k = int(r.uniform(0.0006, 0.002) * SR)
+        sand[i:i + k] += r.standard_normal(k) * r.uniform(0.2, 0.6) * np.exp(-i / (0.1 * SR))
+    sand = dsp.lowpass(bp(sand, 300, 2400, 1), 1600, order=2)
+    x = body + 1.4 * sand
+    x[0] = x[0] if abs(x[0]) > 0 else 1e-6
+    return fade_out_tail(x.astype(np.float32), 0.08)
+
+
+def wick_puff(seed=2352):
+    """S04-b f2352: the wick catches — "噗": (BP 2–5 kHz noise 40 ms, low bump LP 300 Hz 150 ms)."""
+    r = dsp.rng(seed)
+    n = int(0.2 * SR)
+    t = np.arange(n) / SR
+    k = int(0.04 * SR)
+    pf = np.zeros(n, np.float32)
+    pf[:k] = r.standard_normal(k) * onset_env(k, 24, k / 3)
+    pf = bp(pf, 2000, 5000, 2)
+    bump = dsp.lowpass(r.standard_normal(n).astype(np.float32), 300, order=2)
+    bump = bump / (np.std(bump) + 1e-12) * np.sin(np.pi * np.clip(t / 0.15, 0, 1)) ** 2
+    return fade_out_tail(pf / (np.abs(pf).max() + 1e-12), 0.01), fade_out_tail(bump.astype(np.float32), 0.02)
+
+
+def wax_pop(seed=2412):
+    """S04-b f2412: a very fine wax crackle, HP 3 kHz."""
+    r = dsp.rng(seed)
+    n = int(0.03 * SR)
+    x = _click(r, n, 0.8, 3000, 12000)
+    t = np.arange(n) / SR
+    x = x + 0.25 * np.sin(2 * np.pi * r.uniform(5200, 6800) * t) * np.exp(-t / 0.003)
+    return dsp.highpass(fade_out_tail(x.astype(np.float32), 0.005), 3000, order=2)
+
+
+def smoke_hiss(sec, seed=2413):
+    """The thread of smoke from a snuffed wick: thin HP noise that swells and dies."""
+    r = dsp.rng(seed)
+    n = int(sec * SR)
+    t = np.arange(n) / SR
+    x = bp(r.standard_normal(n).astype(np.float32), 3500, 11000, 2)
+    env = np.sin(np.pi * np.clip(t / sec, 0, 1)) ** 1.5 * (1 + 0.3 * smooth_noise(n, 9, seed + 1))
+    return (x * env).astype(np.float32)
+
+
+def glass_seat(seed=2424):
+    """S04-c f2424: the lantern chimney drops into its gallery — 2 ms click + 3.4 kHz ring 80 ms."""
+    r = dsp.rng(seed)
+    n = int(0.2 * SR)
+    t = np.arange(n) / SR
+    c = _click(r, n, 2.0, 1500, 9000)
+    ring = sum(a * np.sin(2 * np.pi * f * t + r.uniform(0, 6)) for f, a in ((3400, 1.0), (5170, 0.35), (7950, 0.15)))
+    ring = ring * np.exp(-t / 0.024)
+    x = c + 0.6 * ring
+    return fade_out_tail(x.astype(np.float32), 0.03)
+
+
+def oil_pom(seed=2427):
+    """S04-c: the oil wick takes — a dull "嘭", LP 400 Hz."""
+    r = dsp.rng(seed)
+    n = int(0.3 * SR)
+    t = np.arange(n) / SR
+    x = dsp.lowpass(r.standard_normal(n).astype(np.float32), 400, order=2)
+    x = x / (np.std(x) + 1e-12) * np.minimum(1, (np.arange(n) + 1) / (0.008 * SR)) * np.exp(-t / 0.07)
+    x = x + 0.6 * np.sin(2 * np.pi * 95 * t) * np.minimum(1, (np.arange(n) + 1) / 96) * np.exp(-t / 0.06)
+    return fade_out_tail(x.astype(np.float32), 0.05)
+
+
+def ratchet(seed=2484):
+    """S04-c f2484: the wick is wound down — three dry ratchet clicks 30 ms apart."""
+    r = dsp.rng(seed)
+    n = int(0.16 * SR)
+    x = np.zeros(n, np.float32)
+    for j in range(3):
+        i = int(j * 0.030 * SR)
+        c = _click(r, n - i, 1.2, 1800, 7000) * (1.0 - 0.12 * j)
+        tt = np.arange(n - i) / SR
+        c = c + 0.18 * np.sin(2 * np.pi * r.uniform(2300, 2700) * tt) * np.exp(-tt / 0.004)
+        x[i:] += c
+    return fade_out_tail(x, 0.01)
+
+
+def switch_click(seed=2496):
+    """S04-d f2496 / f2556 (the same sample): a wall switch — 1 ms click + 1.2 kHz key body 15 ms."""
+    r = dsp.rng(seed)
+    n = int(0.06 * SR)
+    t = np.arange(n) / SR
+    c = _click(r, n, 1.0, 1500, 8000)
+    body = np.sin(2 * np.pi * 1200 * t) * onset_env(n, 12, 0.015 * SR / 4.5)
+    thunk = dsp.lowpass(r.standard_normal(n).astype(np.float32), 500, order=2) * onset_env(n, 30, 0.012 * SR / 4)
+    thunk /= np.abs(thunk).max() + 1e-12
+    return fade_out_tail((c + 0.7 * body + 0.25 * thunk).astype(np.float32), 0.01)
+
+
+def filament_hum(sec, rise, fall_at, fall, seed=2497):
+    """S04-d: current through the filament — 100 Hz family (50 Hz grid, East Africa), very faint;
+    rises over `rise` s as the filament heats, fades over `fall` s from `fall_at` (thermal inertia)."""
+    r = dsp.rng(seed)
+    n = int(sec * SR)
+    t = np.arange(n) / SR
+    jit = 1 + 0.0003 * smooth_noise(n, 0.3, seed, -1, 1)
+    ph = np.cumsum(100.0 * jit) / SR
+    y = np.sin(2 * np.pi * ph) + 0.5 * np.sin(4 * np.pi * ph + 0.7) + 0.3 * np.sin(6 * np.pi * ph + 1.9) \
+        + 0.12 * np.sin(2 * np.pi * 1.2 * ph + 0.3)
+    env = ease_in_out_sine(t / rise) * (1 - ease_in_out_sine((t - fall_at) / fall))
+    y = y * env
+    y[0] = 1e-6
+    return (y / np.sqrt(np.mean(y[int(rise * SR):int(fall_at * SR)] ** 2) + 1e-12)).astype(np.float32)
+
+
+def glass_ting(seed=2506, freq=5100.0):
+    """A tiny glass "叮" (the bulb at full brightness)."""
+    r = dsp.rng(seed)
+    n = int(0.5 * SR)
+    t = np.arange(n) / SR
+    y = np.sin(2 * np.pi * freq * t) * np.exp(-t / 0.12) + 0.3 * np.sin(2 * np.pi * freq * 2.71 * t) * np.exp(-t / 0.05)
+    y = y * np.minimum(1, (np.arange(n) + 1) / 24)
+    y[0] = 1e-4
+    return fade_out_tail(y.astype(np.float32), 0.05)
+
+
+def cool_tick(seed=2562):
+    """S04-d f2562: the filament cooling — a thin 6 kHz tick."""
+    n = int(0.012 * SR)
+    t = np.arange(n) / SR
+    y = np.sin(2 * np.pi * 6000 * t + 0.5) * onset_env(n, 3, 0.002 * SR)
+    return fade_out_tail(y.astype(np.float32), 0.003)
+
+
+def elec_tick():
+    """S04-e f2568: the modern lamp — a clean electronic "嗒": 4 kHz sine, 5 ms, no hum."""
+    n = int(0.005 * SR)
+    t = np.arange(n) / SR
+    y = np.sin(2 * np.pi * 4000 * t + 0.4) * np.hanning(n + 2)[1:-1] ** 0.5
+    y[0] = 1e-4
+    return y.astype(np.float32)
+
+
+def cover_tick():
+    """S09-c: the one short "嗒" that replaces every group's own breathing — 2 kHz, 8 ms."""
+    n = int(0.008 * SR)
+    t = np.arange(n) / SR
+    y = np.sin(2 * np.pi * 2000 * t + 0.3) * onset_env(n, 8, 0.0025 * SR)
+    y[0] = 1e-4
+    return fade_out_tail(y.astype(np.float32), 0.002)
+
+
+# ------------------------------------------------------------------ v2: long take A, the first near sounds
+def leaf_sweep(sec, seed=1740):
+    """S02-f f1740: an out-of-focus acacia twig sweeps the frame left → right — a dry brush of leaves
+    and thorns (granular BP 1.5–7 kHz + a soft low swish). Stereo, panned with the sweep."""
+    r = dsp.rng(seed)
+    n = int(sec * SR)
+    t = np.arange(n) / SR
+    out = np.zeros((n + SR // 10, 2), np.float32)
+    bank = NoiseBank([(1500, 3500), (2500, 5500), (3500, 7000)], 1.0, seed + 1)
+    env = np.sin(np.pi * np.clip(t / sec, 0, 1)) ** 0.8
+    i = 0
+    while True:
+        i += int(r.exponential(0.004) * SR) + 1
+        if i >= n:
+            break
+        k = int(r.uniform(0.0008, 0.004) * SR)
+        g = bank.grain(int(r.integers(3)), k, r) * onset_env(k, 2, k / 3)
+        p = -0.6 + 1.2 * i / n + r.uniform(-0.15, 0.15)
+        place(out, g * env[i] * np.exp(r.normal(0, 0.5)), i, 1.0, float(np.clip(p, -1, 1)))
+    sw = dsp.lowpass(r.standard_normal(n).astype(np.float32), 700, order=2)
+    sw = sw / (np.std(sw) + 1e-12) * env * 0.35
+    out[:n] += pan_c(sw, np.linspace(-0.6, 0.6, n).astype(np.float32))
+    out = out[:n]
+    out[0] += 1e-6
+    return fade_out_tail(out, 0.03)
+
+
+def grass_rustle(sec, seed=1741):
+    """S02-f/g: dry grass close to the lens after f1740 — the first near sound since the prologue:
+    sparse crisp ticks (HP 3 kHz) over a breath of HP 2 kHz noise, slowly breathing. Stereo."""
+    r = dsp.rng(seed)
+    n = int(sec * SR)
+    out = np.zeros((n + SR // 10, 2), np.float32)
+    bank = NoiseBank([(3000, 7000), (4000, 9000)], 1.0, seed + 2)
+    breath = 0.55 + 0.45 * (smooth_noise(n, 0.6, seed + 3, -1, 1) + 1) / 2
+    t = 0.0
+    while t < sec:
+        t += r.exponential(1 / 28.0)
+        i = int(t * SR)
+        if i >= n:
+            break
+        k = int(r.uniform(0.0005, 0.0025) * SR)
+        g = bank.grain(int(r.integers(2)), k, r) * onset_env(k, 2, k / 3)
+        place(out, g * breath[i] * np.exp(r.normal(0, 0.4)) * 0.12, i, 1.0, r.uniform(-0.5, 0.5))
+    bed = dsp.highpass(pink_st(sec, seed + 4), 2000, order=2)
+    bed = follow_unit(bed, 0.3) * 0.08 * breath[:, None]
+    out = out[:n] + bed
+    return out.astype(np.float32)

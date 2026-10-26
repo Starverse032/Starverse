@@ -1,28 +1,35 @@
-"""AFTERGLOW — score part (screenplay §6, plus the musical items of §7.1: #15 reverse reverb,
+"""AFTERGLOW — score part (screenplay v2 §6, plus the musical items of §7.1: #15 reverse reverb,
 #16 Shepard rise, #17 Big Bang 定音 + air, #21 supernova 定音 + string surge, #27 E5 carrier keyed
 in Morse, #32 the reversed ♯C5). Everything synthesised; fixed seeds (global seed 55).
 
 render(tl) -> {stem: full-length stereo float32 @ 48 kHz}. Stems:
-  strings — druid fifths (just intonation in the cosmos), pedals, canon/stretto arco, Dm(add9),
-            the one D-major chord (+ warm organ bed), Dsus2 → Asus2, S27 solo violin
+  strings — druid fifths (just intonation in the cosmos), canon/stretto arco, Dm(add9), the one
+            D-major chord (+ warm organ bed), Dsus2 → Asus2, the S06 solo violin, S07's ppp fifth
+  pedal   — the D2 string pedal of long take A: f888 → f2924 without a break (v2)
   asker   — the Asker (AI's voice), the E5 radio carrier + Morse, the reversed ♯C5
-  plucks  — Karplus–Strong: the first human Q, canon, stretto, pizzicato
-  bells   — A6 "light on the road" (sine at 57, glass bells 88 / 152 / 229), 𒀭 D6, celesta Q
+  plucks  — Karplus–Strong: the first human Q (f1848), canon, stretto, pizzicato
+  bells   — A6 "light on the road" (sine f1392, glass bells f2136 / f3456 / f5496), 𒀭 D6, celesta Q
   glass   — bowed glass: canon/stretto glass, "many askers", the A4 that is left, the E5 unison,
             the Asus2 overtones
-  brass   — the one FM horn D3 (mp, 48–52.5)
-  choir   — 16-voice "aah" — only from 210.0 (03:30.00)
-  low     — score timpani (Big Bang 73.4 → 18.4 Hz, supernova 55 → 27.5 Hz), sustained D1 / A1
+  brass   — the one FM horn D3 (mp, f1152–f1332)
+  choir   — 16 singers "aah" — only from f5088 (03:32.00), entries staggered 0–9 frames
+  low     — score timpani (Big Bang f608 73.4 → 18.4 Hz, supernova f1352 55 → 27.5 Hz), D1 / A1 subs
   fx      — #15 reverse reverb, #16 Shepard rise, #17 Big Bang air
 
-Sync: every frame-aligned event sits on sample frame × 2000 (`fs`); the Morse is placed on exact
-sample times (`xs`), ending at 132.740 s. Hard cuts (24.0, 52.5, 113.0, 202.0, 204.0) end with a
-2 ms raised-cosine so the cut is sample-tight without a click; digital silences are exact zeros.
-Levels follow the screenplay (dBFS, pre-normalisation mix): sustained parts as RMS, hits as peak.
+v2 time base (docs/v2/screenplay-v2.md §6, timeline-v2.md; producer decisions 7-2 / 7-23 locked):
+  0–25 s unchanged · 25–78 s long take A is ONE line (D2 pedal from f888, f1332 drop without a
+  digital zero, supernova f1352, A6 f1392, KS Q f1848/1872/1896) · S03 bed f1920, guest-star A6
+  f2136 · S04 canon: a voice per light-carrier (f2280/2352/2424/2496/2568) + second round from f2664
+  · S05 stretto on the cuts f2784…f2916, tutti E f2924 (loudest), f2928 cut to the lone E5 · Morse
+  125.0–132.74 · S07 (pulsar deleted): A6 f3456, D2–A2 ppp f3528–f3696, digital zero [3702, 3864) ·
+  S08 same windows (𒀭 D6 now f3912) · S09 the question +2 s: D4 f5040, A4 f5064, E5 + choir f5088,
+  Dsus2 f5112; enter f5160 unchanged · S10 bass D → A f5184, warmest f5352 · S11 decay from f5472.
 
-Departures from the computed task text (the locked screenplay final-1.1 + timeline.json win):
-no pitched ident (#1 is sfx.ident, no Deep-Note glide), no star bells / iron bell / grains (§7.1
-#20/#21 deleted), choir from 210.0, bass change at f5184 (216.0), pulsar is not music.
+Sync: every frame-aligned event sits on sample frame × 2000 (`fs`); the Morse is placed on exact
+sample times (`xs`), ending at 132.740 s. Hard cuts (24.0, f1332 upper voices, 122.0, 202.0, 204.0)
+end with a 2 ms raised-cosine so the cut is sample-tight without a click; digital silences are exact
+zeros. Levels follow the screenplay (dBFS, pre-normalisation mix): sustained parts as RMS, hits as peak.
+Every pitched note is logged (NOTES → build/audio/score_notes.json) for the harmony checks.
 """
 from __future__ import annotations
 
@@ -34,7 +41,7 @@ import instruments as I
 from dsp import SR, n_samples
 
 SEED = 55
-STEMS = ('strings', 'asker', 'plucks', 'bells', 'glass', 'brass', 'choir', 'low', 'fx')
+STEMS = ('strings', 'pedal', 'asker', 'plucks', 'bells', 'glass', 'brass', 'choir', 'low', 'fx')
 CUT = 96          # 2 ms raised-cosine at hard cuts
 SQ2 = np.sqrt(2.0)
 
@@ -184,6 +191,13 @@ def rearticulate(n, i0, onsets, depth=0.45, rec=0.12):
     return g
 
 
+NOTES = []      # (stem, i_on, i_off, [Hz, ...]) — every pitched note, for the harmony / third checks
+
+
+def log_note(stem, i_on, i_off, freqs):
+    NOTES.append((stem, int(i_on), int(i_off), [round(float(f), 3) for f in freqs]))
+
+
 def mono2st(x, pan=0.0):
     return (I.pan2(np.asarray(x, dtype=np.float64), pan) * SQ2).astype(np.float32)
 
@@ -291,6 +305,7 @@ def strings_note(sc, f, t_on, t_off, level, attack=2.5, release=6.0, seed=0, vib
     fc = pitch_curve(pitch, i_on, n, 0.08) if pitch else np.full(n, float(f))
     clip = I.string_section(n, fc, dyn, seed=seed, vib=vib, players=players, pan=pan, cut_lo=cut_lo, cut_hi=cut_hi)
     sc.add(stem, clip, i_on, gain=db(level) * K_STR, rev=rev if rev is not None else {'hall': 0.3})
+    log_note(stem, i_on, i_on + hold, [f] + [e[1] for e in (pitch or [])])
 
 
 def glass_note(sc, f, t_on, t_off, level, attack=0.6, release=2.5, seed=0, pts=None, pitch=None,
@@ -304,17 +319,20 @@ def glass_note(sc, f, t_on, t_off, level, attack=0.6, release=2.5, seed=0, pts=N
     fc = pitch_curve(pitch, i_on, n, 0.09) if pitch else np.full(n, float(f))
     clip = I.glass_bowed(n, fc, dyn, seed=seed, pan=pan)
     sc.add(stem, clip, i_on, gain=db(level) * K_GLS, rev=rev if rev is not None else {'hall': 0.4})
+    log_note(stem, i_on, i_on + hold, [f] + [e[1] for e in (pitch or [])])
 
 
 def pluck(sc, f, t, level, sec=None, seed=0, pan=0.0, rev=None, decay=0.996, bright=0.6, stem='plucks'):
     sec = sec or float(np.clip(1100.0 / f, 1.6, 6.0))
     clip = I.ks_pluck(f, sec, decay=decay, bright=bright, seed=seed)
     sc.add(stem, clip, fs(t), gain=db(level), pan=pan, rev=rev if rev is not None else {'room': 0.25, 'hall': 0.22})
+    log_note(stem, fs(t), fs(t) + min(len(clip), n_samples(1.5)), [f])
 
 
 def bell(sc, f, t, level, sec=6.0, seed=0, pan=0.0, rev=None, stem='bells', kind='glass'):
     clip = I.glass_bell(f, sec, seed=seed) if kind == 'glass' else I.celesta(f, sec, seed=seed)
     sc.add(stem, clip, fs(t), gain=db(level), pan=pan, rev=rev if rev is not None else {'hall': 0.35})
+    log_note(stem, fs(t), fs(t) + min(len(clip), n_samples(1.5)), [f])
 
 
 def asker_line(sc, i_on, n, events, amp_pts, level, seed=0, vib=None, harm=None, glide=0.06, rev=None,
@@ -327,6 +345,9 @@ def asker_line(sc, i_on, n, events, amp_pts, level, seed=0, vib=None, harm=None,
         amp = amp * rearticulate(n, i_on, [e[0] for e in events[1:]])
     y = I.asker(n, f, amp, vib_cents=vib, seed=seed) if harm is None else asker_h(n, f, amp, harm, vib, seed)
     sc.add(stem, y, i_on, gain=db(level), pan=pan, rev=rev if rev is not None else {'hall': 0.35})
+    i_end = i_on + (n if release_at is None else release_at - i_on)
+    for k, e in enumerate(events):          # one log entry per sung pitch, from its onset to the next
+        log_note(stem, e[0], events[k + 1][0] if k + 1 < len(events) else i_end, [e[1]])
     return y
 
 
@@ -371,6 +392,7 @@ def sub(sc, f, t_on, t_off, level, attack=1.0, release=2.0, pts=None, h2=-10.0, 
     fc = pitch_curve(pitch, i_on, n, 0.3) if pitch else np.full(n, float(f))
     y = I.sub_tone(n, fc, dyn, h2_db=h2, seed=seed)
     sc.add(stem, y, i_on, gain=db(level) * K_SUB, rev=rev or {})
+    log_note(stem, i_on, i_on + hold, [f] + [e[1] for e in (pitch or [])])
 
 
 # ===================================================================== the Big Bang note (#17)
@@ -478,168 +500,222 @@ def shepard(sec, seed=0, rise_oct=1.25):
     return (y / np.abs(y).max()).astype(np.float32)
 
 
+def F(f):
+    """Frame → timeline seconds (24 fps). Scene times below are written as frames where the screenplay
+    gives frames, so every cue lands on sample frame × 2000."""
+    return f / 24.0
+
+
 def scene_bigbang():
-    """M3: the Big Bang note at f608 (25.333, 8 frames after the flash) + air; no pitched music."""
-    sc = Scene('bigbang', 25.333, 37.0, tail=3.0)
+    """M3 (v2 S02-a/b, long take A): the Big Bang note at f608 (8 frames after the f600 flash) + air;
+    no pitched music. The R_void tail now runs out naturally (v1 truncated it at 40.0 s)."""
+    sc = Scene('bigbang', F(608), 37.0, tail=8.0)
     timp, air = bigbang_parts()
-    sc.add('low', timp, fs(25.333), gain=db(TIMP_BB_DB), rev={'void': 0.18})
-    sc.add('fx', air, fs(25.333), gain=db(AIR_BB_DB), rev={'void': 0.6})
+    sc.add('low', timp, fs(F(608)), gain=db(TIMP_BB_DB), rev={'void': 0.18})
+    sc.add('fx', air, fs(F(608)), gain=db(AIR_BB_DB), rev={'void': 0.6})
+    sc.window(None, [(42.0, 1.0), (45.0, 0.0)], linear=True)
+    return sc
+
+
+# ---------------------------------------------------------------- long take A: ONE continuous line
+# v2 (screenplay §6.1, §6.5; brief §10): the D2 string pedal enters with the first star (f888) and
+# never stops until the f2924 landing — through the druid chord, the f1332 drop (骤降, NOT a digital
+# zero: v1's 52.5–53.333 s zero is gone), the supernova, the Earth, the atmosphere, the fire, the
+# lamps and the stretto. It lives in its own stem ('pedal') so a cut of the upper voices can never
+# take it with them, and so the drop is measurable.
+PEDAL_PTS = [   # dB relative to PEDAL_DB: ppp → mf with the druid → drop → ppp → stretto.
+    # The D2 section (9 players + ensemble, low register) measures ≈ 6.5 dB above the nominal K_STR
+    # calibration, so the ppp points sit at −8.5 (measured ≈ −42 dBFS RMS after the f1332 drop).
+    (F(888), 0.0), (F(1152), 0.0), (F(1248), 10.0), (F(1331), 10.5),
+    (F(1332), -8.5),                                    # f1332 骤降: ≈ −42 dBFS measured, the line goes on
+    (F(1352), -8.5), (F(1392), 0.0), (62.0, -5.0), (66.0, -8.5),     # breathes with the surge
+    (F(1872), -8.5), (F(2280), -5.0), (F(2568), -2.0), (F(2664), -1.0), (F(2784), 2.0), (121.5, 7.0)]
+PEDAL_DB = -40.0
+
+
+def scene_pedal():
+    sc = Scene('pedal', F(888), 122.0, tail=0.3)
+    strings_note(sc, J['D2'], F(888), F(2924), PEDAL_DB, attack=3.0, release=0.12, seed=SEED + 40,
+                 pts=PEDAL_PTS, rev={'void': 0.12, 'hall': 0.08}, stem='pedal', cut_hi=2200)
+    sc.cut(122.0)
     return sc
 
 
 def scene_druid():
-    """M4 first half: 37.0 D2–A2 (just), 48.0 E3–B3–A4–E5 together, 4 s crescendo to mf (52.0), FM
-    horn D3 buried (mp), 52.5 the score is cut."""
-    sc = Scene('druid', 37.0, 52.5, tail=0.5)
+    """M4 first half (S02-b/c/d): f888 A2 (with the D2 pedal: the cosmos' first pitch, ppp, 3 s),
+    f1152 E3–B3–A4–E5 together + the one FM horn D3 (mp), 4 s to mf at f1248, held through the star's
+    tightening; f1332 the score is cut — every voice but the D2 pedal (骤降, no digital zero)."""
+    sc = Scene('druid', F(888), F(1332), tail=0.5)
     rv = {'void': 0.45, 'hall': 0.1}
-    base = [(37.0, 0), (48.0, 0), (52.0, 10.0)]
-    strings_note(sc, J['D2'], 37.0, 52.5, -40.0, attack=3.0, release=1, seed=SEED + 40, pts=base, rev=rv)
-    strings_note(sc, J['A2'], 37.0, 52.5, -41.0, attack=3.0, release=1, seed=SEED + 41, pts=base, rev=rv)
-    up = [(48.0, -12), (52.0, 0)]
+    base = [(F(888), 0), (F(1152), 0), (F(1248), 10.0), (F(1296), 10.0), (F(1331), 11.0)]
+    strings_note(sc, J['A2'], F(888), F(1332), -41.0, attack=3.0, release=1, seed=SEED + 41, pts=base, rev=rv)
+    up = [(F(1152), -12), (F(1248), 0), (F(1296), 0), (F(1331), 1.5)]   # a breath of strain as the star tightens
     for k, (nm, lv) in enumerate((('E3', -32.0), ('B3', -33.0), ('A4', -34.0), ('E5', -35.0))):
-        strings_note(sc, J[nm], 48.0, 52.5, lv, attack=3.6, release=1, seed=SEED + 42 + k, pts=up, rev=rv,
+        strings_note(sc, J[nm], F(1152), F(1332), lv, attack=3.6, release=1, seed=SEED + 42 + k, pts=up, rev=rv,
                      shape=1.4)
     # FM horn D3, mp, buried in the chord (the film's only brass colour)
-    i_on = fs(48.0)
-    n = fs(52.5) - i_on + n_samples(1)
-    dyn = note_env(n, 0.8, fs(52.5) - i_on, 1.0) * dbenv([(48.0, -6), (52.0, 0)], i_on, n)
-    sc.add('brass', I.fm_horn(n, J['D3'], dyn, seed=SEED + 48), i_on, gain=db(-35.0) * K_HRN, rev={'void': 0.5, 'hall': 0.2})
-    sc.cut(52.5)
+    i_on = fs(F(1152))
+    n = fs(F(1332)) - i_on + n_samples(1)
+    dyn = note_env(n, 0.8, fs(F(1332)) - i_on, 1.0) * dbenv([(F(1152), -6), (F(1248), 0)], i_on, n)
+    sc.add('brass', I.fm_horn(n, J['D3'], dyn, seed=SEED + 48), i_on, gain=db(-35.0) * K_HRN,
+           rev={'void': 0.5, 'hall': 0.2})
+    log_note('brass', i_on, fs(F(1332)), [J['D3']])
+    sc.cut(F(1332))
     return sc
 
 
-def scene_supernova_to_lamps():
-    """53.333 supernova note (A1 → A0) + string surge p → f (D–A–E–B over D1) → 57 A6 sine →
-    D2 pedal (M5) → 74 KS Q → 79 D3–A3 bed → 88 A6 glass bell → 95 canon → 107 stretto →
-    112.833 tutti E (loudest) → 113.000 cut."""
-    sc = Scene('lamps', 53.333, 113.0, tail=0.2)
-    t_sn = 53.333
-    # --- #21 supernova score timpani: 55 → 27.5 Hz, 3 s, −9 dBFS peak
+def scene_supernova():
+    """S02-d/e: f1352 (8 frames after the f1344 flash) A1 → A0 score timpani −9 dBFS + string surge
+    (D–A–E–B stacked over a D1, p → f at f1392, then decays) → f1392 A6 sine ("light on the road" ①)
+    out by f1524; the strings settle back into the D2 pedal."""
+    t_sn = F(1352)
+    sc = Scene('supernova', t_sn, 66.0, tail=6.0)
     timp = I.score_timpani(55.0, 27.5, 3.0, 10.0, decay_db_per_s=6.5, h2_db=-10.0, drive=1.25)
     sc.add('low', timp, fs(t_sn), gain=db(-9.0), rev={'void': 0.15})
-    sub(sc, J['D1'], t_sn, 58.0, -24.0, attack=0.3, release=5.0, pts=[(t_sn, -8), (55.0, 0), (58, -6)], seed=SEED + 50)
-    # --- surge: D–A–E–B stacked over the D1, p → f (53.333 → 55.0), then decays
+    log_note('low', fs(t_sn), fs(t_sn + 3.0), [55.0, 27.5])
+    sub(sc, J['D1'], t_sn, 60.0, -24.0, attack=0.3, release=5.0, pts=[(t_sn, -8), (F(1392), 0), (60.0, -6)],
+        seed=SEED + 50)
     rv = {'void': 0.5, 'hall': 0.12}
-    surge = [(t_sn, -12), (55.0, 0), (57.0, -6), (61.0, -18)]
+    surge = [(t_sn, -12), (F(1392), 0), (60.0, -6), (64.0, -18)]
     for k, (nm, lv) in enumerate((('A2', -33.0), ('E3', -33.5), ('B3', -34.0), ('A4', -35.0), ('E5', -36.5),
                                   ('B4', -37.0))):
-        strings_note(sc, J[nm], t_sn, 59.0, lv, attack=0.35, release=6.0, seed=SEED + 52 + k, pts=surge, rev=rv,
+        strings_note(sc, J[nm], t_sn, 62.0, lv, attack=0.35, release=6.0, seed=SEED + 52 + k, pts=surge, rev=rv,
                      cut_hi=3200)
-    # --- the D2 pedal: part of the surge, then ppp through M5, swelling with the canon and stretto
-    ped = [(t_sn, -12), (55.0, -3), (58.0, -11), (62.0, -14), (70.0, -15), (95.0, -12), (107.0, -8),
-           (112.5, -3)]
-    strings_note(sc, J['D2'], t_sn, 112.833, -26.0, attack=0.35, release=0.12, seed=SEED + 60, pts=ped,
-                 rev={'void': 0.3, 'hall': 0.15}, cut_hi=2200)
-    # --- 57.0 A6 "light on the road": a single sine with slight vibrato, −28 dB, out by 63.5 (f1524)
-    i_on = fs(57.0)
-    n = fs(63.5) - i_on
+    # f1392 A6 "light on the road" ①: a single sine with slight vibrato, −28 dB, out by f1524 (63.5)
+    i_on = fs(F(1392))
+    n = fs(F(1524)) - i_on
     t = np.arange(n) / SR
     vib = 2 ** (4.0 / 1200 * np.sin(2 * np.pi * 4.6 * t) * np.clip(t / 1.5, 0, 1))
     a6 = np.sin(2 * np.pi * np.cumsum(1760.0 * vib / SR)) * note_env(n, 1.2, n - n_samples(2.5), 2.5)
-    sc.add('bells', a6, i_on, gain=db(-28.0) * SQ2 / SQ2, rev={'void': 0.5})
-    # ======== M5 (human section: ET, vibrato) ========
-    # --- 74/75/76 KS: the first human asks — D3, A3, E4 (E4 rings ~5 s), mp
-    for k, (nm, t) in enumerate((('D3', 74.0), ('A3', 75.0), ('E4', 76.0))):
-        pluck(sc, N(nm), t, -21.0, sec=5.5, seed=SEED + 74 + k, pan=-0.05, rev={'room': 0.3, 'hall': 0.18})
-    # --- 79 → warm bed D3–A3 (p), continuing into the canon
-    bed = [(79.0, -4), (82.0, -1), (95.0, -1), (107.0, 2.0), (112.5, 4.0)]
-    strings_note(sc, N('D3'), 79.0, 112.833, -35.0, attack=3.5, release=0.12, seed=SEED + 79, vib=True, pts=bed)
-    strings_note(sc, N('A3'), 79.0, 112.833, -36.0, attack=3.5, release=0.12, seed=SEED + 80, vib=True, pts=bed)
-    # --- 88.0 A6 glass bell (another late letter), −30 dB
-    bell(sc, 1760.0, 88.0, -30.0, sec=6.0, seed=SEED + 88, pan=0.15, rev={'void': 0.45, 'hall': 0.1})
-    # ======== M6 canon (95 → 107): Q every 2 beats, registers rising, p → f ========
-    cres = lambda t: float(np.interp(t, [95, 101, 105, 107, 109, 111.5, 112.833], [0, 3, 6, 8, 10, 12.5, 15]))
+    sc.add('bells', a6, i_on, gain=db(-28.0), rev={'void': 0.5})
+    log_note('bells', i_on, i_on + n, [1760.0])
+    sc.window(None, [(70.0, 1.0), (72.0, 0.0)], linear=True)
+    return sc
+
+
+# ---------------------------------------------------------------- fire → lamps → stretto (M5, M6)
+def _q_frames(f0, f1):
+    """Stretto Q inside one montage cut [f0, f1): D on the cut, A at 1/3, E at 2/3 (screenplay S05)."""
+    return [f0, int(round(f0 + (f1 - f0) / 3.0)), int(round(f0 + 2 * (f1 - f0) / 3.0))]
+
+
+T_LAND = F(2924)     # 121.833: everyone lands on E with the amber flash — the loudest moment
+CANON_CRES = ([F(2280), F(2424), F(2568), F(2664), F(2784), 120.5, T_LAND], [0, 3, 6, 8, 10, 12.5, 15])
+
+
+def scene_lamps():
+    """f1848 KS D3 (the first human asks; A3 f1872, E4 f1896) → f1920 warm D3–A3 bed (human vibrato)
+    → f2136 A6 glass bell (the guest star) → S04 canon: one new voice each time a new light-carrier
+    is lit (f2280 / 2352 / 2424 / 2496 / 2568) and a second round a voice a beat from f2664 → S05
+    stretto, a Q on every cut (D on the cut, A at 1/3, E at 2/3) → f2924 tutti E (scene_landing) →
+    f2928 cut."""
+    sc = Scene('lamps', F(1848), 122.0, tail=0.2)
+    fire_pan = -0.05
+    # --- f1848 / 1872 / 1896 KS: the first human asks — D3, A3, E4 (E4 rings ~5 s), mp
+    for k, (nm, f) in enumerate((('D3', 1848), ('A3', 1872), ('E4', 1896))):
+        pluck(sc, N(nm), F(f), -21.0, sec=5.5, seed=SEED + 74 + k, pan=fire_pan, rev={'room': 0.3, 'hall': 0.18})
+    # --- f1920 → warm bed D3–A3 (p), human vibrato fading in after 1 s, under the whole canon
+    bed = [(F(1920), -4), (F(1992), -1), (F(2280), -1), (F(2568), 1.0), (F(2664), 2.0), (F(2784), 3.0), (121.5, 4.0)]
+    strings_note(sc, N('D3'), F(1920), T_LAND, -35.0, attack=3.5, release=0.12, seed=SEED + 79, vib=True, pts=bed)
+    strings_note(sc, N('A3'), F(1920), T_LAND, -36.0, attack=3.5, release=0.12, seed=SEED + 80, vib=True, pts=bed)
+    # --- f2136 A6 glass bell (the guest star: another late letter), −30 dB
+    bell(sc, 1760.0, F(2136), -30.0, sec=6.0, seed=SEED + 88, pan=0.25, rev={'void': 0.45, 'hall': 0.1})
+
+    cres = lambda t: float(np.interp(t, *CANON_CRES))
     cres_s = lambda t: 0.5 * cres(t)
 
-    def q_pluck(root, t0, step, lv, seed, pan=0.0, sec=None, decay=0.996, bright=0.6):
-        for j, iv in enumerate((0, 7, 14)):
-            tj = t0 + j * step
-            f = N(root) * 2 ** (iv / 12)
-            pluck(sc, f, tj, lv + 2.0 + cres(tj), sec=sec, seed=seed + j, pan=pan, decay=decay, bright=bright)
+    def q_pluck(root, frames, lv, seed, pan=0.0, sec=None, decay=0.996, bright=0.6):
+        for j, (iv, f) in enumerate(zip((0, 7, 14), frames)):
+            tj = F(f)
+            pluck(sc, N(root) * 2 ** (iv / 12), tj, lv + 2.0 + cres(tj), sec=sec, seed=seed + j, pan=pan,
+                  decay=decay, bright=bright)
 
-    def q_arco(root, t0, step, lv, seed, t_end=112.833, vib=True, pan=None, attack=0.35):
+    def q_arco(root, frames, lv, seed, pan=None, attack=0.35):
         f0 = N(root)
-        ev = [(fs(t0), f0, 0), (fs(t0 + step), f0 * 2 ** (7 / 12), 0.08), (fs(t0 + 2 * step), f0 * 2 ** (14 / 12), 0.08)]
-        pts = [(t0, cres_s(t0)), (112.5, cres_s(112.5))]
-        strings_note(sc, f0, t0, t_end, lv, attack=attack, release=0.12, seed=seed, vib=True, pts=pts, pitch=ev,
+        ev = [(fs(F(frames[0])), f0, 0), (fs(F(frames[1])), f0 * 2 ** (7 / 12), 0.08),
+              (fs(F(frames[2])), f0 * 2 ** (14 / 12), 0.08)]
+        t0 = F(frames[0])
+        pts = [(t0, cres_s(t0)), (121.5, cres_s(121.5))]
+        strings_note(sc, f0, t0, T_LAND, lv, attack=attack, release=0.12, seed=seed, vib=True, pts=pts, pitch=ev,
                      artic=[ev[1][0], ev[2][0]], pan=pan)
 
-    def q_glass(root, t0, step, lv, seed, sustain=True, pan=0.0):
-        for j, iv in enumerate((0, 7, 14)):
-            tj = t0 + j * step
+    def q_glass(root, frames, lv, seed, sustain=True, pan=0.0):
+        for j, (iv, f) in enumerate(zip((0, 7, 14), frames)):
+            tj = F(f)
             bell(sc, N(root) * 2 ** (iv / 12), tj, lv - 3.0 + cres(tj), sec=4.0, seed=seed + j, pan=pan,
                  rev={'hall': 0.35, 'void': 0.15})
         if sustain:
-            te = t0 + 2 * step
-            glass_note(sc, N(root) * 2 ** (14 / 12), te, 112.833, lv - 6 + cres(te), attack=0.8, release=0.12,
-                       seed=seed + 9, pan=pan, pts=[(te, 0), (112.5, cres(112.5) - cres(te))])
+            te = F(frames[2])
+            glass_note(sc, N(root) * 2 ** (14 / 12), te, T_LAND, lv - 6 + cres(te), attack=0.8, release=0.12,
+                       seed=seed + 9, pan=pan, pts=[(te, 0), (121.5, cres(121.5) - cres(te))])
 
-    q_pluck('D3', 95.0, 1.0, -26.0, SEED + 950, pan=-0.1)                              # v1 KS
-    q_pluck('D4', 97.0, 1.0, -27.0, SEED + 970, pan=0.25)                              # v2 KS
-    q_pluck('D4', 97.0, 1.0, -31.0, SEED + 975, pan=-0.3, decay=0.985, bright=0.35)    # + pizzicato
-    q_arco('D2', 99.0, 1.0, -33.0, SEED + 990)                                         # v3 strings arco
-    q_glass('D5', 101.0, 1.0, -31.0, SEED + 1010, pan=0.2)                             # v4 glass
-    q_pluck('D3', 103.0, 1.0, -27.0, SEED + 1030, pan=0.1)                             # v5 tutti
-    q_arco('D3', 103.0, 1.0, -37.0, SEED + 1035)
-    q_glass('D4', 103.0, 1.0, -33.0, SEED + 1037, sustain=False, pan=-0.2)
-    q_arco('D4', 105.0, 1.0, -37.0, SEED + 1050)                                       # v6 second round, a voice a beat
-    q_pluck('D4', 105.0, 1.0, -28.0, SEED + 1052, pan=-0.25)
-    q_glass('D5', 106.0, 1.0, -33.0, SEED + 1060, pan=0.3)
-    q_pluck('D5', 106.0, 1.0, -29.0, SEED + 1062, pan=0.2)
-    # ======== stretto (107 → 112.833): a Q on every cut, D on the cut, E on the next cut ========
-    cuts = [2568, 2604, 2634, 2658, 2676, 2690, 2700, 2708]
-    plan = [  # (register roots, instruments)
-        (('D3',), 'ks+arco'), (('D4',), 'ks+arco'), (('D2', 'D5'), 'arco+glass'), (('D3', 'D4'), 'ks+arco'),
-        (('D4', 'D5'), 'ks+arco+glass'), (('D5', 'D6'), 'ks+glass+arco'), (('D3', 'D4', 'D5', 'D6'), 'all')]
+    beat = lambda f0: [f0, f0 + 24, f0 + 48]
+    # ======== S04 canon: a new voice each time a new carrier lights (screenplay S04-a…e) ========
+    q_pluck('D3', beat(2280), -26.0, SEED + 950, pan=-0.1)                              # v1 KS — the campfire
+    q_pluck('D4', beat(2352), -27.0, SEED + 970, pan=0.25)                              # v2 KS — the candle
+    q_pluck('D4', beat(2352), -31.0, SEED + 975, pan=-0.3, decay=0.985, bright=0.35)    #    + pizzicato
+    q_arco('D2', beat(2424), -33.0, SEED + 990)                                         # v3 arco — the lantern
+    q_glass('D5', beat(2496), -31.0, SEED + 1010, pan=0.2)                              # v4 glass — the filament
+    q_pluck('D3', beat(2568), -27.0, SEED + 1030, pan=0.1)                              # v5 tutti (mp) — the window
+    q_arco('D3', beat(2568), -37.0, SEED + 1035)
+    q_glass('D4', beat(2568), -33.0, SEED + 1037, sustain=False, pan=-0.2)
+    # ======== second round from f2664: a new voice every beat (f2664 … f2760), p → f ========
+    q_arco('D4', beat(2664), -37.0, SEED + 1050)
+    q_pluck('D4', beat(2688), -28.0, SEED + 1052, pan=-0.25)
+    q_glass('D5', beat(2712), -33.0, SEED + 1060, pan=0.3)
+    q_pluck('D5', beat(2736), -29.0, SEED + 1062, pan=0.2)
+    q_pluck('D3', beat(2760), -28.0, SEED + 1064, pan=-0.15)
+    # ======== S05 stretto: a Q on every cut, register rising, orchestration thickening ========
+    plan = [  # (register roots, instruments)  a … g  (screenplay S05 table)
+        (('D3',), 'ks'), (('D3',), 'ks+pizz'), (('D4',), 'ks+pizz'), (('D3', 'D4'), 'ks+arco'),
+        (('D4', 'D5'), 'ks+arco+glass'), (('D3', 'D4', 'D5', 'D6'), 'all'), (('D3', 'D4', 'D5', 'D6'), 'all')]
     for i, (roots, inst) in enumerate(plan):
-        f0, f1 = cuts[i], cuts[i + 1]
-        t0 = f0 / 24.0
-        step = (f1 - f0) / 48.0
+        frames = _q_frames(STRETTO_CUTS[i], STRETTO_CUTS[i + 1])
         for k, root in enumerate(roots):
             sd = SEED + 2000 + 37 * i + 5 * k
             pn = float(np.clip(-0.4 + 0.13 * i + 0.25 * k, -0.6, 0.6))
             if 'ks' in inst or inst == 'all':
-                q_pluck(root, t0, step, -28.0, sd, pan=pn, sec=3.0)
+                q_pluck(root, frames, -28.0, sd, pan=pn, sec=3.0)
+            if 'pizz' in inst:
+                q_pluck(root, frames, -31.0, sd + 3, pan=-pn, sec=1.5, decay=0.985, bright=0.35)
             if ('arco' in inst or inst == 'all') and root != 'D6':
-                q_arco(root, t0, step, -38.0, sd + 1, pan=pn * 0.5, attack=0.12)
+                q_arco(root, frames, -38.0, sd + 1, pan=pn * 0.5, attack=0.12)
             if 'glass' in inst or inst == 'all':
                 if N(root) >= N('D4'):
-                    q_glass(root, t0, step, -32.0, sd + 2, sustain=(i % 2 == 0), pan=-pn)
-    sub(sc, J['D1'], 107.0, 112.833, -27.0, attack=2.0, release=0.05, pts=[(107, -6), (112.5, 0)], seed=SEED + 3031)
-    # the stretto bed (everything in this scene) gives way 3–4 dB over its last seconds, so the E landing
-    # (scene_landing, not windowed) is an accent of its own instead of a wall the limiter flattens
+                    q_glass(root, frames, -32.0, sd + 2, sustain=(i % 2 == 0), pan=-pn)
+    sub(sc, J['D1'], F(2784), T_LAND, -27.0, attack=2.0, release=0.05, pts=[(F(2784), -6), (121.5, 0)],
+        seed=SEED + 3031)
+    # the stretto bed gives way 3–4 dB over its last seconds, so the E landing (scene_landing, not
+    # windowed) is an accent of its own instead of a wall the limiter flattens (v1.2, shifted +9 s)
     sc.window(None, STRETTO_TRIM)
-    sc.cut(113.0)
+    sc.cut(122.0)
     return sc
 
 
-# v1.2 (review: the f2708 landing had no accent; the web limiter held −1 dBFS from 110.5 and took
-# ~4 dB at the landing): the bed gives way 1.5 → 2.5 dB over 111–112.4 and dips to −7 dB in the last
-# 80 ms (the breath before the shout); the landing is re-voiced denser and less peaky — plucks −3 dB
-# and strummed over 15 ms after the beat (never before it), strings +6 dB, sub +3 dB, tanh-shaved
-# at −10 dBFS — so it lands ≥ 3 dB above the preceding 0.5 s in both masters with the limiter at
-# ≲ 2 dB, and the climax still peaks ≈ +9 LU (short-term) over the film's integrated loudness.
-STRETTO_TRIM = [(107.0, 0.0), (109.0, -0.5), (111.0, -1.5), (112.4, -2.5), (112.75, -7.0)]
+STRETTO_CUTS = [2784, 2820, 2850, 2874, 2892, 2906, 2916, 2928]   # cut g is [2916, 2928): D 2916 / A 2920 / E 2924
+STRETTO_TRIM = [(F(2784), 0.0), (118.0, -0.5), (120.0, -1.5), (121.4, -2.5), (121.75, -7.0)]
 LAND = dict(pluck=-21.0, strum=0.015, strings=-18.0, bells=-20.0, sub=-21.0, soft=-10.0)
 
 
 def scene_landing():
-    """112.833 (f2708): everyone lands on E (E3…E6), the loudest moment, no brass; cut at 113.000."""
-    sc = Scene('landing', 112.833, 113.0, tail=0.2)
-    t_e = 112.833
+    """f2924 (121.833): everyone lands on E (E3…E6) with the amber flash, the loudest moment, no brass;
+    f2928 (122.000) cut — from the fullest frame to the emptiest."""
+    sc = Scene('landing', T_LAND, 122.0, tail=0.2)
+    t_e = T_LAND
     for k, nm in enumerate(('E3', 'E4', 'E5', 'E6')):
         for j in range(2):
             clip = I.ks_pluck(N(nm), 1.0, bright=0.85, seed=SEED + 3000 + 2 * k + j)
             sc.add('plucks', clip, fs(t_e) + n_samples(LAND['strum'] * (2 * k + j) / 7), gain=db(LAND['pluck']),
                    pan=(-0.35 + 0.7 * j) * (0.4 + 0.2 * k), rev={'room': 0.25, 'hall': 0.22})
-        strings_note(sc, N(nm), t_e, 113.0, LAND['strings'], attack=0.025, release=0.12, seed=SEED + 3010 + k,
+        log_note('plucks', fs(t_e), fs(122.0), [N(nm)])
+        strings_note(sc, N(nm), t_e, 122.0, LAND['strings'], attack=0.025, release=0.12, seed=SEED + 3010 + k,
                      vib=True, cut_hi=4200, cut_lo=2600)
         if k >= 2:
             bell(sc, N(nm), t_e, LAND['bells'], sec=1.5, seed=SEED + 3020 + k, pan=0.3 - 0.6 * (k - 2))
-    sub(sc, N('E2'), t_e, 113.0, LAND['sub'], attack=0.02, release=0.1, seed=SEED + 3030)
+    sub(sc, N('E2'), t_e, 122.0, LAND['sub'], attack=0.02, release=0.1, seed=SEED + 3030)
     if LAND.get('soft') is not None:
         sc.soft(('strings', 'plucks'), LAND['soft'])
-    sc.cut(113.0)
+    sc.cut(122.0)
     return sc
 
 
@@ -676,11 +752,12 @@ def dist_km(t):
 
 
 def scene_solo():
-    """M7: 113.000 hard cut to a single E5 (Asker + solo violin, mp) → 123 radio-isation (violin out
-    ∝ 1/distance, harmonics fade → bare carrier) → 125.000 Morse "IS ANYONE THERE?" (ends 132.740)
-    → carrier at ≈ −60 dB → 135.000 zero."""
-    sc = Scene('solo', 113.0, 135.0, tail=0.2)
-    i_on = fs(113.0)
+    """M7 (v2 S06): f2928 (122.000) hard cut to a single E5 (Asker + solo violin, mp) → f2952 (123.0)
+    radio-isation (violin out ∝ 1/distance, gone by f3012; harmonics fade → bare carrier) → f3000
+    (125.000) Morse "IS ANYONE THERE?" (ends 132.740 ≈ f3186) → carrier at ≈ −60 dB → f3240 (135.0) zero."""
+    T0 = F(2928)
+    sc = Scene('solo', T0, 135.0, tail=0.2)
+    i_on = fs(T0)
     i_end = fs(135.0)
     n = i_end - i_on
     t = (i_on + np.arange(n)) / SR
@@ -697,10 +774,10 @@ def scene_solo():
     key = np.zeros(n)
     ramp = n_samples(0.004)
     up = I.raised(ramp)
-    for a, b in [(113.0, 124.82)] + els:
+    for a, b in [(T0, 124.82)] + els:
         ia, ib = max(0, xs(a) - i_on), min(n, xs(b) - i_on)
         key[ia:ib] = 1.0
-        if a > 113.0:
+        if a > T0:
             key[ia:ia + ramp] = up
         if ib < n:
             key[ib - ramp:ib] = up[::-1]
@@ -720,6 +797,7 @@ def scene_solo():
     yr = radio(y.astype(np.float64))
     sc.add('asker', y * clean_w, i_on, gain=db(-24.0), rev={'hall': 0.22})
     sc.add('asker', (yr * radio_w).astype(np.float32), i_on, gain=db(-24.0), rev={'void': 0.05})
+    log_note('asker', i_on, fs(135.0), [E5])
     # the solo violin: one player, bow noise −24 dB, vibrato; exits ∝ min(1, 10 000 km / d), gone by 125.5
     vd = np.minimum(1.0, 1e4 / dist_km(t)) * np.clip((125.5 - t) / 1.0, 0, 1) ** 1.5
     vd[:n_samples(0.004)] *= I.raised(n_samples(0.004))
@@ -731,9 +809,10 @@ def scene_solo():
     vio = I.solo_violin(n, f_v, vd, seed=SEED + 114, drift_cents=0.0, offset=False, phase0=VIO_PHASE,
                         vib_rate=5.0, vib_depth=8.0)
     sc.add('strings', vio, i_on, gain=db(-32.0) * K_STR, rev={'hall': 0.3})
+    log_note('strings', i_on, xs(125.5), [E5])
     # in phase the unison is ~2.4 dB louder than the old beating pair averaged; give that back until the
     # violin leaves (123–125), so S27 keeps its mp and the Morse (125+) keeps its written level
-    sc.window(('asker', 'strings'), [(113.0, -2.4), (123.0, -2.4), (125.0, 0.0)])
+    sc.window(('asker', 'strings'), [(T0, -2.4), (123.0, -2.4), (125.0, 0.0)])
     sc.window(None, [(134.3, 1.0), (135.0, 0.0)], linear=True)      # carrier and tails out by 135.000
     return sc
 
@@ -741,23 +820,32 @@ def scene_solo():
 VIO_PHASE = 0.8125   # saw start phase (cycles) of the S27 violin; chosen so its E5 sits in phase with the Asker
 
 
-def scene_golden():
-    """152.0: glass bell A6 (−38 dB, 1.5 s) — the light on the road once more; out before 154.25."""
-    sc = Scene('golden', 152.0, 154.2, tail=0.0)
+def scene_void():
+    """S07 (Z3 near-silence, [3240, 3702)): the pulsar and everything that answered it are gone (v2).
+    f3456 (144.0) glass bell A6 −38 dB, 1.5 s, on the golden record's glint — the light on the road ③;
+    f3528 (147.0) the strings' D2–A2 open fifth (just, no third, ppp −46 dB) enters very quietly and
+    follows no picture event; f3624 → f3696 it fades out (linear amplitude, true zero by 154.0), so
+    the f3702 digital zero is entered from silence."""
+    sc = Scene('void', F(3456), 154.2, tail=0.0)
     clip = I.glass_bell(1760.0, 1.5, seed=SEED + 152)
     clip[-n_samples(0.5):] *= I.raised(n_samples(0.5))[::-1]
-    sc.add('bells', clip, fs(152.0), gain=db(-38.0), pan=0.1, rev={'void': 0.25})
-    sc.window(None, [(153.4, 0), (154.2, -100)])
+    sc.add('bells', clip, fs(F(3456)), gain=db(-38.0), pan=0.1, rev={'void': 0.25})
+    log_note('bells', fs(F(3456)), fs(F(3456) + 1.5), [1760.0])
+    rv = {'void': 0.4, 'hall': 0.1}
+    for k, (nm, lv) in enumerate((('D2', -46.0), ('A2', -47.0))):
+        strings_note(sc, J[nm], F(3528), F(3696), lv, attack=2.5, release=0.05, seed=SEED + 1470 + k, rev=rv,
+                     pan=0.1 - 0.2 * k, cut_hi=1800)
+    sc.window(None, [(F(3624), 1.0), (F(3696), 0.0)], linear=True)
     return sc
 
 
 def scene_words():
-    """M8: 164 𒀭 D6; 165 Dm(add9) (the first third: F); 166–168 celesta Q; 171–180 the many askers;
+    """M8: 163 (f3912) 𒀭 D6; 165 Dm(add9) (the first third: F); 166–168 celesta Q; 171–180 the many askers;
     180 everything out but a bowed-glass A4; 184 all voices slide to E5 unison, fading; 189 silence.
     v1.2: S36 now dissolves in (180.0–180.5), so the texture no longer stops on 180.000: the notes hold
     to 180.5 and the whole scene (dry + hall) fades on the dissolve curve (inOutSine 180.0 → 180.5)."""
     sc = Scene('words', 161.0, 189.0, tail=0.3)
-    bell(sc, N('D6'), 164.0, -40.0, sec=5.0, seed=SEED + 164, pan=-0.1, rev={'hall3': 0.4})
+    bell(sc, N('D6'), F(3912), -36.0, sec=5.0, seed=SEED + 164, pan=-0.1, rev={'hall3': 0.4})   # v2: 164 → 163.0
     # Dm(add9): D2–A2–F3–C4–E4, pp → mp (≈174) → pp, out on the 180.0 cut
     dm = [(165.0, -6), (168.0, -3), (174.0, 4), (178.0, 0), (179.9, -2)]
     for k, (nm, lv) in enumerate((('D2', -38.0), ('A2', -39.0), ('F3', -39.0), ('C4', -40.0), ('E4', -41.0))):
@@ -790,6 +878,7 @@ def scene_words():
         lv = -40.0 + 2.0 * (v % 3 == 0)
         sc.add('glass', I.glass_bowed(n, fc, dyn, seed=SEED + 1710 + v, pan=-0.6 + 1.2 * v / 7), i_on,
                gain=db(lv) * K_GLS, rev={'hall3': 0.45})
+        log_note('glass', i_on, i_on + n, sorted({round(e[1], 3) for e in evs}))
     sc.window(None, [(180.0, 1.0), (WORDS_OUT, 0.0)], linear=True)      # = the S35→S36 dissolve
     return sc
 
@@ -811,6 +900,7 @@ def scene_converge():
     # case is ±2–3 dB (the 3 Hz tremolo itself is ±1.5 dB); overall RMS is unchanged (the dry dominates).
     sc.add('glass', I.glass_bowed(n, pitch_curve(ev, i_on, n), dyn, seed=SEED + 1800, pan=0.05), i_on,
            gain=db(-39.0) * K_GLS, rev={'hall3': A4_SEND})
+    log_note('glass', i_on, i_on + n, [e[1] for e in ev])
     # 184: the others come back from where they were and converge on E5, fading
     for v, (st, dl) in enumerate((('D4', 0.0), ('B4', 0.3), ('E4', 0.5), ('A5', 0.8), ('D5', 1.0), ('G4', 1.3), ('E5', 1.5))):
         t0 = 184.0 + dl
@@ -820,6 +910,7 @@ def scene_converge():
         dyn = note_env(n, 1.5, n - n_samples(1.0), 1.0) * dbenv([(t0, -4), (186.0, 0), (188.6, -16)], i_on, n)
         sc.add('glass', I.glass_bowed(n, pitch_curve(ev, i_on, n), dyn, seed=SEED + 1810 + v, pan=-0.5 + v / 6),
                i_on, gain=db(-43.0) * K_GLS, rev={'hall3': 0.45})
+        log_note('glass', i_on, i_on + n, [N(st), N('E5')])
     # v1.2: the old dB-cosine window (187.0 → 188.9) had the cue below −80 dBFS by 187.75: ~0.85 s of
     # dead air before the word-breath (188.5). Now the unison holds and fades linearly in amplitude
     # 188.4 → 189.0, overlapping the breath's entry; near-silence (breath only) from 189.0.
@@ -870,12 +961,14 @@ def scene_answer():
             dyn = dyn * dbenv(ANSWER_DRAIN_PTS, i_c, nn)
         clip = I.string_section(nn, N(nm) * flat(nn), dyn, seed=SEED + 1950 + k, vib=True, cut_hi=2800)
         sc.add('strings', clip, i_c, gain=db(lv) * K_STR, rev=H3)
+        log_note('strings', i_c, fs(202.0), [N(nm)])
     for k, nm in enumerate(('D3', 'F#3', 'A3', 'D4')):
         nn = fs(202.0) - i_c + n_samples(0.1)
         o = I.organ(N(nm), nn / SR, stops=(1.0, 0.35, 0.12, 0.06, 0.0, 0.0), chiff=0.0, seed=SEED + 1960 + k)
         o = o * dbenv(chord_pts, i_c, len(o)).astype(np.float32) * note_env(len(o), 0.8, len(o) - n_samples(0.1), 0.1)
         o = o * dbenv(ANSWER_DRAIN_PTS, i_c, len(o)).astype(np.float32)     # the warm bed drains first
         sc.add('strings', I.sos_lp(o, 1800), i_c, gain=db(-38.0) * 3.0, pan=-0.3 + 0.2 * k, rev=H3)
+        log_note('strings', i_c, fs(202.0), [N(nm)])
     sc.low_drain(('strings',), ANSWER_FLOOR_PTS)
     sc.cut(202.0, stems=('strings',), fade=480)
     # #32 the reversed ♯C5: the 194.000 ♯C5 + 0.4 s of R_hall, time-reversed, 0.625 s, ends on 204.000
@@ -889,99 +982,134 @@ def scene_answer():
     seg[-CUT:] *= I.raised(CUT)[::-1, None]                           # it stops on the deletion frame
     assert fs(203.375) + len(seg) == fs(204.0)
     sc.add('asker', seg, fs(203.375), gain=db(-24.0) / (np.abs(seg).max() + 1e-12), rev={})
+    log_note('asker', fs(203.375), fs(204.0), [N('C#5')])
     sc.window(('asker',), [(204.7, 0), (205.0, -100)])          # 205–208: the score is silent
     return sc
 
 
+def choir_gains(n, i0, delays, seed, entry_attack=1.5):
+    """Per-singer gains for the v2 choir: each singer enters on its own frame offset (0–9 frames after
+    f5088, raised-cosine attack) and takes its own breaths (two short dips at singer-specific times),
+    so the common question still contains many voices (brief §10, screenplay S09-g)."""
+    out = []
+    t = (i0 + np.arange(n)) / SR
+    for k, d in enumerate(delays):
+        r = dsp.rng(seed + 11 * k)
+        g = np.zeros(n)
+        a = d * 2000
+        na = n_samples(entry_attack * r.uniform(0.85, 1.15))
+        g[a:a + na] = I.raised(na)[:max(0, min(na, n - a))]
+        g[a + na:] = 1.0
+        for tb in (r.uniform(214.4, 217.5), r.uniform(219.0, 224.5), r.uniform(226.0, 230.0)):
+            w = r.uniform(0.28, 0.42)
+            u = np.clip((t - tb) / w, 0, 1)
+            g *= 1.0 - 0.8 * np.sin(np.pi * u) ** 2
+        out.append(g)
+    return out
+
+
+# the 16 singers: (pitch, → pitch at the D → A change or None, women?, near?, entry delay in frames)
+CHOIR = [('E5', None, True, True, 0), ('E5', None, True, True, 4), ('E5', None, True, True, 7),
+         ('A4', None, True, True, 2), ('A4', 'B4', True, True, 5), ('A4', None, True, True, 9),
+         ('D4', 'E4', False, True, 1), ('D4', 'E4', False, True, 3), ('D4', 'E4', False, True, 6),
+         ('D4', 'E4', False, True, 8), ('D4', 'E4', False, True, 0), ('D4', 'E4', False, True, 5),
+         ('E5', None, True, False, 3), ('A4', 'B4', True, False, 6), ('D4', 'E4', False, False, 2),
+         ('D4', 'E4', False, False, 9)]
+CHOIR_FAR_DB = -6.0
+
+
 def scene_question():
-    """208/209/210 D4 A4 E5 (+ choir 210) → 211 Dsus2, vibrato grows → 215 D1 → 216.000 bass D → A,
-    Asus2 → 224 warmest → 228.5 black, chord goes on, −6 dB every 2 s → 229 A6 bell → gone ≈ 236."""
-    sc = Scene('question', 208.0, 236.5, tail=0.5)
+    """v2 (producer decision 7-2: the question moves +2 s, the f5160 enter does not):
+    f5040 / 5064 / 5088 D4 A4 E5 (+ choir from f5088, the film's first human voice) → f5112 Dsus2,
+    the Asker's vibrato grows over 3 s → f5160 (215.0) D1 → f5184 (216.0) bass D → A, Asus2 →
+    f5352 (223.0) warmest → f5460 cut to black, the chord goes on → from f5472 (228.0) −6 dB every
+    2 s → f5496 (229.0) A6 bell → gone ≈ 236."""
+    sc = Scene('question', F(5040), 236.5, tail=0.5)
     H3 = {'hall3': 0.32}
-    # ---------------- the question: 208 D4 / 209 A4 / 210 E5, then E5 to the end (vibrato from 211)
-    i_q = fs(208.0)
+    T_D, T_A, T_E, T_Q = F(5040), F(5064), F(5088), F(5112)        # 210 / 211 / 212 / 213
+    T_WARM, T_FADE = F(5352), F(5472)                               # 223.0 / 228.0
+    # ---------------- the question: D4 / A4 / E5, then E5 to the end (vibrato from the "？")
+    i_q = fs(T_D)
     n = fs(236.0) - i_q
     tq = (i_q + np.arange(n)) / SR
-    vib = 12.0 * np.clip((tq - 211.0) / 3.0, 0, 1) ** 1.5
-    ev = [(fs(208.0), N('D4'), 0), (fs(209.0), N('A4'), 0.06), (fs(210.0), N('E5'), 0.06)]
-    amp = [(208.0, -4), (209.0, -3), (210.0, -2), (211.0, 0), (215.0, -2), (216.0, -3), (224.0, 0), (228.5, -1, 'lin'),
+    vib = 12.0 * np.clip((tq - T_Q) / 3.0, 0, 1) ** 1.5
+    ev = [(fs(T_D), N('D4'), 0), (fs(T_A), N('A4'), 0.06), (fs(T_E), N('E5'), 0.06)]
+    amp = [(T_D, -4), (T_A, -3), (T_E, -2), (T_Q, 0), (215.0, -2), (216.0, -3), (T_WARM, 0), (T_FADE, -1, 'lin'),
            (236.0, -24)]
     asker_line(sc, i_q, n, ev, amp, -25.0, seed=SEED + 208, vib=vib, release_at=fs(234.0), release=2.0, rev=H3)
-    # ---------------- strings: Dsus2 at 211 (D2–A2–E3–A3–D4–E4), revoiced to Asus2 at 216
-    fin = [(211.0, -2), (214.5, -4), (216.0, -6), (224.0, -3), (228.5, -3.5, 'lin'), (236.0, -26)]
+    # ---------------- strings: Dsus2 at f5112 (D2–A2–E3–A3–D4–E4), revoiced to Asus2 at f5184
+    fin = [(T_Q, -2), (214.5, -4), (216.0, -6), (T_WARM, -3), (T_FADE, -3.5, 'lin'), (236.0, -26)]
     i216 = fs(216.0)
     for k, (nm, to, lv) in enumerate((('D2', None, -28.0), ('A2', 'A2', -29.0), ('E3', 'E3', -30.0), ('A3', 'B3', -31.0),
                                       ('D4', None, -32.0), ('E4', 'E4', -32.0))):
         t_off = 216.0 if to is None else 236.0
-        rel = 0.25 if to is None else 0.5
+        rel = 0.25 if to is None else 0.5           # the D (D2, D4) is released over 6 frames at f5184
         pitch = None
         if to is not None and to != nm:
-            pitch = [(fs(211.0), N(nm), 0), (i216, N(to), 0.25)]
-        strings_note(sc, N(nm), 211.0, t_off, lv, attack=0.7, release=rel, seed=SEED + 2110 + k, vib=True, pts=fin,
+            pitch = [(fs(T_Q), N(nm), 0), (i216, N(to), 0.25)]
+        strings_note(sc, N(nm), T_Q, t_off, lv, attack=0.7, release=rel, seed=SEED + 2110 + k, vib=True, pts=fin,
                      pitch=pitch, rev=H3, cut_hi=2600 + 400 * (k > 3))
     for k, (nm, lv) in enumerate((('A1', -28.0), ('E2', -29.5))):      # the new ground: A1, E2 swell in 0.5 s
         strings_note(sc, N(nm), 216.0, 236.0, lv, attack=0.5, release=0.5, seed=SEED + 2160 + k, vib=True,
                      pts=fin, rev=H3)
-    # sub: D1 from 215.0 (gently), released over 6 frames at 216.0; A1 0.5 s in.
-    # v1.2: the A1 used `fin` (−6 dB at 216) and a plain raised-cosine attack, so the summed sub-bass fell
-    # ~12 dB at the D → A change and only recovered ~2 s later as the strings' hall built up. Now the A1
-    # comes in on a front-loaded 0.5 s attack (raised cosine ^0.3: crosses the D1's 6-frame release within
-    # −3 dB) a little above the D1's level, and eases back to `fin` while the strings' hall builds up,
-    # so the ground shifts under the melody but does not drop out.
+    # sub: D1 from f5160 (gently, with the enter), released over 6 frames at f5184; A1 0.5 s in, a little
+    # above the D1 so the ground shifts under the melody but does not drop out (v1.2)
     sub(sc, N('D1'), 215.0, 216.0, -27.0, attack=0.8, release=0.25, seed=SEED + 215)
     sub(sc, N('A1'), 216.0, 236.0, -27.0, attack=0.5, release=0.5, pts=A1_PTS, seed=SEED + 216, shape=0.3)
     # overtones E6, B6 (ppp) above the Asus2
     for k, nm in enumerate(('E6', 'B6')):
         glass_note(sc, N(nm), 217.0 + k, 236.0, -46.0 - 2 * k, attack=3.0, release=0.5, seed=SEED + 2170 + k,
                    pts=fin, rev={'hall3': 0.5}, pan=-0.3 + 0.6 * k)
-    # ---------------- choir: 16 voices, only from 210.0 — S×4 E5, A×4 A4 (→ 2 to B4), T×4 D4 → E4, B×4 A3 (211)
-    i_ch = fs(210.0)
+    # ---------------- choir: 16 singers "aah", the first human voice of the film, from f5088 only.
+    # D4–A4–E5 (pp, 1.5 s attack), entries staggered 0–9 frames, own breaths; 4 singers further away
+    # (wetter, −6 dB). At f5184: D4 → E4, two altos A4 → B4 (Asus2: E4–A4–B4–E5).
+    i_ch = fs(T_E)
     n = fs(236.0) - i_ch
-    cpts = [(210.0, -12), (211.0, -2), (214.5, -4), (216.0, -5), (224.0, -2), (228.5, -2.5, 'lin'), (236.0, -25)]
+    cpts = [(T_E, -12), (T_Q, -2), (214.5, -4), (216.0, -5), (T_WARM, -2), (T_FADE, -2.5, 'lin'), (236.0, -25)]
     dyn = note_env(n, 1.5, n - n_samples(0.5), 0.5) * dbenv(cpts, i_ch, n)
-
-    def cv(name, to=None):
-        out = []
-        for j in range(4):
-            dt = dsp.rng(SEED + 7 * j + len(name)).uniform(-4, 4) / 1200
-            if to is None:
-                out.append(np.full(n, N(name) * 2 ** dt))
-            else:
-                out.append(pitch_curve([(i_ch, N(name) * 2 ** dt, 0), (i216 + n_samples(0.04 * j), N(to) * 2 ** dt, 0.35)],
-                                       i_ch, n))
-        return out
-    sop = cv('E5')
-    alt = cv('A4')
-    alt = alt[:2] + [pitch_curve([(i_ch, N('A4'), 0), (i216 + n_samples(0.1), N('B4') * 2 ** (j * 3 / 1200), 0.4)], i_ch, n)
-                     for j in range(2)]
-    ten = cv('D4', 'E4')
-    sc.add('choir', I.choir_section(n, sop, dyn, True, SEED + 2101, pan=-0.3), i_ch, gain=db(-30.0) * K_CH, rev=H3)
-    sc.add('choir', I.choir_section(n, alt, dyn, True, SEED + 2102, pan=-0.1), i_ch, gain=db(-31.0) * K_CH, rev=H3)
-    sc.add('choir', I.choir_section(n, ten, dyn, False, SEED + 2103, pan=0.15), i_ch, gain=db(-31.0) * K_CH, rev=H3)
-    i_b = fs(211.0)
-    nb = fs(236.0) - i_b
-    dynb = note_env(nb, 1.5, nb - n_samples(0.5), 0.5) * dbenv(cpts, i_b, nb)
-    bas = [np.full(nb, N('A3') * 2 ** (dsp.rng(j).uniform(-4, 4) / 1200)) for j in range(4)]
-    sc.add('choir', I.choir_section(nb, bas, dynb, False, SEED + 2104, pan=0.35), i_b, gain=db(-33.0) * K_CH, rev=H3)
-    # ---------------- 229.0 glass bell A6: the light on the road, the last time. v1.2: −36 → BELL229_DB;
+    gains = choir_gains(n, i_ch, [c[4] for c in CHOIR], SEED + 2100)
+    groups = {}
+    for k, (nm, to, women, near, _) in enumerate(CHOIR):
+        dt = dsp.rng(SEED + 7 * k + 3).uniform(-4, 4) / 1200
+        if to is None:
+            fc = np.full(n, N(nm) * 2 ** dt)
+        else:
+            fc = pitch_curve([(i_ch, N(nm) * 2 ** dt, 0), (i216 + n_samples(0.04 * (k % 4)), N(to) * 2 ** dt, 0.35)],
+                             i_ch, n)
+        g = groups.setdefault((women, near), ([], []))
+        g[0].append(fc)
+        g[1].append(gains[k])
+        log_note('choir', i_ch + 2000 * CHOIR[k][4], fs(236.0), [N(nm)] + ([N(to)] if to else []))
+    for (women, near), (fcs, gs) in sorted(groups.items()):
+        y = I.choir_section(n, fcs, dyn, women, SEED + 2101 + 2 * women + near, pan=(-0.2 if women else 0.15)
+                            * (1.0 if near else 2.2), voice_gain=gs)
+        lv = (-27.5 if women else -29.0) + (0.0 if near else CHOIR_FAR_DB)   # = v1's sop+alto / ten+bass sums
+        rev = H3 if near else {'hall3': 0.75, 'void': 0.15}
+        sc.add('choir', y, i_ch, gain=db(lv) * K_CH, rev=rev, dry=1.0 if near else 0.45)
+    # ---------------- f5496 (229.0) glass bell A6: the light on the road, the last time. v1.2: −36 → BELL229_DB;
     # at −36 it sat ~20 dB under the still-loud Asus2 and was masked on the title flash
-    bell(sc, 1760.0, 229.0, BELL229_DB, sec=6.0, seed=SEED + 229, pan=0.1, rev={'hall3': 0.3, 'void': 0.3})
-    sc.window(None, [(208.0, 1.0), (233.5, 1.0), (236.2, 0.0)], linear=True)
+    bell(sc, 1760.0, F(5496), BELL229_DB, sec=6.0, seed=SEED + 229, pan=0.1, rev={'hall3': 0.3, 'void': 0.3})
+    sc.window(None, [(T_D, 1.0), (233.5, 1.0), (236.2, 0.0)], linear=True)
     return sc
 
 
-A1_PTS = [(216.0, 1.5), (216.6, 1.5), (219.0, -5.0), (224.0, -3.0), (228.5, -3.5, 'lin'), (236.0, -26.0)]
+A1_PTS = [(216.0, 1.5), (216.6, 1.5), (219.0, -5.0), (F(5352), -3.0), (F(5472), -3.5, 'lin'), (236.0, -26.0)]
 BELL229_DB = -28.0
 
 
-SCENES = (scene_prologue, scene_bigbang, scene_druid, scene_supernova_to_lamps, scene_landing, scene_solo, scene_golden,
-          scene_words, scene_converge, scene_answer, scene_question)
+SCENES = (scene_prologue, scene_bigbang, scene_pedal, scene_druid, scene_supernova, scene_lamps, scene_landing,
+          scene_solo, scene_void, scene_words, scene_converge, scene_answer, scene_question)
+
+# The digital silences this score is written against (screenplay v2 §6.4: Z0, Z1, Z4, Z7), in frames.
+# build.py warns when timeline.json disagrees (e.g. the v1 52.5–53.333 s zero still present).
+EXPECTED_DIGITAL_SILENCES = [(0, 6), (576, 608), (3702, 3864), (5988, 6000)]
 
 
 # ===================================================================== render
 def render(tl, only=None):
     n = int(round(tl['duration'] * SR))
     stems = {k: np.zeros((n, 2), np.float32) for k in STEMS}
+    NOTES.clear()
     for make in SCENES:
         if only and make.__name__ not in only:
             continue
