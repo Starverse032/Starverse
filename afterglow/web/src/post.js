@@ -1,6 +1,11 @@
 // Film post pipeline: HDR scene → physically-based mip bloom + anamorphic streak →
 // grade (exposure, ACES, saturation/contrast/tint) → film grain, vignette, CA, dither →
 // title-card overlay → letterbox → screen (sRGB 8-bit).
+//
+// V2 bloom mask (optional, per frame): an RGBA8 texture the shot module drew into f.mask.
+//   R = this pixel does not feed bloom or streak (applied in the prefilter, before both);
+//   G = this pixel receives no bloom; B = this pixel receives no streak (applied in the composite).
+// With no mask the shaders take the old path (maskOn = 0): the picture is bit-identical to before.
 import * as THREE from 'three';
 import { common, color } from './lib/glsl.js';
 
@@ -75,7 +80,7 @@ export class Post {
     this.streakA = makeRT(sw, sh); this.streakB = makeRT(sw, sh);
 
     this.prefilter = shader(common + /* glsl */ `
-      varying vec2 vUv; uniform sampler2D src; uniform vec2 texel; uniform float thr, knee;
+      varying vec2 vUv; uniform sampler2D src, tMask; uniform vec2 texel; uniform float thr, knee, maskOn;
       vec3 s(vec2 o){ return texture2D(src, vUv + o * texel).rgb; }
       float kw(vec3 c){ return 1.0 / (1.0 + luma(c)); } // Karis average against fireflies
       vec3 bright(vec3 c){ float l = luma(c); float soft = clamp(l - thr + knee, 0.0, 2.0 * knee); soft = soft * soft / (4.0 * knee + 1e-4);
@@ -84,8 +89,10 @@ export class Post {
         vec3 a = s(vec2(-1,-1)), b = s(vec2(1,-1)), c = s(vec2(-1,1)), d = s(vec2(1,1)), e = s(vec2(0));
         float wa = kw(a), wb = kw(b), wc = kw(c), wd = kw(d), we = kw(e);
         vec3 col = (a*wa + b*wb + c*wc + d*wd + e*we * 2.0) / (wa + wb + wc + wd + we * 2.0);
-        gl_FragColor = vec4(bright(col), 1.0);
-      }`, { src: { value: null }, texel: { value: new THREE.Vector2() }, thr: { value: 1 }, knee: { value: 0.5 } });
+        vec3 hi = bright(col);
+        if (maskOn > 0.5) hi *= 1.0 - texture2D(tMask, vUv).r;   // V2: masked pixels feed neither bloom nor streak
+        gl_FragColor = vec4(hi, 1.0);
+      }`, { src: { value: null }, tMask: { value: null }, maskOn: { value: 0 }, texel: { value: new THREE.Vector2() }, thr: { value: 1 }, knee: { value: 0.5 } });
 
     // 13-tap downsample (CoD: AW)
     this.down = shader(/* glsl */ `
@@ -122,9 +129,9 @@ export class Post {
 
     this.composite = shader(common + color + /* glsl */ `
       varying vec2 vUv;
-      uniform sampler2D tScene, tBloom, tStreak, tCards;
+      uniform sampler2D tScene, tBloom, tStreak, tCards, tMask;
       uniform vec2 res; uniform float time;
-      uniform float exposure, bloom, streak, ca, vignette, grain, saturation, contrast, fade, flash, bar, cardsOn, blackLevel;
+      uniform float exposure, bloom, streak, ca, vignette, grain, saturation, contrast, fade, flash, bar, cardsOn, blackLevel, maskOn;
       uniform vec3 tint, lift, flashColor, streakTint;
       void main(){
         vec2 uv = vUv;
@@ -136,7 +143,11 @@ export class Post {
           sc.g = texture2D(tScene, uv).g;
           sc.b = texture2D(tScene, uv + off).b;
         } else sc = texture2D(tScene, uv).rgb;
-        vec3 hdr = sc + texture2D(tBloom, uv).rgb * bloom + texture2D(tStreak, uv).rgb * streak * streakTint;
+        vec3 hdr;
+        if (maskOn > 0.5) {
+          vec4 mk = texture2D(tMask, uv);                       // V2: G = receives no bloom, B = receives no streak
+          hdr = sc + texture2D(tBloom, uv).rgb * bloom * (1.0 - mk.g) + texture2D(tStreak, uv).rgb * streak * streakTint * (1.0 - mk.b);
+        } else hdr = sc + texture2D(tBloom, uv).rgb * bloom + texture2D(tStreak, uv).rgb * streak * streakTint;
         hdr += flashColor * flash;
         hdr *= tint * exposure;
         float l = luma(hdr);
@@ -166,7 +177,7 @@ export class Post {
         col *= inside;
         gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
       }`, {
-      tScene: { value: null }, tBloom: { value: null }, tStreak: { value: null }, tCards: { value: null },
+      tScene: { value: null }, tBloom: { value: null }, tStreak: { value: null }, tCards: { value: null }, tMask: { value: null }, maskOn: { value: 0 },
       res: { value: new THREE.Vector2(W, H) }, time: { value: 0 },
       exposure: { value: 1 }, bloom: { value: 1 }, streak: { value: 0 }, ca: { value: 0 }, vignette: { value: 0 },
       grain: { value: 0 }, saturation: { value: 1 }, contrast: { value: 1 }, fade: { value: 0 }, flash: { value: 0 },
@@ -202,13 +213,15 @@ export class Post {
     this.pass(this.mix, target);
   }
 
-  // src: HDR render target; P: post params; bar: letterbox bar height as fraction of H; cardsTex or null
-  run(src, P, { bar = 0, time = 0, cardsTex = null } = {}) {
+  // src: HDR render target; P: post params; bar: letterbox bar height as fraction of H; cardsTex or null;
+  // mask: V2 bloom-mask render target or null
+  run(src, P, { bar = 0, time = 0, cardsTex = null, mask = null } = {}) {
     const r = this.r;
+    const maskTex = mask ? mask.texture : this.black, maskOn = mask ? 1 : 0;
     let streakTex = this.black, bloomTex = this.black;
     if (P.bloom > 0 || P.streak > 0) {
       const pf = this.prefilter.uniforms;
-      pf.src.value = src.texture; pf.texel.value.set(1 / src.width, 1 / src.height); pf.thr.value = P.bloomThreshold; pf.knee.value = Math.max(1e-3, P.bloomKnee);
+      pf.src.value = src.texture; pf.tMask.value = maskTex; pf.maskOn.value = maskOn; pf.texel.value.set(1 / src.width, 1 / src.height); pf.thr.value = P.bloomThreshold; pf.knee.value = Math.max(1e-3, P.bloomKnee);
       this.pass(this.prefilter, this.mips[0]);
       for (let i = 1; i < this.mips.length; i++) {
         const u = this.down.uniforms; const s = this.mips[i - 1];
@@ -238,6 +251,7 @@ export class Post {
     const u = this.composite.uniforms;
     u.tScene.value = src.texture; u.tBloom.value = bloomTex; u.tStreak.value = streakTex;
     u.tCards.value = cardsTex || this.black; u.cardsOn.value = cardsTex ? 1 : 0;
+    u.tMask.value = maskTex; u.maskOn.value = maskOn;
     u.time.value = time; u.bar.value = bar;
     for (const k of ['exposure', 'bloom', 'streak', 'ca', 'vignette', 'grain', 'saturation', 'contrast', 'fade', 'flash', 'blackLevel']) u[k].value = P[k];
     u.tint.value.fromArray(P.tint); u.lift.value.fromArray(P.lift); u.flashColor.value.fromArray(P.flashColor); u.streakTint.value.fromArray(P.streakTint);

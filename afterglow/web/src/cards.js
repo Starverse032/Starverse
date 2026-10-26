@@ -1,5 +1,11 @@
 // Title cards, credits and the film title, drawn with canvas2D (crisp, not bloomed) and
 // composited by post after tone mapping. Purely a function of time.
+//
+// v2 sizes (screenplay-v2 §4): cinema cards zh 60 px / en 45 px (card `size` = zh px, `enSize` = en px,
+// default 0.75 × size), subtitles 40 px (subtitleStyle.size). Layout inside the 2.39 band (y 138–942):
+// card centre cy = 942 − 0.2 × 804 ≈ 781; zh baseline cy − 8 ≈ 773 (ink ≈ 722–778), en baseline
+// cy + 0.6 × size × 1.55 ≈ 837 (ink ≈ 805–848); subtitle baseline 900 (ink ≈ 868–910). An item whose
+// line is wider than the frame minus 2 × 96 px is scaled down to fit (never happens with the v2 texts).
 import * as THREE from 'three';
 import { clamp, ease, smoothstep } from './lib/util.js';
 
@@ -27,7 +33,8 @@ export class Cards {
       ...(timeline.credits || []).map((c, i) => ({ id: `CR${i}`, fadeIn: 0.8, fadeOut: 0.8, ...c, kind: 'credit' })),
       ...((timeline.subtitleStyle?.enabled !== false) ? (timeline.subtitles || []).map(c => ({ ...c, style: 'subtitle', kind: 'subtitle' })) : []),
     ];
-    this.sub = { font: 'Cormorant Garamond', size: 30, color: '#CFC9BE', opacity: 0.85, x: 960, baseline: 900, ...(timeline.subtitleStyle || {}) };
+    this.sub = { font: 'Cormorant Garamond', size: 40, color: '#CFC9BE', opacity: 0.85, x: 960, baseline: 900, ...(timeline.subtitleStyle || {}) };
+    this.maxW = W - 2 * 96 * this.S;   // widest line allowed (title-safe margin)
   }
 
   // envelope 0..1 with eased fade in/out
@@ -66,7 +73,8 @@ export class Cards {
       g.font = `italic 400 ${Math.round((it.size || st.size) * S)}px "Cormorant Garamond", "Noto Serif"`;
       g.letterSpacing = `${(0.5 * S).toFixed(1)}px`;
       g.shadowColor = 'rgba(0,0,0,0.7)'; g.shadowBlur = 10 * S;
-      g.fillText(it.en || it.zh || '', (it.x ?? st.x) * S * (W / H) / (16 / 9), (it.baseline ?? st.baseline) * S);
+      const txt = it.en || it.zh || '';
+      this.fitText(txt, (it.x ?? st.x) * S * (W / H) / (16 / 9), (it.baseline ?? st.baseline) * S);
       g.restore();
       return;
     }
@@ -107,22 +115,29 @@ export class Cards {
     } else {
       // cinema_center / cinema_lower: Chinese line + English line
       const lower = style === 'cinema_lower';
-      const zhSize = (it.size || (lower ? 40 : 46)) * S, enSize = zhSize * 0.6;
+      const zhSize = (it.size || (lower ? 60 : 64)) * S, enSize = (it.enSize ? it.enSize * S : zhSize * 0.75) / 1.25;
       const cy = lower ? bottom - (bottom - top) * 0.2 : midY;
       g.fillStyle = it.color || '#efe9df';
       shadow();
       g.font = `300 ${Math.round(zhSize)}px ${FONTS.zhSerif}`;
       const zhTrack = zhSize * (0.28 + 0.04 * life);
       g.letterSpacing = `${zhTrack.toFixed(1)}px`;
-      if (it.zh) g.fillText(it.zh, W / 2 + zhTrack / 2, cy - (it.en ? 8 * S : -zhSize * 0.35) + drift);
+      if (it.zh) this.fitText(it.zh, W / 2 + zhTrack / 2, cy - (it.en ? 8 * S : -zhSize * 0.35) + drift);
       if (it.en) {
         g.font = `italic 400 ${Math.round(enSize * 1.25)}px ${FONTS.enSerifItalic}`;
         const enTrack = enSize * 0.08;
         g.letterSpacing = `${enTrack.toFixed(1)}px`;
         g.globalAlpha = e * 0.78;
-        g.fillText(it.en, W / 2 + enTrack / 2, cy + enSize * 1.55 + drift);
+        this.fitText(it.en, W / 2 + enTrack / 2, cy + enSize * 1.55 + drift);
       }
     }
     g.restore();
+  }
+
+  // fillText, horizontally squeezed about x if the line is wider than the title-safe width
+  fitText(txt, x, y) {
+    const g = this.g, w = g.measureText(txt).width;
+    if (w <= this.maxW) { g.fillText(txt, x, y); return; }
+    g.save(); g.translate(x, y); g.scale(this.maxW / w, 1); g.fillText(txt, 0, 0); g.restore();
   }
 }

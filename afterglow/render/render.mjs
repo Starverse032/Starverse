@@ -7,6 +7,9 @@
 //   node render/render.mjs --workers 3 --out build/video.mp4   # whole film, split across processes
 //
 // Times for --from/--to are seconds (frame = round(t*fps)); --frames a:b gives frames directly.
+// E4: every page is told the frame range it will render (URL r0/r1 → ctx.range), so wrapper modules can
+// build only the sub-scenes they need: --frames/--from/--to give that range; --stills gives
+// [min still, max still + 1); --range a:b overrides it (frames).
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -80,7 +83,7 @@ function ffmpegPng(buf, out) {
   });
 }
 
-async function launch(serverPort, wsPort) {
+async function launch(serverPort, wsPort, range = null) {
   const browser = await chromium.launch({
     executablePath: process.env.CHROMIUM_PATH || undefined,
     args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--disable-gpu-watchdog',
@@ -90,7 +93,7 @@ async function launch(serverPort, wsPort) {
   const page = await browser.newPage({ viewport: { width: W, height: H } });
   page.on('console', m => { const t = m.text(); if (m.type() === 'error' || /BOOT|shot module|WARN/i.test(t)) if (!/GPU stall|GL Driver/.test(t)) console.error('[page]', t); });
   page.on('pageerror', e => console.error('[page error]', e.message));
-  await page.goto(`http://127.0.0.1:${serverPort}/web/index.html?w=${W}&h=${H}${wsPort ? `&ws=${wsPort}` : ''}`);
+  await page.goto(`http://127.0.0.1:${serverPort}/web/index.html?w=${W}&h=${H}${wsPort ? `&ws=${wsPort}` : ''}${range ? `&r0=${range[0]}&r1=${range[1]}` : ''}`);
   await page.waitForFunction('window.AG_READY || window.AG_ERROR', null, { timeout: 120000 });
   const err = await page.evaluate('window.AG_ERROR');
   if (err) throw new Error(err);
@@ -130,15 +133,24 @@ async function runSingle() {
   let sock = null; const queue = []; let waiter = null;
   wss.on('connection', s => { sock = s; s.on('message', d => { queue.push(d); if (waiter) { const w = waiter; waiter = null; w(); } }); });
   const nextFrame = () => new Promise(r => { if (queue.length) return r(queue.shift()); waiter = () => r(queue.shift()); });
-  const { browser, page } = await launch(srv.address().port, wss.address().port);
+  // the frames this process renders (E4)
+  let f0, f1, stillFrames = null;
+  if (args.stills) {
+    stillFrames = args.stills.split(',').map(Number).map(t => [t, Math.min(TOTAL - 1, Math.round(t * FPS))]);
+    f0 = Math.min(...stillFrames.map(s => s[1])); f1 = Math.max(...stillFrames.map(s => s[1])) + 1;
+  } else {
+    if (args.frames) [f0, f1] = args.frames.split(':').map(Number);
+    else { f0 = Math.round((args.from ?? 0) * FPS); f1 = Math.round((args.to ?? tl.duration) * FPS); }
+    f1 = Math.min(f1, TOTAL);
+  }
+  const range = args.range ? args.range.split(':').map(Number) : [f0, f1];
+  const { browser, page } = await launch(srv.address().port, wss.address().port, range);
   const log = (...m) => { if (!args.quiet) console.log(...m); };
   try {
     if (args.stills) {
       fs.mkdirSync(path.resolve(ROOT, args.stillsDir), { recursive: true });
-      const times = args.stills.split(',').map(Number);
       const written = [];
-      for (const t of times) {
-        const fr = Math.min(TOTAL - 1, Math.round(t * FPS));
+      for (const [t, fr] of stillFrames) {
         await page.evaluate(([a, b]) => window.AG.prepare(a, b), [t, t]);
         const info = await page.evaluate(f => window.AG.renderFrame(f), fr);
         const buf = await nextFrame();
@@ -158,10 +170,6 @@ async function runSingle() {
       }
       return;
     }
-    let f0, f1;
-    if (args.frames) [f0, f1] = args.frames.split(':').map(Number);
-    else { f0 = Math.round((args.from ?? 0) * FPS); f1 = Math.round((args.to ?? tl.duration) * FPS); }
-    f1 = Math.min(f1, TOTAL);
     const out = path.resolve(ROOT, args.out || 'build/out.mp4');
     const ff = ffmpegVideo(out);
     const ffDone = new Promise(r => ff.on('exit', r));

@@ -1,5 +1,6 @@
 // Boot: load fonts + timeline, build the engine, expose window.AG for the offline renderer.
-// URL params: w, h (render size), ws (frame sink port), tl (timeline url), play=1 (realtime preview)
+// URL params: w, h (render size), ws (frame sink port), tl (timeline url), play=1 (realtime preview),
+//             r0, r1 (E4: the frame range [r0, r1) this page will render → ctx.range; default the whole film)
 import { Engine } from './engine.js';
 
 const q = new URLSearchParams(location.search);
@@ -20,7 +21,8 @@ async function loadFonts() {
 async function boot() {
   await loadFonts();
   const tl = await (await fetch(q.get('tl') || '../timeline.json', { cache: 'no-store' })).json();
-  const engine = new Engine(tl, { W, H, canvas: document.getElementById('c') });
+  const range = q.has('r0') && q.has('r1') ? [+q.get('r0'), +q.get('r1')] : null;
+  const engine = new Engine(tl, { W, H, canvas: document.getElementById('c'), range });
   const gl = engine.renderer.getContext();
   const bufs = [new Uint8Array(W * H * 4), new Uint8Array(W * H * 4)];
   let which = 0;
@@ -32,7 +34,7 @@ async function boot() {
   }
   const drain = () => new Promise(res => { const chk = () => (ws.bufferedAmount < W * H * 4 ? res() : setTimeout(chk, 1)); chk(); });
   window.AG = {
-    W, H, fps: engine.fps, duration: engine.duration, frameCount: engine.frameCount, engine,
+    W, H, fps: engine.fps, duration: engine.duration, frameCount: engine.frameCount, engine, range: engine.ctx.rangeFrames,
     shots: tl.shots.map(s => ({ id: s.id, start: s.start, end: s.end, module: s.module })),
     async renderFrame(frame, send = true) {
       const t0 = performance.now();
