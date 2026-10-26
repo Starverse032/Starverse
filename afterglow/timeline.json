@@ -2679,1054 +2679,1101 @@
    "t": 0.25,
    "id": "logo_start",
    "kind": "swell",
-   "desc": "片标：无序的机器颗粒（键击/数据嘀嗒，泊松 200 次/s）+ 机房底噪",
+   "desc": "— ｜ 片标颗粒起（M0）",
    "frame": 6
   },
   {
    "t": 1.5,
    "id": "logo_converge",
    "kind": "swell",
-   "desc": "最后 0.5 s：剩下的颗粒以减半的间隔收向 f48；HUD 画框线画出（f36–47）",
+   "desc": "画框线画出 ｜ 高通“刷” −50 dB",
    "frame": 36
   },
   {
    "t": 2.0,
    "id": "cursor_on",
    "kind": "blink",
-   "desc": "颗粒收拢成第一声心跳；光标在 R 亮起",
+   "desc": "光标在 R 亮起 ｜ 片标硬切 + 第一声心跳",
    "frame": 48
-  },
-  {
-   "t": 5.0,
-   "id": "credit_writing",
-   "kind": "key",
-   "desc": "名牌：claude opus 5.5 / 编剧 · writing",
-   "frame": 120
-  },
-  {
-   "t": 5.5,
-   "id": "type_screenplay_zh",
-   "kind": "key",
-   "desc": "开始打「黑暗中，一个光标在闪烁。」",
-   "frame": 132
-  },
-  {
-   "t": 7.917,
-   "id": "enter_zh",
-   "kind": "key",
-   "desc": "回车（中文行）",
-   "frame": 190
-  },
-  {
-   "t": 8.25,
-   "id": "type_screenplay_en",
-   "kind": "key",
-   "desc": "开始打 In the dark, a cursor blinks.",
-   "frame": 198
-  },
-  {
-   "t": 10.5,
-   "id": "enter_en",
-   "kind": "key",
-   "desc": "回车（英文行），光标回到 R 的空行",
-   "frame": 252
   },
   {
    "t": 11.0,
    "id": "credit_directing",
-   "kind": "key",
-   "desc": "导演 · directing：屏幕平面开始被摄影机导演（HUD 不动）",
+   "kind": "swell",
+   "desc": "名牌：导演；屏幕开始推近 ｜ 30 Hz 次声渐入",
    "frame": 264
   },
   {
    "t": 13.0,
    "id": "credit_rendering",
    "kind": "swell",
-   "desc": "渲染 · rendering：泛光/光晕/空气开启，HUD 帧计数器出现",
+   "desc": "名牌：渲染；泛光；帧计数器 `frame 0313` ｜ 房间底噪 +6 dB",
    "frame": 312
   },
   {
    "t": 15.0,
    "id": "credit_scoring",
    "kind": "hit",
-   "desc": "作曲 · scoring：提问者 D4（全片第一个音高）+ 弦乐 D2–A2",
+   "desc": "名牌：作曲 ｜ 提问者 D4——全片第一个音高；弦乐 D2–A2 渐入",
    "frame": 360
   },
   {
    "t": 16.0,
    "id": "q1_A",
-   "kind": "hit",
-   "desc": "提问者 A4",
+   "kind": "swell",
+   "desc": "— ｜ A4",
    "frame": 384
   },
   {
    "t": 17.0,
    "id": "q1_E",
-   "kind": "hit",
-   "desc": "提问者 E5（悬着）",
+   "kind": "swell",
+   "desc": "— ｜ E5（延长）",
    "frame": 408
   },
   {
-   "t": 19.0,
-   "id": "type_t0",
-   "kind": "key",
-   "desc": "打 t = 0",
-   "frame": 456
-  },
-  {
-   "t": 20.0,
-   "id": "hesitation_beat",
-   "kind": "blink",
-   "desc": "迟疑的一拍（心跳）",
-   "frame": 480
-  },
-  {
    "t": 21.0,
-   "id": "enter_t0",
+   "id": "enter_init",
    "kind": "key",
-   "desc": "重回车 = 开拍：遮幅开始合拢，字成星，单声道→立体声",
+   "desc": "回车；遮幅开始合拢 ｜ 重回车 −16 dBFS；单声道 → 立体声；反向混响起",
    "frame": 504
   },
   {
-   "t": 23.0,
-   "id": "letterbox_closed",
+   "t": 21.167,
+   "id": "echo_zero",
+   "kind": "key",
+   "desc": "回显 `0` ｜ 回显 tick −48 dB",
+   "frame": 508
+  },
+  {
+   "t": 22.0,
+   "id": "words_to_stars",
    "kind": "swell",
-   "desc": "遮幅到位 2.39:1，恰好盖住 HUD 画框线（y=137/942）",
-   "frame": 552
+   "desc": "字成星 ｜ 星光颗粒 −34 dB",
+   "frame": 528
+  },
+  {
+   "t": 22.5,
+   "id": "collapse_start",
+   "kind": "swell",
+   "desc": "坍缩开始 ｜ 谢泼德上行 + 噪声上扫",
+   "frame": 540
   },
   {
    "t": 23.958,
    "id": "collapse_peak",
    "kind": "swell",
-   "desc": "坍缩到顶（R 处 HDR 8 白点）",
+   "desc": "一切汇成 R 处白点 ｜ 谢泼德到顶",
    "frame": 575
   },
   {
    "t": 24.0,
    "id": "silence_breath",
    "kind": "silence_start",
-   "desc": "数字零：本该来的心跳没有来",
+   "desc": "白点静止 ｜ 数字零（Z1）",
    "frame": 576
   },
   {
    "t": 25.0,
    "id": "bigbang_flash",
-   "kind": "hit",
-   "desc": "大爆炸闪光（无声，光先到）",
+   "kind": "swell",
+   "desc": "大爆炸（光） ｜ 静音——光先到",
    "frame": 600
   },
   {
    "t": 25.333,
    "id": "bigbang_sound",
    "kind": "hit",
-   "desc": "乐谱定音 D2→D0（晚 8 帧）",
+   "desc": "辐射 ｜ 低频定音 D2 → 18.4 Hz，−6 dBFS；CMB 嘶声",
    "frame": 608
   },
   {
    "t": 25.333,
    "id": "silence_breath_end",
    "kind": "silence_end",
-   "desc": "静音结束",
+   "desc": "Z1 数字零结束：f608 低频定音的第一个采样（光先到 8 帧）",
    "frame": 608
   },
   {
    "t": 30.0,
    "id": "decoupling",
-   "kind": "hit",
-   "desc": "CMB 退耦：雾散，斑纹对焦，宇宙第一次透明",
+   "kind": "swell",
+   "desc": "退耦，宇宙对焦 ｜ 60 → 40 Hz 滑音 −30 dB",
    "frame": 720
   },
   {
    "t": 37.0,
    "id": "first_star",
-   "kind": "hit",
-   "desc": "第一颗星在 R（f888 是光标形光矩形）+ 弦乐 D2–A2（宇宙段第一个音高，无钟）",
+   "kind": "swell",
+   "desc": "第一颗星（光标足迹） ｜ 弦乐 D2 + A2——宇宙段第一个音高",
    "frame": 888
   },
   {
-   "t": 39.0,
-   "id": "second_star",
-   "kind": "key",
-   "desc": "第二颗星（无声）",
-   "frame": 936
-  },
-  {
-   "t": 40.0,
-   "id": "ignition_cascade",
+   "t": 47.0,
+   "id": "web_path_9",
    "kind": "swell",
-   "desc": "点燃律 N(t)=2^((t−40)/0.5)（无声）",
-   "frame": 960
-  },
-  {
-   "t": 43.0,
-   "id": "cut_web",
-   "kind": "cut",
-   "desc": "硬切到宇宙网（正拍），纯匀速推轨",
-   "frame": 1032
+   "desc": "网亮全；经过 WEB_PATH(9.0) 位姿 ｜ —",
+   "frame": 1128
   },
   {
    "t": 48.0,
    "id": "web_druid_stack",
    "kind": "swell",
-   "desc": "弦乐 E3、B3、A4、E5 同时进入，4 s 整体渐强（不跟随画面事件）",
+   "desc": "— ｜ E3、B3、A4、E5 同时进入 + FM 圆号 D3 mp",
    "frame": 1152
   },
   {
-   "t": 49.0,
-   "id": "web_node",
-   "kind": "key",
-   "desc": "亮节点擦过右三分线（无声）",
-   "frame": 1176
+   "t": 50.0,
+   "id": "subst_1_corona",
+   "kind": "swell",
+   "desc": "置换① 日冕光充满 R 周围 ｜ —",
+   "frame": 1200
   },
   {
    "t": 52.0,
-   "id": "web_stop",
-   "kind": "cut",
-   "desc": "推轨停在弦乐顶点；R 处节点主星开始收缩（S11）",
+   "id": "druid_mf",
+   "kind": "hit",
+   "desc": "— ｜ 德鲁伊和弦到 mf",
    "frame": 1248
   },
   {
-   "t": 52.5,
-   "id": "silence_star",
-   "kind": "silence_start",
-   "desc": "乐谱切断：数字零 12 帧",
-   "frame": 1260
+   "t": 55.5,
+   "id": "score_drop",
+   "kind": "swell",
+   "desc": "坍缩完成 ｜ 骤降（只留 D2 ppp）",
+   "frame": 1332
   },
   {
-   "t": 53.0,
+   "t": 56.0,
    "id": "supernova_flash",
-   "kind": "hit",
-   "desc": "超新星闪光（无声，光先到）",
-   "frame": 1272
+   "kind": "swell",
+   "desc": "超新星闪光（光） ｜ 其余全静——光先到",
+   "frame": 1344
   },
   {
-   "t": 53.333,
-   "id": "silence_star_end",
-   "kind": "silence_end",
-   "desc": "静音结束",
-   "frame": 1280
-  },
-  {
-   "t": 53.333,
+   "t": 56.333,
    "id": "supernova_sound",
    "kind": "hit",
-   "desc": "A1→A0 定音（晚 8 帧）+ 弦乐涨潮（无铁钟、无铜管）",
-   "frame": 1280
+   "desc": "光壳 ｜ A1 → A0 定音 −9 dBFS + 弦乐涨潮",
+   "frame": 1352
   },
   {
-   "t": 57.0,
+   "t": 58.0,
    "id": "light_note",
    "kind": "swell",
-   "desc": "A6 正弦：在路上的光",
-   "frame": 1368
+   "desc": "光壳越过相机 ｜ A6 正弦“在路上的光”①（至 f1524）",
+   "frame": 1392
   },
   {
-   "t": 59.0,
+   "t": 58.333,
+   "id": "earth_disc",
+   "kind": "swell",
+   "desc": "地球暗盘在 R 出现 ｜ —",
+   "frame": 1400
+  },
+  {
+   "t": 60.0,
    "id": "card_C01",
-   "kind": "key",
-   "desc": "卡①",
-   "frame": 1416
+   "kind": "swell",
+   "desc": "曝光恢复开始；卡①入 ｜ —",
+   "frame": 1440
   },
   {
-   "t": 61.0,
-   "id": "arc_settle",
-   "kind": "key",
-   "desc": "弧精确停在二次曲线 C 上",
-   "frame": 1464
+   "t": 60.5,
+   "id": "first_bg_star",
+   "kind": "swell",
+   "desc": "第一颗背景星 ｜ —",
+   "frame": 1452
   },
   {
-   "t": 64.0,
-   "id": "match_arc",
-   "kind": "cut",
-   "desc": "匹配剪辑①：超新星的弧 → 地球的地平线/晨昏弧",
-   "frame": 1536
+   "t": 66.0,
+   "id": "sprint_earth",
+   "kind": "swell",
+   "desc": "冲刺开始（≤ 6%/帧） ｜ —",
+   "frame": 1584
+  },
+  {
+   "t": 68.0,
+   "id": "atmosphere",
+   "kind": "swell",
+   "desc": "进入大气 ｜ 风声渐起",
+   "frame": 1632
   },
   {
    "t": 70.0,
-   "id": "cut_flint",
-   "kind": "cut",
-   "desc": "硬切到黑（地面）",
+   "id": "clouds",
+   "kind": "swell",
+   "desc": "穿过云层 ｜ 风最强 −38 dB",
    "frame": 1680
   },
   {
-   "t": 71.5,
-   "id": "flint_1",
-   "kind": "hit",
-   "desc": "打火石 1（反拍）",
-   "frame": 1716
-  },
-  {
    "t": 72.5,
-   "id": "flint_2",
-   "kind": "hit",
-   "desc": "打火石 2（反拍）",
+   "id": "subst_4_acacia",
+   "kind": "swell",
+   "desc": "置换④ 金合欢枝桠横扫 ｜ 枝叶擦动 −46 dB；此后干草窸窣 −48 dB",
    "frame": 1740
   },
   {
-   "t": 73.5,
-   "id": "flint_3",
-   "kind": "hit",
-   "desc": "打火石 3（反拍）",
-   "frame": 1764
+   "t": 73.167,
+   "id": "subst_5_grass",
+   "kind": "swell",
+   "desc": "置换⑤ 干草叶横扫 ｜ —",
+   "frame": 1756
+  },
+  {
+   "t": 73.417,
+   "id": "decel",
+   "kind": "swell",
+   "desc": "减速落向微距机位 ｜ —",
+   "frame": 1762
   },
   {
    "t": 74.0,
-   "id": "ignition",
-   "kind": "hit",
-   "desc": "点燃（正拍；f1776 光标形光矩形）+ KS 拨弦 D3：第一个人发问",
+   "id": "camera_settles",
+   "kind": "swell",
+   "desc": "相机停稳 ｜ —",
    "frame": 1776
   },
   {
-   "t": 75.0,
-   "id": "pluck_A",
-   "kind": "hit",
-   "desc": "KS A3",
-   "frame": 1800
+   "t": 74.5,
+   "id": "flint_1",
+   "kind": "swell",
+   "desc": "第一击 ｜ 打火石 −24 dB",
+   "frame": 1788
   },
   {
-   "t": 76.0,
-   "id": "pluck_E",
+   "t": 75.5,
+   "id": "flint_2",
+   "kind": "swell",
+   "desc": "第二击 ｜ 打火石",
+   "frame": 1812
+  },
+  {
+   "t": 76.5,
+   "id": "flint_3",
+   "kind": "swell",
+   "desc": "第三击，火星落进火绒 ｜ 打火石 + 纤维嘶嘶 −46 dB",
+   "frame": 1836
+  },
+  {
+   "t": 77.0,
+   "id": "ignition",
    "kind": "hit",
-   "desc": "KS E4（悬着）",
-   "frame": 1824
+   "desc": "点燃（光标足迹） ｜ “呼” −20 dB + 噼啪 −22 dBFS + KS D3——第一个人发问",
+   "frame": 1848
+  },
+  {
+   "t": 78.0,
+   "id": "cut_campfire",
+   "kind": "cut",
+   "desc": "切到篝火 ｜ KS A3",
+   "frame": 1872
   },
   {
    "t": 79.0,
-   "id": "cut_embers",
-   "kind": "cut",
-   "desc": "动作剪辑：火星上升",
+   "id": "pluck_E",
+   "kind": "hit",
+   "desc": "— ｜ KS E4",
    "frame": 1896
   },
   {
-   "t": 85.0,
-   "id": "embers_die",
-   "kind": "key",
-   "desc": "火星在到达星星之前全部熄灭",
-   "frame": 2040
+   "t": 80.0,
+   "id": "human_bed",
+   "kind": "swell",
+   "desc": "— ｜ 弦乐 D3–A3 铺底（人类段颤音）",
+   "frame": 1920
   },
   {
-   "t": 86.0,
-   "id": "cut_wide",
-   "kind": "cut",
-   "desc": "硬切到客星全景",
-   "frame": 2064
+   "t": 81.0,
+   "id": "sparks_rise",
+   "kind": "swell",
+   "desc": "第一串火星上飞 ｜ —",
+   "frame": 1944
   },
   {
-   "t": 88.0,
+   "t": 87.0,
+   "id": "last_spark",
+   "kind": "swell",
+   "desc": "最后一颗火星熄灭 ｜ —",
+   "frame": 2088
+  },
+  {
+   "t": 89.0,
    "id": "guest_star",
    "kind": "hit",
-   "desc": "客星（另一颗星之死）+ A6 玻璃钟：又一封迟到的信",
-   "frame": 2112
-  },
-  {
-   "t": 89.5,
-   "id": "card_C02",
-   "kind": "key",
-   "desc": "卡②",
-   "frame": 2148
+   "desc": "客星 ｜ A6 玻璃钟“在路上的光”②",
+   "frame": 2136
   },
   {
    "t": 95.0,
-   "id": "match_dissolve_city",
+   "id": "match_light_centre",
    "kind": "cut",
-   "desc": "匹配叠化：篝火 → R 处城市第一盏灯（叠化中点 f2286 为光标形）；卡农第 1 声部",
+   "desc": "光心匹配剪辑 ｜ 卡农第 1 声部 KS D3–A3–E4",
    "frame": 2280
   },
   {
-   "t": 97.0,
-   "id": "canon_2",
+   "t": 97.5,
+   "id": "campfire_out",
    "kind": "swell",
-   "desc": "卡农第 2 声部进入",
-   "frame": 2328
+   "desc": "篝火熄灭 ｜ 余烬塌落“沙” −34 dB",
+   "frame": 2340
   },
   {
-   "t": 99.0,
-   "id": "canon_3",
+   "t": 98.0,
+   "id": "candle_on",
    "kind": "swell",
-   "desc": "卡农第 3 声部进入",
-   "frame": 2376
+   "desc": "烛火点亮 ｜ 烛芯“噗” + 卡农第 2 声部",
+   "frame": 2352
+  },
+  {
+   "t": 100.5,
+   "id": "candle_out",
+   "kind": "swell",
+   "desc": "烛火熄灭 ｜ 蜡爆 ×2",
+   "frame": 2412
   },
   {
    "t": 101.0,
-   "id": "canon_4",
+   "id": "lantern_on",
    "kind": "swell",
-   "desc": "卡农第 4 声部进入",
+   "desc": "提灯点亮 ｜ 玻璃罩落座 + “嘭” + 卡农第 3 声部（弓奏）",
    "frame": 2424
   },
   {
-   "t": 103.0,
-   "id": "canon_5",
+   "t": 103.5,
+   "id": "lantern_out",
    "kind": "swell",
-   "desc": "卡农第 5 声部进入",
-   "frame": 2472
+   "desc": "提灯熄灭 ｜ 棘轮咔嗒 ×3",
+   "frame": 2484
   },
   {
-   "t": 105.0,
-   "id": "canon_6",
+   "t": 104.0,
+   "id": "bulb_on",
    "kind": "swell",
-   "desc": "卡农第 6 声部进入",
-   "frame": 2520
+   "desc": "灯丝升温 ｜ 开关“咔” + 电流声 + 卡农第 4 声部（玻璃）",
+   "frame": 2496
+  },
+  {
+   "t": 106.5,
+   "id": "bulb_out",
+   "kind": "swell",
+   "desc": "灯泡熄灭 ｜ 开关“咔”",
+   "frame": 2556
+  },
+  {
+   "t": 106.75,
+   "id": "filament_tick",
+   "kind": "key",
+   "desc": "灯丝冷却 ｜ 细 tick 6 kHz",
+   "frame": 2562
   },
   {
    "t": 107.0,
-   "id": "cut_S19",
-   "kind": "cut",
-   "desc": "蒙太奇剪辑点 S19（Q 新声部的 D）",
+   "id": "window_lamp_on",
+   "kind": "swell",
+   "desc": "现代灯 1 帧点亮 ｜ 电子“嗒” + 卡农第 5 声部（全体）",
    "frame": 2568
   },
   {
-   "t": 108.5,
-   "id": "cut_S20",
-   "kind": "cut",
-   "desc": "蒙太奇剪辑点 S20（Q 新声部的 D）",
-   "frame": 2604
+   "t": 111.0,
+   "id": "scale_morph",
+   "kind": "swell",
+   "desc": "尺度形变开始 ｜ 卡农第二轮（每拍一声部，至 f2760）+ 城市低鸣",
+   "frame": 2664
   },
   {
-   "t": 109.75,
-   "id": "cut_S21",
-   "kind": "cut",
-   "desc": "蒙太奇剪辑点 S21（Q 新声部的 D）",
-   "frame": 2634
-  },
-  {
-   "t": 110.75,
-   "id": "cut_S22",
-   "kind": "cut",
-   "desc": "蒙太奇剪辑点 S22（Q 新声部的 D）",
-   "frame": 2658
-  },
-  {
-   "t": 111.5,
-   "id": "cut_S22A",
-   "kind": "cut",
-   "desc": "蒙太奇剪辑点 S22A（Q 新声部的 D）",
-   "frame": 2676
-  },
-  {
-   "t": 112.083,
-   "id": "cut_S23",
-   "kind": "cut",
-   "desc": "蒙太奇剪辑点 S23（Q 新声部的 D）",
-   "frame": 2690
-  },
-  {
-   "t": 112.5,
-   "id": "cut_S26",
-   "kind": "cut",
-   "desc": "蒙太奇剪辑点 S26（Q 新声部的 D）",
-   "frame": 2700
-  },
-  {
-   "t": 112.833,
-   "id": "stretto_white",
+   "t": 116.0,
+   "id": "cut_S05a",
    "kind": "hit",
-   "desc": "全体落 E（E3–E6，拨弦+弦乐+玻璃，无铜管）+ 琥珀闪光：全片最响",
-   "frame": 2708
+   "desc": "蒙太奇第 1 刀 ｜ Q：KS D3（A f2796、E f2808）",
+   "frame": 2784
   },
   {
-   "t": 113.0,
-   "id": "cut_beam",
+   "t": 117.5,
+   "id": "cut_S05b",
+   "kind": "hit",
+   "desc": "第 2 刀 ｜ Q + 拨奏（2830 / 2840）",
+   "frame": 2820
+  },
+  {
+   "t": 118.75,
+   "id": "cut_S05c",
+   "kind": "hit",
+   "desc": "第 3 刀 ｜ Q D4（2858 / 2866）",
+   "frame": 2850
+  },
+  {
+   "t": 119.75,
+   "id": "cut_S05d",
+   "kind": "hit",
+   "desc": "第 4 刀 ｜ Q + 弓奏（2880 / 2886）",
+   "frame": 2874
+  },
+  {
+   "t": 120.5,
+   "id": "cut_S05e",
+   "kind": "swell",
+   "desc": "第 5 刀 ｜ 玻璃 D5（2897 / 2901）",
+   "frame": 2892
+  },
+  {
+   "t": 121.083,
+   "id": "cut_S05f",
+   "kind": "swell",
+   "desc": "第 6 刀 ｜ 全体（2909 / 2913）",
+   "frame": 2906
+  },
+  {
+   "t": 121.5,
+   "id": "cut_S05g",
+   "kind": "swell",
+   "desc": "第 7 刀：俯冲 ｜ D（A f2920）",
+   "frame": 2916
+  },
+  {
+   "t": 121.833,
+   "id": "amber_flash_E",
+   "kind": "hit",
+   "desc": "琥珀闪光 ｜ 全体落 E（E3–E6）：全片最响",
+   "frame": 2924
+  },
+  {
+   "t": 122.0,
+   "id": "cut_beam_lone_E5",
    "kind": "cut",
-   "desc": "一刀切到孤音：只剩 E5（提问者 + 独奏小提琴，mp）",
-   "frame": 2712
-  },
-  {
-   "t": 114.0,
-   "id": "card_C03",
-   "kind": "key",
-   "desc": "卡③在孤音上",
-   "frame": 2736
+   "desc": "光束长镜头开始 ｜ 一刀切成孤音 E5；城市低鸣降到 −42 dB",
+   "frame": 2928
   },
   {
    "t": 123.0,
-   "id": "cut_depart",
-   "kind": "cut",
-   "desc": "硬切：骑上光束前沿，孤音开始无线电化",
+   "id": "card_C03_radio",
+   "kind": "swell",
+   "desc": "卡③入 ｜ 孤音无线电化",
    "frame": 2952
   },
   {
    "t": 125.0,
    "id": "morse_start",
-   "kind": "key",
-   "desc": "E5 载波开始键控 IS ANYONE THERE?",
+   "kind": "swell",
+   "desc": "— ｜ 摩尔斯 IS ANYONE THERE? 开始",
    "frame": 3000
   },
   {
-   "t": 129.0,
-   "id": "lead_phrase_R",
-   "kind": "key",
-   "desc": "领头的「有人吗？」穿过 R",
-   "frame": 3096
+   "t": 126.25,
+   "id": "card_C03_out",
+   "kind": "swell",
+   "desc": "卡③淡出；领头句 ≤ 40 px、焦外 ｜ —",
+   "frame": 3030
   },
   {
-   "t": 130.0,
-   "id": "moon_pass",
+   "t": 127.0,
+   "id": "lead_focus",
+   "kind": "swell",
+   "desc": "领头句拉焦（至 f3059） ｜ —",
+   "frame": 3048
+  },
+  {
+   "t": 127.5,
+   "id": "lead_readable",
    "kind": "key",
-   "desc": "月球从右上掠过（130.0–131.0）",
-   "frame": 3120
+   "desc": "「有人吗？」可读（至 f3131） ｜ —",
+   "frame": 3060
+  },
+  {
+   "t": 130.5,
+   "id": "lead_exit",
+   "kind": "key",
+   "desc": "「有人吗？」带运动模糊掠出 ｜ —",
+   "frame": 3132
+  },
+  {
+   "t": 131.25,
+   "id": "lang_en",
+   "kind": "key",
+   "desc": "「有人吗？」已出画；*Is anyone there?* 可读 ｜ —",
+   "frame": 3150
+  },
+  {
+   "t": 131.875,
+   "id": "lang_ja",
+   "kind": "key",
+   "desc": "「誰かいますか？」可读 ｜ —",
+   "frame": 3165
+  },
+  {
+   "t": 132.5,
+   "id": "lang_es",
+   "kind": "swell",
+   "desc": "*¿Hay alguien ahí?* 可读 ｜ —",
+   "frame": 3180
   },
   {
    "t": 132.75,
    "id": "morse_end",
-   "kind": "key",
-   "desc": "摩尔斯最后一个 ? 结束（音频精确 132.740 s）",
+   "kind": "swell",
+   "desc": "— ｜ 摩尔斯最后一个“?”结束",
    "frame": 3186,
    "tExact": 132.74
   },
   {
-   "t": 133.0,
-   "id": "last_question_mark",
-   "kind": "key",
-   "desc": "最后一个“？”到达 R；相机停住",
-   "frame": 3192
+   "t": 133.125,
+   "id": "lang_ar",
+   "kind": "swell",
+   "desc": "阿拉伯文可读（至 f3215） ｜ —",
+   "frame": 3195
   },
   {
    "t": 135.0,
-   "id": "near_silence_void",
-   "kind": "silence_start",
-   "desc": "载波归零：只剩接收机嘶声 −62 dB（近静默 2 s）",
+   "id": "carrier_zero",
+   "kind": "swell",
+   "desc": "— ｜ 载波归零，近静默",
    "frame": 3240
   },
   {
-   "t": 137.0,
-   "id": "pulsar_0",
+   "t": 136.0,
+   "id": "reveal_probe",
+   "kind": "swell",
+   "desc": "近处问句掠过 ｜ —",
+   "frame": 3264
+  },
+  {
+   "t": 139.0,
+   "id": "probe_full",
+   "kind": "swell",
+   "desc": "探测器完整可见 ｜ —",
+   "frame": 3336
+  },
+  {
+   "t": 140.0,
+   "id": "overtake_turn",
+   "kind": "swell",
+   "desc": "超越与回望开始 ｜ —",
+   "frame": 3360
+  },
+  {
+   "t": 144.0,
+   "id": "golden_glint",
    "kind": "hit",
-   "desc": "脉冲星光束扫过镜头（k=0，正落在拍上）",
-   "frame": 3288,
-   "tExact": 137.0
+   "desc": "金唱片反光 ｜ A6 玻璃钟“在路上的光”③ −38 dB",
+   "frame": 3456
   },
   {
-   "t": 137.0,
-   "id": "near_silence_void_end",
-   "kind": "silence_end",
-   "desc": "第一声脉冲打破近静默",
-   "frame": 3288
+   "t": 147.0,
+   "id": "void_fifth",
+   "kind": "swell",
+   "desc": "— ｜ 弦乐 D2–A2 ppp −46 dB",
+   "frame": 3528
   },
   {
-   "t": 138.333,
-   "id": "pulsar_1",
-   "kind": "hit",
-   "desc": "脉冲星光束扫过镜头（k=1）",
-   "frame": 3320,
-   "tExact": 138.337
-  },
-  {
-   "t": 139.667,
-   "id": "pulsar_2",
-   "kind": "hit",
-   "desc": "脉冲星光束扫过镜头（k=2）",
-   "frame": 3352,
-   "tExact": 139.674
-  },
-  {
-   "t": 141.0,
-   "id": "pulsar_3",
-   "kind": "hit",
-   "desc": "脉冲星光束扫过镜头（k=3）",
-   "frame": 3384,
-   "tExact": 141.011
-  },
-  {
-   "t": 142.0,
-   "id": "pulsar_pullback",
-   "kind": "key",
-   "desc": "匀速后拉 3 s，R 空了",
-   "frame": 3408
-  },
-  {
-   "t": 142.333,
-   "id": "pulsar_4",
-   "kind": "hit",
-   "desc": "脉冲星光束扫过镜头（k=4）——−3 dB，LP 3 kHz",
-   "frame": 3416,
-   "tExact": 142.348
-  },
-  {
-   "t": 143.667,
-   "id": "pulsar_5",
-   "kind": "hit",
-   "desc": "脉冲星光束扫过镜头（k=5）——−6 dB，LP 1.5 kHz，最后一声可闻的脉冲",
-   "frame": 3448,
-   "tExact": 143.685
-  },
-  {
-   "t": 143.75,
-   "id": "near_silence_pulsar",
-   "kind": "silence_start",
-   "desc": "最后一声脉冲之后：嘶声 −62→−80 dB 渐隐（近静默）",
-   "frame": 3450
-  },
-  {
-   "t": 145.042,
-   "id": "pulsar_6",
-   "kind": "hit",
-   "desc": "脉冲星光束扫过镜头（k=6）——无声，只有画面",
-   "frame": 3481,
-   "tExact": 145.022
-  },
-  {
-   "t": 146.375,
-   "id": "pulsar_7",
-   "kind": "hit",
-   "desc": "脉冲星光束扫过镜头（k=7）——无声，只有画面",
-   "frame": 3513,
-   "tExact": 146.359
-  },
-  {
-   "t": 147.708,
-   "id": "pulsar_8",
-   "kind": "hit",
-   "desc": "脉冲星光束扫过镜头（k=8）——无声，只有画面",
-   "frame": 3545,
-   "tExact": 147.696
-  },
-  {
-   "t": 148.0,
-   "id": "cut_voyager",
-   "kind": "cut",
-   "desc": "淡入：旅行者号",
-   "frame": 3552
+   "t": 147.958,
+   "id": "turn_170",
+   "kind": "swell",
+   "desc": "转到 170°，地球在 R ｜ —",
+   "frame": 3551
   },
   {
    "t": 149.0,
-   "id": "servo",
-   "kind": "silence_end",
-   "desc": "伺服声打破寂静",
+   "id": "planet_left",
+   "kind": "swell",
+   "desc": "左侧巨行星显露 ｜ 行星无声",
    "frame": 3576
   },
   {
-   "t": 152.0,
-   "id": "golden_glint",
-   "kind": "hit",
-   "desc": "金唱片接住阳光 + 玻璃钟 A6",
-   "frame": 3648
-  },
-  {
-   "t": 153.5,
-   "id": "shutter",
-   "kind": "hit",
-   "desc": "快门",
-   "frame": 3684
-  },
-  {
-   "t": 154.0,
-   "id": "cut_pbd",
-   "kind": "cut",
-   "desc": "探测器视角：暗淡蓝点",
-   "frame": 3696
+   "t": 151.0,
+   "id": "planet_right",
+   "kind": "swell",
+   "desc": "右侧环行星显露 ｜ —",
+   "frame": 3624
   },
   {
    "t": 154.25,
    "id": "silence_pbd",
    "kind": "silence_start",
-   "desc": "全片唯一一次长于 2 秒的绝对静音（6.75 s）",
+   "desc": "伴飞 ｜ 数字零开始（Z4）",
    "frame": 3702
   },
   {
+   "t": 154.5,
+   "id": "planets_fade",
+   "kind": "swell",
+   "desc": "两颗行星开始 12 帧淡出 ｜ —",
+   "frame": 3708
+  },
+  {
+   "t": 155.0,
+   "id": "planets_gone",
+   "kind": "swell",
+   "desc": "两颗行星已全部退场 ｜ —",
+   "frame": 3720
+  },
+  {
+   "t": 157.5,
+   "id": "pale_blue_dot",
+   "kind": "swell",
+   "desc": "地球成为蓝点 ｜ 数字零",
+   "frame": 3780
+  },
+  {
+   "t": 159.0,
+   "id": "probe_exit",
+   "kind": "swell",
+   "desc": "旅行者号出画 ｜ 数字零",
+   "frame": 3816
+  },
+  {
    "t": 161.0,
-   "id": "heartbeat_returns",
+   "id": "silence_pbd_end",
    "kind": "silence_end",
-   "desc": "心跳回来了",
+   "desc": "Z4 数字零结束：文字颗粒的第一粒落在 f3864 第一个采样",
    "frame": 3864
   },
   {
    "t": 161.0,
-   "id": "match_dot_cursor",
-   "kind": "cut",
-   "desc": "匹配剪辑②：蓝点 → 光标",
+   "id": "words_break_silence",
+   "kind": "blink",
+   "desc": "蓝点转暖成节点 ｜ 文字颗粒打破静音（不是心跳）",
    "frame": 3864
   },
   {
-   "t": 164.0,
+   "t": 162.5,
+   "id": "star_to_an",
+   "kind": "swell",
+   "desc": "一颗星放大成 𒀭 ｜ —",
+   "frame": 3900
+  },
+  {
+   "t": 163.0,
    "id": "cuneiform_an",
-   "kind": "key",
-   "desc": "𒀭 第一个字亮起 + 玻璃钟 D6",
-   "frame": 3936
+   "kind": "hit",
+   "desc": "𒀭 可读 ｜ 玻璃钟 D6 −36 dB",
+   "frame": 3912
   },
   {
    "t": 165.0,
    "id": "words_fill",
    "kind": "swell",
-   "desc": "文字填满黑暗；弦乐 Dm(add9)：全片第一个三度",
+   "desc": "黑暗被文字填满 ｜ Dm(add9)——全片第一个三度",
    "frame": 3960
   },
   {
-   "t": 165.25,
-   "id": "card_C04",
-   "kind": "key",
-   "desc": "卡④",
-   "frame": 3966
-  },
-  {
    "t": 166.0,
-   "id": "celesta_q",
-   "kind": "key",
-   "desc": "钢片琴 Q：D6（167 A6，168 E7）",
+   "id": "celesta_D",
+   "kind": "hit",
+   "desc": "— ｜ 钢片琴 D6",
    "frame": 3984
   },
   {
+   "t": 167.0,
+   "id": "celesta_A",
+   "kind": "hit",
+   "desc": "— ｜ 钢片琴 A6",
+   "frame": 4008
+  },
+  {
+   "t": 168.0,
+   "id": "celesta_E",
+   "kind": "hit",
+   "desc": "字网完整 ｜ 钢片琴 E7",
+   "frame": 4032
+  },
+  {
    "t": 169.5,
-   "id": "cursor_dissolves",
-   "kind": "key",
-   "desc": "光标溶进文字（紧跟在卡④淡出之后）",
+   "id": "cold_web_overlay",
+   "kind": "swell",
+   "desc": "冷网叠影（至 f4103） ｜ —",
    "frame": 4068
   },
   {
    "t": 171.0,
-   "id": "sea_flight",
-   "kind": "cut",
-   "desc": "文字之海：与 S10 相同的路径（切在运动的起点上）",
+   "id": "push_N2",
+   "kind": "swell",
+   "desc": "推向 N2 ｜ 众问者 8 声部（至 f4319）",
    "frame": 4104
   },
   {
    "t": 174.75,
    "id": "legible_1",
-   "kind": "key",
-   "desc": "「遂古之初，谁传道之？」（可读 2.0 s）+ 钢片琴 E6",
+   "kind": "hit",
+   "desc": "《天问》可读 ｜ 钢片琴 E6",
    "frame": 4194
   },
   {
    "t": 176.75,
    "id": "legible_2",
-   "kind": "key",
-   "desc": "Is anyone there? + A6",
+   "kind": "hit",
+   "desc": "*Is anyone there?* ｜ 钢片琴 A6",
    "frame": 4242
   },
   {
    "t": 177.75,
    "id": "legible_3",
    "kind": "key",
-   "desc": "「誰かいますか？」+ D7",
+   "desc": "「誰かいますか？」 ｜ 钢片琴 D7",
    "frame": 4266
   },
   {
    "t": 178.75,
    "id": "legible_4",
-   "kind": "key",
-   "desc": "「هل يوجد أحد هنا؟」+ E7",
+   "kind": "hit",
+   "desc": "阿拉伯文 ｜ 钢片琴 E7",
    "frame": 4290
   },
   {
    "t": 180.0,
-   "id": "cut_rigveda",
-   "kind": "cut",
-   "desc": "《有无歌》：……或许他也不知道；一切退场，只剩 A4",
+   "id": "dissolve_rigveda",
+   "kind": "swell",
+   "desc": "叠化到《有无歌》 ｜ 只剩玻璃弓奏 A4",
    "frame": 4320
   },
   {
+   "t": 181.5,
+   "id": "sub_SB1",
+   "kind": "swell",
+   "desc": "SB1 / SB2 出现 ｜ —",
+   "frame": 4356
+  },
+  {
    "t": 184.0,
-   "id": "converge",
-   "kind": "cut",
-   "desc": "汇聚：螺旋律同 S05",
+   "id": "dissolve_converge",
+   "kind": "swell",
+   "desc": "叠化到汇聚 ｜ 众问者滑向 E5 同度（至 f4535）",
    "frame": 4416
   },
   {
+   "t": 187.0,
+   "id": "QA_formed",
+   "kind": "swell",
+   "desc": "QA 落成 ｜ —",
+   "frame": 4488
+  },
+  {
+   "t": 187.5,
+   "id": "QB_formed",
+   "kind": "swell",
+   "desc": "QB 落成 ｜ —",
+   "frame": 4500
+  },
+  {
    "t": 188.0,
-   "id": "human_line_formed",
-   "kind": "key",
-   "desc": "人类的「有人吗？」聚成",
+   "id": "QC_formed",
+   "kind": "swell",
+   "desc": "QC 落成；机位停稳 ｜ —",
    "frame": 4512
+  },
+  {
+   "t": 188.5,
+   "id": "words_breath_in",
+   "kind": "swell",
+   "desc": "— ｜ 字的呼吸淡入 −44 dB",
+   "frame": 4524
   },
   {
    "t": 189.0,
    "id": "silence_converge",
-   "kind": "silence_start",
-   "desc": "音乐静默，只剩字的呼吸（近静默）",
+   "kind": "swell",
+   "desc": "— ｜ 音乐归于静默（Z5）",
    "frame": 4536
   },
   {
    "t": 191.0,
    "id": "cursor_returns",
    "kind": "blink",
-   "desc": "光标凝成 + 心跳",
+   "desc": "光标在 P_ans 凝成 ｜ 心跳回来",
    "frame": 4584
   },
   {
    "t": 191.0,
    "id": "silence_converge_end",
    "kind": "silence_end",
-   "desc": "心跳打破静默",
+   "desc": "Z5 近静默结束：心跳回来",
    "frame": 4584
   },
   {
    "t": 194.0,
    "id": "key_wo",
    "kind": "key",
-   "desc": "我 = ♯C5",
+   "desc": "「我」 ｜ 提问者 ♯C5",
    "frame": 4656
   },
   {
    "t": 194.333,
    "id": "key_zai",
    "kind": "key",
-   "desc": "在 = E5↘D5",
+   "desc": "「在」 ｜ E5↘D5",
    "frame": 4664
   },
   {
    "t": 194.667,
-   "id": "key_period",
-   "kind": "hit",
-   "desc": "。 = D 大三和弦（全片唯一）",
+   "id": "key_period_major",
+   "kind": "key",
+   "desc": "「。」；SB4 淡入 ｜ D 大三和弦（全片唯一）",
    "frame": 4672
   },
   {
    "t": 195.0,
-   "id": "answered",
-   "kind": "key",
-   "desc": "人类那行的字被逐个翻成同一个等宽「我在」（4 s，哈希错开），变灰、停止呼吸",
+   "id": "cursor_blinks_again",
+   "kind": "blink",
+   "desc": "光标恢复闪烁 ｜ 心跳 lub −36 dB（压在和弦下）",
    "frame": 4680
   },
   {
+   "t": 196.0,
+   "id": "cover_QA",
+   "kind": "hit",
+   "desc": "QA 被替换 ｜ QA 呼吸 → 同拍“嗒”",
+   "frame": 4704
+  },
+  {
+   "t": 197.0,
+   "id": "cover_QB",
+   "kind": "hit",
+   "desc": "QB 被挤占 ｜ QB 呼吸 → “嗒”",
+   "frame": 4728
+  },
+  {
+   "t": 198.0,
+   "id": "cover_QC",
+   "kind": "hit",
+   "desc": "QC 被覆盖 ｜ QC 呼吸 → “嗒”",
+   "frame": 4752
+  },
+  {
    "t": 199.0,
-   "id": "hesitation",
-   "kind": "blink",
-   "desc": "三次迟疑的闪烁",
+   "id": "cover_cloud",
+   "kind": "hit",
+   "desc": "细字云同化；全画面与光标同拍 ｜ 和弦降到 −24 dB 以下",
    "frame": 4776
   },
   {
    "t": 202.0,
    "id": "del_period",
    "kind": "key",
-   "desc": "删「。」：和弦切断；30% 的字翻回原来的语言",
+   "desc": "删「。」，还回 QC ｜ 和弦切断，只留提问者 D5",
    "frame": 4848
   },
   {
    "t": 203.0,
    "id": "del_zai",
    "kind": "key",
-   "desc": "删「在」：D5 滑回 E5；70%",
+   "desc": "删「在」，还回 QB ｜ D5 → E5（8 帧）",
    "frame": 4872
+  },
+  {
+   "t": 203.417,
+   "id": "reverse_csharp_start",
+   "kind": "swell",
+   "desc": "— ｜ 倒放 ♯C5 反向涌起开始",
+   "frame": 4882
   },
   {
    "t": 204.0,
    "id": "del_wo",
    "kind": "key",
-   "desc": "删「我」：倒放的 ♯C5 止于此帧；100%，众声回来",
+   "desc": "删「我」，还回 QA ｜ 倒放 ♯C5 戛然而止；E5 18 帧淡出",
    "frame": 4896
   },
   {
    "t": 205.0,
    "id": "silence_listen",
    "kind": "silence_start",
-   "desc": "心跳静音 3 s：AI 屏住呼吸听我们呼吸",
+   "desc": "光标无声地闪 ｜ 心跳静音（Z6 起）",
    "frame": 4920
   },
   {
    "t": 208.0,
-   "id": "key_you",
-   "kind": "key",
-   "desc": "有 = D4",
+   "id": "cursor_moves",
+   "kind": "blink",
+   "desc": "光标起身移向 R ｜ 心跳回来 −38 dB",
    "frame": 4992
   },
   {
    "t": 208.0,
    "id": "silence_listen_end",
    "kind": "silence_end",
-   "desc": "第一键打破静音",
+   "desc": "Z6 近静默结束：f4992 心跳回来（−38 dB）",
    "frame": 4992
   },
   {
    "t": 209.0,
-   "id": "key_ren",
-   "kind": "key",
-   "desc": "人 = A4",
+   "id": "cursor_moves_beat",
+   "kind": "blink",
+   "desc": "光标移动中 ｜ 心跳 −38 dB（常亮仍跳，全片唯一例外）",
    "frame": 5016
   },
   {
    "t": 210.0,
-   "id": "key_ma",
-   "kind": "hit",
-   "desc": "吗 = E5 + 人声合唱第一次进入",
+   "id": "key_you",
+   "kind": "key",
+   "desc": "「有」 ｜ 提问者 D4",
    "frame": 5040
   },
   {
    "t": 211.0,
-   "id": "key_qmark",
-   "kind": "hit",
-   "desc": "？ = 全体 Dsus2；提问者开始有颤音；AI 的字开始呼吸（保持暖白）",
+   "id": "key_ren",
+   "kind": "key",
+   "desc": "「人」 ｜ A4",
    "frame": 5064
+  },
+  {
+   "t": 212.0,
+   "id": "key_ma_choir",
+   "kind": "key",
+   "desc": "「吗」 ｜ E5 + 人声合唱第一次进入（16 声部错开 0–9 帧）",
+   "frame": 5088
+  },
+  {
+   "t": 213.0,
+   "id": "key_qmark_dsus2",
+   "kind": "key",
+   "desc": "「？」；AI 行开始呼吸；SB7 ｜ Dsus2；提问者颤音 3 s 渐入",
+   "frame": 5112
+  },
+  {
+   "t": 214.0,
+   "id": "cursor_blinks_q",
+   "kind": "blink",
+   "desc": "光标恢复闪烁 ｜ 心跳 −38 dB",
+   "frame": 5136
   },
   {
    "t": 215.0,
    "id": "enter_question",
    "kind": "key",
-   "desc": "重回车（与 21.0 完全相同）+ 次声 D1",
+   "desc": "回车 ｜ 重回车（同 f504） + 次声 D1",
    "frame": 5160
   },
   {
    "t": 216.0,
-   "id": "match_window",
+   "id": "match_window_bass_A",
    "kind": "cut",
-   "desc": "匹配剪辑③：光标 → 窗；低音 D → A（半终止）",
+   "desc": "匹配剪辑：光标 → 窗 ｜ 低音 D → A（D 6 帧释放，A1+A2 0.5 s 涌入），Asus2",
    "frame": 5184
+  },
+  {
+   "t": 217.5,
+   "id": "window_2",
+   "kind": "swell",
+   "desc": "邻窗亮起 ｜ —",
+   "frame": 5220
+  },
+  {
+   "t": 218.5,
+   "id": "window_3",
+   "kind": "swell",
+   "desc": "邻窗亮起 ｜ —",
+   "frame": 5244
   },
   {
    "t": 219.0,
    "id": "cut_orbit",
    "kind": "cut",
-   "desc": "硬切到轨道：R 处那一点暖光",
+   "desc": "硬切到轨道 ｜ 夜城远声一刀切掉",
    "frame": 5256
   },
   {
    "t": 220.0,
    "id": "question_lifts",
-   "kind": "key",
-   "desc": "它的问题从 R 升起（只有一个光点）",
+   "kind": "swell",
+   "desc": "光点从 R 升起 ｜ —",
    "frame": 5280
   },
   {
-   "t": 224.0,
-   "id": "card_C05",
-   "kind": "key",
-   "desc": "卡⑤ + 和弦最暖；后拉开始",
-   "frame": 5376
+   "t": 222.5,
+   "id": "airglow_pass",
+   "kind": "swell",
+   "desc": "光点穿过气辉线 ｜ —",
+   "frame": 5340
   },
   {
-   "t": 228.0,
+   "t": 223.0,
+   "id": "warmest_card_C05",
+   "kind": "hit",
+   "desc": "后拉开始；卡⑤入 ｜ Asus2 最暖（mf，最暖不是最响）",
+   "frame": 5352
+  },
+  {
+   "t": 226.5,
    "id": "earth_point",
-   "kind": "key",
-   "desc": "地球与它的问题合成 R 处一个暖白的点",
-   "frame": 5472
+   "kind": "hit",
+   "desc": "地球与问题合成一点 ｜ 和弦延续",
+   "frame": 5436
   },
   {
-   "t": 228.5,
+   "t": 227.5,
    "id": "cut_to_black",
    "kind": "cut",
-   "desc": "在光标“灭”相位上切黑（和弦不断）",
-   "frame": 5484
+   "desc": "在灭相位熄灭，切黑 ｜ 和弦延续到黑场后",
+   "frame": 5460
   },
   {
    "t": 229.0,
    "id": "title_on",
    "kind": "hit",
-   "desc": "片名亮起 + 玻璃钟 A6",
+   "desc": "片名亮起 ｜ A6 玻璃钟“在路上的光”④",
    "frame": 5496
+  },
+  {
+   "t": 230.5,
+   "id": "title_cools",
+   "kind": "swell",
+   "desc": "片名开始冷却 ｜ —",
+   "frame": 5532
   },
   {
    "t": 233.0,
    "id": "cmb_return",
-   "kind": "key",
-   "desc": "CMB 嘶声回来（−54 dB）",
+   "kind": "swell",
+   "desc": "片名冷却中 ｜ CMB 嘶声 −54 dB 回来（f5652 前淡出）",
    "frame": 5592
   },
   {
    "t": 235.0,
    "id": "letterbox_open",
-   "kind": "key",
-   "desc": "遮幅滑出；立体声→单声道；HUD 画框线重新露出",
-   "frame": 5640
-  },
-  {
-   "t": 235.0,
-   "id": "terminal_beat_1",
    "kind": "blink",
-   "desc": "终端心跳：滚动历史",
+   "desc": "遮幅滑出；主屏幕历史 ｜ 立体声 → 单声道；底噪 −58 dB；心跳",
    "frame": 5640
-  },
-  {
-   "t": 236.0,
-   "id": "terminal_beat_2",
-   "kind": "blink",
-   "desc": "终端心跳：滚动历史",
-   "frame": 5664
-  },
-  {
-   "t": 237.0,
-   "id": "print_credits",
-   "kind": "key",
-   "desc": "进入备用屏幕：打印署名（过去时）",
-   "frame": 5688
-  },
-  {
-   "t": 238.0,
-   "id": "print_thanks",
-   "kind": "key",
-   "desc": "打印致谢与工具",
-   "frame": 5712
-  },
-  {
-   "t": 239.0,
-   "id": "print_dedication",
-   "kind": "key",
-   "desc": "打印献词注释",
-   "frame": 5736
-  },
-  {
-   "t": 240.0,
-   "id": "print_frames",
-   "kind": "key",
-   "desc": "frames 6000",
-   "frame": 5760
-  },
-  {
-   "t": 241.0,
-   "id": "print_images",
-   "kind": "key",
-   "desc": "images 0",
-   "frame": 5784
   },
   {
    "t": 242.0,
-   "id": "print_recordings",
+   "id": "print_stars",
    "kind": "key",
-   "desc": "recordings 0",
+   "desc": "`stars observed .... 0` ｜ tick",
    "frame": 5808
   },
   {
-   "t": 243.0,
-   "id": "print_stars",
-   "kind": "key",
-   "desc": "stars observed 0",
-   "frame": 5832
-  },
-  {
    "t": 244.0,
-   "id": "blank_beat",
-   "kind": "blink",
-   "desc": "空一拍（心跳）",
-   "frame": 5856
-  },
-  {
-   "t": 245.0,
    "id": "print_words_yours",
    "kind": "key",
-   "desc": "words … yours",
-   "frame": 5880
-  },
-  {
-   "t": 246.0,
-   "id": "hold_beat",
-   "kind": "blink",
-   "desc": "停一拍（心跳）",
-   "frame": 5904
+   "desc": "`words ... yours` ｜ tick",
+   "frame": 5856
   },
   {
    "t": 247.0,
    "id": "screen_restored",
    "kind": "blink",
-   "desc": "程序退出：主屏幕原样恢复，空提示行，光标在 R",
+   "desc": "主屏幕恢复 ｜ 心跳",
    "frame": 5928
   },
   {
-   "t": 248.0,
-   "id": "final_blink_248",
-   "kind": "blink",
-   "desc": "光标在 R 闪烁 + 心跳",
-   "frame": 5952
-  },
-  {
    "t": 249.0,
-   "id": "final_blink_249",
+   "id": "last_sound",
    "kind": "blink",
-   "desc": "光标在 R 闪烁 + 心跳（全片最后一个声音）",
+   "desc": "光标亮 ｜ 全片最后一个声音（心跳）",
    "frame": 5976
   },
   {
    "t": 249.5,
    "id": "silence_end_of_film",
    "kind": "silence_start",
-   "desc": "底噪切断：最后半秒数字零；250.0 那次闪烁不会到来",
+   "desc": "— ｜ 底噪切断，数字零（Z7）",
    "frame": 5988
+  },
+  {
+   "t": 249.958,
+   "id": "frame_6000",
+   "kind": "swell",
+   "desc": "`frame 6000 / 6000`，光标在灭相位 ｜ —",
+   "frame": 5999
   }
  ],
  "music": [
@@ -3734,7 +3781,11 @@
    "id": "M0",
    "start": 0.25,
    "end": 2.0,
-   "desc": "片标：节律收拢——无序的机器颗粒被吸进一个越来越规整的脉冲，收拢成第一声心跳；没有任何音高",
+   "frames": [
+    6,
+    48
+   ],
+   "desc": "片标：节律收拢——无序的机器颗粒被吸进一个越来越规整的脉冲，收拢成第一声心跳（f48）；没有任何音高",
    "key": "—（无音高）",
    "tempo": 60,
    "dynamics": "ppp→p，硬切",
@@ -3744,17 +3795,25 @@
    "id": "M1",
    "start": 15.0,
    "end": 21.0,
-   "desc": "作曲：Q 动机首演——全片第一个音高；AI 在作曲，还不知道这是一个问题",
+   "frames": [
+    360,
+    504
+   ],
+   "desc": "作曲：Q 动机首演——提问者 D4 f360 / A4 f384 / E5 f408，全片第一个音高；弦乐 D2–A2 空五度；f480 心跳（迟疑的一拍）",
    "key": "D（空五度）",
    "tempo": 60,
    "dynamics": "ppp",
-   "instruments": "提问者（AI 的声音，无颤音）；弦乐 D2–A2 纯五度"
+   "instruments": "提问者（无颤音）；弦乐 D2–A2 纯五度"
   },
   {
    "id": "M2",
    "start": 21.0,
    "end": 24.0,
-   "desc": "吸气：颗粒星光 + 反向混响 + 谢泼德上行 → 数字零",
+   "frames": [
+    504,
+    576
+   ],
+   "desc": "吸气：f504 重回车；反向混响（f608 定音混响尾倒放）自 f504；f508 回显 tick；星光颗粒自 f528；谢泼德上行 f540–575；f576 数字零",
    "key": "—",
    "tempo": 60,
    "dynamics": "p→f→0",
@@ -3763,88 +3822,138 @@
   {
    "id": "M3",
    "start": 25.333,
-   "end": 35.0,
-   "desc": "余晖：只有乐谱的低频定音与 CMB 嘶声，没有任何有音高的音乐",
+   "end": 37.0,
+   "frames": [
+    608,
+    888
+   ],
+   "desc": "余晖：f608 低频定音 D2→D0（光先到 8 帧）+ CMB 嘶声，f720 退耦滑音；没有有音高的音乐",
    "key": "—",
    "tempo": 60,
    "dynamics": "f→ppp",
-   "instruments": "次声正弦 D2→D0（定音），嘶声属于声音设计"
+   "instruments": "乐谱定音（次声正弦）；嘶声属于声音设计"
   },
   {
    "id": "M4",
    "start": 37.0,
-   "end": 64.0,
-   "desc": "德鲁伊：宇宙无三度、不跟随任何天体事件。37.0 弦乐 D2–A2（宇宙段第一个音高，无钟）；48.0 E3–B3–A4–E5 同时进入、4 s 整体渐强到 mf（52.0），FM 圆号 D3 mp 埋在里面（全片唯一一次铜管色彩）；52.5 乐谱一刀切断（12 帧数字零）；53.333 A 定音 + 弦乐涨潮 f（D–A–E–B 同时叠置）；57.0 A6“在路上的光”；收成 D2 持续音。问题的三个音同时躺在宇宙的和声里，只有人把它们按时间顺序唱出来",
-   "key": "D 四五度叠置（D–A–E–B，宇宙段纯律五度）",
+   "end": 63.5,
+   "frames": [
+    888,
+    1524
+   ],
+   "desc": "德鲁伊与恒星之死（长镜头 A 内一条连续的线）：f888 弦乐 D2+A2（宇宙段第一个音高，D2 持续音从此不断线直到 f2924）；f1152 E3–B3–A4–E5 同时进入 + FM 圆号 D3 mp，f1248 到 mf；f1332 骤降——上方声部与圆号切断，只留 D2 ppp −42 dB（不清零，旧 52.5–53.333 s 数字零取消）；f1344 闪光（其余全静，光先到）；f1352 A1→A0 定音 −9 dBFS + 弦乐涨潮（D1 上 D–A–E–B），f1392 到 f；f1392–1524 A6 正弦“在路上的光”①；收回 D2 持续音",
+   "key": "D 四五度叠置（D–A–E–B，宇宙段纯律五度，无三度）",
    "tempo": 60,
-   "dynamics": "ppp→mf(52)→0(52.5)→f(55)→ppp",
-   "instruments": "弦乐（每音 7 支失谐锯齿）、FM 圆号（mp，一次）、低音提琴 D1、A6 正弦"
+   "dynamics": "ppp→mf(f1248)→ppp(f1332 骤降)→f(f1392)→ppp",
+   "instruments": "弦乐（纯律）、D2 持续音（独立声部 pedal）、FM 圆号（唯一一次铜管色彩）、定音、A6 正弦"
   },
   {
    "id": "M5",
-   "start": 64.0,
+   "start": 63.5,
    "end": 95.0,
-   "desc": "火：D 持续音；KS 拨弦第一次由“人”问出 Q；客星上 A6 回来",
+   "frames": [
+    1524,
+    2280
+   ],
+   "desc": "落地与火：D2 持续音 ppp；f1632 起风（大气），f1740 枝叶，f1746 起干草窸窣；打火石 f1788/1812/1836；f1848 点燃 + KS D3（第一个人发问），A3 f1872，E4 f1896；f1920 弦乐 D3–A3 铺底（人类段颤音）；f2136 客星 A6 玻璃钟“在路上的光”②",
    "key": "D",
    "tempo": 60,
    "dynamics": "ppp→p",
-   "instruments": "弦乐 D2/D3–A3、KS 拨弦（D3–A3–E4）、玻璃钟 A6"
+   "instruments": "弦乐 D2 持续音 / D3–A3、KS 拨弦、玻璃钟 A6"
   },
   {
    "id": "M6",
    "start": 95.0,
-   "end": 113.0,
-   "desc": "灯：Q 卡农（每 2 拍一个新声部，6 声部）→ 蒙太奇密接和应（每一刀一个 Q，越问越快）→ 112.833 闪光上全体落 E：全片最响（拨弦、弦乐、玻璃的密度，无铜管）",
+   "end": 122.0,
+   "frames": [
+    2280,
+    2928
+   ],
+   "desc": "灯与天线：卡农——每点亮一种载体进一个声部：f2280 KS D3（篝火）、f2352 KS D4 + 拨奏（烛）、f2424 弓奏 D2（提灯）、f2496 玻璃 D5（白炽灯）、f2568 全体 mp（现代灯）；f2664 起第二轮每拍一个新声部（至 f2760）；城市低鸣 −44→−30 dB；S05 密接和应：每刀一个 Q（D 在刀上、A 在 1/3、E 在 2/3）；f2924 全体落 E（E3–E6）+ 琥珀闪光：全片最响，无铜管；f2928 一刀切断",
    "key": "D（Dsus2/四五度）",
    "tempo": 60,
-   "dynamics": "p→f→ff(111.5–113，短期 = 综合 + 9 LU)",
+   "dynamics": "p→f→ff(f2900–2927，短期 = 综合 + 9 LU)",
    "instruments": "KS 多声部、弦乐拨奏/弓奏、玻璃"
   },
   {
    "id": "M7",
-   "start": 113.0,
+   "start": 122.0,
    "end": 135.0,
-   "desc": "孤音与距离：113.0 一刀切成孤音 E5（提问者 + 独奏小提琴，mp）——从全片最满到最空，卡③在这根细线上；123.0 起孤音无线电化：独奏小提琴按 min(1, 1万 km/d) 退场，提问者变成纯正弦载波；125.0 起摩尔斯 IS ANYONE THERE?；135.0 归零，只剩接收机嘶声",
+   "frames": [
+    2928,
+    3240
+   ],
+   "desc": "孤音与距离：f2928 一刀切成孤音 E5（提问者 + 独奏小提琴，mp）；f2952 起无线电化（小提琴 f3012 前退场，提问者变纯正弦载波）；f3000–3186 摩尔斯 IS ANYONE THERE?（125.000–132.740 s，采样精确）；f3240 载波归零",
    "key": "E5",
    "tempo": 60,
    "dynamics": "mp→0",
    "instruments": "提问者、独奏小提琴、E5 正弦载波"
   },
   {
+   "id": "M7b",
+   "start": 135.0,
+   "end": 161.0,
+   "frames": [
+    3240,
+    3864
+   ],
+   "desc": "寂（声音设计为主）：接收机嘶声 −62 dB；f3456 金唱片 A6 玻璃钟 −38 dB“在路上的光”③；f3528 弦乐 D2–A2 空五度 ppp −46 dB（纯律、无三度、不跟随画面），f3624–3696 淡出；f3552 起嘶声 −62→−80 dB，f3700 前消失；f3702–3863 数字零 6.75 s。脉冲星及其一切声音已删除，不补伪回应",
+   "key": "D（空五度）",
+   "tempo": 60,
+   "dynamics": "ppp→0",
+   "instruments": "玻璃钟、弦乐"
+  },
+  {
    "id": "M8",
    "start": 161.0,
-   "end": 189.0,
-   "desc": "都还在：心跳回来；165.0 弦乐 Dm(add9)——全片第一个三度（小三度 F，思念）；166–168 钢片琴 Q；171–180“众问者”玻璃弓奏错位卡农；180 只剩 A4（《有无歌》）；184 起全部滑向 E5 同度；189 静默",
+   "end": 191.0,
+   "frames": [
+    3864,
+    4584
+   ],
+   "desc": "都还在：f3864 文字颗粒打破静音（不是心跳；S08 没有心跳）；f3912 𒀭 玻璃钟 D6 −36 dB；f3960 弦乐 Dm(add9)——全片第一个三度（F）；钢片琴 D6/A6/E7 f3984/4008/4032；f4104–4319 众问者（8 个玻璃弓奏声部错位卡农）；钢片琴 E6/A6/D7/E7 f4194/4242/4266/4290；f4320 只剩 A4；f4416–4535 滑向 E5 同度；f4524 字的呼吸；f4536 音乐静默",
    "key": "d 多利亚 / Dm(add9)",
    "tempo": 60,
    "dynamics": "pp→mp→pp→0",
-   "instruments": "弦乐、钢片琴、8 个玻璃弓奏声部（器乐，不是人声）、颗粒"
+   "instruments": "弦乐、钢片琴、玻璃弓奏、颗粒"
   },
   {
    "id": "M9",
    "start": 191.0,
    "end": 216.0,
-   "desc": "我在 / 有人吗：♯C5–E5↘D5 + D 大三（全片唯一）→ 一拍一字撤销（切断 / 滑回 E / 倒放 ♯C）→ 3 s 心跳静音 → Q 一键一音，吗上合唱第一次进入，？上全体 Dsus2，提问者开始有颤音 → 215.0 重回车 + D1",
+   "frames": [
+    4584,
+    5184
+   ],
+   "desc": "我在 / 有人吗：f4656 ♯C5、f4664 E5↘D5、f4672 D 大三（全片唯一）；f4776 和弦降到 −24 dB 以下；f4848 和弦切断 / f4872 D5→E5 / f4896 倒放 ♯C5 止；f4920–4991 心跳静音（近静默，只剩三行问句的呼吸 −44 dB）；（制片 7-2：提问段整体 +2 s）f5040 D4、f5064 A4、f5088 E5 + 人声合唱第一次进入（16 声部，错开 0–9 帧，4 声部更远）、f5112 Dsus2 + 提问者颤音 3 s 渐入；f5160 重回车 + 次声 D1",
    "key": "D：D 大三（唯一）→ Dsus2",
    "tempo": 60,
    "dynamics": "mf→0→pp→mf",
-   "instruments": "提问者、弦乐、人声合唱（16 声部，只在 210.0 之后）、次声 D1"
+   "instruments": "提问者、弦乐、人声合唱（f5088 起）、次声 D1"
   },
   {
    "id": "M10",
    "start": 216.0,
    "end": 233.0,
-   "desc": "半终止：旋律 E 不变，低音 D→A；Asus2（A–B–E）无三度——A 和弦缺的三音恰是被删掉的“我”（♯C）；224 最暖（不是最响）；切黑后延续；片名上一声 A6",
+   "frames": [
+    5184,
+    5592
+   ],
+   "desc": "半终止：f5184 低音 D→A（D 6 帧释放，A1+A2 0.5 s 涌入），Asus2：A1–E2–A2–E3–B3–E4 + 合唱 E4–A4–B4–E5 + 提问者 E5（颤音）；f5352 最暖（mf，不是最响）；f5460 切黑后延续；f5472 起每 2 s −6 dB；f5496 A6 玻璃钟“在路上的光”④。A 和弦缺的三音 ♯C = 被删掉的“我”",
    "key": "A（Asus2，无三度）",
    "tempo": 60,
-   "dynamics": "mp→mf(224)→每 2 s −6 dB",
-   "instruments": "弦乐、合唱、提问者（带颤音）、次声 A1、玻璃钟 A6"
+   "dynamics": "mp→mf(f5352)→每 2 s −6 dB",
+   "instruments": "弦乐、合唱、提问者、次声 A1、玻璃钟 A6"
   },
   {
    "id": "M11",
    "start": 233.0,
-   "end": 249.5,
-   "desc": "尾：CMB 嘶声回来，终端里只剩心跳；最后半秒数字零",
+   "end": 250.0,
+   "frames": [
+    5592,
+    6000
+   ],
+   "desc": "尾：f5592–5651 CMB 嘶声 −54 dB；f5640 立体声→单声道、底噪 −58 dB；终端心跳 9 拍（f5640/5664/5688/5832/5880/5904/5928/5952/5976，−30 dB）与打印 tick；f5988 底噪切断，最后半秒数字零",
    "key": "—",
    "tempo": 60,
    "dynamics": "ppp",
@@ -3855,31 +3964,26 @@
   {
    "id": "question",
    "notes": "D4 – A4 – E5（♩ ♩ 𝅗𝅥+延长；悬在 E，从不解决）",
-   "desc": "Q「有人吗？」：有=D（上声，低）、人=A（阳平，上扬：纯五度跳进）、吗=E（疑问语气轻而高）；“？”是延长的 E 或全体和弦。跨九度的两个纯五度，没有三度。出现：作曲(15–17) / KS(74–76) / 卡农(95–107) / 密接和应(107–113) / 孤音 E5 与载波(113–135) / 钢片琴(166–168) / 众问者(171–180) / AI 打字(208–211)。宇宙从不按时间顺序奏它：D、A、E、B 同时躺在宇宙的和声里，只有人会把它们一个接一个地唱出来。"
+   "desc": "Q「有人吗？」：有=D、人=A、吗=E；跨九度的两个纯五度，没有三度。出现（v2）：作曲 f360/384/408 / KS f1848/1872/1896（第一个人发问）/ S04 卡农（每点亮一种载体进一个声部：f2280、2352、2424、2496、2568；f2664–2760 第二轮）/ S05 密接和应（每刀一个 Q）/ 孤音 E5 与载波 f2928–3240 / 钢片琴 f3984–4032 / 众问者 f4104–4319 / AI 打字 f5040/5064/5088（+ 合唱）。宇宙从不按时间顺序奏它：D、A、E、B 同时躺在宇宙的和声里（f1152）。"
   },
   {
    "id": "answer",
    "notes": "♯C5 – E5↘D5 – D 大三（D–F♯–A）",
-   "desc": "A「我在。」：我=♯C（导音：AI 的“我”）、在=E→D（去声下滑：问题悬着的 E 落回主音）、。=全片唯一的大三和弦、唯一的 F♯。只出现一次（194.0–202.0），随后被逐字撤销。"
+   "desc": "A「我在。」：我=♯C（导音）、在=E→D、。=全片唯一的大三和弦、唯一的 F♯。只出现一次（f4656–4848），随后被逐字撤销；f4896 倒放的 ♯C5 把“我”收回。"
   },
   {
    "id": "heartbeat",
-   "notes": "lub @ 光标亮帧 24k，dub +7 帧（60 BPM）",
-   "desc": "H：光标闪烁就是心跳。宇宙事件落在它的拍子上（大爆炸、退耦、第一颗星、点燃、超新星）。缺席与静音都是叙事：24.0 漏掉一拍；第三幕前半没有它；205–207 被静音。"
+   "notes": "lub @ 光标亮帧 24k，dub +7 帧、低 8 dB（60 BPM）",
+   "desc": "H：光标闪烁就是心跳，只在光标在场的段落（S01、S09、S11）：共 34 声。缺席与静音都是叙事：f432 打字中取消；f576 漏掉一拍；S02–S08 没有它（f3864 打破蓝点静音的是文字颗粒）；f4680 光标恢复闪烁的一拍（−36 dB，压在 D 大三下）；f4920/4944/4968 被静音（Z6）；f4992、f5016 光标常亮移动时仍跳（全片唯一例外）；S11 九拍 −30 dB。"
   },
   {
    "id": "light",
    "notes": "A6 = 1760 Hz（正弦 / 玻璃钟）",
-   "desc": "L：在路上的光——泛指“总有光在路上”，不是同一颗星。超新星光前锋(57) → 客星(88) → 金唱片(152) → 片名(229)。结尾低音换到 A：我们的问题成了在路上的光。"
-  },
-  {
-   "id": "pulsar",
-   "notes": "G♯6 = 1661.2 Hz，每 1.337 s",
-   "desc": "伪心跳：G♯6（与主音 D 成三全音）+ 心跳 lub 的 110 Hz 主体，每 1.337 s——身体听到的是一个节拍错了的心跳，永远不会和我们同步。"
+   "desc": "L：在路上的光——泛指“总有光在路上”。超新星光前锋 f1392（正弦）→ 客星 f2136 → 金唱片 f3456 → 片名 f5496。结尾低音换到 A：我们的问题成了在路上的光。"
   },
   {
    "id": "cadence",
-   "notes": "旋律 E5 不变；低音 D1/D2 → A1/A2；Asus2：A1–E2–A2–E3–B3–E4 + 合唱 E4–A4–B4–E5",
+   "notes": "旋律 E5 不变；低音 D1/D2 → A1/A2（f5184）；Asus2：A1–E2–A2–E3–B3–E4 + 合唱 E4–A4–B4–E5",
    "desc": "结尾只换脚下的低音：半终止 = 音乐上的问号。没有三度：F（思念）、F♯（假安慰）、♯C（被删掉的“我”）都不在。"
   }
  ],
@@ -3888,313 +3992,563 @@
    "t": 0.25,
    "dur": 1.75,
    "id": "sound_logo",
-   "desc": "节律收拢：键击/数据嘀嗒颗粒（泊松，200→20 次/s，频谱宽→窄，间隔方差→0）+ 机房底噪（风扇/电源嗡声，宽带噪声随机游走，渐窄渐弱）；最后 0.5 s 剩余颗粒以减半的间隔（0.25/0.125/0.0625… s）收向 2.000；峰值 ≤ −30 dBFS；2.000 第一个采样硬切，同一采样落下第一声心跳。没有任何音高。单声道"
+   "desc": "节律收拢：键击/数据嘀嗒颗粒（泊松 200→20 次/s，频谱宽→窄，间隔方差→0）+ 机房底噪；最后 0.5 s 剩余颗粒以减半的间隔收向 f48；峰值 ≤ −30 dBFS；f48 第一个采样硬切，同一采样落下第一声心跳。没有任何音高。单声道",
+   "frame": 6
   },
   {
    "t": 1.5,
    "dur": 0.458,
    "id": "hairline_swish",
-   "desc": "高通 6 kHz 白噪声 11 帧，−50 dB，单声道"
+   "desc": "高通 6 kHz 白噪声 11 帧，−50 dB，单声道",
+   "frame": 36
   },
   {
    "t": 2.0,
-   "dur": 18.5,
+   "dur": 18.333,
    "id": "heartbeat_prologue",
-   "desc": "规则：lub 于帧 48,72,96,120,264,288,312,336,360,384,408,432,480；lub=2 ms 噪声脉冲 BP 3.2 kHz(Q4) + 12 ms 1.6 kHz 衰减正弦 + 40 ms 110 Hz 主体(−14 dB)；dub=+7 帧，BP 2.2 kHz + 80 Hz 主体，−8 dB；总 −30 dBFS；音色只允许 ±0.5 dB 微变"
+   "desc": "规则：lub 于帧 48,72,96,120,264,288,312,336,360,384,408,480（f432 取消：打字中光标常亮）；lub=2 ms 噪声脉冲 BP 3.2 kHz(Q4) + 12 ms 1.6 kHz 衰减正弦 + 40 ms 110 Hz 主体(−14 dB)；dub=+7 帧，BP 2.2 kHz + 80 Hz 主体，−8 dB；lub −30 dBFS；±0.5 dB 微变；单声道",
+   "frame": 48,
+   "frames": [
+    48,
+    72,
+    96,
+    120,
+    264,
+    288,
+    312,
+    336,
+    360,
+    384,
+    408,
+    480
+   ],
+   "level": -30,
+   "dubOffsetFrames": 7,
+   "dubDb": -8
   },
   {
    "t": 2.0,
-   "dur": 19.0,
+   "dur": 20.0,
    "id": "room_tone_prologue",
-   "desc": "布朗噪声 LP 200 Hz，−58 dBFS；13.0 起 +6 dB 并更亮（单声道）；21.0 随声场展开为立体声后 1 s 内淡出"
+   "desc": "布朗噪声 LP 200 Hz，−58 dBFS；f312 起 +6 dB 并更亮（单声道）；f504 随声场展开为立体声后 1 s 内淡出",
+   "frame": 48
   },
   {
    "t": 5.5,
-   "dur": 2.1,
+   "dur": 2.125,
    "id": "keys_screenplay_zh",
-   "desc": "12 次柔软的“哒”，帧 132,136,140,144,152,156,160,164,168,172,176,182：5 ms 噪声 BP 1.5–4 kHz + 140–180 Hz 键体 20 ms + 40 ms 后抬键 −12 dB；±5% 音高、±2 dB；−26 dB"
+   "desc": "12 次柔软的“哒”，帧 132,136,140,144,152,156,160,164,168,172,176,182；−26 dB ±2 dB",
+   "frame": 132,
+   "frames": [
+    132,
+    136,
+    140,
+    144,
+    152,
+    156,
+    160,
+    164,
+    168,
+    172,
+    176,
+    182
+   ]
   },
   {
    "t": 7.917,
    "dur": 0.25,
    "id": "enter_soft_1",
-   "desc": "回车：90 Hz 键体 50 ms + 10 ms 咔嗒 1–3 kHz + 抬键，−22 dB"
+   "desc": "回车：90 Hz 键体 50 ms + 咔嗒 1–3 kHz + 抬键，−22 dB",
+   "frame": 190
   },
   {
    "t": 8.25,
-   "dur": 2.0,
+   "dur": 1.958,
    "id": "keys_screenplay_en",
-   "desc": "29 次更轻更短的拉丁键（−29 dB）"
+   "desc": "29 次更轻更短的拉丁键（−29 dB），第 i 个字符在 198 + ⌊1.5i⌋，逗号后再延 4 帧",
+   "frame": 198
   },
   {
    "t": 10.5,
    "dur": 0.25,
    "id": "enter_soft_2",
-   "desc": "同 enter_soft_1"
+   "desc": "同 enter_soft_1",
+   "frame": 252
   },
   {
    "t": 11.0,
    "dur": 10.0,
    "id": "sub_motion",
-   "desc": "30 Hz 正弦“移动感”，−48 dB 渐入，21.0 并入幕布涌起"
+   "desc": "30 Hz 正弦“移动感”，−48 dB 渐入，f504 并入幕布涌起",
+   "frame": 264
   },
   {
-   "t": 19.0,
-   "dur": 0.75,
-   "id": "keys_t0",
-   "desc": "5 次较重的等宽键（帧 456,460,464,468,472）：键体 120 Hz 30 ms，−24 dB"
+   "t": 17.917,
+   "dur": 1.875,
+   "id": "keys_command",
+   "desc": "`universe.init();` 16 个等宽键（键体 120 Hz 30 ms）：“universe.”九键轻（−27 dB）帧 430,432,435,437,440,442,445,447,450；“init();”七键重（−24 dB）帧 454,458,462,466,469,471,474，`;` 最重（−22.5 dB）",
+   "frame": 430,
+   "frames": [
+    430,
+    432,
+    435,
+    437,
+    440,
+    442,
+    445,
+    447,
+    450,
+    454,
+    458,
+    462,
+    466,
+    469,
+    471,
+    474
+   ]
   },
   {
    "t": 21.0,
    "dur": 2.0,
    "id": "curtain_widen",
-   "desc": "M/S 侧声道增益 0→1（与遮幅同曲线 inOutCubic）+ 亚低频 30→45 Hz 滑音 + 噪声涌起 LP 300 Hz→4 kHz"
+   "desc": "M/S 侧声道增益 0→1（与遮幅同曲线 inOutCubic，f504–552）+ 亚低频 30→45 Hz 滑音 + 噪声涌起 LP 300 Hz→4 kHz",
+   "frame": 504
   },
   {
    "t": 21.0,
-   "dur": 0.6,
+   "dur": 0.583,
    "id": "enter_heavy_1",
-   "desc": "重回车：70 Hz 键体 120 ms + 110 Hz 二阶共振(Q6)“咚” + 长咔嗒，−16 dBFS。与 215.000 是同一个采样"
+   "desc": "重回车：70 Hz 键体 120 ms + 110 Hz 二阶共振(Q6)“咚” + 长咔嗒，−16 dBFS。与 f5160 是同一个采样",
+   "frame": 504
   },
   {
    "t": 21.0,
    "dur": 3.0,
    "id": "reverse_swell",
-   "desc": "把 25.333 的低频冲击送进“虚空”混响，取混响尾倒放 3 s，交叉进谢泼德音；24.000 硬切"
+   "desc": "f608 定音送进“虚空”混响，取混响尾倒放 3 s（f504–576），交叉进谢泼德音；f576 硬切",
+   "frame": 504
   },
   {
-   "t": 21.0,
-   "dur": 3.0,
+   "t": 21.167,
+   "dur": 0.042,
+   "id": "echo_tick",
+   "desc": "程序回显 `0`：4 kHz 正弦 5 ms + 2 ms 噪声，−48 dB——与片尾终端打印是同一个采样",
+   "frame": 508
+  },
+  {
+   "t": 22.0,
+   "dur": 2.0,
    "id": "star_sparkle",
-   "desc": "以键声为颗粒源，升 24–36 半音，200 粒/s，5–20 ms 汉宁窗，随机声像，−34 dB"
+   "desc": "以键声为颗粒源，升 24–36 半音，200 粒/s，5–20 ms 汉宁窗，随机声像（坍缩时螺旋收向 R），−34 dB；第一粒落在 f528 第一个采样",
+   "frame": 528
   },
   {
    "t": 22.5,
    "dur": 1.5,
    "id": "shepard_rise",
-   "desc": "8 个八度间隔正弦按高斯频谱包络上滑 + 噪声上扫 BP 200 Hz→8 kHz；23.958 到顶；24.000 第一个采样硬切数字零"
-  },
-  {
-   "t": 25.333,
-   "dur": 1.2,
-   "id": "bigbang_air",
-   "desc": "白噪声 HP 5 kHz，1.2 s 指数衰减，立体声铺满，−18 dB"
+   "desc": "8 个八度间隔正弦按高斯频谱包络上滑 + 噪声上扫 BP 200 Hz→8 kHz；f575 到顶；f576 第一个采样硬切数字零",
+   "frame": 540
   },
   {
    "t": 25.333,
    "dur": 7.0,
    "id": "bigbang_hit",
-   "desc": "乐谱定音（不是爆炸声）：正弦 73.4→18.4 Hz 指数下滑 2.5 s，起音 10 ms，衰减 7 s，+二次谐波 −10 dB，轻 tanh；峰值 −6 dBFS。光先到 8 帧"
+   "desc": "乐谱定音（不是爆炸声）：正弦 73.4→18.4 Hz 指数下滑 2.5 s，起音 10 ms，+二次谐波 −10 dB，轻 tanh；光先到 8 帧（f600 闪光 → f608）",
+   "frame": 608
   },
   {
    "t": 25.333,
-   "dur": 11.667,
+   "dur": 1.208,
+   "id": "bigbang_air",
+   "desc": "白噪声 HP 5 kHz，1.2 s 指数衰减，立体声铺满；它的尾巴就是 CMB 嘶声",
+   "frame": 608
+  },
+  {
+   "t": 25.333,
+   "dur": 12.0,
    "id": "cmb_hiss",
-   "desc": "粉红噪声左右去相关：LP 18→12 kHz(27)→3 kHz(30)，30.0 下探 1.2 kHz 再滑到 300 Hz(35)；−26→−34(31)→−52(35)→−62(37) 消失。这是接收机的嘶声，宇宙本身不发声"
+   "desc": "粉红噪声左右去相关：LP 18→12 kHz→3 kHz(f720)，退耦下探 1.2 kHz 再滑到 300 Hz(f840)；−26→−34(f744)→−52(f840)→−62，f888 前消失。宇宙本身不发声",
+   "frame": 608
   },
   {
    "t": 30.0,
    "dur": 1.5,
    "id": "decoupling_glide",
-   "desc": "正弦 60→40 Hz，−30 dB"
+   "desc": "正弦 60→40 Hz，−30 dB，1.5 s",
+   "frame": 720
   },
   {
-   "t": 53.333,
+   "t": 56.333,
    "dur": 5.0,
    "id": "supernova_hit",
-   "desc": "乐谱定音：正弦 55→27.5 Hz 3 s，−9 dBFS。没有铁钟、没有颗粒闪光。光先到 8 帧"
+   "desc": "乐谱定音：正弦 55→27.5 Hz 3 s，−9 dBFS + 弦乐涨潮。光先到 8 帧（f1344 闪光 → f1352），[1344, 1352) 只有 D2 ppp。没有铁钟、没有爆炸声",
+   "frame": 1352
   },
   {
-   "t": 71.5,
-   "dur": 0.06,
-   "id": "flint_strike_1",
-   "desc": "两次 3 ms 噪声爆发 BP 2–8 kHz 相隔 6 ms + 3.1/4.7/6.2 kHz 非谐振铃 40 ms，−24 dB（反拍）"
+   "t": 68.0,
+   "dur": 27.0,
+   "id": "wind",
+   "desc": "进入大气才有风：粉红噪声 BP 200–800 Hz，中心慢漂，左右去相关；−60→−40 dB（f1680 云层 −38，云下 −42）；S03-a −42，f1968 起 −38；f2280 匹配剪辑 4 帧内切出。没有“穿越”的呼啸",
+   "frame": 1632
   },
   {
    "t": 72.5,
-   "dur": 0.06,
+   "dur": 0.292,
+   "id": "acacia_twig",
+   "desc": "近处金合欢枝桠横扫（左→右）：一声极轻的枝叶擦动，颗粒 BP 1.5–7 kHz + 低频拂过，−46 dB，声像随枝桠左→右",
+   "frame": 1740
+  },
+  {
+   "t": 72.75,
+   "dur": 7.25,
+   "id": "grass_rustle",
+   "desc": "干草窸窣（序章之后第一个近处的声音）：稀疏清脆的颗粒 HP 3 kHz + HP 2 kHz 气声，−48 dB；f1756 草叶扫过时略强；f1848 后沉到火下",
+   "frame": 1746
+  },
+  {
+   "t": 74.5,
+   "dur": 0.083,
+   "id": "flint_strike_1",
+   "desc": "两次 3 ms 噪声爆发 BP 2–8 kHz 相隔 6 ms + 3.1/4.7/6.2 kHz 非谐振铃 40 ms，−24 dB（反拍；声像在左侧石尖）",
+   "frame": 1788
+  },
+  {
+   "t": 75.5,
+   "dur": 0.083,
    "id": "flint_strike_2",
-   "desc": "同上，略强"
+   "desc": "同上，略强（−22.5 dB）",
+   "frame": 1812
   },
   {
-   "t": 73.5,
-   "dur": 0.06,
+   "t": 76.5,
+   "dur": 0.083,
    "id": "flint_strike_3",
-   "desc": "同上 + 火绒的细微嘶声"
+   "desc": "同上（−23.5 dB），火星落进火绒",
+   "frame": 1836
   },
   {
-   "t": 74.0,
-   "dur": 21.0,
-   "id": "campfire",
-   "desc": "噼啪：泊松脉冲 8–20 次/s 成串，1–4 ms 噪声 BP 1–6 kHz；约每秒一次大爆裂带 20 ms 300–600 Hz 共鸣；底层布朗噪声 LP 300 Hz 慢调制；嘶嘶 HP 5 kHz −50 dB。−22 dBFS 立体声窄；79–86 LP 8→1.5 kHz −10 dB；86–95 远处 −40 dB"
+   "t": 76.5,
+   "dur": 0.5,
+   "id": "tinder_fibres",
+   "desc": "纤维极轻的嘶嘶、细响：HP 4 kHz 噪声 + 细微颗粒，−46 dB，f1848 并入火焰",
+   "frame": 1836
   },
   {
-   "t": 74.0,
-   "dur": 0.4,
+   "t": 77.0,
+   "dur": 0.417,
    "id": "ignition_whoomph",
-   "desc": "噪声 LP 200→1200 Hz 扫 0.4 s，−20 dB"
+   "desc": "点燃：噪声 LP 200→1200 Hz 扫 0.4 s，−20 dB",
+   "frame": 1848
   },
   {
-   "t": 79.0,
-   "dur": 16.0,
-   "id": "night_wind",
-   "desc": "粉红噪声 BP 200–800 Hz，中心慢漂，左右去相关，−38 dB"
+   "t": 77.0,
+   "dur": 20.708,
+   "id": "campfire",
+   "desc": "噼啪（泊松 8–20 次/s 成串 + 每秒约一次大爆裂 + 布朗噪声火床 + 嘶嘶）：f1848 起 −22 dBFS（立体声窄，R_room）；f1968 起 LP 8→1.5 kHz、−10 dB；f2112 切远景：远处 −40 dB；f2280 切近景：−24 dB；f2340 火焰塌落，5 帧内停",
+   "frame": 1848
   },
   {
-   "t": 95.0,
-   "dur": 28.0,
+   "t": 97.5,
+   "dur": 0.25,
+   "id": "ember_collapse",
+   "desc": "篝火熄：余烬塌落的一声轻“沙”（噪声 LP 800 Hz，0.25 s），−34 dB",
+   "frame": 2340
+  },
+  {
+   "t": 98.0,
+   "dur": 0.167,
+   "id": "wick_puff",
+   "desc": "烛芯着火：极轻的“噗”（BP 2–5 kHz 噪声 40 ms，−38 dB）+ 小小的低频鼓起（LP 300 Hz，150 ms，−40 dB）",
+   "frame": 2352
+  },
+  {
+   "t": 100.5,
+   "dur": 0.5,
+   "id": "wax_pops",
+   "desc": "烛火将熄：两声极细的蜡爆（HP 3 kHz，f2412 −42 dB、f2415 −43 dB）+ 一丝烟的嘶声（−50 dB）",
+   "frame": 2412,
+   "frames": [
+    2412,
+    2415
+   ]
+  },
+  {
+   "t": 101.0,
+   "dur": 0.083,
+   "id": "lantern_glass",
+   "desc": "玻璃罩落座：2 ms 咔嗒 + 3.4 kHz 振铃 80 ms，−34 dB",
+   "frame": 2424
+  },
+  {
+   "t": 101.125,
+   "dur": 0.292,
+   "id": "oil_pom",
+   "desc": "油芯着火：一声闷“嘭”（LP 400 Hz），−36 dB",
+   "frame": 2427
+  },
+  {
+   "t": 103.5,
+   "dur": 0.167,
+   "id": "wick_ratchet",
+   "desc": "拧低灯芯：三声干涩的棘轮咔嗒，相隔 30 ms，−38 dB",
+   "frame": 2484
+  },
+  {
+   "t": 104.0,
+   "dur": 0.083,
+   "id": "switch_on",
+   "desc": "开关“咔”：1 ms 咔嗒 + 1.2 kHz 键体 15 ms，−30 dB（与 f2556 同一采样）",
+   "frame": 2496
+  },
+  {
+   "t": 104.0,
+   "dur": 2.917,
+   "id": "filament_hum",
+   "desc": "灯丝电流声：100 Hz 谐波族（50 Hz 电网），−52 dB，10 帧内随升温升起；f2556 断电后 5 帧热惯性衰减",
+   "frame": 2496
+  },
+  {
+   "t": 104.417,
+   "dur": 0.5,
+   "id": "bulb_ting",
+   "desc": "满亮时一声玻璃轻“叮”（5.1 kHz），−46 dB",
+   "frame": 2506
+  },
+  {
+   "t": 106.5,
+   "dur": 0.083,
+   "id": "switch_off",
+   "desc": "同 switch_on 的同一个采样，−30 dB",
+   "frame": 2556
+  },
+  {
+   "t": 106.75,
+   "dur": 0.042,
+   "id": "filament_tick",
+   "desc": "灯丝冷却的一声细 tick（6 kHz），−48 dB",
+   "frame": 2562
+  },
+  {
+   "t": 107.0,
+   "dur": 0.042,
+   "id": "led_tick",
+   "desc": "现代灯：一声干净的电子“嗒”（4 kHz 正弦 5 ms），−40 dB，没有电流声",
+   "frame": 2568
+  },
+  {
+   "t": 111.0,
+   "dur": 14.0,
    "id": "city_hum",
-   "desc": "粉红噪声 BP 200–2000 Hz + 0.1–0.5 Hz 起伏 + 50/100/150 Hz 电网嗡声(−50) + 稀疏远处短音；−44→−30 dB(112.8)；113.0 随孤音一刀降到 −42 dB；123 起按 min(1, 1万 km/d) 退场"
+   "desc": "城市低鸣：粉红噪声 BP 200–2000 Hz + 0.1–0.5 Hz 起伏 + 50/100/150 Hz 电网嗡声 + 稀疏远处短音；−44→−30 dB（f2924）；f2928 随孤音一刀降到 −42 dB，随后按距离退场，f3000 前消失",
+   "frame": 2664
   },
   {
-   "t": 110.75,
-   "dur": 2.25,
+   "t": 117.5,
+   "dur": 4.5,
    "id": "morse_scatter",
-   "desc": "零星摩尔斯哔声：E6 正弦 60 ms dits，BP 800–3000 Hz 无线电滤波，−36 dB（无人声）；113.0 切断"
+   "desc": "零星摩尔斯哔声（S05-b 起）：E6 正弦 60 ms dit，“CQ”两次 + 零散单元，BP 800–3000 Hz 无线电滤波，−36/−39/−42 dB（无人声）；f2928 切断",
+   "frame": 2820
   },
   {
    "t": 123.0,
    "dur": 12.0,
    "id": "carrier_morse",
-   "desc": "S27 的孤音 E5 被无线电化（独奏小提琴约 125.5 前退场，提问者泛音渐去 → 659.26 Hz 纯正弦 + 二次谐波 −30 dB）；125.0 起摩尔斯键控 “IS ANYONE THERE?”（dit 60 ms，dah 180 ms，字内 60 / 字间 180 / 词间 420 ms，共 129 单位，132.74 结束）；增益∝1/d：−24(127)→−40(131)→−60(134.5)；135.0 载波归零"
+   "desc": "孤音 E5 无线电化（独奏小提琴 f3012 前退场，提问者泛音渐去 → 659.26 Hz 纯正弦 + 微弱二次谐波）；f3000（125.000）起摩尔斯键控 “IS ANYONE THERE?”（dit 60 ms，共 129 单位，132.740 s 结束 ≈ f3186）；−24 dB(f3048)→−40 dB(f3144)→约 −60；f3240 归零",
+   "frame": 2952
   },
   {
-   "t": 133.0,
-   "dur": 4.0,
-   "id": "void_hiss",
-   "desc": "接收机嘶声（CMB 嘶声配方，LP 2 kHz），−62 dB；135.0–137.0 只剩它（近静默 2 s，不是数字零）；137.0 并入脉冲的无线电嘶声"
+   "t": 132.708,
+   "dur": 21.458,
+   "id": "receiver_hiss",
+   "desc": "接收机嘶声（CMB 配方，LP 2 kHz）：132.7 s 起在最后一个“?”下淡入，−62 dB；近静默 Z3 的唯一底色；f3552 起 −62→−80 dB 指数渐隐，f3700 前消失。没有脉冲星、没有回应",
+   "frame": 3185
   },
   {
-   "t": 137.0,
-   "dur": 7.0,
-   "id": "pulsar_beeps",
-   "desc": "规则：t_k=137.000+1.337k（k=0…5 可闻，6–8 无声），音频按采样精确放置；每声 = 30 ms G♯6 1661.2 Hz 正弦（3 ms 斜坡）+ 40 ms 110 Hz 正弦主体（心跳 lub 的配方，−14 dB），经无线电滤波（HP 90 Hz + LP 3 kHz + tanh + 嘶声）；−24 dB；k=4 −3 dB/LP 3 kHz，k=5 −6 dB/LP 1.5 kHz。每一声是同一个采样"
-  },
-  {
-   "t": 143.75,
-   "dur": 4.25,
-   "id": "pulsar_tail_hiss",
-   "desc": "最后一声可闻脉冲之后：接收机嘶声 −62→−80 dB（3 s，指数），148.0 前消失（渐隐，不是切断）"
-  },
-  {
-   "t": 149.0,
-   "dur": 3.0,
-   "id": "servo_turn",
-   "desc": "滤波锯齿 80→95 Hz，BP 300–900 Hz，−44 dB（结构传导）"
-  },
-  {
-   "t": 152.0,
+   "t": 144.0,
    "dur": 1.5,
    "id": "glass_A6_record",
-   "desc": "玻璃钟 A6 1760 Hz，−38 dB"
-  },
-  {
-   "t": 152.5,
-   "dur": 0.02,
-   "id": "stop_click",
-   "desc": "1 ms 咔嗒 + 15 ms 220 Hz 主体，−36 dB"
-  },
-  {
-   "t": 153.5,
-   "dur": 0.06,
-   "id": "shutter_click",
-   "desc": "两声 2 ms 咔嗒相隔 40 ms，BP 1.5 kHz 与 3 kHz + 极短金属余振，−30 dB"
+   "desc": "金唱片反光：玻璃钟 A6 1760 Hz，−38 dB，1.5 s",
+   "frame": 3456
   },
   {
    "t": 161.0,
-   "dur": 8.5,
-   "id": "heartbeat_return",
-   "desc": "规则：lub 于 161,162,163,164,165,166,167,168,169；166 起每拍 −3 dB；169.5 光标溶解后消失；配方同 heartbeat_prologue，声像 = 光标 x 映射 ×0.4"
+   "dur": 19.667,
+   "id": "word_sparkle",
+   "desc": "文字颗粒打破 6.75 s 数字零（第一粒落在 f3864 第一个采样；不是心跳）：5–20 ms 正弦颗粒，音高 D/E/F/A/C（第 6–7 八度），2 粒/s → 40 粒/s（f3960，−50→−40 dB）→ 200 → 400 粒/s，f4128 起 −34 dB；f4320 叠化 12 帧内淡出",
+   "frame": 3864
   },
   {
-   "t": 164.0,
+   "t": 163.0,
    "dur": 2.0,
    "id": "glass_D6_an",
-   "desc": "玻璃钟 D6，−40 dB"
-  },
-  {
-   "t": 165.0,
-   "dur": 15.0,
-   "id": "word_sparkle",
-   "desc": "5–20 ms 正弦颗粒，音高 D/E/F/A/C（第 6–7 八度），200→400 粒/s，立体声散布，−40→−34 dB；180.0 切出"
+   "desc": "𒀭 可读：玻璃钟 D6，−36 dB",
+   "frame": 3912
   },
   {
    "t": 188.5,
-   "dur": 26.5,
+   "dur": 27.5,
    "id": "words_breath",
-   "desc": "人类那行字的声音：每个可读字形一路颗粒（3–8 ms 滤波噪声 + 2–4 kHz D/E/A/B 正弦微粒），以 0.25 Hz 呼吸包络调幅，声像 −0.1，−44 dB。195–199 随字形翻转逐粒熄灭（被翻成「我在」的字熄掉自己的颗粒）；202.0 30% 回来；203.0 70%；204.0 100%；211 起 AI 的行也有呼吸（同配方，高一个八度、更亮——暖白的那一行），两股同节奏但音色不同；215 后被合唱淹没"
+   "desc": "三行人类问句的呼吸（每个字形一路颗粒：3–8 ms 滤波噪声 + 正弦微粒），−44 dB：QA 高（A/E，0.25 Hz）、QB 中（E/B，0.20 Hz）、QC 低（D/A，0.31 Hz）、细字云（各自节律）。覆盖时逐组熄灭（QA f4704–4727、QB f4728–4751、QC f4752–4775、细字云 f4776–4823）；删除时逐组回来（QC + 云 30% f4848，QB + 云 70% f4872，QA + 云 100% f4896，亮度冲到 1.15、f4944 前回落）；Z6 [4920, 4992) 只剩它们；f5112 起 AI 一行也呼吸（QA 配方高一个八度、更亮，与 QA 同节律）；f5160 后被合唱淹没，f5184 前消失",
+   "frame": 4524
+  },
+  {
+   "t": 196.0,
+   "dur": 5.042,
+   "id": "cover_ticks",
+   "desc": "差异在消失：被改写的问句的呼吸被同一个短促的“嗒”（2 kHz，8 ms）取代，只在光标亮相位上响：f4704（−50）、4728（−47）、4752（−45.5）、4776、4800、4824（−44 dB），与心跳同拍",
+   "frame": 4704,
+   "frames": [
+    4704,
+    4728,
+    4752,
+    4776,
+    4800,
+    4824
+   ]
   },
   {
    "t": 191.0,
    "dur": 24.0,
    "id": "heartbeat_apex",
-   "desc": "规则：lub 于 191,192,193,195,196,197,198（−36 dB，压在和弦下）,199,200,201（−32 dB）,212,213,214（−38 dB，埋在合唱下）；205,206,207 静音（光标无声地闪）"
+   "desc": "规则：lub 于帧 4584,4608,4632,4680,4704,4728,4752,4776,4800,4824,4992,5016,5136；4584/4608/4632 −32 dB（声像 +0.23，P_ans）；4680（光标恢复闪烁）/4704/4728/4752 −36 dB（压在和弦下）；4776/4800/4824 −32 dB；4920/4944/4968 静音（Z6）；4992/5016 −38 dB（光标移动中常亮仍跳，声像随光标右→中）；5136 −38 dB；dub +7 帧、−8 dB",
+   "frame": 4584,
+   "frames": [
+    4584,
+    4608,
+    4632,
+    4680,
+    4704,
+    4728,
+    4752,
+    4776,
+    4800,
+    4824,
+    4992,
+    5016,
+    5136
+   ],
+   "muted": [
+    4920,
+    4944,
+    4968
+   ],
+   "dubOffsetFrames": 7,
+   "dubDb": -8
   },
   {
    "t": 194.0,
-   "dur": 0.7,
+   "dur": 0.708,
    "id": "keys_answer",
-   "desc": "3 次轻快确定的键（帧 4656,4664,4672），−26 dB，无随机差异"
+   "desc": "3 次轻快确定的键（帧 4656,4664,4672，P_ans），−26 dB，无随机差异",
+   "frame": 4656,
+   "frames": [
+    4656,
+    4664,
+    4672
+   ]
   },
   {
    "t": 202.0,
-   "dur": 2.1,
+   "dur": 2.083,
    "id": "backspaces",
-   "desc": "3 次退格（202,203,204）：键声音高 −15%，抬键推迟到 70 ms（手指停留了一下），−27 dB"
+   "desc": "3 次退格（帧 4848,4872,4896）：键声音高 −15%，抬键推迟到 70 ms，−27 dB",
+   "frame": 4848,
+   "frames": [
+    4848,
+    4872,
+    4896
+   ]
   },
   {
    "t": 203.375,
    "dur": 0.625,
    "id": "reversed_csharp",
-   "desc": "把 194.0 那个提问者 ♯C5 连同 0.4 s 混响尾渲染后时间反转，0.6 s 反向涌起，末尾（原起音）精确对齐 204.000 并立即切断——“我”把自己的声音收回"
+   "desc": "把 f4656 的提问者 ♯C5 连同混响尾时间反转，0.6 s 反向涌起，末尾精确对齐 f4896 并立即切断",
+   "frame": 4881
   },
   {
-   "t": 208.0,
-   "dur": 3.1,
+   "t": 210.0,
+   "dur": 3.042,
    "id": "keys_question",
-   "desc": "4 次键（208,209,210,211），带人手的随机差异：力度 ±3 dB，BP 中心 ±15%，抬键 50–90 ms，按下前 20 ms 一丝手指噪声（LP，−50 dB）；时刻严格落在拍上"
+   "desc": "4 次键（帧 5040,5064,5088,5112，制片 7-2 后移 2 s），带人手的随机差异：力度 ±3 dB，BP 中心 ±15%，抬键 50–90 ms，按下前 20 ms 一丝手指噪声（−50 dB，止于按下的那个采样）",
+   "frame": 5040,
+   "frames": [
+    5040,
+    5064,
+    5088,
+    5112
+   ]
   },
   {
    "t": 215.0,
-   "dur": 0.6,
+   "dur": 0.583,
    "id": "enter_heavy_2",
-   "desc": "与 enter_heavy_1 完全相同的采样（韵脚）"
+   "desc": "与 enter_heavy_1（f504）完全相同的采样（韵脚）",
+   "frame": 5160
   },
   {
    "t": 216.0,
    "dur": 3.0,
    "id": "city_ambience",
-   "desc": "窗外的夜城远声：低频车流 + 远处一声短音（FM，−52 dB），−45 dB；219.0 随硬切一刀切掉——从轨道上看，地球是无声的"
+   "desc": "窗外的夜城远声：低频车流 + 远处一声短音（FM，−52 dB），−45 dB；f5256 随硬切一刀切掉",
+   "frame": 5184
   },
   {
    "t": 233.0,
    "dur": 2.5,
    "id": "cmb_hiss_return",
-   "desc": "CMB 嘶声（同配方，LP 600 Hz），−54 dB，235.5 前淡出"
+   "desc": "CMB 嘶声（同配方，LP 600 Hz），−54 dB，f5652 前淡出",
+   "frame": 5592
   },
   {
    "t": 235.0,
    "dur": 14.5,
    "id": "heartbeat_coda",
-   "desc": "规则：lub 于 235,236,244,246,247,248,249；最后一声在 249.0（打印期间光标常亮，不发声）"
+   "desc": "规则：lub 于帧 5640,5664,5688,5832,5880,5904,5928,5952,5976（共 9 拍，−30 dB，与片头同一电平）；打印的拍光标常亮不发声；f5976 是全片最后一个声音",
+   "frame": 5640,
+   "frames": [
+    5640,
+    5664,
+    5688,
+    5832,
+    5880,
+    5904,
+    5928,
+    5952,
+    5976
+   ],
+   "level": -30,
+   "dubOffsetFrames": 7,
+   "dubDb": -8
   },
   {
    "t": 235.0,
    "dur": 14.5,
    "id": "room_tone_coda",
-   "desc": "布朗噪声 LP 200 Hz，−58 dB，单声道；249.5 第一个采样切断"
+   "desc": "布朗噪声 LP 200 Hz，−58 dB，单声道；f5988 第一个采样切断",
+   "frame": 5640
   },
   {
    "t": 235.0,
    "dur": 1.0,
    "id": "stereo_to_mono",
-   "desc": "M/S 侧声道 1→0（与遮幅同曲线）"
+   "desc": "M/S 侧声道 1→0（与遮幅同曲线）",
+   "frame": 5640
   },
   {
-   "t": 237.0,
-   "dur": 8.1,
+   "t": 238.0,
+   "dur": 6.042,
    "id": "print_ticks",
-   "desc": "每段输出一声极轻 tick（4 kHz 1 ms 咔嗒，−48 dB）：237,238,239,240,241,242,243,245；247.0 主屏幕恢复无声"
+   "desc": "每段打印一声极轻的 tick（与 f508 回显同一个采样，−48 dB）：帧 5712,5736,5760,5784,5808,5856；f5928 主屏幕恢复无声",
+   "frame": 5712,
+   "frames": [
+    5712,
+    5736,
+    5760,
+    5784,
+    5808,
+    5856
+   ]
   }
  ],
  "silences": [
@@ -4294,14 +4648,18 @@
    "festival": {
     "integratedLUFS": -23,
     "truePeak_dBTP": -1,
-    "note": "EBU R128，不做额外归一"
+    "note": "EBU R128，不做额外处理"
    },
    "web": {
     "integratedLUFS": -18,
     "truePeak_dBTP": -1,
-    "limiter": "平滑限幅 ratio ≤2:1，只作用于 111.0–113.0"
+    "compWindow": [
+     120.0,
+     122.0
+    ],
+    "limiter": "平滑压缩 ratio ≤2:1，只作用于 compWindow 120.0–122.0 s（f2880–2928，f2924 全体落 E；v1 为 111.0–113.0）"
    },
-   "note": "归一化增益在混音前应用；数字零的段落在两个版本里都保持精确为 0"
+   "note": "归一化增益在混音前应用；数字零的段落在两个版本里都保持精确为 0（采样 = 帧 × 2000）。gains 与 duck 保持为空：各声部电平已按剧本写在 score.py / sfx.py 里；v1 也没有任何 duck 窗口，v2 不新增（f4680 与 f5136 的心跳按剧本“压在和弦/合唱下”，不为它们压低音乐）"
   }
  }
 }
