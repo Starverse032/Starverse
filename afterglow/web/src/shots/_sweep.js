@@ -194,8 +194,7 @@ export function createSweep(ctx) {
         float j = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) - 0.5;
         for (int k = 0; k < ${NT}; k++){
           // the layer grows about its own centre as it nears the lens; taps jittered inside their stratum
-          int k1 = min(k + 1, ${NT - 1});
-          float xk = mix(uX[k], uX[k1], j * 0.98 + (k == ${NT - 1} ? -0.0 : 0.0));
+          float xk = uX[k] + j * (uX[${NT - 1}] - uX[0]) / float(${NT - 1});
           vec2 c = vec2(xk + 0.5 * uWH.x, uY + 0.5 * uWH.y);
           vec2 lp = (px - c) / uS[k] + 0.5 * uWH;
           vec4 t = tap(lp);
