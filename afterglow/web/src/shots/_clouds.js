@@ -251,7 +251,7 @@ export function createClouds(ctx) {
         // fine billows and tears: what streams past the lens inside the deck (the ≥ 8 % texture)
         vec4 c3 = texture2D(uTex, q * 17.0 + vec2(p.y / 260.0, p.y / 410.0) * 0.18 + 0.61);
         vec4 c4 = texture2D(uTex, q * 31.0 + vec2(p.y / 300.0, -p.y / 470.0) * 0.15 + 0.13);
-        dd *= smoothstep(0.30, 0.62, c3.r * 0.55 + c3.a * 0.2 + c4.g * 0.35);
+        dd *= smoothstep(0.28, 0.66, c3.r * 0.65 + c3.a * 0.15 + c4.g * 0.20);
         return dd * regionMask(p);
       }
       void main(){
@@ -259,7 +259,7 @@ export function createClouds(ctx) {
         float jit = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))) + fract(uN * 0.6180339887));
         // stochastic shutter: each pixel sees the camera at its own instant inside a 180° shutter (the camera
         // covers ~2 km per frame here; the half-res noise is smoothed by the upsample and the zoom blur)
-        float jt = fract(jit * 7.31 + 0.37);
+        float jt = hash12(gl_FragCoord.xy + vec2(fract(uN * 0.37) * 517.0, 3.1));
         vec3 ro = uDir * exp(mix(uLnD.x, uLnD.y, jt));
         vec3 acc = vec3(0.0); float T = 1.0;
         float gH = groundHit(ro, rd);
