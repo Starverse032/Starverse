@@ -49,7 +49,9 @@ export function webState(fr) {
   const glowFWHM = lerp(6, 20, s5(1176, 1200, fr));        // 6 → 20 px over the sprint
   const glowA = (0.55 + 0.9 * s5(1176, 1200, fr)) * (fr < 889 ? 0 : 1) * heroFade;
   const cluster = 1 + 1.4 * sel * (1 - s5(1190, 1210, fr));   // the knot of ≈ 40 stars around R
-  return { fr, t: fr / FPS, sel, gain, sprint, hero, glowFWHM, glowA, cluster, heroFade };
+  // in the corona the stars sink into the glare (S02-K15: no pixel above L 230 in [1200, 1224))
+  const starDim = 1 - 0.88 * s5(1192, 1206, fr);
+  return { fr, t: fr / FPS, starDim, sel, gain, sprint, hero, glowFWHM, glowA, cluster, heroFade };
 }
 
 let SHARED = null;
@@ -83,7 +85,8 @@ export function createWebLayer(ctx) {
       w = Math.sqrt(mN(a) * mN(b)) * (heroEdge(e) ? 4.5 : 1);
     } else {
       const n = pts.nodeOf[i];
-      tl = nodeLit(n) + 0.05 * r();
+      // (hero.first's own clump lights with the web at f972, not with the lonely star of f888)
+      tl = n === first ? 40.5 + 0.6 * r() : nodeLit(n) + 0.05 * r();
       w = mN(n) * 0.8 * Math.exp(0.5 * r.gauss());
     }
     const lum = 0.075 * Math.pow(Math.min(w, 16), 1.25) * Math.exp(0.7 * r.gauss());
@@ -150,15 +153,15 @@ export function createWebLayer(ctx) {
         float len = length(seg);
         // cruise: "an observation, not a flight" — fast near points fade, capsules ≤ 3 px;
         // sprint: the full half-frame streak (radial), fading only beyond ~120 px
-        vec2 fd2 = mix(vec2(5.0, 12.0), vec2(60.0, 140.0), uSprint);
+        vec2 fd2 = mix(vec2(5.0, 12.0), vec2(40.0, 90.0), uSprint);
         I *= 1.0 - smoothstep(fd2.x, fd2.y, len / uSub);
-        float capD = mix(3.0, 120.0, uSprint) * uSub;
+        float capD = mix(3.0, 60.0, uSprint) * uSub;
         if (len > capD) { seg *= capD / len; len = capD; }
         I *= 6.2832 * vSig * vSig / (6.2832 * vSig * vSig + len * 2.5066 * vSig);
         vSeg = seg;
         vec3 bb = blackbody(mix(7000.0, 15000.0, far)); bb /= max(1e-3, luma(bb));
         vec3 vi = uViolet / luma(uViolet);
-        vCol = mix(bb, vi, 0.06 + 0.16 * far);
+        vCol = mix(bb, vi, 0.04 + 0.10 * far);
         vI = I;
         vPs = size * 2.2 + 1.0 + len;
         gl_PointSize = (I > 2e-4 && d > 0.05) ? vPs * uS : 0.0;
@@ -200,7 +203,7 @@ export function createWebLayer(ctx) {
   for (let i = 0; i < N; i++) {
     let amp = 2.2 * Math.pow(Math.min(mN(i), 20), 0.7) * Math.exp(0.35 * r.gauss());
     let flag = 0;
-    if (I.rank[i] === 1) amp = 16;
+    if (I.rank[i] === 1) { amp = 16; flag = 4; }
     if (i === first) { amp = 1; flag = 1; }
     aS.set([I.tIgn[i], amp, r(), flag], 4 * i);
   }
@@ -210,10 +213,10 @@ export function createWebLayer(ctx) {
   gS.setAttribute('aS', new THREE.BufferAttribute(aS, 4));
   const starMat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
-    uniforms: { ...common, uStar: { value: PAL.STAR }, uHero: { value: 0 }, uGlowS: { value: 2.5 }, uGlowA: { value: 0 } },
+    uniforms: { ...common, uStar: { value: PAL.STAR }, uHero: { value: 0 }, uStarDim: { value: 1 }, uGlowS: { value: 2.5 }, uGlowA: { value: 0 } },
     vertexShader: GLSL.common + /* glsl */ `
       attribute vec4 aS;
-      uniform float uT, uS, uGain, uSub, uSprint, uCluster, uHero; uniform vec3 uStar;
+      uniform float uT, uS, uGain, uSub, uSprint, uCluster, uHero, uStarDim; uniform vec3 uStar;
       uniform mat4 uVPa, uVPb;
       varying vec3 vCol; varying float vI, vStreak, vHalf, vFirst; varying vec2 vSeg;
       void main(){
@@ -229,6 +232,7 @@ export function createWebLayer(ctx) {
         float knot = aS.w > 2.5 ? 1.0 : 0.0;
         float I;
         if (vFirst > 0.5) I = uHero * uSub;                           // explicit schedule (webState)
+        else if (aS.w > 3.5) I = aS.y * mix(0.04, 1.0, rise) * over * on * uGain * uSub * mix(1.0, 0.45, smoothstep(41.0, 47.0, uT));   // the second star (f936): not distance-dimmed
         else {
           float g = knot > 0.5 ? uCluster * min(1.0, uGain / 0.7) : uGain;
           // stars stay points: brightness rises gently as the camera nears (not 1/d²)
@@ -237,6 +241,7 @@ export function createWebLayer(ctx) {
           float fd = smoothstep(14.0, 150.0, d);
           I *= mix(1.0, 0.6, fd);
         }
+        I *= vFirst > 0.5 ? 1.0 : uStarDim;
         vI = I;
         vStreak = clamp((I - 5.0) / 20.0, 0.0, 1.0);
         if (vFirst > 0.5) vStreak = 1.0;
@@ -306,7 +311,7 @@ export function createWebLayer(ctx) {
   gR.setIndex(new THREE.BufferAttribute(rbIdx, 1));
   const ribbonMat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
-    uniforms: { ...common, uCol: { value: PAL.HAZE.clone().lerp(PAL.VIOLET, 0.5) }, uHot: { value: PAL.STAR.clone().lerp(PAL.VIOLET, 0.25) }, uProp: { value: PROP } },
+    uniforms: { ...common, uCol: { value: PAL.HAZE.clone().lerp(PAL.VIOLET, 0.5).lerp(PAL.STAR, 0.3) }, uHot: { value: PAL.STAR.clone().lerp(PAL.VIOLET, 0.25) }, uProp: { value: PROP } },
     vertexShader: GLSL.common + /* glsl */ `
       attribute vec3 aB; attribute vec4 aC; attribute vec2 aT;
       uniform float uGain;
@@ -379,7 +384,7 @@ export function createWebLayer(ctx) {
         a *= smoothstep(9.0, 45.0, d) * exp(-d / 170.0) * 1.25;
         if (aH.w > 1.5) a *= smoothstep(3.0, 9.0, d);
         vA = a;
-        vCol = aH.w > 0.5 ? mix(uHaze, uStar, 0.45) : uHaze;
+        vCol = aH.w > 0.5 ? mix(uHaze, uStar, 0.45) : mix(uHaze, uStar, 0.2);
         gl_PointSize = a > 1e-5 ? sz : 0.0;
       }`,
     fragmentShader: /* glsl */ `
@@ -506,7 +511,7 @@ export function createWebLayer(ctx) {
         u.uT.value = t; u.uGain.value = St.gain; u.uSprint.value = St.sprint; u.uCluster.value = St.cluster;
       }
       const su = starMat.uniforms;
-      su.uHero.value = St.hero; su.uGlowS.value = St.glowFWHM / 2.355; su.uGlowA.value = St.glowA;
+      su.uHero.value = St.hero; su.uStarDim.value = St.starDim; su.uGlowS.value = St.glowFWHM / 2.355; su.uGlowA.value = St.glowA;
       filMat.uniforms.uFilA.value = sstep(985, 1010, fr) * (1 - sstep(1190, 1205, fr));
       hazeMat.uniforms.uFpxQ.value = cam.projectionMatrix.elements[5] * gasRT.rt.height * 0.5;
       // shutter poses (180°): fr ± 0.25

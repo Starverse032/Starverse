@@ -17,7 +17,7 @@
 // What it draws (screen space, 1080p pixel units, y down, centred on R = (734.5, 540.5) — the
 // pixel-centre convention of _webgraph.js):
 //   • a soft cold-white radial light, "radius ≈ 300 px" = the radius where the wide lobe falls to
-//     10 % of its centre value; a tighter core (σ ≈ 46 px) on top.  Display value near R peaks at
+//     18 % of its centre value (≈ 10 % of the total); a tighter core (σ ≈ 46 px) on top.  Display value near R peaks at
 //     ≈ 180/255 at f1212 under coronaPost() (HDR luminance ≈ 0.6, below the bloom knee — never white).
 //   • faint coronal streamers: an angular modulation of the wide lobe (fixed integer harmonics,
 //     seeded phases, very slow rotation) — radial, so forward motion does not smear them.
@@ -50,8 +50,8 @@ export const CORONA = {
   core: hex('#E6EEFF'),
   lobe: hex('#BFD4FF'),
   tail: hex('#6FA8FF'),
-  coreGain: 0.30,               // HDR at R of the core term at A = 1
-  lobeGain: 0.34,               // HDR at R of the lobe term at A = 1
+  coreGain: 0.34,               // HDR at R of the core term at A = 1
+  lobeGain: 0.46,               // HDR at R of the lobe term at A = 1
   veil: 0.72,                   // occ at R at A = 1 (how much of what is behind R is hidden)
   streamer: 0.22,               // angular modulation depth of the lobe (outer part)
 };
@@ -86,7 +86,7 @@ export function coronaProfile(r, theta, fr) {
   const S = coronaState(fr);
   if (S.A <= 0) return [0, 0, 0, 0];
   const x = r / S.R300;
-  const lobe = Math.pow(1 + 3.22 * x * x, -1.6);
+  const lobe = Math.pow(1 + 3.17 * x * x, -1.2);
   const core = Math.exp(-0.5 * (r / S.sigma) ** 2);
   const str = 1 + CORONA.streamer * streamer(theta + S.rot) * sstep(0.12, 0.8, x);
   const c = [0, 1, 2].map(i => {
@@ -113,7 +113,7 @@ vec4 corona(vec2 px){
   vec2 d = px - vec2(${CORONA.R[0].toFixed(1)}, ${CORONA.R[1].toFixed(1)});
   float r = length(d);
   float x = r / cR300;
-  float lobe = pow(1.0 + 3.22 * x * x, -1.6);
+  float lobe = pow(1.0 + 3.17 * x * x, -1.2);
   float core = exp(-0.5 * (r / cSigma) * (r / cSigma));
   float th = atan(-d.y, d.x);
   float str = 1.0 + cStreamer * coronaStreamer(th + cRot) * smoothstep(0.12, 0.8, x);

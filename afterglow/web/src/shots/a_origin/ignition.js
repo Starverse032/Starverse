@@ -39,7 +39,22 @@ export function ignitionA() {
   const hk = i => (hop[i] < 0 ? 1e6 : hop[i]);
   const rest = [];
   for (let i = 0; i < N; i++) if (i !== first && i !== second) rest.push(i);
-  rest.sort((a, b) => (hk(a) - hk(b)) || (eu[a] - eu[b]));
+  // nodes inside the f1032 frame first — so the stars lit by 43.0 are the ones the camera sees
+  // (S02-K10: 50–80 in frame at f1032)
+  const P2 = webPathAPose(1032);
+  cam.position.copy(P2.pos); cam.up.copy(P2.up); cam.lookAt(P2.target); cam.updateMatrixWorld();
+  const inF = new Uint8Array(N);
+  for (let i = 0; i < N; i++) {
+    v.set(nodes[3 * i], nodes[3 * i + 1], nodes[3 * i + 2]);
+    vv.copy(v).applyMatrix4(cam.matrixWorldInverse);
+    if (vv.z > -1) continue;
+    v.project(cam);
+    const x = (v.x + 1) / 2 * 1920, y = (1 - v.y) / 2 * 1080;
+    inF[i] = x > 40 && x < 1880 && y > 160 && y < 920 ? 1 : 0;
+  }
+  // off-frame nodes are delayed by 3 hops: on screen the stars still ignite strictly in hop order
+  const key = i => hk(i) + 3 * (1 - inF[i]);
+  rest.sort((a, b) => (key(a) - key(b)) || (eu[a] - eu[b]));
   const order = [first, second, ...rest];
   const rank = new Int32Array(N), tIgn = new Float32Array(N);
   order.forEach((n, k) => {

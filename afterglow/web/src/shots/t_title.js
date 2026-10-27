@@ -77,7 +77,7 @@ export async function create(ctx) {
         vec3 tb = texture2D(tTitle, q).rgb;
         float th = smoothstep(0.08, 0.55, tb.g);
         // local temperature: thick parts lag the cooling (hairlines up to ≈ 12 % colder)
-        float Tl = uT * (1.0 + uCool * 0.12 * (th - 0.7));
+        float Tl = uT * (1.0 + uCool * 0.12 * (th - 0.85));
         vec3 bb = blackbody(Tl); bb /= max(lumi(bb), 1e-4);          // unit luminance at that temperature
         float Yl = uY * mix(0.92, 1.0, th) * mix(1.0, pow(Tl / uT, 3.0), uCool);
         col = bb * Yl * tb.r;                                          // strokes: ≤ HDR 0.4 luminance

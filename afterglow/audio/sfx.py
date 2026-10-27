@@ -134,15 +134,18 @@ def _move_x(f):
 
 # (lub frame, lub dBFS, cursor x or None for the mono interface). Screenplay v2 §0 / §5.1 rule 4 /
 # timeline-v2 §3.2.2: 34 lubs, only on bright frames 24k; f432 cancelled (typing); S08 has none;
-# f4680 new (−36, under the D-major chord); f4920/4944/4968 muted (Z6); f4992, f5016 while the
+# f4680 new (under the D-major chord); f4920/4944/4968 muted (Z6); f4992, f5016 while the
 # cursor moves (the one exception: steady cursor with a heartbeat); S11 nine beats at −30.
+# 2026-10-27 (coordinator, v1.2 correction): f4680, f4704 and f5136 at −32 instead of −36 / −36 / −38,
+# so they are just felt under the chord / choir — measured still ≥ 6 dB under the music in 1–4 kHz.
 HEARTBEATS = (
     [(f, -30.0, None) for f in (48, 72, 96, 120, 264, 288, 312, 336, 360, 384, 408, 480)]
     + [(f, -32.0, P_ANS_X) for f in (4584, 4608, 4632)]
-    + [(f, -36.0, P_ANS_X + 3 * CELL) for f in (4680, 4704, 4728, 4752)]
+    + [(f, -32.0, P_ANS_X + 3 * CELL) for f in (4680, 4704)]      # v1.2 correction (2026-10-27): felt under the chord
+    + [(f, -36.0, P_ANS_X + 3 * CELL) for f in (4728, 4752)]
     + [(f, -32.0, P_ANS_X + 3 * CELL) for f in (4776, 4800, 4824)]
     + [(f, -38.0, _move_x(f)) for f in (4992, 5016)]
-    + [(5136, -38.0, R_X + 4 * CELL)]
+    + [(5136, -32.0, R_X + 4 * CELL)]                                  # v1.2 correction: felt under the choir
     + [(f, -30.0, None) for f in (5640, 5664, 5688, 5832, 5880, 5904, 5928, 5952, 5976)])
 DUB_DB = -8.0
 

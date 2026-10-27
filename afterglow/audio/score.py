@@ -700,7 +700,8 @@ def scene_lamps():
 
 
 STRETTO_CUTS = [2784, 2820, 2850, 2874, 2892, 2906, 2916, 2928]   # cut g is [2916, 2928): D 2916 / A 2920 / E 2924
-STRETTO_TRIM = [(F(2784), 0.0), (118.0, -0.5), (120.0, -1.5), (121.4, -2.5), (121.75, -7.0)]
+# v2.1 (2026-10-27): the bed over 120–121.4 s another −1 dB, so the f2924 landing clearly tops f2892
+STRETTO_TRIM = [(F(2784), 0.0), (118.0, -0.5), (120.0, -2.5), (121.4, -3.5), (121.75, -7.0)]
 LAND = dict(pluck=-21.0, strum=0.015, strings=-18.0, bells=-20.0, sub=-21.0, soft=-10.0)
 
 

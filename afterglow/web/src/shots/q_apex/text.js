@@ -61,16 +61,16 @@ export function textPlaneMaterial(tex, { arr = null, arrT = [0, 0] } = {}) {
     transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending,
     uniforms: {
       ink: { value: tex.ink }, halo: { value: tex.halo }, col: { value: new THREE.Vector3(1, 1, 1) },
-      gain: { value: 1 }, haloGain: { value: 0.16 }, alpha: { value: 1 }, dissolve: { value: 0 },
+      gain: { value: 1 }, bias: { value: 0 }, haloGain: { value: 0.16 }, alpha: { value: 1 }, dissolve: { value: 0 },
       arr: { value: arr }, useArr: { value: arr ? 1 : 0 }, arrT: { value: new THREE.Vector2(...arrT) }, time: { value: 0 },
       noiseScale: { value: new THREE.Vector2(tex.w / SS / 3.0, tex.h / SS / 3.0) },
     },
     vertexShader: /* glsl */ `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
     fragmentShader: hashGLSL + /* glsl */ `
-      uniform sampler2D ink, halo, arr; uniform vec3 col; uniform float gain, haloGain, alpha, dissolve, useArr, time;
+      uniform sampler2D ink, halo, arr; uniform vec3 col; uniform float gain, bias, haloGain, alpha, dissolve, useArr, time;
       uniform vec2 arrT, noiseScale; varying vec2 vUv;
       void main(){
-        float a = texture2D(ink, vUv).a, hl = texture2D(halo, vUv).a;
+        float a = texture2D(ink, vUv, bias).a, hl = texture2D(halo, vUv, bias * 0.5).a;
         float k = alpha;
         if (useArr > 0.5) { float g = texture2D(arr, vUv).r; float ta = mix(arrT.x, arrT.y, g); k *= smoothstep(ta - 0.05, ta + 0.30, time); }
         if (dissolve > 0.0) {

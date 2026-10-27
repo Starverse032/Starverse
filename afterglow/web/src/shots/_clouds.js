@@ -138,7 +138,7 @@ vec3 duskHaze(vec3 dir, float alt){
 export const CLOUD_LAYERS = [
   { base: 5900, top: 6400, scale: 9000, cov: 0.52, sigma: 0.0030, off: [0.13, 0.71] },
   { base: 5000, top: 5550, scale: 6500, cov: 0.62, sigma: 0.0032, off: [0.57, 0.29] },
-  { base: 4050, top: 4900, scale: 5200, cov: 0.74, sigma: 0.0017, off: [0.83, 0.47] },
+  { base: 4050, top: 4900, scale: 5200, cov: 0.70, sigma: 0.0040, off: [0.83, 0.47] },
   { base: 3300, top: 3750, scale: 4200, cov: 0.62, sigma: 0.0032, off: [0.31, 0.92] },
 ];
 const CLOUD_Z = [25000, 150000];
@@ -231,9 +231,10 @@ export function createClouds(ctx) {
   // ---- pass 1: the cloud decks, half resolution, premultiplied (rgb, a = 1 − transmittance) ------------
   const cloudMat = new THREE.ShaderMaterial({
     vertexShader: VS_UV, depthTest: false, depthWrite: false,
-    uniforms: { uProjInv: { value: new THREE.Matrix4() }, uRot: { value: new THREE.Matrix3() }, uCam: { value: new THREE.Vector3() }, uN: { value: 0 }, uTex: { value: tex } },
+    uniforms: { uProjInv: { value: new THREE.Matrix4() }, uRot: { value: new THREE.Matrix3() }, uCam: { value: new THREE.Vector3() }, uN: { value: 0 }, uTex: { value: tex },
+      uDir: { value: new THREE.Vector3(0, Math.sin(GLIDE), Math.cos(GLIDE)) }, uLnD: { value: new THREE.Vector2() } },
     fragmentShader: COMMON + /* glsl */ `
-      uniform sampler2D uTex;
+      uniform sampler2D uTex; uniform vec3 uDir; uniform vec2 uLnD;
       struct Layer { float b; float t; float s; float cov; float sig; vec2 off; };
       const Layer LS[4] = Layer[4](${layerGLSL});
       float regionMask(vec3 p){ return smoothstep(${CLOUD_Z[0].toFixed(1)}, ${(CLOUD_Z[0] + 15000).toFixed(1)}, p.z) * smoothstep(${CLOUD_Z[1].toFixed(1)}, ${(CLOUD_Z[1] - 30000).toFixed(1)}, p.z); }
@@ -248,13 +249,18 @@ export function createClouds(ctx) {
         float thr = (1.0 - l.cov) * 0.95 + 0.2 + 0.30 * smoothstep(0.45, 1.0, h) + 0.25 * smoothstep(0.18, 0.0, h);
         float dd = smoothstep(thr, thr + 0.30, shape);
         // fine billows and tears: what streams past the lens inside the deck (the ≥ 8 % texture)
-        vec4 c3 = texture2D(uTex, q * 17.0 + vec2(0.0, p.y / l.s * 9.0) + 0.61);
-        dd *= 0.25 + 1.5 * smoothstep(0.30, 0.75, c3.r * 0.7 + c3.a * 0.3);
+        vec4 c3 = texture2D(uTex, q * 17.0 + vec2(p.y / 260.0, p.y / 410.0) * 0.18 + 0.61);
+        vec4 c4 = texture2D(uTex, q * 31.0 + vec2(p.y / 300.0, -p.y / 470.0) * 0.15 + 0.13);
+        dd *= smoothstep(0.30, 0.62, c3.r * 0.55 + c3.a * 0.2 + c4.g * 0.35);
         return dd * regionMask(p);
       }
       void main(){
-        vec3 rd = rayDir(vUv), ro = uCam;
+        vec3 rd = rayDir(vUv);
         float jit = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))) + fract(uN * 0.6180339887));
+        // stochastic shutter: each pixel sees the camera at its own instant inside a 180° shutter (the camera
+        // covers ~2 km per frame here; the half-res noise is smoothed by the upsample and the zoom blur)
+        float jt = fract(jit * 7.31 + 0.37);
+        vec3 ro = uDir * exp(mix(uLnD.x, uLnD.y, jt));
         vec3 acc = vec3(0.0); float T = 1.0;
         float gH = groundHit(ro, rd);
         float west = max(dot(rd, vec3(-1.0, 0.0, 0.0)), 0.0);
@@ -278,16 +284,19 @@ export function createClouds(ctx) {
             float ta = t0 + span * u0 * u0, tb = t0 + span * u1 * u1;
             vec3 p = ro + rd * (0.5 * (ta + tb));
             float dn = dens(l, p, uN);
+            // the camera flies in a pocket of clearer air: the deck is seen as walls and wisps 0.1–1 km away
+            // (inside a uniform fog every pixel would see the same few metres: a flat grey, a white frame)
+            dn *= 0.05 + 0.95 * smoothstep(1200.0, 6000.0, 0.5 * (ta + tb));
             if (dn < 0.002) continue;
             float h = (p.y - l.b) / (l.t - l.b);
             // light: the sky dome from above (brighter on the tops), the warm west (on everything facing it),
             // a dim warm floor below; the further west (−x) the warmer the light (the sun is still on the far west)
-            float wpos = clamp(0.5 - p.x / 60000.0, 0.0, 1.0);
+            float wpos = clamp(0.5 - p.x / 30000.0, 0.0, 1.0);
             float edge = 1.0 - dens(l, p + vec3(-260.0, 0.0, 0.0), uN) * 0.8;    // west-facing edges catch the glow
             float occ = dens(l, p + vec3(-90.0, 140.0, 40.0), uN);                 // cloud between this sample and the sky above-west
-            float shade = mix(1.25, 0.45, occ);
-            vec3 amb = mix(vec3(0.050, 0.058, 0.085), vec3(0.120, 0.125, 0.165), h) + skyUp * 0.30 * h;
-            vec3 warm = vec3(0.34, 0.170, 0.090) * (0.25 + 0.75 * edge) * (0.35 + 0.65 * wpos) * (0.45 + 0.55 * h) * phase;
+            float shade = mix(1.35, 0.35, occ) * (0.7 + 0.6 * h);
+            vec3 amb = mix(vec3(0.050, 0.060, 0.080), vec3(0.118, 0.128, 0.150), h) + skyUp * 0.22 * h;
+            vec3 warm = vec3(0.34, 0.180, 0.080) * (0.15 + 0.85 * edge) * (0.10 + 0.90 * wpos * wpos) * (0.45 + 0.55 * h) * phase;
             float topLit = smoothstep(0.55, 1.0, h) * (0.4 + 0.6 * wpos) * float(i < 2);
             vec3 col = (amb + warm) * shade + vec3(0.30, 0.15, 0.13) * topLit;              // tops of the high decks: pink-orange
             float sigma = l.sig * dn;
@@ -339,6 +348,7 @@ export function createClouds(ctx) {
     mat.uniforms.uRot.value.copy(rot);
     mat.uniforms.uCam.value.set(...c.pos);
     mat.uniforms.uN.value = n;
+    if (mat.uniforms.uLnD) mat.uniforms.uLnD.value.set(Math.log(camAt(n - 0.25).d), Math.log(camAt(n + 0.25).d));
     return c;
   }
   // max transmittance-weighted visibility of the background at frame n (A3 uses it to decide whether its

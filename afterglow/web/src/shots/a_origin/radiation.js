@@ -100,7 +100,7 @@ export function radState(fr) {
   const ev = smoothPL(EV_KEYS, fr);
   let gain = Math.pow(2, ev);
   // white f603–610 (field at WHITE gain), falling from f611 (outCubic over f611–f646)
-  const W = 1.9, L0 = 0.62;
+  const W = 1.9, L0 = 0.5;
   if (x < 2.5) gain = 0;
   else if (x < 11) gain = W * sstep(2.5, 3.0, x) + 0 * (1 - sstep(2.5, 3.0, x));
   else if (fr < 648) gain = logLerp(W, L0, outCubic(clamp((x - 11) / 36))) * Math.pow(2, Math.min(0, ev));
@@ -120,10 +120,10 @@ export function radState(fr) {
   s.nearThin = s.dec;                      // near fog threshold up: 1–2 wisps remain
   s.ampFar = lerp(0.6, 1.0, s.dec);
   // near-layer brightness: with the field during S02-a; S02-b: faint dust (display 3–8), out by f1010
-  s.dust = fr < 792 ? 0 : sstep(780, 820, fr) * (1 - sstep(960, 1010, fr));
+  s.dust = sstep(770, 830, fr) * (1 - sstep(960, 1010, fr));
   // the afterglow target at R (S02-b): HDR luma 0.02–0.035, Ø 40 → 12 px (FWHM), gone at f888
   const ag = sstep(744, 800, fr) * (fr < 888 ? 1 : 0);
-  s.agA = ag * lerp(0.030, 0.034, clamp((fr - 792) / 96));
+  s.agA = ag * lerp(0.022, 0.026, clamp((fr - 792) / 96));
   s.agFWHM = fr < 792 ? 40 : lerp(40, 12, Math.pow(clamp((fr - 792) / 96), 0.8));
   s.moat = sstep(744, 800, fr) * (fr < 888 ? 1 : 0);
   s.camS = camTravel(fr);
@@ -220,7 +220,7 @@ export function createRadiation(ctx) {
   const layRT = new kit.LowRes(W, H, 0.5);
   const LAYERS = /* glsl */ `
     uniform sampler2D tFog, tGrain;
-    uniform float uPxScale, uHt, uCamS, uTemp, uAmpMid, uMidGain, uNearThin, uNearGain, uDust, uWhite;
+    uniform float uPxScale, uHt, uCamS, uTemp, uAmpMid, uMidGain, uNearThin, uNearGain, uDust, uWhite, uNearAbs, uDustMix, uPresence;
     const float FPX = ${FPX.toFixed(1)};
     const vec2 RR = vec2(${R[0].toFixed(1)}, ${R[1].toFixed(1)});
     const int NM = 12; const float DM = 1.0, ZM0 = 1.2, ZM1 = 13.2;
@@ -247,7 +247,7 @@ export function createRadiation(ctx) {
         float grain = mix(0.45, pow(g.r, 1.3) * 2.2, uAmpMid);                      // contrast → 0 at decoupling
         float dens = grain * (0.55 + 0.9 * g.g) * smoothstep(0.03, 0.12, length(P));
         float a = 0.07 * dens * w * uMidGain;
-        float Te = uTemp * (1.0 + 0.10 * (g.g - 0.5));
+        float Te = uTemp * (1.0 + 0.22 * (g.g - 0.5) + 0.12 * (grain - 0.5));
         col = col * (1.0 - a) + bbN(Te) * (0.11 * dens * w * uMidGain);
         T *= 1.0 - a;
       }
@@ -266,21 +266,21 @@ export function createRadiation(ctx) {
         float lod = log2(max(1.0, tpp)) + 1.6 * smoothstep(2.5, 0.3, z) + 0.6;
         vec4 fg = textureLod(tFog, uv, lod);
         // after the decoupling only the thin wisps (B) of 1–2 clouds remain
-        float c = mix(fg.r, fg.b, uNearThin) * step(mix(0.45, 0.80, uNearThin), hash11(k * 3.7 + 0.31));
+        float c = mix(mix(fg.r, fg.b, uNearThin), max(fg.b, 0.55 * fg.r), uDustMix) * step(uPresence, hash11(k * 3.7 + 0.31));
         float tunnel = smoothstep(0.30, 0.62, length(P));
         float dens = c * tunnel * w;
         float a = (0.55 * (1.0 - uWhite) + 0.25 * uWhite) * dens * (0.6 + 0.4 * fg.g);
-        float Te = uTemp * (1.0 + 0.08 * (fg.g - 0.4));
+        float Te = uTemp * (1.0 + 0.10 * (fg.g - 0.4) + 0.22 * (c - 0.3));
         vec3 e = bbN(Te) * dens * (0.75 + 0.7 * fg.g) * (uNearGain + uDust);
-        col = col * (1.0 - a * (1.0 - uDust)) + e;
-        T *= 1.0 - a * (1.0 - uDust);
+        col = col * (1.0 - a * uNearAbs) + e;
+        T *= 1.0 - a * uNearAbs;
       }
       gl_FragColor = vec4(col, 1.0 - T);
     }`;
   const layUni = {
     tFog: { value: fogTex }, tGrain: { value: grainTex },
     uPxScale: { value: 1 }, uHt: { value: 1 }, uCamS: { value: 0 }, uTemp: { value: 4500 },
-    uAmpMid: { value: 1 }, uMidGain: { value: 1 }, uNearThin: { value: 0 }, uNearGain: { value: 1 }, uDust: { value: 0 }, uWhite: { value: 0 },
+    uAmpMid: { value: 1 }, uMidGain: { value: 1 }, uNearThin: { value: 0 }, uNearGain: { value: 1 }, uDust: { value: 0 }, uWhite: { value: 0 }, uNearAbs: { value: 1 }, uDustMix: { value: 0 }, uPresence: { value: 0.45 },
   };
   const layPass = kit.fullscreen(LAYERS, layUni);
 
@@ -309,18 +309,19 @@ export function createRadiation(ctx) {
         Ff += textureLod(tFar, uv + vec2( 0.3, -0.7) * uTexel * uSpread, uLod).r;
         Ff *= 0.25 * (1.0 + 0.10 * uLod);
         float F = uAmpFar * Ff;
-        float Te = uTemp * (1.0 + 0.12 * clamp(0.25 * F, -0.75, 0.75));
+        float Te = uTemp * (1.0 + 0.20 * clamp(0.25 * F, -0.75, 0.75));
         float I = pow(Te / uTemp, 4.0) * exp(uFGain * F);
         vec3 far = bbN(Te) * I;
         // S02-b: the gas around R drains into the afterglow — a darker moat 30–150 px
         float r = length(px - RR);
-        far *= 1.0 - 0.5 * uMoat * smoothstep(190.0, 30.0, r);
+        far *= 1.0 - 0.72 * uMoat * smoothstep(230.0, 30.0, r);
         col = far * (1.0 - L.a) + L.rgb;
         col *= uGain;
         col *= mix(vec3(1.0), uWhiteTint, uWhite);
       }
       if (uDustOnly > 0.5) col = L.rgb;          // S02-b/c: only the faint dust wisps (gain inside)
-      vec2 q = px - RR;
+      // the flash, its lines and the f600 point are centred on p_terminal's still point (734.0, 540.0)
+      vec2 q = px - vec2(734.0, 540.0);
       float r2 = dot(q, q);
       // flash at R (c_afterglow): the source keeps the cursor's 24:64 proportion for a frame
       float rc = q.x * q.x + q.y * q.y / (uAsp * uAsp);
@@ -335,6 +336,7 @@ export function createRadiation(ctx) {
       }
       // the afterglow target at R: dark red-brown soft clump (S02-b)
       if (uAgA > 0.0) {
+        r2 = dot(px - RR, px - RR);
         float g = exp(-0.5 * r2 / (uAgSig * uAgSig)) + 0.18 * exp(-0.5 * r2 / (4.0 * uAgSig * uAgSig));
         col += vec3(1.0, 0.30, 0.10) / 0.4205 * uAgA * g / 1.18;
       }
@@ -379,10 +381,14 @@ export function createRadiation(ctx) {
       layUni.uCamS.value = S.camS; layUni.uTemp.value = S.T;
       layUni.uAmpMid.value = S.ampMid; layUni.uMidGain.value = mode === 'dust' ? 0 : S.midGain;
       layUni.uNearThin.value = S.nearThin; layUni.uWhite.value = S.white;
-      layUni.uNearGain.value = mode === 'dust' ? 0 : S.nearBoost;
-      // dust: absolute HDR emission ≈ 0.004–0.012 (display 3–8)
-      layUni.uDust.value = mode === 'dust' || S.gain < 0.02 ? 0.010 * S.dust : 0;
-      if (mode === 'base' && S.dust > 0 && S.gain < 0.02) layUni.uNearGain.value = 0;
+      // near fog: the field's own clouds fade out as they become the faint dust wisps of S02-b
+      // (absolute HDR ≈ 0.004–0.012, display 3–8; in 'base' mode divided by the field gain applied later)
+      const dustAbs = 0.012 * S.dust;
+      layUni.uNearGain.value = mode === 'dust' ? 0 : S.nearBoost * (1 - S.dust);
+      layUni.uDust.value = mode === 'dust' || S.gain < 1e-4 ? dustAbs : dustAbs / S.gain;
+      layUni.uNearAbs.value = 1 - S.dust;
+      layUni.uDustMix.value = S.dust;
+      layUni.uPresence.value = lerp(lerp(0.45, 0.80, S.nearThin), 0.35, S.dust);
       const ac = r.autoClear; r.autoClear = true;
       r.setRenderTarget(layRT.rt); r.setClearColor(0x000000, 0); r.clear();
       layPass.render(r, layRT.rt);

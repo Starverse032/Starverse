@@ -1,32 +1,34 @@
-// p_terminal — the opening (S01–S06, 00:00.00 → 00:25.00, one continuous shot) and the closing
-// terminal (S44, 03:55.00 → 04:10.00). Frame-level spec: screenplay §3 S01–S06, §4, §8.
+// p_terminal — the opening (S01–S06 [0, 600), one continuous shot; screenplay v2 S01-a … S01-h) and the
+// closing terminal (S44 [5640, 6000); screenplay v2 S11-d / e / f).
 //
-// Two layers, exactly as §4.2 asks:
-//   SCREEN PLANE  background, script lines, cursor, name plate — a plane in 3D. Rendered by ONE
-//                 fullscreen shader that intersects each pixel's camera ray with the plane (exact
-//                 pinhole maths, so before 00:11 it is a pixel-exact 1:1 orthographic screen, and
-//                 from 00:11 the 50 mm camera pushes in 6 % and the plane yaws/pitches about axes
-//                 through the cursor — the cursor never leaves R = (734, 540)).
-//   HUD           viewfinder frame lines (y = 137 / 942) and the frame counter, in screen space,
-//                 composited in the same pass; they never move.
-// All UI pixels are composed in display sRGB and pushed through the inverse ACES curve (ui.js), so
-// the post chain shows the specified colours exactly. HDR light (cursor glow, stars, the white point)
-// is added on top in scene-linear units.
+// Two layers:
+//   SCREEN PLANE  background, script lines, command, echo, cursor, name plate — a plane in 3D. Rendered by
+//                 ONE fullscreen shader that intersects each pixel's camera ray with the plane (exact
+//                 pinhole maths, so before f264 it is a pixel-exact 1:1 orthographic screen, and from f264
+//                 the 50 mm camera pushes in 6 % and the plane yaws/pitches about axes through the cursor —
+//                 the cursor on its empty row never leaves R = (734, 540)).
+//   HUD           viewfinder frame lines (y = 137 / 942) and the frame counter, in screen space.
+// All UI pixels are composed in display sRGB and pushed through the inverse ACES curve (ui.js), so the post
+// chain shows the specified colours exactly. HDR light (cursor glow, stars, the white point) is added on
+// top in scene-linear units.
 //
-// Text → stars (S04): the three typed lines are re-rasterised once in create() on a 4× super-sampled
-// canvas; every super-sampled ink pixel emits a point with probability 0.25·coverage (≈ 6×10⁴ points,
-// seeded). At f504 they replace the canvas text (12-frame cross-fade at identical positions), then
-// gain depth, curl drift and blackbody colour; 2×10⁴ background stars fade in behind them.
-// Collapse (S05): every star follows r(u) = r₀(1 − u)², θ(u) = θ₀ + 10u³ about R (plane normal axis),
-// u = easeInExpo(s), brightness ∝ (r₀ + 8)/(r + 8); the engine averages 8 sub-frames (timeline).
-// The cursor contracts 14×36 → 4×4 at HDR 8 (f575), S06 settles it to the S07 point (peak 1.5,
-// Gaussian σ 1.6 px — identical to c_afterglow's f600) and then holds it absolutely still.
+// v2 opening: the third row is the command `universe.init();` (16 keys, f430–474, variable rhythm) with a
+// margin prompt '>' (x 684–706, body from x 727); f480 the hesitant beat; f504 return (cursor hidden while
+// the program runs); f508 the program echoes `0` (grey #9EA3AA, no prompt, printed at once); f522 newline,
+// an empty prompt row '> ▌' at R. Text → stars only from f528 (6-frame cross-fade at identical positions):
+// every row is re-rasterised once in create() on a 4× super-sampled canvas and every ink sample emits a
+// point with probability 0.25·coverage (≈ 7×10⁴ points, seeded), which then gains depth, curl drift and
+// blackbody colour; 2×10⁴ background stars fade in behind them.
+// Collapse (S05): r(u) = r₀(1 − u)², θ(u) = θ₀ + 10u³ about R, u = easeInExpo(s), brightness ∝ (r₀+8)/(r+8),
+// motion-blurred analytically (each star draws its own 180°-shutter trail, ≤ 1.9 px between samples).
+// The cursor contracts 14×36 → 4×4 at HDR 8 (f575); S06 settles it to the A1 point (peak 1.5, Gaussian
+// σ 1.6 px) and holds it absolutely still — f599 = a_origin's f600.
+// Bloom (V2 mask): name plate, script, command and echo strokes neither emit nor receive bloom; the
+// cursor's anamorphic line and the post streak skip the text already on its row.
 //
 // Every frame is a pure function of t: the name-plate spring is the analytic step response of a
 // critically damped spring, typing is a table of frames, canvases are only re-drawn when their
 // content key changes (the key is a function of t).
-//
-// Cost (1080p SwiftShader): S01–S04 ≈ 0.15–0.3 s, S05 ≈ 8 × (screen + 8×10⁴ points), S44 ≈ 0.1 s.
 import * as THREE from 'three';
 import { DISPLAY_GLSL, hex, hdrFor, assertFonts, scriptRuns, drawRuns } from './p_terminal/ui.js';
 
@@ -127,9 +129,10 @@ export async function create(ctx) {
     }
     return x;
   };
-  // carriage return: the old line glides up 64 px over 6 frames (easeOutCubic); the curve is shifted so the
-  // CR frame already shows 58 % of the move — the line has cleared the cursor when the cursor lands at R
-  const scrollAt = fr => CRS.reduce((s, c) => s + 64 * ease.outCubic(clamp((fr - c + 2) / 8)), 0);
+  // carriage return: the lines glide up 64 px over 6 frames starting ON the return frame (f504–509 etc.),
+  // easeOutQuart, so the CR frame itself already shows 52 % of the move — the old line has cleared the
+  // cursor's row when the cursor lands at R; nothing moves before the key is pressed
+  const scrollAt = fr => CRS.reduce((s, c) => s + 64 * ease.outQuart(clamp((fr - c + 1) / 6)), 0);
   const itemCount = (k, F) => { const L = ITEMS[k]; return L.times ? L.times.filter(f => f <= F).length : (F >= L.show ? [...L.text].length : 0); };
   const docY = L => 540 + 64 * L.row;
 
