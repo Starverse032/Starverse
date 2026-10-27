@@ -58,11 +58,11 @@ export async function create(ctx) {
   const { THREE: T, renderer, W, H, kit, makeRT, FSQ } = ctx;
   const P38 = ctx.timeline.shots.find(s => s.id === 'S38')?.params || {};
   const LQ = [
-    { id: 'QA', text: '有人吗？', font: '600 108px "Noto Serif CJK SC"', color: '#FFB36B', y: 320, hdr: 0.40, rtl: false, land: [185.95, 187.0] },
-    { id: 'QB', text: 'Is anyone there?', font: 'italic 500 84px "Cormorant Garamond"', color: '#F2C98A', y: 210, hdr: 0.40, rtl: false, land: [186.4, 187.5] },
-    { id: 'QC', text: 'هل يوجد أحد هنا؟', font: '400 80px "Noto Naskh Arabic"', color: '#FF9A5C', y: 430, hdr: 0.25, rtl: true, land: [186.85, 188.0] },
+    { id: 'QA', text: '有人吗？', font: '600 108px "Noto Serif CJK SC"', color: '#FFB36B', y: 320, hdr: 0.33, rtl: false, land: [185.95, 187.0] },
+    { id: 'QB', text: 'Is anyone there?', font: 'italic 500 84px "Cormorant Garamond"', color: '#F2C98A', y: 210, hdr: 0.31, rtl: false, land: [186.4, 187.5] },
+    { id: 'QC', text: 'هل يوجد أحد هنا؟', font: '400 80px "Noto Naskh Arabic"', color: '#FF9A5C', y: 430, hdr: 0.20, rtl: true, land: [186.85, 188.0] },
   ];
-  for (const L of LQ) { const p = P38[L.id]; if (p) { L.text = p.text || L.text; L.font = p.font || L.font; L.color = p.color || L.color; L.y = p.y || L.y; L.hdr = p.strokeHDR || L.hdr; } }
+  for (const L of LQ) { const p = P38[L.id]; if (p) { L.text = p.text || L.text; L.font = p.font || L.font; L.color = p.color || L.color; L.y = p.y || L.y; L.hdrSpec = p.strokeHDR; } }
   await assertFonts([
     [LQ[0].font, '有人吗？'], [LQ[1].font, 'Is anyone there'], [LQ[2].font, 'هل يوجد أحد هنا'],
     [`400 64px ${MONO}`, '我在。有人吗？'],
@@ -70,7 +70,8 @@ export async function create(ctx) {
   const lex = getLexicon();
   const r = rng(55 * 37 + 2);
   const CUR_LIN = PAL.CURSOR, ASH_LIN = PAL.ASH;
-  const AI_COL = atLevel(CUR_LIN, 0.40);            // AI strokes: neutral white, HDR 0.40
+  const AIW = CUR_LIN.map(v => 0.75 * v + 0.25 * luma(CUR_LIN));   // AI white, a touch more neutral (S ≤ 0.06 after ACES)
+  const AI_COL = atLevel(AIW, 0.31);            // AI strokes: neutral white, HDR 0.40
 
   // =========================================================================================
   // Layout of the three lines (1080p px)
@@ -485,7 +486,7 @@ export async function create(ctx) {
       });
       qaWhite.forEach((m, c) => {
         const [x, a] = qaPlanes[c].userData.cell; squash(m, qa[c].white, x + a / 2, shift);
-        setCol(m, atLevel(CUR_LIN, 0.40), sync * sg);
+        setCol(m, atLevel(AIW, 0.31), sync * sg);
       });
       // QB: squeezed about its left edge, greying; the white chain pushed in from the right end
       squash(qbPlane, qb.sx, LX, shift);
@@ -499,7 +500,7 @@ export async function create(ctx) {
         m.position.set(X(xL + 42) + (m.userData.cx0 - 42), Y(m.userData.cy) + shift, 0);
         m.material.uniforms.alpha.value = emerge * qb.whiteA * fadeTop;
         m.material.uniforms.dissolve.value = qb.whiteDis;
-        setCol(m, atLevel(CUR_LIN, 0.40), sync * sg);
+        setCol(m, atLevel(AIW, 0.31), sync * sg);
       });
       // QC: dimmed and grey under the bar
       qcPlane.visible = true; qcPlane.position.y = Y(qcPlane.userData.cy) + shift;
@@ -508,7 +509,7 @@ export async function create(ctx) {
         qcBar.visible = true;
         qcBar.position.set(X(qc.x0 + 240) + (qcBar.userData.cx - 240), Y(qcBar.userData.cy) + shift, 0);
         qcBar.material.uniforms.alpha.value = qc.barA; qcBar.material.uniforms.dissolve.value = qc.dis;
-        setCol(qcBar, atLevel(CUR_LIN, 0.40), sync * sg);
+        setCol(qcBar, atLevel(AIW, 0.31), sync * sg);
       }
     }
     // --- the AI's glyphs

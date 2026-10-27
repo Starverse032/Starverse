@@ -200,6 +200,7 @@ async function buildS34(ctx, lex, draw) {
     const d0 = Math.hypot(iPos[3 * i] - P9.pos.x, iPos[3 * i + 1] - P9.pos.y, iPos[3 * i + 2] - P9.pos.z);
     iC[i * 4 + 3] = 165.0 + 2.6 * Math.pow(1 - smooth(10, 250, d0), 1.25) + 0.35 * r();
     if (!isFil && nodeOf[i] === first) heroIdx.push(i);
+    if (i >= nBase + nNear - N2_CLUMP && i < nBase + nNear) iA[4 * i + 1] = Math.min(2.0, b * 0.12);
   }
   // hero clump: f3870 → f3958, by screen distance from R (the words grow around the node)
   {
@@ -504,7 +505,7 @@ async function buildS34(ctx, lex, draw) {
       if (vis > ck) { ck = vis; box = [x - m.userData.w * s / 2, y - m.userData.h * s / 2, x + m.userData.w * s / 2, y + m.userData.h * s / 2]; }
     });
     if (box) U.uClear.value.set(box[0] - 40, box[1] - 26, box[2] + 40, box[3] + 26);
-    U.uClearK.value = Math.min(1, ck) * 0.85;
+    U.uClearK.value = Math.min(1, ck) * 0.96;
     draw(mainScene, cam, f.target, false);
     // fog: violet with the filling (S08-a/b), warm amber in the push
     const gu = gasMat.uniforms;

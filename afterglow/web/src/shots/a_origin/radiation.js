@@ -100,15 +100,15 @@ export function radState(fr) {
   const ev = smoothPL(EV_KEYS, fr);
   let gain = Math.pow(2, ev);
   // white f603–610 (field at WHITE gain), falling from f611 (outCubic over f611–f646)
-  const W = 1.5, L0 = 0.5;
+  const W = 1.2, L0 = 0.5;
   if (x < 2.5) gain = 0;
-  else if (x < 11) gain = W * sstep(2.5, 3.0, x) + 0 * (1 - sstep(2.5, 3.0, x));
-  else if (fr < 648) gain = logLerp(W, L0, outCubic(clamp((x - 11) / 36))) * Math.pow(2, Math.min(0, ev));
+  else if (x < 11) gain = W * lerp(1, 0.72, clamp((x - 3) / 8)) * sstep(2.5, 3.0, x);
+  else if (fr < 648) gain = logLerp(W * 0.72, L0, outCubic(clamp((x - 11) / 36))) * Math.pow(2, Math.min(0, ev));
   else gain *= L0;
   if (fr > 900) gain *= 1 - sstep(900, 915, fr);
   s.gain = gain;
   // near fog: luminous (brighter than the field); on the white frames it carries the ≥ 5 % relief
-  s.nearBoost = x < 11 ? 16.0 : lerp(16.0, 1.9, outCubic(clamp((x - 11) / 30)));
+  s.nearBoost = x < 11 ? 22.0 : lerp(22.0, 1.9, outCubic(clamp((x - 11) / 30)));
   s.white = x >= 2.5 && x < 11 ? 1 : x < 2.5 ? 0 : 1 - sstep(11, 30, x);     // warm-white tint weight
   // temperature (log-linear keys, smoothed); the white frames are 6500 K → 4500 K by f648
   s.T = x < 48 ? logLerp(6500, 4500, sstep(8, 48, x)) : Math.exp(smoothPL(LT_KEYS, fr, 20));
@@ -245,7 +245,9 @@ export function createRadiation(ctx) {
         float lod = log2(max(1.0, tpp)) + 2.2 * smoothstep(4.0, 1.2, z);  // defocus near the lens
         vec4 g = textureLod(tGrain, uv, lod);
         float grain = mix(0.45, pow(g.r, 1.3) * 2.2, uAmpMid);                      // contrast → 0 at decoupling
-        float dens = grain * (0.55 + 0.9 * g.g) * smoothstep(0.03, 0.12, length(P));
+        // clumpy planes: each depth plane is patchy, so different depths dominate different places (parallax)
+        float patchy = mix(1.0, 2.6 * smoothstep(0.42, 0.72, g.b), uAmpMid);
+        float dens = grain * (0.55 + 0.9 * g.g) * patchy * smoothstep(0.03, 0.12, length(P));
         float a = 0.07 * dens * w * uMidGain;
         float Te = uTemp * (1.0 + 0.22 * (g.g - 0.5) + 0.12 * (grain - 0.5));
         col = col * (1.0 - a) + bbN(Te) * (0.11 * dens * w * uMidGain);

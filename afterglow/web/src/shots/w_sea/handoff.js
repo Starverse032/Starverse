@@ -113,10 +113,10 @@ export function createHandoffLayer(ctx) {
     transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending,
     uniforms: {
       morph: { value: 0 }, band: { value: 1 }, dotC: { value: new THREE.Vector3(...dotHDR) }, nodeC: { value: new THREE.Vector3(...nodeHDR) },
-      bandC: { value: new THREE.Vector3(...bandHDR) }, res: { value: new THREE.Vector2(W, H) }, center: { value: new THREE.Vector2(...BLUE_DOT.center) }, scl: { value: 1 },
+      bandC: { value: new THREE.Vector3(...bandHDR) }, glowC: { value: new THREE.Vector3(...hdrForDisplay('#FFD9A8', 1)) }, res: { value: new THREE.Vector2(W, H) }, center: { value: new THREE.Vector2(...BLUE_DOT.center) }, scl: { value: 1 },
     },
     vertexShader: /* glsl */ `void main(){ gl_Position = vec4(position.xy, 0.0, 1.0); }`,
-    fragmentShader: /* glsl */ `uniform float morph, band, scl; uniform vec3 dotC, nodeC, bandC; uniform vec2 res, center;
+    fragmentShader: /* glsl */ `uniform float morph, band, scl; uniform vec3 dotC, nodeC, bandC, glowC; uniform vec2 res, center;
       void main(){
         vec2 px = vec2(gl_FragCoord.x, res.y - gl_FragCoord.y) * (1080.0 / res.y);   // 1080p px, y down (pixel centre at +0.5)
         vec2 q = (px - center) / scl;
@@ -127,9 +127,9 @@ export function createHandoffLayer(ctx) {
         float sq = step(aq.x, hs) * step(aq.y, hs);
         float rd = 1.0 - smoothstep(hs - 0.6, hs + 0.4, length(q));
         float core = mix(sq, rd, smoothstep(0.0, 0.5, morph));
-        float glow = morph * 0.11 * exp(-dot(q, q) / (2.0 * 10.2 * 10.2)) + morph * 0.05 * exp(-dot(q, q) / (2.0 * 26.0 * 26.0));
+        float glow = morph * 0.22 * exp(-dot(q, q) / (2.0 * 6.5 * 6.5)) + morph * 0.045 * exp(-dot(q, q) / (2.0 * 18.0 * 18.0));
         vec3 c = mix(dotC, nodeC, morph);
-        vec3 col = c * core + nodeC * glow;
+        vec3 col = c * core * mix(1.0, 0.62, morph) + glowC * glow;
         col += bandC * band * exp(-0.5 * pow((px.x - 824.0) / 70.0, 2.0)) * (1.0 - core);
         gl_FragColor = vec4(col, 1.0); }`,
   });
