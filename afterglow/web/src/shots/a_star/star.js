@@ -57,13 +57,17 @@ export function createStar(ctx) {
     uRect: { value: new THREE.Vector4() }, uR: { value: 60 }, uI: { value: 0.7 }, uGain: { value: 1 },
     uTex: { value: granTex }, uRotA: { value: new THREE.Matrix3() }, uRotB: { value: new THREE.Matrix3() },
     uTight: { value: 0 }, uPulse: { value: 0 }, uCollapse: { value: 0 }, uRa: { value: 60 }, uRb: { value: 60 },
-    uDisk: { value: hexv(0xE6EEFF) }, uLimb: { value: hexv(0x8FB0FF) }, uIron: { value: hexv(0x6FA8FF) }, uStar: { value: hexv(0xBFD4FF) },
+    uDisk: { value: hexv(0xE6EEFF).multiplyScalar(1.0) }, uLimb: { value: new THREE.Vector3(0.20, 0.36, 1.0) }, uIron: { value: hexv(0x6FA8FF) }, uStar: { value: hexv(0xBFD4FF) },
     uFr: { value: 0 },
   };
   const mat = new THREE.ShaderMaterial({
-    uniforms: U, depthTest: false, depthWrite: false, transparent: true, blending: THREE.AdditiveBlending,
+    uniforms: U, depthTest: false, depthWrite: false, transparent: true, side: THREE.DoubleSide,
+    // premultiplied "over": the disc hides the web behind it, the halo adds
+    blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
+    blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor,
     vertexShader: RECT_VS,
     fragmentShader: GLSL.common + GLSL.noise + /* glsl */ `
+      float anoise(float th, float k, float y){ return vnoise(vec3(cos(th) * k / 6.2831853, sin(th) * k / 6.2831853, y)); }
       varying vec2 vPx;
       uniform float uR, uI, uGain, uTight, uPulse, uCollapse, uRa, uRb, uFr;
       uniform sampler2D uTex; uniform mat3 uRotA, uRotB;
@@ -80,7 +84,7 @@ export function createStar(ctx) {
         vec2 d = vPx - vec2(${C.RX.toFixed(1)}, ${C.RY.toFixed(1)});
         float r = length(d);
         float x = r / uR;
-        vec3 col = vec3(0.0);
+        vec3 col = vec3(0.0); float alpha = 0.0;
         // ---- disc (analytic motion blur of the edge over the shutter: coverage between uRb and uRa)
         float cov = uRa > uRb + 0.05 ? clamp((uRa - r) / (uRa - uRb), 0.0, 1.0) : clamp(uR - r + 0.5, 0.0, 1.0);
         if (cov > 0.0) {
@@ -92,37 +96,41 @@ export function createStar(ctx) {
           // granules: layer A + layer B (flowing against each other); tightening → the finer channel
           float g = mix(A.r * 0.62 + B.r * 0.38, A.g * 0.6 + B.g * 0.4, uTight);
           float sg = A.b;
-          float limb = 0.06 + 0.94 * pow(mu, 0.92);
-          float I = uI * limb * (1.0 + 0.30 * (g - 0.55) * mix(1.0, 0.55, smoothstep(0.0, 0.25, 1.0 - mu)) + 0.10 * (sg - 0.5));
+          float limb = 0.10 + 0.90 * pow(mu, 0.95);
+          // granulation contrast fades towards the limb, where bright faculae (supergranule network) take over
+          float gc = 0.62 * mix(1.0, 0.35, smoothstep(0.0, 0.7, 1.0 - mu));
+          float fac = smoothstep(0.55, 0.8, sg) * smoothstep(0.35, 0.95, 1.0 - mu);
+          float I = uI * limb * (1.0 + gc * (g - 0.55) + 0.14 * (sg - 0.5) + 0.55 * fac);
           I *= 1.0 + 0.35 * uPulse;
-          vec3 c = mix(uLimb, uDisk, pow(mu, 0.6));
-          c = mix(c, uIron * 1.15, 0.25 * uTight);                          // bluer while it holds its breath
+          vec3 c = mix(uLimb, uDisk, pow(mu, 0.45));
+          c = mix(c, uIron * 1.2, 0.30 * uTight * (1.0 - 0.5 * mu));         // bluer while it holds its breath
           // collapse: the surface streams radially inwards, the light concentrates in the centre
           if (uCollapse > 0.0) {
             float th = atan(p.y, p.x);
-            float streak = 0.55 + 0.9 * pow(vnoise(vec2(th * 38.0, 0.0)) * 0.6 + vnoise(vec2(th * 91.0, 3.0)) * 0.4, 1.6);
-            float flow = vnoise(vec2(th * 24.0, log(max(sqrt(pr), 1e-3)) * 3.0 + uFr * 0.9));
+            float streak = 0.55 + 0.9 * pow(anoise(th, 38.0, 0.0) * 0.6 + anoise(th, 91.0, 3.0) * 0.4, 1.6);
+            float flow = anoise(th, 24.0, log(max(sqrt(pr), 1e-3)) * 3.0 + uFr * 0.9);
             I = mix(I, uI * (0.5 + 0.8 * flow) * streak * (0.5 + 1.6 * exp(-pr * 3.0)), smoothstep(0.0, 0.5, uCollapse));
             I *= 1.0 + 2.5 * uCollapse * exp(-pr * 6.0);
           }
           col += c * I * cov;
+          alpha = cov;
         }
         // ---- inward trails of the collapsing limb (radial streaks between the shutter radii, faint)
         if (uCollapse > 0.0 && r > uRb && r < uRa + 6.0) {
           float th = atan(d.y, d.x);
-          col += uIron * 0.12 * uI * pow(vnoise(vec2(th * 60.0, 1.0)), 2.0) * smoothstep(uRa + 6.0, uRb, r);
+          col += uIron * 0.12 * uI * pow(anoise(th, 60.0, 1.0), 2.0) * smoothstep(uRa + 6.0, uRb, r);
         }
         // ---- chromosphere: 3 px IRON_BLUE layer just outside the limb, broken into spicules
         float th = atan(d.y, d.x);
-        float sp = 0.65 + 0.35 * vnoise(vec2(th * 140.0, uFr * 0.05)) + 0.25 * vnoise(vec2(th * 37.0, 7.0 + uFr * 0.02));
+        float sp = 0.65 + 0.35 * anoise(th, 140.0, uFr * 0.05) + 0.25 * anoise(th, 37.0, 7.0 + uFr * 0.02);
         float h = r - uR;                                                    // px above the limb
-        float chrom = smoothstep(-1.2, 0.3, h) * exp(-max(h, 0.0) / (1.6 + 1.4 * sp));
-        col += uIron * chrom * (0.42 + 0.42 * uTight) * sp * uI * (1.0 - smoothstep(0.0, 0.8, uCollapse));
+        float chrom = smoothstep(-2.0, 0.0, h) * exp(-max(h, 0.0) / (1.2 + 2.2 * sp));
+        col += mix(uIron, uStar, 0.35) * chrom * (0.55 + 0.55 * uTight) * sp * uI * (1.0 - smoothstep(0.0, 0.8, uCollapse));
         // ---- coronal halo to ≈ 1.4 R at ≈ 3 %, with faint streamers
-        float str = 1.0 + 0.5 * (vnoise(vec2(th * 6.0, 2.0)) - 0.5) + 0.35 * (vnoise(vec2(th * 17.0, 9.0)) - 0.5);
+        float str = 1.0 + 0.5 * (anoise(th, 6.0, 2.0) - 0.5) + 0.35 * (anoise(th, 17.0, 9.0) - 0.5);
         float halo = 0.030 * exp(-max(x - 1.0, 0.0) / (0.16 * str)) * smoothstep(0.98, 1.02, x);
         col += mix(uStar, uIron, smoothstep(1.0, 1.4, x)) * halo * uI * (1.0 - uCollapse);
-        gl_FragColor = vec4(col * uGain, 1.0);
+        gl_FragColor = vec4(col * uGain, alpha * uGain);
       }`,
   });
   const disc = rectQuad(mat);
@@ -130,7 +138,7 @@ export function createStar(ctx) {
   // ---- the still point and the flash (point-spread function, cold white) -------------------------
   const PU = { uRect: { value: new THREE.Vector4() }, uP: { value: 0 }, uF: { value: 0 }, uCore: { value: 0 } };
   const pmat = new THREE.ShaderMaterial({
-    uniforms: PU, depthTest: false, depthWrite: false, transparent: true, blending: THREE.AdditiveBlending,
+    uniforms: PU, depthTest: false, depthWrite: false, transparent: true, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
     vertexShader: RECT_VS,
     fragmentShader: /* glsl */ `
       varying vec2 vPx; uniform float uP, uF, uCore;
@@ -162,7 +170,7 @@ export function createStar(ctx) {
       U.uR.value = r; U.uRa.value = C.starRadiusPx(fr - sh); U.uRb.value = C.starRadiusPx(fr + sh);
       const tight = C.tighten(fr), col = C.collapseU(fr);
       U.uTight.value = tight; U.uPulse.value = C.pulse(fr); U.uCollapse.value = col; U.uFr.value = fr;
-      U.uI.value = 0.70;
+      U.uI.value = 1.0;
       U.uGain.value = C.discGain(fr) * (fr < 1331 ? 1 : 0);
       const ph = phase(fr);
       U.uRotA.value.setFromMatrix4(m4.makeRotationAxis(axA, 0.0016 * ph));

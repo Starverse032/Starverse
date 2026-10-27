@@ -30,7 +30,7 @@ const T34 = 3864 / FPS, T36 = 4320 / FPS;
 const R = [734, 540];
 const FPX24 = 960 / (18 / 24);
 const FPX100 = 960 / (18 / 100);
-const N_SEA = 142000, N_NEAR = 16000, N2_CLUMP = 1400, N_MOTE = 300000, N_GAS = 24000;
+const N_SEA = 142000, N_NEAR = 16000, N2_CLUMP = 900, N_MOTE = 300000, N_GAS = 24000;
 const CARD4 = [165.25, 169.25, 0.75];
 const COLD = [4068, 4104];                      // cold-web overlay (frames)
 const PUSH0 = 4104;
@@ -86,6 +86,7 @@ async function buildS34(ctx, lex, draw) {
   const web = getWeb();
   const P9 = webPathPose(9.0);
   const { nodes, edges, mass } = web;
+  const first = web.hero.first;
   const proj = (x, y, z, P = P9) => {
     const dx = x - P.pos.x, dy = y - P.pos.y, dz = z - P.pos.z;
     const d = dx * P.forward.x + dy * P.forward.y + dz * P.forward.z;
@@ -117,7 +118,6 @@ async function buildS34(ctx, lex, draw) {
 
   // ---- the first words (B2's stars) and the hero node --------------------------------------------
   const stars = handoffStars();
-  const first = web.hero.first;
   const HERO = new T.Vector3(nodes[3 * first], nodes[3 * first + 1], nodes[3 * first + 2]);
   const heroPx = proj(HERO.x, HERO.y, HERO.z);
   const heroCorr = [BLUE_DOT.center[0] - heroPx[0], BLUE_DOT.center[1] - heroPx[1]];   // ≤ 1 px convention offset
@@ -155,8 +155,14 @@ async function buildS34(ctx, lex, draw) {
   const keep = []; for (let k = 0; k < extra.length && keep.length < N_NEAR; k++) if (hash1(k, 92) < keepP) keep.push(extra[k]);
   // N2's own clump: the "stars" that open into words as the camera arrives
   const rC = rng(1990 * 34 + 9);
+  // the hero node's own clump (sampleWebPoints runs out before the last node): the words around the node
+  const rH = rng(1990 * 34 + 10), HC = web.nodes;
+  for (let k = 0; k < 130; k++) {
+    const rr = 0.75 + 2.6 * Math.pow(rH(), 0.7), dv = rH.sphere();
+    keep.push([HC[3 * first] + dv[0] * rr, HC[3 * first + 1] + dv[1] * rr, HC[3 * first + 2] + dv[2] * rr, 0, 0, first, 1]);
+  }
   for (let k = 0; k < N2_CLUMP; k++) {
-    const rr = Math.abs(rC.gauss()) * 1.6 * Math.pow(rC(), 0.4), dv = rC.sphere();
+    const rr = 0.3 + 3.6 * Math.pow(rC(), 0.8), dv = rC.sphere();
     keep.push([N2.x + dv[0] * rr, N2.y + dv[1] * rr, N2.z + dv[2] * rr, 0, 0, n2, 1]);
   }
   const nW = stars.filter(s => !s.cune).length;
@@ -200,13 +206,13 @@ async function buildS34(ctx, lex, draw) {
     const d0 = Math.hypot(iPos[3 * i] - P9.pos.x, iPos[3 * i + 1] - P9.pos.y, iPos[3 * i + 2] - P9.pos.z);
     iC[i * 4 + 3] = 165.0 + 2.6 * Math.pow(1 - smooth(10, 250, d0), 1.25) + 0.35 * r();
     if (!isFil && nodeOf[i] === first) heroIdx.push(i);
-    if (i >= nBase + nNear - N2_CLUMP && i < nBase + nNear) iA[4 * i + 1] = Math.min(2.0, b * 0.12);
+    if (i >= nBase + nNear - N2_CLUMP && i < nBase + nNear && nodeOf[i] === n2) { iA[4 * i + 1] = Math.min(0.9, 0.25 * b); iA[4 * i] = 0.3 + 0.2 * hash1(i, 6); }
   }
   // hero clump: f3870 → f3958, by screen distance from R (the words grow around the node)
   {
     const dd = heroIdx.map(i => { const p = proj(iPos[3 * i], iPos[3 * i + 1], iPos[3 * i + 2]); return Math.hypot(p[0] - R[0], p[1] - R[1]); });
     const ord = heroIdx.map((i, k) => k).sort((a, b) => dd[a] - dd[b]);
-    ord.forEach((k, rank) => { const i = heroIdx[k]; iC[4 * i + 3] = (3870 + 88 * Math.pow(rank / ord.length, 0.8)) / FPS; iA[4 * i + 1] = Math.min(iA[4 * i + 1], 2.5); });
+    ord.forEach((k, rank) => { const i = heroIdx[k]; iC[4 * i + 3] = (3870 + 88 * Math.pow(rank / ord.length, 0.8)) / FPS; iA[4 * i + 1] = Math.min(iA[4 * i + 1], 0.55); iA[4 * i] = 0.24 + 0.1 * hash1(rank, 5); });
   }
   // the first words: B2's stars, each a 6–9 px word at its node's place, born on its turn (tk)
   const shortToks = lex.sea.filter(k => lex.rowAspect(k) < 2.4);
@@ -250,7 +256,7 @@ async function buildS34(ctx, lex, draw) {
       float xPx = (0.5 + 0.5 * cp.x / max(cp.w, 1e-4)) * 1920.0;
       // card ④: words in the lowest 260 px of the band (y 682–942) thinned to 40 % (by hash), and the
       // few bright ones under the card itself held down
-      float keep = 1.0 - 0.6 * uCard * smoothstep(672.0, 692.0, yPx);
+      float keep = 1.0 - 0.63 * uCard * smoothstep(672.0, 692.0, yPx);
       b *= smoothstep(0.0, 0.06, keep - iA.z);
       float inCard = smoothstep(560.0, 620.0, xPx) * (1.0 - smoothstep(1300.0, 1360.0, xPx)) * smoothstep(715.0, 745.0, yPx) * (1.0 - smoothstep(830.0, 860.0, yPx));
       b *= 1.0 - 0.75 * uCard * inCard;
@@ -315,7 +321,7 @@ async function buildS34(ctx, lex, draw) {
         gl_PointSize = max(s, 1.0);
         b *= smoothstep(4.0, 14.0, d) * min(1.0, s * s);
         float yPx = (0.5 - 0.5 * gl_Position.y / max(gl_Position.w, 1e-4)) * 1080.0;
-        float keep = 1.0 - 0.6 * uCard * smoothstep(672.0, 692.0, yPx);
+        float keep = 1.0 - 0.63 * uCard * smoothstep(672.0, 692.0, yPx);
         b *= smoothstep(0.0, 0.06, keep - mA.z);
         if (b < 1e-4 || age < 0.0) gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
         vC = mCol * b * gain;
@@ -376,12 +382,15 @@ async function buildS34(ctx, lex, draw) {
   {
     const V = 40 / FPS;
     const pool = [...heroScreen.map(q => ({ ...q, used: false })), ...stars.filter(s => !s.cune).map(s => ({ x: s.x, y: s.y, tb: s.tk, used: false }))];
-    const nearest = (x, y, k, lo, hi) => pool.filter(q => !q.used).map(q => [Math.hypot(q.x - x, q.y - y), q]).filter(a => a[0] > lo && a[0] < hi).sort((a, b) => a[0] - b[0]).slice(0, k).map(a => a[1]);
+    const dR = q => Math.hypot(q.x - R[0], q.y - R[1]);
+    // the next words of a thread: the nearest ones that lead outwards (away from the node)
+    const nearest = (x, y, k, lo, hi) => { const d0 = Math.hypot(x - R[0], y - R[1]);
+      return pool.filter(q => !q.used && dR(q) > d0 + 0.5 * lo).map(q => [Math.hypot(q.x - x, q.y - y), q]).filter(a => a[0] > lo && a[0] < hi).sort((a, b) => a[0] - b[0]).slice(0, k).map(a => a[1]); };
     let front = [{ x: BLUE_DOT.center[0], y: BLUE_DOT.center[1], f: 3872 }];
     for (let lvl = 0; lvl < 4; lvl++) {
       const next = [];
       for (const s of front) {
-        const kids = nearest(s.x, s.y, lvl === 0 ? 4 : 2, lvl === 0 ? 24 : 30, lvl === 0 ? 120 : 260);
+        const kids = nearest(s.x, s.y, lvl === 0 ? 4 : 2, lvl === 0 ? 36 : 46, lvl === 0 ? 150 : 260);
         for (const q of kids) {
           q.used = true;
           const len = Math.hypot(q.x - s.x, q.y - s.y), f0 = Math.max(s.f, q.tb - 6);
@@ -393,16 +402,18 @@ async function buildS34(ctx, lex, draw) {
     }
   }
   const segN = segs.length;
-  const sGeo = new T.InstancedBufferGeometry();
-  sGeo.setAttribute('position', new T.BufferAttribute(new Float32Array([0, -1, 0, 1, -1, 0, 1, 1, 0, 0, 1, 0]), 3));
-  sGeo.setIndex([0, 1, 2, 0, 2, 3]);
-  const sA = new Float32Array(segN * 4), sB = new Float32Array(segN * 2);
-  segs.forEach((s, k) => { sA.set(s.slice(0, 4), 4 * k); sB.set([s[4], s[5]], 2 * k); });
-  sGeo.setAttribute('sA', new T.InstancedBufferAttribute(sA, 4)); sGeo.setAttribute('sB', new T.InstancedBufferAttribute(sB, 2));
-  sGeo.instanceCount = segN;
-  const threadCol = atLevel(PAL.AMBER, 0.085);
+  console.log(`WARN w_sea: hero clump ${heroScreen.length}, threads ${segN}`);
+  // (plain geometry: 4 vertices per thread, per-vertex copies of the thread's data)
+  const sGeo = new T.BufferGeometry();
+  const qv = [[0, -1], [1, -1], [1, 1], [0, 1]];
+  const sP = new Float32Array(segN * 12), sA = new Float32Array(segN * 16), sB = new Float32Array(segN * 8), sI = [];
+  segs.forEach((s, k) => { for (let v = 0; v < 4; v++) { sP.set([qv[v][0], qv[v][1], 0], 12 * k + 3 * v); sA.set(s.slice(0, 4), 16 * k + 4 * v); sB.set([s[4], s[5]], 8 * k + 2 * v); }
+    sI.push(4 * k, 4 * k + 1, 4 * k + 2, 4 * k, 4 * k + 2, 4 * k + 3); });
+  sGeo.setAttribute('position', new T.BufferAttribute(sP, 3)); sGeo.setAttribute('sA', new T.BufferAttribute(sA, 4)); sGeo.setAttribute('sB', new T.BufferAttribute(sB, 2));
+  sGeo.setIndex(sI);
+  const threadCol = atLevel(PAL.AMBER, 0.13);
   const segMat = new T.ShaderMaterial({
-    transparent: true, depthTest: false, depthWrite: false, blending: T.AdditiveBlending,
+    transparent: true, depthTest: false, depthWrite: false, blending: T.AdditiveBlending, side: T.DoubleSide,
     uniforms: { fr: { value: 0 }, col: { value: new T.Vector3(...threadCol) }, fade: { value: 1 } },
     vertexShader: /* glsl */ `attribute vec4 sA; attribute vec2 sB; uniform float fr; varying float vD; varying float vK;
       void main(){

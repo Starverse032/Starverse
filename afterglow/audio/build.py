@@ -113,12 +113,31 @@ def apply_width(m, tl, n):
     return np.stack([mid + side, mid - side], axis=1).astype(np.float32)
 
 
+def automation_env(points, n):
+    """Gain (linear) from [[t, dB], ...] (linear in dB between points); 0 dB outside [t_first, t_last]."""
+    ts = np.array([p[0] for p in points], dtype=np.float64)
+    vs = np.array([p[1] for p in points], dtype=np.float64)
+    a, b = dsp.n_samples(ts[0]), min(n, dsp.n_samples(ts[-1]))
+    env = np.ones(n, np.float32)
+    t = np.arange(a, b) / dsp.SR
+    env[a:b] = 10 ** (np.interp(t, ts, vs) / 20)
+    return env
+
+
 def mix(stems, tl, n):
+    """Stems → music + fx buses. timeline.mix: `gains` {stem: dB}; `automation` [{match: glob, except:
+    [stems], points: [[t, dB], ...]}] time-varying stem gains (v2: the f2924 landing shape); `duck`
+    music windows."""
+    import fnmatch
     gains = (tl.get('mix') or {}).get('gains', {})
+    autos = (tl.get('mix') or {}).get('automation', [])
     music = np.zeros((n, 2), np.float32)
     fx = np.zeros((n, 2), np.float32)
     for k, v in stems.items():
         g = 10 ** (gains.get(k, 0.0) / 20)
+        for au in autos:
+            if fnmatch.fnmatch(k, au['match']) and k not in au.get('except', []):
+                v = v * automation_env(au['points'], n)[:, None]
         (music if k.startswith('score.') else fx).__iadd__(v * g)
     # duck music a little under dense sound design moments listed in timeline.mix.duck
     for d in (tl.get('mix') or {}).get('duck', []):
@@ -195,24 +214,36 @@ def master(m, tl, kind='web'):
     spec = ((tl.get('mix') or {}).get('masters') or {}).get(kind, {})
     target = spec.get('integratedLUFS', -23 if kind == 'festival' else -18)
     loud = dsp.lufs(m)
-    out = m * (10 ** ((target - loud) / 20)) if loud > -70 else m.copy()
-    if kind == 'web':
-        w0, w1 = spec.get('compWindow', WEB_COMP_WINDOW)
-        a, b = frame_sample(w0), frame_sample(w1)
-        pad = dsp.n_samples(0.25)
-        lo, hi = max(0, a - pad), min(len(out), b + pad)
-        seg = out[lo:hi]
-        comp = dsp.compress(seg, **WEB_COMP)
-        w = np.ones(hi - lo, np.float32)
-        r = np.linspace(0, 1, pad, dtype=np.float32)
-        w[:pad] = r; w[-pad:] = r[::-1]
-        out[lo:hi] = seg * (1 - w[:, None]) + comp * w[:, None]
-    # verify: the old dsp.limiter bounded the sample peak only (web: −0.88 dBTP at 25.643); now true peak
-    out = tp_limiter(out, ceiling_db=spec.get('truePeak_dBTP', -1.0), lookahead=0.004, release=0.12)
-    for z in tl.get('silences', []):
-        if z.get('type', 'digital') == 'digital':
-            out[frame_sample(z['start']):frame_sample(z['end'])] = 0.0
-    print(f'[master:{kind}] mix {loud:.1f} LUFS → {dsp.lufs(out):.1f} LUFS (target {target}), '
+    gain_db = (target - loud) if loud > -70 else 0.0
+
+    def chain(g_db):
+        out = m * np.float32(10 ** (g_db / 20))
+        if kind == 'web':
+            w0, w1 = spec.get('compWindow', WEB_COMP_WINDOW)
+            a, b = frame_sample(w0), frame_sample(w1)
+            pad = dsp.n_samples(0.25)
+            lo, hi = max(0, a - pad), min(len(out), b + pad)
+            seg = out[lo:hi]
+            comp = dsp.compress(seg, **WEB_COMP)
+            w = np.ones(hi - lo, np.float32)
+            r = np.linspace(0, 1, pad, dtype=np.float32)
+            w[:pad] = r; w[-pad:] = r[::-1]
+            out[lo:hi] = seg * (1 - w[:, None]) + comp * w[:, None]
+        # verify: the old dsp.limiter bounded the sample peak only (web: −0.88 dBTP at 25.643); now true peak
+        out = tp_limiter(out, ceiling_db=spec.get('truePeak_dBTP', -1.0), lookahead=0.004, release=0.12)
+        for z in tl.get('silences', []):
+            if z.get('type', 'digital') == 'digital':
+                out[frame_sample(z['start']):frame_sample(z['end'])] = 0.0
+        return out
+    # v2.1: the compressor and the true-peak limiter take loudness off the climax, so the integrated
+    # loudness is re-measured AFTER them and the input gain corrected (≤ 3 passes, to ±0.05 LU)
+    for _ in range(3):
+        out = chain(gain_db)
+        got = dsp.lufs(out)
+        if abs(got - target) <= 0.05:
+            break
+        gain_db += target - got
+    print(f'[master:{kind}] mix {loud:.1f} LUFS → {dsp.lufs(out):.1f} LUFS (target {target}, input gain {gain_db:+.2f} dB), '
           f'peak {dsp.peak_db(out):.2f} dBFS, true peak {true_peak_db(out):.2f} dBTP')
     return out
 

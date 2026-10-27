@@ -16,23 +16,24 @@ import * as C from './curves.js';
 const IRON = hex(0x6FA8FF), OIII = hex(0x4FE0D0), HA = hex(0xFF3B4E);
 const v3 = a => `vec3(${a.map(x => x.toFixed(4)).join(',')})`;
 
-export function createZoomComposite(ctx) {
+export function createZoomComposite(ctx, { over = false } = {}) {
   const { kit } = ctx;
   // additive composite with an 8-tap zoom blur about R; scale range [sLo, sHi] (multiplicative, about R)
   const fsq = kit.fullscreen(/* glsl */ `
     uniform sampler2D tex; uniform float uLo, uHi, uGain, uJit; uniform vec2 uC;
     void main(){
       float j = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))) + uJit);
-      vec3 c = vec3(0.0);
-      if (uHi - uLo < 1e-4) c = texture2D(tex, vUv).rgb;
+      vec4 c = vec4(0.0);
+      if (uHi - uLo < 1e-4) c = texture2D(tex, vUv);
       else {
         float a = log(uLo), b = log(uHi);
-        for (int k = 0; k < 8; k++) { float s = exp(mix(a, b, (float(k) + j) / 8.0)); c += texture2D(tex, uC + (vUv - uC) * s).rgb; }
+        for (int k = 0; k < 8; k++) { float s = exp(mix(a, b, (float(k) + j) / 8.0)); c += texture2D(tex, uC + (vUv - uC) * s); }
         c /= 8.0;
       }
-      gl_FragColor = vec4(c * uGain, 1.0);
+      gl_FragColor = vec4(c.rgb * uGain, ${over ? 'c.a' : '1.0'});
     }`, { tex: { value: null }, uLo: { value: 1 }, uHi: { value: 1 }, uGain: { value: 1 }, uJit: { value: 0 }, uC: { value: new THREE.Vector2(C.RX / 1920, 1 - C.RY / 1080) } },
-  { blending: THREE.AdditiveBlending, transparent: true });
+  over ? { blending: THREE.CustomBlending, transparent: true } : { blending: THREE.AdditiveBlending, transparent: true });
+  if (over) Object.assign(fsq.material, { blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor });
   return {
     apply(tex, target, lo, hi, gain = 1, n = 0) {
       const u = fsq.material.uniforms;
@@ -64,7 +65,7 @@ export function createShell(ctx) {
           gl_Position = keep ? projectionMatrix * mv : vec4(2.0, 2.0, 2.0, 1.0);
           // element colour: iron blue inside, oxygen cyan outside (patchy), H-alpha only on outer filaments
           float L = clamp(aLayer + 0.45 * (aPatch - 0.5), 0.0, 1.0);
-          vec3 c = mix(${v3(IRON)}, ${v3(OIII)}, smoothstep(0.30, 0.70, L));
+          vec3 c = mix(${v3(IRON)}, ${v3(OIII)}, smoothstep(0.45, 0.85, L));
           float ha = smoothstep(0.90, 0.975, aLayer) * smoothstep(0.55, 0.85, aFil) * step(0.45, aSeed);
           c = mix(c, ${v3(HA)} * 0.75, ha);
           c /= max(0.12, dot(c, vec3(0.2126, 0.7152, 0.0722)));
@@ -75,7 +76,11 @@ export function createShell(ctx) {
           float near = clamp(0.35 / max(depth, 0.035), 1.0, 5.0);
           float size = (${sizeAdd.toFixed(2)} + ${sizeK.toFixed(2)} * (1.1 * aFil + 0.6 * aSeed)) * near;
           gl_PointSize = max(size * uS, 1.0);
-          vI = aB * uGain * max(asym, 0.15) * mix(1.0, 0.1 + 0.9 * aFil, ${filW.toFixed(2)}) / (near * near) * (1.0 - 0.35 * ha);
+          // thin shell: the line of sight crosses more glowing gas near the limb (path length ∝ 1/|cos|)
+          vec3 nv = normalize(mat3(modelViewMatrix) * position);
+          float cosv = abs(dot(nv, normalize(mv.xyz)));
+          float path = pow(min(1.0 / max(cosv, 0.1), 6.0), 0.85);
+          vI = path * aB * uGain * max(asym, 0.15) * mix(1.0, 0.1 + 0.9 * aFil, ${filW.toFixed(2)}) / (near * near) * (1.0 - 0.35 * ha);
         }`,
       fragmentShader: /* glsl */ `
         varying vec3 vCol; varying float vI;
@@ -101,7 +106,7 @@ export function createShell(ctx) {
   const gasRT = makeRT(Math.round(W / 4), Math.round(H / 4));
   const up = kit.compositor();
   const zoom = createZoomComposite(ctx);
-  const FINE_GAIN = 0.11, GAS_GAIN = 0.016 * shell.count / NG;
+  const FINE_GAIN = 0.05, GAS_GAIN = 0.0075 * shell.count / NG;
 
   const limb = fr => { const q = C.shellQ(fr); return q < 0.97 ? q / Math.sqrt(1 - q * q) : q * 4.1; };
 

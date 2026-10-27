@@ -70,7 +70,7 @@ export async function create(ctx) {
   const lex = getLexicon();
   const r = rng(55 * 37 + 2);
   const CUR_LIN = PAL.CURSOR, ASH_LIN = PAL.ASH;
-  const AIW = CUR_LIN.map(v => 0.75 * v + 0.25 * luma(CUR_LIN));   // AI white, a touch more neutral (S ≤ 0.06 after ACES)
+  const AIW = CUR_LIN.map(v => 0.4 * v + 0.6 * luma(CUR_LIN));   // AI white, a touch more neutral (S ≤ 0.06 after ACES)
   const AI_COL = atLevel(AIW, 0.31);            // AI strokes: neutral white, HDR 0.40
 
   // =========================================================================================
@@ -402,10 +402,10 @@ export async function create(ctx) {
     const ci = Math.min(3, Math.max(0, Math.floor((p[0] - 722) / 64)));
     const tok = ci < 3 ? monoOf[ci] : monoOf[Math.floor(ra() * 3)];
     aRect.set(lex.rects.subarray(tok * 4, tok * 4 + 4), 4 * i);
-    aA.set([(isM ? 4 + 2 * ra() : 1.3 + 0.4 * ra()) * 1.6, isM ? 0.42 : 0.1, ra(), ra()], 4 * i);
+    aA.set([(isM ? 4 + 2 * ra() : 1.3 + 0.4 * ra()) * 1.6, isM ? 0.2 : 0.05, ra(), ra()], 4 * i);
     const tg = AM.tangent(p[0], p[1]);
     aB.set([tg[0], tg[1], isM ? 0 : 1, KF.question[3] / 24 + 1.4 * ra()], 4 * i);
-    aCol.set(CUR_LIN, 3 * i);
+    aCol.set(AIW, 3 * i);
   }
   const aiField = glyphMesh(an, { iPos: aPos, iRect: aRect, iA: aA, iB: aB, iCol: aCol }, {
     uniforms: { uShift: { value: 0 }, uBrA: { value: 1 }, uLiveA: { value: 0 } },

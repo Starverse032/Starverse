@@ -29,7 +29,7 @@ import * as THREE from 'three';
 const FPX = 1280;                       // 24 mm focal length in 1080p px (36 mm gauge)
 const R = [734.5, 540.5];
 const PLANE = { x0: -0.80, x1: 0.80, y0: -0.45, y1: 0.45 };   // gnomonic window of F_far (no yaw)
-const BW = 2560, BH = 1440;
+const BW = 3072, BH = 1728;
 
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -116,7 +116,7 @@ export function radState(fr) {
   const dec = clamp((fr - 720) / 24); s.dec = dec * dec * (3 - 2 * dec);
   s.sigmaFar = lerp(6, 1, s.dec);
   s.ampMid = 1 - s.dec;                    // mid layer contrast
-  s.midGain = lerp(1, 0.25, s.dec);        // mid layer: sparser and darker
+  s.midGain = lerp(1, 0.55, s.dec);        // mid layer: sparser and darker
   s.nearThin = s.dec;                      // near fog threshold up: 1–2 wisps remain
   s.ampFar = lerp(0.6, 1.0, s.dec);
   // near-layer brightness: with the field during S02-a; S02-b: faint dust (display 3–8), out by f1010
@@ -217,34 +217,40 @@ export function createRadiation(ctx) {
   });
 
   // ---- half-res layer pass: mid grains + near fog, premultiplied (rgb = emission, a = 1 − T) --------
+  // mid grains at half resolution, near fog (soft by nature) at quarter resolution — two passes
   const layRT = new kit.LowRes(W, H, 0.5);
+  const nearRT = new kit.LowRes(W, H, 0.25);
   const LAYERS = /* glsl */ `
     uniform sampler2D tFog, tGrain;
     uniform float uPxScale, uHt, uCamS, uTemp, uAmpMid, uMidGain, uNearThin, uNearGain, uDust, uWhite, uNearAbs, uDustMix, uPresence;
     const float FPX = ${FPX.toFixed(1)};
     const vec2 RR = vec2(${R[0].toFixed(1)}, ${R[1].toFixed(1)});
-    const int NM = 12; const float DM = 1.0, ZM0 = 1.2, ZM1 = 13.2;
+    const int NM = 8; const float DM = 1.5, ZM0 = 1.2, ZM1 = 13.2;
     const int NN = 9; const float DN = 0.36, ZN0 = 0.26, ZN1 = 3.3;
-    vec3 bbN(float T){ vec3 b = blackbody(T); return b / max(1e-3, luma(b)); }
+    // normalised blackbody around uTemp, linearised in ln T (uBB0 = colour at uTemp, uBB1 = d colour / d ln T): cheap per layer
+    uniform vec3 uBB0, uBB1;
+    vec3 bbN(float T){ return max(uBB0 + uBB1 * log(T / uTemp), 0.0); }
     void main(){
       vec2 px = vec2(gl_FragCoord.x, uHt - gl_FragCoord.y) * uPxScale;   // 1080p px, y down
       vec2 d = px - RR;
       float pxw = uPxScale;                                              // 1080p px per target px
       vec3 col = vec3(0.0); float T = 1.0;
       // ---- mid: granular plasma (far → near) ----
+#ifdef DO_MID
       float kTop = floor((uCamS + ZM1) / DM);
       for (int i = 0; i < NM; i++){
         float k = kTop - float(i);
         float z = k * DM - uCamS;
         if (z < ZM0) break;
-        float w = smoothstep(ZM1, ZM1 - 3.0, z) * smoothstep(ZM0, ZM0 + 1.8, z);
+        float w = smoothstep(ZM1, ZM1 - 3.5, z) * smoothstep(ZM0, ZM0 + 2.0, z);
         vec2 P = d * z / FPX;
         vec2 h = hash22(vec2(k * 1.37, 3.1));
         vec2 uv = rot2(h.x * TAU) * P * 0.5 + h * 7.0;                  // tile = 2 u
         float tpp = z / FPX * 0.5 * 1024.0 * pxw;                         // texels per target px
         float lod = log2(max(1.0, tpp)) + 2.2 * smoothstep(4.0, 1.2, z);  // defocus near the lens
         vec4 g = textureLod(tGrain, uv, lod);
-        float grain = mix(0.45, pow(g.r, 1.3) * 2.2, uAmpMid);                      // contrast → 0 at decoupling
+        // decoupling: the smooth plasma (contrast) goes, sparse bright grains remain (sparser, dimmer)
+        float grain = mix(pow(g.r, 2.6) * 4.5 * smoothstep(0.45, 0.75, g.g), pow(g.r, 1.3) * 2.2, uAmpMid);
         // clumpy planes: each depth plane is patchy, so different depths dominate different places (parallax)
         float patchy = mix(1.0, 2.6 * smoothstep(0.42, 0.72, g.b), uAmpMid);
         float dens = grain * (0.55 + 0.9 * g.g) * patchy * smoothstep(0.03, 0.12, length(P));
@@ -253,7 +259,9 @@ export function createRadiation(ctx) {
         col = col * (1.0 - a) + bbN(Te) * (0.11 * dens * w * uMidGain);
         T *= 1.0 - a;
       }
+#endif
       // ---- near: big soft fog clouds (far → near) ----
+#ifdef DO_NEAR
       float kTopN = floor((uCamS + ZN1) / DN);
       float thr = mix(0.0, 0.62, uNearThin);
       for (int i = 0; i < NN; i++){
@@ -269,7 +277,7 @@ export function createRadiation(ctx) {
         vec4 fg = textureLod(tFog, uv, lod);
         // after the decoupling only the thin wisps (B) of 1–2 clouds remain
         float c = mix(mix(fg.r, fg.b, uNearThin), max(fg.b, 0.55 * fg.r), uDustMix) * step(uPresence, hash11(k * 3.7 + 0.31));
-        float tunnel = smoothstep(0.30, 0.62, length(P));
+        float tunnel = smoothstep(0.12, 0.75, length(P) * (0.85 + 0.3 * fg.g));   // soft, irregular clear channel
         float dens = c * tunnel * w;
         float a = (0.55 * (1.0 - uWhite) + 0.25 * uWhite) * dens * (0.6 + 0.4 * fg.g);
         float Te = uTemp * (1.0 + 0.10 * (fg.g - 0.4) + 0.22 * (c - 0.3));
@@ -277,32 +285,37 @@ export function createRadiation(ctx) {
         col = col * (1.0 - a * uNearAbs) + e;
         T *= 1.0 - a * uNearAbs;
       }
+#endif
       gl_FragColor = vec4(col, 1.0 - T);
     }`;
   const layUni = {
     tFog: { value: fogTex }, tGrain: { value: grainTex },
     uPxScale: { value: 1 }, uHt: { value: 1 }, uCamS: { value: 0 }, uTemp: { value: 4500 },
-    uAmpMid: { value: 1 }, uMidGain: { value: 1 }, uNearThin: { value: 0 }, uNearGain: { value: 1 }, uDust: { value: 0 }, uWhite: { value: 0 }, uNearAbs: { value: 1 }, uDustMix: { value: 0 }, uPresence: { value: 0.45 },
+    uAmpMid: { value: 1 }, uMidGain: { value: 1 }, uNearThin: { value: 0 }, uNearGain: { value: 1 }, uDust: { value: 0 }, uWhite: { value: 0 }, uNearAbs: { value: 1 }, uDustMix: { value: 0 }, uPresence: { value: 0.45 }, uBB0: { value: new THREE.Vector3(1, 1, 1) }, uBB1: { value: new THREE.Vector3() },
   };
-  const layPass = kit.fullscreen(LAYERS, layUni);
+  const layPass = kit.fullscreen('#define DO_MID\n' + LAYERS, layUni);
+  const nearPass = kit.fullscreen('#define DO_NEAR\n' + LAYERS, layUni);
 
   // ---- full-res main pass ----------------------------------------------------------------------------
   const MAIN = /* glsl */ `
-    uniform sampler2D tFar, tLay; uniform vec4 uPlane; uniform vec2 uTexel;
-    uniform float uPxScale, uHt, uWt, uLod, uSpread, uAmpFar, uTemp, uGain, uFGain, uWhite, uDrift, uOverMode;
+    uniform sampler2D tFar, tLay, tNear; uniform vec4 uPlane; uniform vec2 uTexel;
+    uniform float uPxScale, uHt, uWt, uLod, uSpread, uAmpFar, uTemp, uGain, uFGain, uWhite, uDrift, uOverMode, uFarZoom;
     uniform vec3 uWhiteTint;
     uniform float uP, uSig, uAsp, uHaloA, uHaloR, uLine, uPLine;
     uniform float uAgA, uAgSig, uMoat, uDustOnly;
     const vec2 RR = vec2(${R[0].toFixed(1)}, ${R[1].toFixed(1)});
-    vec3 bbN(float T){ vec3 b = blackbody(T); return b / max(1e-3, luma(b)); }
+    // normalised blackbody around uTemp, linearised in ln T (uBB0 = colour at uTemp, uBB1 = d colour / d ln T): cheap per layer
+    uniform vec3 uBB0, uBB1;
+    vec3 bbN(float T){ return max(uBB0 + uBB1 * log(T / uTemp), 0.0); }
     void main(){
       vec2 px = vec2(gl_FragCoord.x, uHt - gl_FragCoord.y) * uPxScale;
       vec2 sv = gl_FragCoord.xy / vec2(uWt, uHt);
-      vec4 L = texture2D(tLay, sv);
+      vec4 L = texture2D(tLay, sv), Ln = texture2D(tNear, sv);
       vec3 col = vec3(0.0);
       if (uGain > 0.0 && uDustOnly < 0.5) {
         // far field: gnomonic direction of this pixel (camera fixed, no yaw)
-        vec2 n = (px - vec2(960.0, 540.0)) / 1280.0;
+        // the far layer is very far, not at infinity: a slow zoom about R (≈ 0.3 %/frame)
+        vec2 n = (RR + (px - RR) / uFarZoom - vec2(960.0, 540.0)) / 1280.0;
         vec2 uv = (vec2(n.x, -n.y) + vec2(uDrift, 0.3 * uDrift) - uPlane.xz) / (uPlane.yw - uPlane.xz);
         float Ff = 0.0;
         Ff += textureLod(tFar, uv + vec2( 0.7,  0.3) * uTexel * uSpread, uLod).r;
@@ -317,11 +330,11 @@ export function createRadiation(ctx) {
         // S02-b: the gas around R drains into the afterglow — a darker moat 30–150 px
         float r = length(px - RR);
         far *= 1.0 - 0.72 * uMoat * smoothstep(230.0, 30.0, r);
-        col = far * (1.0 - L.a) + L.rgb;
+        col = (far * (1.0 - L.a) + L.rgb) * (1.0 - Ln.a) + Ln.rgb;
         col *= uGain;
         col *= mix(vec3(1.0), uWhiteTint, uWhite);
       }
-      if (uDustOnly > 0.5) col = L.rgb;          // S02-b/c: only the faint dust wisps (gain inside)
+      if (uDustOnly > 0.5) col = Ln.rgb;          // S02-b/c: only the faint dust wisps (gain inside)
       // the flash, its lines and the f600 point are centred on p_terminal's still point (734.0, 540.0)
       vec2 q = px - vec2(734.0, 540.0);
       float r2 = dot(q, q);
@@ -345,10 +358,10 @@ export function createRadiation(ctx) {
       gl_FragColor = vec4(max(col, 0.0), uDustOnly > 0.5 ? L.a * 0.0 : 1.0);
     }`;
   const uni = {
-    tFar: { value: farTex }, tLay: { value: layRT.texture },
+    tFar: { value: farTex }, tLay: { value: layRT.texture }, tNear: { value: nearRT.texture },
     uPlane: { value: new THREE.Vector4(PLANE.x0, PLANE.x1, PLANE.y0, PLANE.y1) }, uTexel: { value: new THREE.Vector2(1 / BW, 1 / BH) },
     uPxScale: { value: 1 }, uHt: { value: H }, uWt: { value: W }, uLod: { value: 0 }, uSpread: { value: 1 }, uAmpFar: { value: 1 },
-    uTemp: { value: 4500 }, uGain: { value: 1 }, uFGain: { value: 0.25 }, uWhite: { value: 0 }, uDrift: { value: 0 }, uOverMode: { value: 0 },
+    uTemp: { value: 4500 }, uGain: { value: 1 }, uFGain: { value: 0.25 }, uWhite: { value: 0 }, uDrift: { value: 0 }, uOverMode: { value: 0 }, uFarZoom: { value: 1 }, uBB0: { value: new THREE.Vector3(1, 1, 1) }, uBB1: { value: new THREE.Vector3() },
     uWhiteTint: { value: new THREE.Vector3(1, 1, 1) },
     uP: { value: 0 }, uSig: { value: 1.6 }, uAsp: { value: 1 }, uHaloA: { value: 0 }, uHaloR: { value: 40 }, uLine: { value: 0 }, uPLine: { value: 0 },
     uAgA: { value: 0 }, uAgSig: { value: 10 }, uMoat: { value: 0 }, uDustOnly: { value: 0 },
@@ -381,6 +394,12 @@ export function createRadiation(ctx) {
       // layers (half res)
       layUni.uPxScale.value = 1080 / layRT.rt.height; layUni.uHt.value = layRT.rt.height;
       layUni.uCamS.value = S.camS; layUni.uTemp.value = S.T;
+      {
+        const n0 = bbJS(S.T), n1 = bbJS(S.T * 1.03), n2 = bbJS(S.T / 1.03);
+        const c0 = n0.map(v => v / lumaJS(n0)), c1 = n1.map(v => v / lumaJS(n1)), c2 = n2.map(v => v / lumaJS(n2));
+        const d = c0.map((_, i) => (c1[i] - c2[i]) / (2 * Math.log(1.03)));
+        layUni.uBB0.value.set(...c0); layUni.uBB1.value.set(...d); uni.uBB0.value.set(...c0); uni.uBB1.value.set(...d);
+      }
       layUni.uAmpMid.value = S.ampMid; layUni.uMidGain.value = mode === 'dust' ? 0 : S.midGain;
       layUni.uNearThin.value = S.nearThin; layUni.uWhite.value = S.white;
       // near fog: the field's own clouds fade out as they become the faint dust wisps of S02-b
@@ -392,12 +411,21 @@ export function createRadiation(ctx) {
       layUni.uDustMix.value = S.dust;
       layUni.uPresence.value = lerp(lerp(0.45, 0.80, S.nearThin), 0.35, S.dust);
       const ac = r.autoClear; r.autoClear = true;
-      r.setRenderTarget(layRT.rt); r.setClearColor(0x000000, 0); r.clear();
-      layPass.render(r, layRT.rt);
+      r.setClearColor(0x000000, 0);
+      if (mode !== 'dust' && S.gain > 1e-4) {
+        layUni.uPxScale.value = 1080 / layRT.rt.height; layUni.uHt.value = layRT.rt.height;
+        r.setRenderTarget(layRT.rt); r.clear();
+        layPass.render(r, layRT.rt);
+      } else { r.setRenderTarget(layRT.rt); r.clear(); }
+      layUni.uPxScale.value = 1080 / nearRT.rt.height; layUni.uHt.value = nearRT.rt.height;
+      r.setRenderTarget(nearRT.rt); r.clear();
+      nearPass.render(r, nearRT.rt);
       // main
       uni.uPxScale.value = pxScale; uni.uHt.value = target.height; uni.uWt.value = target.width;
       const sig = S.sigmaFar;
-      uni.uLod.value = Math.max(0, Math.log2(Math.max(1e-3, sig * texPerPx / 0.45)));
+      const farZoom = Math.exp(0.003 * Math.max(0, fr - 600));
+      uni.uFarZoom.value = farZoom;
+      uni.uLod.value = Math.max(0, Math.log2(Math.max(1e-3, sig * texPerPx / farZoom / 0.45)));
       uni.uSpread.value = Math.pow(2, uni.uLod.value) * 0.6;
       uni.uAmpFar.value = S.ampFar; uni.uTemp.value = S.T; uni.uFGain.value = lerp(0.22, 0.30, S.dec);
       uni.uDrift.value = 0.00004 * (fr - 600);

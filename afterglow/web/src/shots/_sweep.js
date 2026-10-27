@@ -5,8 +5,9 @@
 //                        west sky) sweeps LEFT → RIGHT; behind it the view goes ≈ 1.35 km → 60 m.
 //   置换⑤ [1756, 1762)  a near clump of dry grass blades (out of focus, pale straw, lit from the left)
 //                        sweeps RIGHT → LEFT across R; behind it the view goes ≈ 27.8 m → 0.55 m.
-// Each covers at most ≈ 70 % of the frame at its widest, covers R for ≤ 4 frames (acacia: f1742–1744,
-// grass: f1757–1760), and is never a black frame. The hand-off A3 → A4 is f1758, inside 置换⑤.
+// Each covers at most ≈ 70 % of the frame at its widest (measured peaks 52 % / 58 %), covers R (α > 0.5)
+// for ≤ 4 frames (acacia f1741, 1742, 1744; grass f1758, 1759), and is never a black frame. The hand-off
+// A3 → A4 is f1758, inside 置换⑤.
 //
 // The behind-the-grass world swap (A3's 28 m ground → A4's macro set) is bridged by the VEIL: a shared,
 // screen-space, heavily defocused dusk ground (a pure function of the frame) that both sides mix over
@@ -32,18 +33,18 @@ export const GRASS_FRAMES = [1756, 1762];
 
 // ---- the poses (1080p pixel units, y down) ------------------------------------------------------------
 // layer = a W×H picture slid across the frame; u = progress 0 → 1 (fully off-frame at both ends)
-const ACACIA = { w: 1800, h: 1120, y0: -40, t0: 1739.30, len: 6.40, grow: 0.20 };
-const GRASS  = { w: 1700, h: 1120, y0: -20, t0: 1755.40, len: 6.30, grow: 0.25 };
+const ACACIA = { w: 1800, h: 1120, y0: -40, t0: 1739.55, len: 6.05, s0: 1.30, grow: 0.20 };
+const GRASS  = { w: 1700, h: 1120, y0: -20, t0: 1755.25, len: 6.00, s0: 1.22, grow: 0.25 };
 const ease = u => u;                                   // constant speed: a foreground object whipping past
 export function acaciaPose(n) {
   const u = ease((n - ACACIA.t0) / ACACIA.len);
   const x = -ACACIA.w + u * (1920 + ACACIA.w);        // left edge of the layer, moving right
-  return { u, x, y: ACACIA.y0, w: ACACIA.w, h: ACACIA.h, s: 1 + ACACIA.grow * u, on: u > -0.05 && u < 1.05 };
+  return { u, x, y: ACACIA.y0, w: ACACIA.w, h: ACACIA.h, s: ACACIA.s0 + ACACIA.grow * u, on: u > -0.05 && u < 1.05 };
 }
 export function grassPose(n) {
   const u = ease((n - GRASS.t0) / GRASS.len);
   const x = 1920 - u * (1920 + GRASS.w);              // left edge, moving left
-  return { u, x, y: GRASS.y0, w: GRASS.w, h: GRASS.h, s: 1 + GRASS.grow * u, on: u > -0.05 && u < 1.05 };
+  return { u, x, y: GRASS.y0, w: GRASS.w, h: GRASS.h, s: GRASS.s0 + GRASS.grow * u, on: u > -0.05 && u < 1.05 };
 }
 export function veilWeight(n) {
   // piecewise-linear in n through the integer frames; both sides call this, never a copy of it
@@ -57,7 +58,7 @@ export const sweepPost = n => cloudsPost(n);
 // ---- what A4 needs to line its macro set up with the descent at f1758 ---------------------------------
 // World: metres, x east, y up, z south; camera faces north (−z) → west (the dusk) is screen LEFT.
 // The descent camera sits on a 4.5° glide line through the target, which is the point on the ground
-// that ends up under R: the tinder. At f1758 it is at d ≈ 13.4 m (view at the target ≈ 7.4 m, 75.6 mm).
+// that ends up under R: the tinder. At f1758 it is at d ≈ 17.2 m, 1.35 m up (view at the target ≈ 7.5 m, 82.1 mm).
 // The veil hides the jump to the macro framing (A4: 100 mm, ≈ 0.55 m view at f1762, 0.37 m at f1776);
 // A4 only has to keep: the tinder (its focus point) on R, camera facing north, no roll, the dusk light
 // from the left/west (low, cold, sun 4° below the west horizon), no other light, and the same post.
@@ -72,7 +73,7 @@ export const HANDOFF_1758 = (() => {
     facing: DUSK.facing, roll: 0,
     dusk: { ...DUSK, skyLight: 'cold blue-grey from above, warm-grey from the west (screen left); no sun, no lamps' },
     veil: 'veilWeight(n) — A4 mixes its world towards the veil with this weight at f1758–1760 (1, 0.8, 0.4)',
-    grassCoversR: [1757, 1760],
+    grassCoversR: [1758, 1759],      // α > 0.5 at R (f1760: 0.49)
   };
 })();
 
@@ -88,7 +89,7 @@ function acaciaCanvas() {
   g.lineCap = 'round'; g.lineJoin = 'round';
   g.strokeStyle = '#fff'; g.fillStyle = '#fff';
   const leaf = (x, y, s) => {                           // a feathery tuft of bipinnate leaflets
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < 18; i++) {
       const a = r() * 6.283, d = Math.pow(r(), 0.7) * s;
       g.globalAlpha = 0.35 + 0.4 * r();
       g.beginPath(); g.ellipse(x + Math.cos(a) * d, y + Math.sin(a) * d * 0.6, s * (0.18 + 0.2 * r()), s * (0.08 + 0.08 * r()), a, 0, 6.283); g.fill();
@@ -110,7 +111,7 @@ function acaciaCanvas() {
           const ta = a + sgn * (1.0 + 0.3 * r()), tl = 7 + 9 * r();
           g.lineWidth = 1.2; g.beginPath(); g.moveTo(nx, ny); g.lineTo(nx + Math.cos(ta) * tl, ny + Math.sin(ta) * tl); g.stroke();
         }
-        if (r() < 0.55) leaf(nx + (r() - 0.5) * 10, ny + (r() - 0.5) * 10, 14 + 16 * r());
+        if (r() < 0.85) leaf(nx + (r() - 0.5) * 14, ny + (r() - 0.5) * 14, 18 + 22 * r());
       }
       if (depth > 0 && r() < (depth > 2 ? 0.45 : 0.6)) branch(nx, ny, a + (r() < 0.5 ? -1 : 1) * (0.5 + 0.5 * r()), len * (0.35 + 0.35 * r()), ww * 0.6, depth - 1);
       px = nx; py = ny;
@@ -150,13 +151,13 @@ function grassCanvas() {
     g.beginPath(); g.moveTo(...L[0]); for (const p of L) g.lineTo(...p); for (const p of Rr.reverse()) g.lineTo(...p); g.closePath(); g.fill();
   };
   // a clump: dense near the base (low in the frame), a fan of long blades through the R row and above
-  for (let i = 0; i < 70; i++) {
-    const x0 = W * (0.08 + 0.84 * r());
+  for (let i = 0; i < 120; i++) {
+    const x0 = W * (0.04 + 0.92 * r());
     const h = H * (0.45 + 0.75 * Math.pow(r(), 0.8));
     const lean = (r() - 0.5) * 0.9, curl = (r() - 0.5) * 2.2;
     blade(x0, h, lean, curl, 6 + 16 * r(), 0.45 + 0.55 * r());
   }
-  for (let i = 0; i < 26; i++) {                         // bent and broken blades lying across
+  for (let i = 0; i < 40; i++) {                         // bent and broken blades lying across
     const x0 = W * (0.1 + 0.8 * r());
     blade(x0, H * (0.3 + 0.4 * r()), (r() < 0.5 ? -1 : 1) * (0.7 + 0.5 * r()), (r() - 0.5) * 4, 5 + 9 * r(), 0.35 + 0.5 * r());
   }

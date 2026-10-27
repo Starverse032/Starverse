@@ -95,8 +95,9 @@ export async function create(ctx) {
           if (shell && fr >= 1344) shell.render(fr, target, 0);
         } else {
           if (shell && fr < 1530) shell.render(fr, target, fr < 1440 ? 1 : 0);
+          if (earth && fr < 1500) earth.renderBowl(fr, target);
           if (earth) earth.render(f, { shell, clouds });
-          if (shell && fr < 1440) shell.render(fr, target, 2);
+          if (shell && fr < 1440) shell.render(fr, target, 2, 1 - 0.6 * C.s5(1392, 1400, fr));
           if (earth && fr < 1440) earth.renderSweep(fr, target);
         }
         corona.render(renderer, target, fr);
