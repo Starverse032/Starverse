@@ -637,7 +637,7 @@ def render_lamps(tl, n):
     # f2412 the flame gutters: two very fine wax pops (−42) and a thread of smoke (−50)
     put(L.wax_pop(SEED + 2412), 2412, -42)
     put(L.wax_pop(SEED + 2415), 2415, -43)
-    put(L.smoke_hiss(0.45, SEED + 2413), 2416, -50, rms=True, wet=0.05)   # the smoke rises after the second pop
+    put(L.smoke_hiss(0.29, SEED + 2413), 2416, -50, rms=True, wet=0.05)   # after the 2nd pop, gone inside the dark gap (before f2424)
     # S04-c lantern: f2424 the chimney seats (−34), then the oil wick takes (−36) as it lights left → right
     put(L.glass_seat(SEED + 2424), 2424, -34)
     put(L.oil_pom(SEED + 2427), 2427, -36, wet=0.08)

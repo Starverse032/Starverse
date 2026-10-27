@@ -1,173 +1,194 @@
-// q_apex — the apex of the film.
-//   S37 汇聚   184.0–191.0  50 mm, a slight pull-back that settles at 188.0 (= S38's locked frame).
-//        The whole sea of words flows into the human line 「有人吗？」 (Noto Serif CJK SC SemiBold
-//        128 px, left 722, centre y 410) with S05's spiral law applied to every word's offset from
-//        its own landing place: r = r₀(1 − u)², θ = θ₀ + 10u³ (so each lands softly, and the
-//        differential rotation draws the spiral arms), re-timed so that every word spends its last
-//        1.2 s within 30 px of its place (≤ ≈ 7 px/frame). Arrivals spread over 186.0–188.0.
-//        Legible layer (v1.2): ≈ 450 real graphemes of voices.js sentences, 9.5–12 px landed,
-//        12–15 px in flight (shrinking only in the last 0.5 s), one chain of readable words per
-//        stroke; dust layer ≤ 3 px at ≈ 0.35 (dim in flight); the absorbed sea goes out as it nears
-//        the line (no glowing ball); ~700 words gather into the cursor
-//        block at R. Breathing = 0.25 Hz brightness + ±3.5 px flow along the stroke tangent.
-//        191.0 the cursor block condenses into solid warm white.
-//        Motion blur: the timeline's 4 sub-frames would draw each fast word as four stepped copies
-//        (a column of repeated words — "character rain"). Every sub-frame is snapped to the frame
-//        time (one memoised render) and each word is integrated analytically along its own spiral
-//        over a 108° shutter in the shader (lexicon.js `streak`): smooth arcs of light.
-//   S38 我在。/ 有人吗？ 191.0–216.0  locked. Frame-exact per the screenplay table:
-//        194.0 我 · 194.333 在 · 194.667 。 (one key per 8 frames) — the AI's own voice, Noto Sans Mono
-//        CJK SC 64 px, CURSOR HDR 1.6, centre y 540.
-//        195–199 every legible glyph of the human line flips (card-flip, one by one by hash) into the
-//        same monospace 「我」/「在」: AMBER → (2-frame warm-white tick) → ASH × 0.3, breathing and
-//        flow freeze; dust 1.0 → 0.4 and greys: the line's mean luma halves by 199.5. 202.0 / 203.0 / 204.0 the three deletions flip them back
-//        (hash < 0.3 / < 0.7 / all — a ripple from the deleted character), 204.0 surge 1.15 → 1.0 by 206.
-//        205/206/207 silent blinks. 208/209/210/211 有 人 吗 ？ one key per beat. 211–214 the AI's
-//        strokes dissolve into ~700 micro mono 「有」「人」「吗」 + 5000 motes that breathe in the
-//        same rhythm as the human line but stay CURSOR warm white (never AMBER). 215.0 carriage
-//        return: both lines up 130 px in 6 frames (easeOutCubic); the cursor drops to the head of
-//        the new line (130 px below) and rides the scroll up onto R (exactly on R from 215.25).
+// q_apex — the apex of the film (v2).
+//   S37 = S08-e 汇聚 [4416, 4584)  50 mm, a slight pull-back that settles at f4512 (= S38's frame).
+//        The sea flows (S01's spiral law r = r0 (1 − u)², θ = θ0 + 10u³, re-timed so every word
+//        spends its last 1.2 s within 30 px of its place) into THREE human questions, left edge
+//        x 722, facing the dark on the right:
+//          QB  Is anyone there?  italic 500 84 px Cormorant, pale gold, centre y 210, lands f4500
+//          QA  「有人吗？」          600 108 px Noto Serif CJK SC, AMBER, centre y 320, lands f4488
+//          QC  「هل يوجد أحد هنا؟」  80 px Noto Naskh Arabic, deep orange, centre y 430, lands f4512
+//        Each line = a solid ink plane (stroke HDR 0.40 / 0.40 / 0.25, + a wide dim halo) that
+//        appears exactly where its words have landed (one arrival field drives both), carrying
+//        ≈ 1500–2500 real-sentence glyphs of 6–9 px in its strokes as texture. A cloud of short
+//        multilingual questions (6–9 px, ≤ 0.3 of QA) around them; the R row (y 540) left of
+//        x 1300 stays empty; ≈ 700 words fly to P_ans = (1520, 540), amber → CURSOR white by their
+//        own flight progress, and gather into the cursor's shape by f4583.
+//   S38 = S09 长镜头 C [4584, 5184)  locked. Frame-exact per q_apex/state.js:
+//        f4584 the cursor is solid at P_ans · 4656/4664/4672 「我在。」 at P_ans · 4704–4727 QA
+//        replaced char by char (？→我 吗→。 人→在 有→我) · 4728–4751 QB squeezed (× 0.18, ASH) by a
+//        pushed-in 「我在。我在」 · 4752–4775 QC covered by a white 「我在。我在。」 bar · 4776–4823 the
+//        cloud flips to white mono 我/在 · rewritten glyphs follow the cursor's square wave ·
+//        4848 / 4872 / 4896 deleting 。/ 在 / 我 gives back QC / QB / QA (shape, place, colour,
+//        breathing) · 4920–4991 three silent blinks · 4992–5039 the cursor walks to R
+//        (inOutSine, analytic blur) · 5040/5064/5088/5112 「有人吗？」 · 5160 return, all up 110 px.
+//        The cursor's ±160 px streak is masked to 0 over the strokes of its own row (V2 mask B),
+//        its bloom fades out over them (G), and the AI's strokes feed no bloom (R).
 //
 // World space = 1080p pixel space on the plane z = 0 (X = px − 960, Y = 540 − py); the 50 mm camera
-// sits at the focal distance FPX50 so that 1 unit = 1 px. Cursor block = x 722–746, y 508–572.
+// sits at the focal distance FPX50, so 1 unit = 1 px.
 import * as THREE from 'three';
 import { getWeb, sampleWebPoints, webPathPose } from './_webgraph.js';
-import { getLexicon, assertFonts, PAL, glyphMesh, screenRect, hash1, rng } from './w_sea/lexicon.js';
+import { getLexicon, assertFonts, PAL, hexLin, glyphMesh, hash1, rng } from './w_sea/lexicon.js';
+import { textTextures, textPlane, squash, inkBox, inkMask, gridInk, randInk, maskRectMaterial } from './q_apex/text.js';
+import { KF, aiState, cursorPos, cursorOn, qaChar, qbState, qcState, cloudFrac, syncGain, surge, scrollAt, clamp, sstep, outCubic } from './q_apex/state.js';
 
-const T37 = 184, T38 = 191, T39 = 216;
-const FPX50 = 960 / (18 / 50);                // 2666.667: camera distance for 1 unit = 1 px (36 mm gauge)
-const HUMAN = { x: 722, y: 410, font: '600 128px "Noto Serif CJK SC"', text: '有人吗？' };
-const AI = { x: 722, y: 540, cell: 64, font: '400 64px "Noto Sans Mono CJK SC"' };
-const ROWS = ['我在。', '有人吗？'];
-const N_DUST = 14000, N_CUR = 700, N_DRAIN = 8000, N_AI_MICRO = 700, N_AI_DUST = 5000;
-const FLIP = { start: 195.0, spread: 4.0, revert: [[202.0, 0.3], [203.0, 0.7], [204.0, 1.0]] };
-
-const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-const outCubic = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+const T37 = 184, T38 = 191;
+const FPX50 = 960 / (18 / 50);
 const X = px => px - 960, Y = py => 540 - py;
+const MONO = '"Noto Sans Mono CJK SC"';
+const luma = c => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+const atLevel = (lin, L) => lin.map(v => v * L / luma(lin));     // linear colour with luma L
 
-// ---- the AI line: what is on it at time t (frame-exact keystrokes) ----------------------------
-const KEYS = [   // [t, row, count]
-  [194.0, 0, 1], [194 + 8 / 24, 0, 2], [194 + 16 / 24, 0, 3],
-  [202.0, 0, 2], [203.0, 0, 1], [204.0, 0, 0],
-  [208.0, 1, 1], [209.0, 1, 2], [210.0, 1, 3], [211.0, 1, 4],
+// breathing: dominant frequency per the screenplay (QA 0.25, QB 0.20, QC 0.31 Hz), with a weaker
+// overtone; phases chosen so the three lines are uncorrelated over S08-e.2 (|r| ≈ 0.17)
+const BR = [
+  { f: 0.25, p: [1.679, 1.57], m: 2.056 },
+  { f: 0.20, p: [6.145, 1.393], m: 2.141 },
+  { f: 0.31, p: [2.795, 1.464], m: 1.66 },
 ];
-const EPS = 1e-4;
-function aiLine(t) {
-  let row = 0, n = 0;
-  for (const [tk, r, c] of KEYS) if (t >= tk - EPS) { row = r; n = c; }
-  return { row, n, returned: t >= 215.0 - EPS };
-}
-// cursor: steady while typing / deleting / returning, else the 60 BPM square wave (on x.00–x.11)
-const STEADY = [[194.0, 195.0], [202.0, 205.0], [208.0, 212.0], [215.0, 217.0]];
-function cursorOn(t) {
-  if (t < T38 - EPS) return false;
-  for (const [a, b] of STEADY) if (t >= a - EPS && t < b - EPS) return true;
-  return (t + EPS - Math.floor(t + EPS)) < 0.5;
-}
-// fraction of the legible layer that is flipped (for the dust layer), and its integral (frozen flow)
-function flipFrac(t) {
-  let f = Math.min(1, Math.max(0, (t - FLIP.start) / FLIP.spread));
-  let prev = 0;
-  for (const [tr, h] of FLIP.revert) { const k = smooth(tr, tr + 0.35, t); f = Math.max(0, f - (h - prev) * k); prev = h; }
-  return f;
-}
-function tauDust(t) {   // t − ∫ flipFrac (the dust's own clock stops while it is "answered")
-  if (t <= FLIP.start) return t;
-  let acc = 0; const n = 64, a = FLIP.start, b = Math.min(t, 206);
-  for (let i = 0; i < n; i++) acc += flipFrac(a + (b - a) * (i + 0.5) / n) * (b - a) / n;
-  return t - 0.9 * acc;
-}
+const breath = (i, t) => { const b = BR[i], x = 2 * Math.PI * b.f * (t - 188); return 0.72 * Math.sin(x + b.p[0]) + 0.28 * Math.sin(x * b.m + b.p[1]); };
 
-// ---- ink masks -----------------------------------------------------------------------------
-// canvas2D rasterisation of a line at 1080p scale; returns alpha (0..1) and a stroke-tangent field
-// from the structure tensor of the smoothed gradient (well defined on stroke centres too).
-function inkMask(text, font, x, yMid, { cell = 0, region }) {
-  const [x0, y0, w, h] = region;
-  const c = document.createElement('canvas'); c.width = w; c.height = h;
-  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.font = font; g.textBaseline = 'middle';
-  if (cell) { g.textAlign = 'center'; Array.from(text).forEach((ch, i) => g.fillText(ch, x + cell * i + cell / 2 - x0, yMid - y0)); }
-  else { g.textAlign = 'left'; g.fillText(text, x - x0, yMid - y0); }
-  const d = g.getImageData(0, 0, w, h).data;
-  const A = new Float32Array(w * h); let ink = 0;
-  for (let i = 0; i < w * h; i++) { A[i] = d[4 * i + 3] / 255; ink += A[i]; }
-  const blur = (src, r) => {       // separable box blur ×2
-    let a = src, b = new Float32Array(w * h);
-    for (let pass = 0; pass < 2; pass++) {
-      for (let y = 0; y < h; y++) { let s = 0; for (let x2 = -r; x2 <= r; x2++) s += a[y * w + Math.min(w - 1, Math.max(0, x2))];
-        for (let x2 = 0; x2 < w; x2++) { b[y * w + x2] = s / (2 * r + 1); s += a[y * w + Math.min(w - 1, x2 + r + 1)] - a[y * w + Math.max(0, x2 - r)]; } }
-      const c2 = new Float32Array(w * h);
-      for (let x2 = 0; x2 < w; x2++) { let s = 0; for (let y = -r; y <= r; y++) s += b[Math.min(h - 1, Math.max(0, y)) * w + x2];
-        for (let y = 0; y < h; y++) { c2[y * w + x2] = s / (2 * r + 1); s += b[Math.min(h - 1, y + r + 1) * w + x2] - b[Math.max(0, y - r) * w + x2]; } }
-      a = c2;
-    }
-    return a;
-  };
-  const B = blur(A, 2);
-  const jxx = new Float32Array(w * h), jxy = new Float32Array(w * h), jyy = new Float32Array(w * h);
-  for (let y = 1; y < h - 1; y++) for (let x2 = 1; x2 < w - 1; x2++) {
-    const i = y * w + x2, gx = B[i + 1] - B[i - 1], gy = B[i + w] - B[i - w];
-    jxx[i] = gx * gx; jxy[i] = gx * gy; jyy[i] = gy * gy;
-  }
-  const Jxx = blur(jxx, 4), Jxy = blur(jxy, 4), Jyy = blur(jyy, 4);
-  const at = (px, py) => { const ix = Math.round(px - x0), iy = Math.round(py - y0); return (ix < 0 || iy < 0 || ix >= w || iy >= h) ? 0 : A[iy * w + ix]; };
-  const tangent = (px, py) => {    // unit tangent in world coords (Y up)
-    const ix = Math.min(w - 1, Math.max(0, Math.round(px - x0))), iy = Math.min(h - 1, Math.max(0, Math.round(py - y0))), i = iy * w + ix;
-    const th = 0.5 * Math.atan2(2 * Jxy[i], Jxx[i] - Jyy[i]) + Math.PI / 2;   // across-stroke + 90°
-    return [Math.cos(th), -Math.sin(th)];
-  };
-  return { at, tangent, ink, region };
-}
-// points inside the ink: jittered grid (spacing s) or uniform rejection sampling (count n)
-function gridInk(M, s, r, thr = 0.5, jit = 1) {
-  const [x0, y0, w, h] = M.region, out = [];
-  for (let y = y0; y < y0 + h; y += s) for (let x = x0; x < x0 + w; x += s) {
-    const px = x + (0.5 + (r() - 0.5) * jit) * s, py = y + (0.5 + (r() - 0.5) * jit) * s;
-    if (M.at(px, py) > thr) out.push([px, py]);
-  }
-  return out;
-}
-function randInk(M, n, r, thr = 0.45) {
-  const [x0, y0, w, h] = M.region, out = [];
-  for (let tries = 0; out.length < n && tries < n * 200; tries++) {
-    const px = x0 + r() * w, py = y0 + r() * h;
-    if (M.at(px, py) > thr) out.push([px, py]);
-  }
-  return out;
-}
+// a smooth deterministic value noise (for the arrival field)
+const hh = (i, j) => hash1((i * 7919 + j * 104729) & 0x7fffffff, 9);
+const vnoise = (x, y) => {
+  const i = Math.floor(x), j = Math.floor(y), fx = x - i, fy = y - j, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+  return (hh(i, j) * (1 - sx) + hh(i + 1, j) * sx) * (1 - sy) + (hh(i, j + 1) * (1 - sx) + hh(i + 1, j + 1) * sx) * sy;
+};
 
 export async function create(ctx) {
   const { THREE: T, renderer, W, H, kit, makeRT, FSQ } = ctx;
-  await assertFonts([[HUMAN.font, '有人吗？'], [AI.font, '我在。有人吗？'], ['400 40px "Noto Serif CJK SC"', '遂古之初']]);
+  const P38 = ctx.timeline.shots.find(s => s.id === 'S38')?.params || {};
+  const LQ = [
+    { id: 'QA', text: '有人吗？', font: '600 108px "Noto Serif CJK SC"', color: '#FFB36B', y: 320, hdr: 0.40, rtl: false, land: [185.55, 187.0] },
+    { id: 'QB', text: 'Is anyone there?', font: 'italic 500 84px "Cormorant Garamond"', color: '#F2C98A', y: 210, hdr: 0.40, rtl: false, land: [186.05, 187.5] },
+    { id: 'QC', text: 'هل يوجد أحد هنا؟', font: '400 80px "Noto Naskh Arabic"', color: '#FF9A5C', y: 430, hdr: 0.25, rtl: true, land: [186.55, 188.0] },
+  ];
+  for (const L of LQ) { const p = P38[L.id]; if (p) { L.text = p.text || L.text; L.font = p.font || L.font; L.color = p.color || L.color; L.y = p.y || L.y; L.hdr = p.strokeHDR || L.hdr; } }
+  await assertFonts([
+    [LQ[0].font, '有人吗？'], [LQ[1].font, 'Is anyone there'], [LQ[2].font, 'هل يوجد أحد هنا'],
+    [`400 64px ${MONO}`, '我在。有人吗？'],
+  ]);
   const lex = getLexicon();
-  const r = rng(55 * 37 + 1);
+  const r = rng(55 * 37 + 2);
+  const CUR_LIN = PAL.CURSOR, ASH_LIN = PAL.ASH;
+  const AI_COL = atLevel(CUR_LIN, 0.40);            // AI strokes: neutral white, HDR 0.40
 
   // =========================================================================================
-  // The human line: legible layer + dust + cursor words + the rest of the sea (drain)
-  const HM = inkMask(HUMAN.text, HUMAN.font, HUMAN.x, HUMAN.y, { region: [700, 318, 600, 190] });
-  // legible layer: a micrography, not a texture. ≈ 450 graphemes of 9.5–12 px (readable at 1080p),
-  // on an evenly spaced grid (jitter 0.35 of the spacing, so they do not pile up): ≈ 1.5 glyph
-  // cells across a 14-px stroke, each stroke a chain of words; the dust layer underneath (≈ 0.35)
-  // only fills the stroke so the letterforms of the glyphs show at its edges. (v1: 1600 × 6–8.5 px
-  // stacked ~10 deep — at full resolution the line read as noise and no glyph was ever legible.)
-  const EM = [9.5, 12], N_LEG = 450;
-  const spacing = Math.sqrt(HM.ink / N_LEG);
-  const legible = gridInk(HM, spacing, r, 0.5, 0.35);
-  console.log(`WARN q_apex: ink ${HM.ink.toFixed(0)} px², legible ${legible.length} (spacing ${spacing.toFixed(2)})`);
-  // tokens: graphemes of real sentences, interleaved across scripts, written in reading order
-  const byLang = new Map();
-  for (const s of lex.sentences) if (s.glyphs.length && s.v.lang !== 'morse') { if (!byLang.has(s.v.lang)) byLang.set(s.v.lang, []); byLang.get(s.v.lang).push(s); }
-  const langs = [...byLang.keys()].sort((a, b) => hash1(a.length * 31 + a.charCodeAt(0) * 7 + (a.charCodeAt(1) || 0), 5) - hash1(b.length * 31 + b.charCodeAt(0) * 7 + (b.charCodeAt(1) || 0), 5));
-  const stream = [];
-  for (let k = 0; stream.length < 12000; k++) {
-    const L = byLang.get(langs[k % langs.length]);
-    const s = L[Math.floor(k / langs.length) % L.length];
-    stream.push(...s.glyphs);
+  // Layout of the three lines (1080p px)
+  const LX = 722;
+  for (const L of LQ) {
+    const b = inkBox(L.text, L.font, { rtl: L.rtl });
+    L.baseline = Math.round((L.y - (b.top + b.bottom) / 2) * 2) / 2;
+    L.adv = b.adv; L.x0 = LX; L.x1 = LX + b.adv; L.inkL = LX + b.left; L.inkR = LX + b.right;
+    L.top = L.baseline + b.top; L.bottom = L.baseline + b.bottom;
+    L.rect = [LX - 40, L.top - 34, Math.ceil(L.x1) + 40, L.bottom + 34];
+    L.lin = hexLin(L.color); L.col = atLevel(L.lin, L.hdr);
+    console.log(`WARN q_apex: ${L.id} ink x ${L.inkL.toFixed(0)}–${L.inkR.toFixed(0)} y ${L.top.toFixed(0)}–${L.bottom.toFixed(0)}`);
   }
-  legible.sort((a, b) => (Math.round(a[1] / spacing) - Math.round(b[1] / spacing)) || (a[0] - b[0]));   // reading order
-  const dust = randInk(HM, N_DUST, r, 0.45);
-  const curPts = []; for (let i = 0; i < N_CUR; i++) curPts.push([722 + 1 + 22 * r(), 508 + 1 + 62 * r()]);
-  const drainPts = randInk(HM, N_DRAIN, r, 0.3);
+  const [QA, QB, QC] = LQ;
+  // arrival field g ∈ [0, 1] (left → right with noise): the ink of a pixel appears when the words
+  // aimed at it land; the words' landing times are drawn from the same field
+  const arrG = (L, px, py) => clamp(0.72 * (L.rtl ? L.inkR - px : px - L.inkL) / Math.max(1, L.inkR - L.inkL) + 0.28 * vnoise(px / 34, py / 34) - 0.06, 0, 1);   // in reading order
+  const arrTex = (L, rect) => {
+    const nx = 96, ny = 24, d = new Uint8Array(nx * ny * 4);
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const px = rect[0] + (i + 0.5) / nx * (rect[2] - rect[0]), py = rect[3] - (j + 0.5) / ny * (rect[3] - rect[1]);
+      const g = Math.round(255 * arrG(L, px, py)); d.set([g, g, g, 255], 4 * (j * nx + i));
+    }
+    const tx = new T.DataTexture(d, nx, ny, T.RGBAFormat); tx.minFilter = tx.magFilter = T.LinearFilter; tx.needsUpdate = true;
+    return tx;
+  };
+
+  // =========================================================================================
+  // Text planes
+  const planeScene = new T.Scene();
+  const mk = (items, rect, opts = {}) => { const tx = textTextures(items, rect, { halo: opts.halo ?? 9 }); const m = textPlane(tx, opts); planeScene.add(m); return m; };
+  // QA: one plane per character (each one turns over on its own frame)
+  const qaAdv = []; { let x = LX; for (const ch of Array.from(QA.text)) { const b = inkBox(ch, QA.font); qaAdv.push([x, b.adv]); x += b.adv; } }
+  QA.cells = qaAdv;
+  const qaPlanes = Array.from(QA.text).map((ch, c) => {
+    const [x, a] = qaAdv[c], rect = [x - 34, QA.rect[1], x + a + 34, QA.rect[3]];
+    const m = mk([{ text: ch, font: QA.font, x, baseline: QA.baseline }], rect, { arr: arrTex(QA, rect), arrT: QA.land });
+    m.userData.cell = [x, a]; return m;
+  });
+  const monoAt = (text, size, x, yc) => {
+    const font = `400 ${size}px ${MONO}`, b = inkBox('我在', font);
+    return { text, font, x, baseline: yc - (b.top + b.bottom) / 2 };
+  };
+  // the white mono glyphs that replace QA's (same size, same cells): ？→我 吗→。 人→在 有→我
+  const QA_REPL = ['我', '在', '。', '我'];
+  const qaWhite = QA_REPL.map((ch, c) => {
+    const [x, a] = qaAdv[c], adv = inkBox(ch, `400 108px ${MONO}`).adv;
+    const it = monoAt(ch, 108, x + (a - adv) / 2, QA.y);
+    return mk([it], [x - 34, QA.rect[1], x + a + 34, QA.rect[3]]);
+  });
+  const qbPlane = mk([{ text: QB.text, font: QB.font, x: LX, baseline: QB.baseline }], QB.rect, { arr: arrTex(QB, QB.rect), arrT: QB.land });
+  const QB_WHITE = ['我', '在', '。', '我', '在'];
+  const qbWhite = QB_WHITE.map(ch => {
+    const it = monoAt(ch, 84, 0, QB.y), adv = inkBox(ch, it.font).adv; it.x = (84 - adv) / 2;
+    const m = mk([it], [-30, QB.rect[1], 84 + 30, QB.rect[3]]);
+    m.userData.cx0 = m.userData.cx; return m;      // positioned per frame: cell left edge + 42
+  });
+  const qcPlane = mk([{ text: QC.text, font: QC.font, x: LX, baseline: QC.baseline, rtl: true }], QC.rect, { arr: arrTex(QC, QC.rect), arrT: QC.land });
+  const QC_BAR = '我在。我在。';
+  const qcBar = mk([monoAt(QC_BAR, 80, 0, QC.y)], [-30, QC.rect[1], 480 + 30, QC.rect[3]]);
+  // the AI's own glyphs: 「我在。」 at P_ans, 「有人吗？」 on the R row
+  const aiGlyph = (ch, x) => { const it = monoAt(ch, 64, x, 540), adv = inkBox(ch, it.font).adv; it.x = x + (64 - adv) / 2; return mk([it], [x - 26, 476, x + 64 + 26, 604], { halo: 8 }); };
+  const ansPlanes = ['我', '在', '。'].map((ch, k) => aiGlyph(ch, 1508 + 64 * k));
+  const qPlanes = ['有', '人', '吗', '？'].map((ch, k) => aiGlyph(ch, 722 + 64 * k));
+  for (const m of [...ansPlanes, ...qPlanes]) m.material.uniforms.haloGain.value = 0.14;
+
+  // =========================================================================================
+  // The glyph field: the words that land in the lines, the cloud, the cursor's words, the drain
+  const N_MICRO = [1800, 1500, 1500], N_DUST = 1800, N_CUR = 700, N_DRAIN = 7000;
+  const groups = [];   // { kind, pts: [[px, py]], line }
+  const masks = LQ.map(L => inkMask([{ text: L.text, font: L.font, x: LX, baseline: L.baseline, rtl: L.rtl }],
+    [Math.floor(L.rect[0]), Math.floor(L.rect[1]), Math.ceil(L.rect[2] - L.rect[0]), Math.ceil(L.rect[3] - L.rect[1])]));
+  LQ.forEach((L, li) => {
+    const M = masks[li], sp = Math.sqrt(M.ink / N_MICRO[li]);
+    groups.push({ kind: li, pts: gridInk(M, sp, r, 0.5, 0.7), line: li });
+    groups.push({ kind: 3 + li, pts: randInk(M, N_DUST, r, 0.45), line: li });
+    console.log(`WARN q_apex: ${L.id} ink ${M.ink.toFixed(0)} px², micro ${groups[groups.length - 2].pts.length}`);
+  });
+  // the cloud: short real questions laid out in rows (6–9 px), around the three lines
+  const cloud = [];
+  {
+    const rc = rng(55 * 37 + 11);
+    const pool = lex.sentences.filter(s => s.v.kind === 'question' && s.sea.length && !['code', 'morse'].includes(s.v.lang));
+    const GSCR = new Set(['zh', 'ja', 'xsux', 'egy', 'gmy', 'phn', 'peo', 'runr', 'sga', 'glag', 'tfng', 'chr', 'iu']);
+    const RTLS = new Set(['ar', 'fa', 'ur', 'he', 'syr', 'phn']);
+    const excl = [[700, QB.top - 22, QB.inkR + 26, QB.bottom + 20], [700, QA.top - 20, QA.inkR + 26, QA.bottom + 20],
+      [700, QC.top - 20, QC.inkR + 26, QC.bottom + 22], [0, 496, 1320, 584]];
+    const hit = (x0, y0, x1, y1) => excl.some(e => x1 > e[0] && x0 < e[2] && y1 > e[1] && y0 < e[3]);
+    let y = 154, si = 0;
+    while (y < 636) {
+      const em = 6 + 3 * rc(), rowH = em * 1.45;
+      let x = 60 + 30 * rc();
+      while (x < 1300) {
+        const s = pool[Math.floor(hash1(si++, 77) * pool.length)];
+        const gap = GSCR.has(s.v.lang) ? 0.08 * em : 0.32 * em;
+        const ws = s.sea.map(k => lex.rowAspect(k) * em * 1.6 * 0.86);
+        const len = ws.reduce((a, b) => a + b, 0) + gap * (ws.length - 1);
+        const yc = y + rowH / 2;
+        // soft edges: density falls off towards the cloud's border, so it is never a rectangle
+        const ex = sstep(60, 260, x) * (1 - sstep(1080, 1300, x + len)), ey = sstep(150, 230, yc) * (1 - sstep(560, 640, yc));
+        if (x + len < 1300 && !hit(x, yc - em, x + len, yc + em) && rc() < 0.25 + 0.65 * ex * ey) {
+          const toks = RTLS.has(s.v.lang) ? s.sea.map((k, i) => [k, ws[i]]).reverse() : s.sea.map((k, i) => [k, ws[i]]);
+          let cx = x;
+          for (const [k, w] of toks) { cloud.push([cx + w / 2, yc, k, em]); cx += w + gap; }
+          x += len + (10 + 26 * rc());
+        } else x += 14 + 40 * rc();
+      }
+      y += rowH + 2 + 4 * rc();
+    }
+    groups.push({ kind: 6, pts: cloud.map(c => [c[0], c[1]]), toks: cloud });
+    const dust = []; for (let i = 0; i < 2600; i++) { const c = cloud[Math.floor(rc() * cloud.length)]; dust.push([c[0] + (rc() - 0.5) * 30, c[1] + (rc() - 0.5) * 12]); }
+    groups.push({ kind: 9, pts: dust });
+    console.log(`WARN q_apex: cloud ${cloud.length} glyphs`);
+  }
+  const curPts = []; for (let i = 0; i < N_CUR; i++) curPts.push([1508 + 1 + 22 * r(), 508 + 1 + 62 * r()]);
+  groups.push({ kind: 7, pts: curPts });
+  const drainPts = []; for (let i = 0; i < N_DRAIN; i++) { const li = i % 3; const p = randInk(masks[li], 1, r, 0.3)[0]; if (p) drainPts.push(p); }
+  groups.push({ kind: 8, pts: drainPts });
 
   // start positions: a patch of the word-web (same graph), seen from beyond WEB_PATH(9)
   const web = getWeb();
@@ -175,315 +196,384 @@ export async function create(ctx) {
   const C0 = P9.pos.clone().addScaledVector(P9.forward, 34);
   const wp = sampleWebPoints(web, 260000, 37);
   const starts = [];
-  const K = 52;   // px per web unit
   for (let i = 0; i < wp.count && starts.length < 80000; i++) {
     const dx = wp.pos[3 * i] - C0.x, dy = wp.pos[3 * i + 1] - C0.y, dz = wp.pos[3 * i + 2] - C0.z;
-    const lx = (dx * P9.right.x + dy * P9.right.y + dz * P9.right.z) * K;
-    const ly = (dx * P9.up.x + dy * P9.up.y + dz * P9.up.z) * K;
-    const lz = -(dx * P9.forward.x + dy * P9.forward.y + dz * P9.forward.z) * K;
+    const lx = (dx * P9.right.x + dy * P9.right.y + dz * P9.right.z) * 52;
+    const ly = (dx * P9.up.x + dy * P9.up.y + dz * P9.up.z) * 52;
+    const lz = -(dx * P9.forward.x + dy * P9.forward.y + dz * P9.forward.z) * 52;
     if (Math.abs(lx) > 3400 || Math.abs(ly) > 2000 || lz > 1500 || lz < -5200) continue;
     starts.push([lx, ly, lz]);
   }
-  // pair starts and targets by angle around the line centre (coherent swirl, no criss-crossing)
-  const CEN = [X(978), Y(410)];
+  const CEN = [X(1000), Y(380)];
   const ang = (x, y) => Math.atan2(y - CEN[1], x - CEN[0]);
-  const groups = [
-    { kind: 0, pts: legible }, { kind: 1, pts: dust }, { kind: 2, pts: curPts }, { kind: 3, pts: drainPts },
-  ];
   const total = groups.reduce((s, g) => s + g.pts.length, 0);
   const iPos = new Float32Array(total * 3), iC = new Float32Array(total * 4), iB = new Float32Array(total * 4), iA = new Float32Array(total * 4);
   const iRect = new Float32Array(total * 4), iRect2 = new Float32Array(total * 4), iCol = new Float32Array(total * 3);
   const sorted = starts.map((s, i) => [ang(s[0], s[1]), i]).sort((a, b) => a[0] - b[0]).map(a => a[1]);
-  let o = 0, si = 0;
+  // the sentence stream (graphemes of real sentences, interleaved across scripts)
+  const byLang = new Map();
+  for (const s of lex.sentences) if (s.glyphs.length && !['morse', 'code'].includes(s.v.lang)) { if (!byLang.has(s.v.lang)) byLang.set(s.v.lang, []); byLang.get(s.v.lang).push(s); }
+  const langs = [...byLang.keys()].sort((a, b) => hash1(a.charCodeAt(0) * 31 + (a.charCodeAt(1) || 0) * 7 + a.length, 5) - hash1(b.charCodeAt(0) * 31 + (b.charCodeAt(1) || 0) * 7 + b.length, 5));
+  const stream = [];
+  for (let k = 0; stream.length < 16000; k++) { const L = byLang.get(langs[k % langs.length]); stream.push(...L[Math.floor(k / langs.length) % L.length].glyphs); }
   const amberVar = h => { const c = [[1.0, 0.40, 0.11], PAL.AMBER, [1.0, 0.56, 0.22]]; const k = h * 2, i = Math.min(1, Math.floor(k)), f = k - i; return c[i].map((v, j) => v + (c[i + 1][j] - v) * f); };
   const seaShort = lex.sea.filter(k => lex.rowAspect(k) < 3);
-  let maxD = 0;
+  let o = 0, si = 0, maxD = 0;
   for (const G of groups) {
-    // choose starts for this group evenly through the angle-sorted list, then pair by target angle
     const n = G.pts.length, step = sorted.length / n;
     const S = []; for (let k = 0; k < n; k++) S.push(starts[sorted[Math.floor((k * step + si * 0.37) % sorted.length)]]);
     si++;
     const tIdx = G.pts.map((p, k) => [ang(X(p[0]), Y(p[1])), k]).sort((a, b) => a[0] - b[0]).map(a => a[1]);
     for (let k = 0; k < n; k++) {
-      const p = G.pts[tIdx[k]], s = S[k], i = o + k;
+      const pk = tIdx[k], p = G.pts[pk], s = S[k], i = o + k;
       const tx = X(p[0]), ty = Y(p[1]);
-      iPos.set([tx, ty, 0], 3 * i);
+      iPos.set([tx, ty, 1], 3 * i);
       const dd = Math.hypot(s[0] - tx, s[1] - ty, s[2] * 0.5); maxD = Math.max(maxD, dd);
       iC.set([s[0], s[1], s[2], dd], 4 * i);
-      const tg = (G.kind === 2) ? [0, 1] : HM.tangent(p[0], p[1]);
+      const tg = G.kind < 6 ? masks[G.line].tangent(p[0], p[1]) : [1, 0];
       iB.set([tg[0], tg[1], G.kind, 0], 4 * i);
       const h1 = r(), h2 = r();
-      let tok, em, b;
-      if (G.kind === 0) { tok = stream[tIdx[k] % stream.length]; em = EM[0] + (EM[1] - EM[0]) * r(); b = 0.66 * Math.exp(0.3 * r.gauss()); }
-      else if (G.kind === 1) { tok = stream[Math.floor(r() * stream.length)]; em = 1.4 + 0.5 * r(); b = 0.42 * Math.exp(0.3 * r.gauss()); }
-      else if (G.kind === 2) { tok = seaShort[Math.floor(r() * seaShort.length)]; em = 1.9 + 0.5 * r(); b = 0.6; }
+      let tok, em, b, col = amberVar(r());
+      if (G.kind < 3) {                       // the words of a line: 6–9 px landed
+        tok = stream[(pk * 7 + G.kind * 977) % stream.length]; em = 6 + 3 * r(); b = 0.55 * Math.exp(0.25 * r.gauss());
+        col = LQ[G.kind].lin.map((v, j) => 0.8 * v + 0.2 * col[j]);
+      } else if (G.kind < 6) { tok = stream[Math.floor(r() * stream.length)]; em = 1.4 + 0.5 * r(); b = 0.4 * Math.exp(0.3 * r.gauss()); col = LQ[G.kind - 3].lin; }
+      else if (G.kind === 6) { tok = G.toks[pk][2]; em = G.toks[pk][3]; b = 0.5 * Math.exp(0.25 * r.gauss()); }
+      else if (G.kind === 9) { tok = seaShort[Math.floor(r() * seaShort.length)]; em = 1.2 + 0.5 * r(); b = 0.25 * Math.exp(0.4 * r.gauss()); }
+      else if (G.kind === 7) { tok = seaShort[Math.floor(r() * seaShort.length)]; em = 2.0 + 0.5 * r(); b = 0.55; }
       else { tok = seaShort[Math.floor(r() * seaShort.length)]; em = 4 + 4 * r(); b = Math.min(8, 1.1 * Math.exp(0.8 * r.gauss())); }
-      // two spiral arms (log spiral in the start offsets) — brighter words trace the arms, so the
-      // vortex reads as a forming galaxy, then winds up into the sentence
-      // (flight only for the words that land in the line — iPos.z carries the factor; the landed
-      // line is evenly lit — but for good for the sea that is absorbed)
-      if (G.kind !== 2) {
+      // two spiral arms in the start offsets — brighter words trace the arms (flight only)
+      if (G.kind !== 7) {
         const a0 = Math.atan2(s[1] - CEN[1], s[0] - CEN[0]), r0 = Math.hypot(s[0] - CEN[0], s[1] - CEN[1]) + 60;
         const arm = Math.pow(0.5 + 0.5 * Math.cos(2 * a0 - 2.4 * Math.log(r0 / 300)), 2.5);
-        if (G.kind === 3) b *= 0.35 + 1.6 * arm; else iPos[3 * i + 2] = 0.35 + 1.6 * arm;
-      } else iPos[3 * i + 2] = 1;
+        if (G.kind === 8) b *= 0.35 + 1.6 * arm; else iPos[3 * i + 2] = 0.35 + 1.6 * arm;
+      }
       iRect.set(lex.rects.subarray(tok * 4, tok * 4 + 4), 4 * i);
       const mono = h2 < 0.5 ? lex.mono['我'] : lex.mono['在'];
       iRect2.set(lex.rects.subarray(mono * 4, mono * 4 + 4), 4 * i);
-      iA.set([em * 1.6, b, h1, h2], 4 * i);    // quad height = em × 1.6 (atlas row 80 px, font 50 px)
-      iCol.set(amberVar(r()), 3 * i);
+      iA.set([em * 1.6, b, h1, h2], 4 * i);
+      iCol.set(col, 3 * i);
     }
     o += n;
   }
-  // departures: near first (the line nucleates). Arrivals of the words that land in the line are
-  // spread evenly over 186.0–188.0 by distance rank (+ hash), so at every moment of the last two
-  // seconds some words are seen settling into the strokes; the absorbed sea keeps its old law.
+  // timing: landing time from the line's arrival field (lines), spread over the last seconds (cloud),
+  // f4493–4550 for the cursor's words; departures ≥ 2.2 s before landing, near first
   {
-    const rank = new Float32Array(total);
-    for (let a = 0, g = 0; g < groups.length; a += groups[g].pts.length, g++) {
-      const n = groups[g].pts.length, idx = Array.from({ length: n }, (_, k) => a + k).sort((p, q) => iC[4 * p + 3] - iC[4 * q + 3]);
-      idx.forEach((i, k) => { rank[i] = (k + 0.5) / n; });
-    }
-    for (let i = 0; i < total; i++) {
-      const dn = Math.min(1, iC[4 * i + 3] / maxD), h = iA[4 * i + 2], kind = iB[4 * i + 2];
-      let ts = T37 + 0.15 + 0.75 * dn + 0.25 * h;
-      const te = kind < 2.5 ? 186.0 + 2.0 * Math.min(1, Math.max(0, 0.75 * rank[i] + 0.25 * h)) : Math.min(188.0, 186.4 + 1.45 * dn + 0.15 * h);
-      if (kind < 2.5) ts = Math.max(T37 + 0.1, Math.min(ts, te - 2.2));   // ≥ 1 s of flight before the last 1.2 s
-      iC[4 * i + 3] = ts; iB[4 * i + 3] = te;
+    let a = 0;
+    for (const G of groups) {
+      const n = G.pts.length;
+      for (let k = 0; k < n; k++) {
+        const i = a + k, px = iPos[3 * i] + 960, py = 540 - iPos[3 * i + 1];
+        const dn = Math.min(1, iC[4 * i + 3] / maxD), h = iA[4 * i + 2];
+        let te;
+        if (G.kind < 6) { const L = LQ[G.kind % 3]; te = L.land[0] + (L.land[1] - L.land[0]) * arrG(L, px, py) - 0.02; }
+        else if (G.kind === 6 || G.kind === 9) te = 186.3 + 1.7 * clamp(0.6 * h + 0.4 * (1 - Math.abs(py - 400) / 260));
+        else if (G.kind === 7) te = 187.2 + 2.4 * h;
+        else te = Math.min(188.0, 186.4 + 1.45 * dn + 0.15 * h);
+        let ts = T37 + 0.15 + 0.75 * dn + 0.25 * iA[4 * i + 3];
+        if (G.kind !== 8) ts = Math.max(T37 + 0.1, Math.min(ts, te - 2.2));
+        iC[4 * i + 3] = ts; iB[4 * i + 3] = te;
+      }
+      a += n;
     }
   }
   const HOPTS = {
-    streak: 28,          // (max taps) analytic motion blur along each word's own path (see lexicon.js)
+    streak: 28,
     uniforms: {
-      uShift: { value: 0 }, uSurge: { value: 1 }, uDust: { value: 1 }, uFrac: { value: 0 }, uTauD: { value: 0 },
-      uAsh: { value: new T.Vector3(...PAL.ASH) }, uCur: { value: new T.Vector3(...PAL.CURSOR) }, uRipple: { value: new T.Vector3(X(746), Y(540), 1 / 2400) },
-      uRevert: { value: new T.Vector3(202, 203, 204) },
+      uShift: { value: 0 }, uSurge: { value: 1 }, uSync: { value: 1 }, uMicro: { value: 0.16 }, uDustLvl: { value: 0.12 },
+      uBr: { value: new T.Vector3(1, 1, 1) }, uLive: { value: new T.Vector3(1, 1, 1) }, uQAsx: { value: new T.Vector4(1, 1, 1, 1) },
+      uQB: { value: new T.Vector2(1, 0) }, uQC: { value: new T.Vector2(1, 0) }, uCloudF: { value: 0 }, uCloudGain: { value: 0.5 },
+      uAsh: { value: new T.Vector3(...ASH_LIN) }, uCur: { value: new T.Vector3(...CUR_LIN) },
     },
-    header: /* glsl */ `uniform float uShift, uSurge, uDust, uFrac, uTauD; uniform vec3 uAsh, uCur, uRipple, uRevert;
-      float breath(float tau, float ph){ return sin(6.28318 * 0.25 * tau + ph) * 0.65 + sin(6.28318 * 0.13 * tau + 1.7 * ph + 1.3) * 0.35; }`,
+    header: /* glsl */ `uniform float uShift, uSurge, uSync, uMicro, uDustLvl, uCloudF, uCloudGain; uniform vec3 uBr, uLive, uAsh, uCur; uniform vec4 uQAsx; uniform vec2 uQB, uQC;`,
     vertexBody: /* glsl */ `
-      float kind = iB.z, ts = iC.w, te = iB.w;
+      float kind = iB.z, ts = iC.w, te = iB.w, F = time * 24.0;
       float s0 = clamp((time - ts) / max(1e-3, te - ts), 0.0, 1.0);
       vec2 off = iC.xy - iPos.xy;
       float u;
-      if (kind < 2.5) {
-        // the spiral law r = r0 (1 − u)², θ = 10u³, re-timed in two C¹ pieces: the flight brings the
-        // word to ≈ 30 px from its place 1.2 s before it lands (Hermite, soft start); the last 1.2 s
-        // close those 30 px with an ease-out (≤ ≈ 7 px/frame, falling to 0) — the eye can follow the
-        // word into the stroke, and in-flight blur is only the shutter's few px
+      if (kind < 7.5 || kind > 8.5) {
+        // spiral law re-timed in two C¹ pieces: the flight brings the word to ≈ 30 px of its place
+        // 1.2 s before it lands; the last 1.2 s close those 30 px with an ease-out (≤ 7 px/frame)
         float r0 = length(vec3(off, iC.z));
         float ua = clamp(1.0 - sqrt(30.0 / max(r0, 31.0)), 0.0, 0.985);
         float f = clamp(1.2 / max(1e-3, te - ts), 0.2, 0.7);
         float m1 = min(2.5 * ua, 2.0 * (1.0 - ua) * (1.0 - f) / f);
         if (s0 < 1.0 - f) { float x = s0 / (1.0 - f); u = (3.0 * x * x - 2.0 * x * x * x) * ua + (x * x * x - x * x) * m1; }
         else { float x = (s0 - (1.0 - f)) / f; u = ua + (1.0 - ua) * (1.0 - (1.0 - x) * (1.0 - x)); }
-      } else u = s0 * s0 * (3.0 - 2.0 * s0);      // the absorbed sea: soft departure, soft landing
+      } else u = s0 * s0 * (3.0 - 2.0 * s0);
       float k1 = (1.0 - u) * (1.0 - u), phi = 10.0 * u * u * u;
       float cph = cos(phi), sph = sin(phi);
       p = vec3(iPos.xy + vec2(cph * off.x - sph * off.y, sph * off.x + cph * off.y) * k1, iC.z * k1);
-      float fl = kind < 0.5 ? 0.3 : kind < 1.5 ? 1.6 : kind < 2.5 ? 1.4 : 0.0;
+      // flight size: 10–16 px for the words of the lines, shrinking to 6–9 px only in the last 0.5 s
+      float fl = kind < 2.5 ? 0.75 : kind < 5.5 ? 1.2 : kind < 6.5 ? 0.7 : kind < 7.5 ? 2.6 : kind < 8.5 ? 0.0 : 1.0;
       hW *= 1.0 + fl * (1.0 - smoothstep(te - 0.5, te, time));
       float landed = smoothstep(0.92, 1.0, u);
-      // the arms of the vortex are bright only in flight; the landed line is evenly lit
-      if (kind < 2.5) b *= mix(iPos.z, 1.0, smoothstep(0.55, 1.0, u));
-      float ph = iPos.x * 0.011 + iA.w * 1.1;
-      float tau = time;
-      if (kind < 0.5) {
-        // the answer: flip to the AI's mono 我/在 (195 + 4·hash), back on the deletions (by hash).
-        // Each flip is a 2-frame warm-white tick, then the glyph is ASH and dim (≈ half the light):
-        // the question goes grey and stops breathing. The way back is the same tick, then AMBER.
-        float tF = 195.0 + 4.0 * iA.z;
-        float rip = length(iPos.xy - uRipple.xy) * uRipple.z;
-        float tB = (iA.z < 0.3 ? uRevert.x : (iA.z < 0.7 ? uRevert.y : uRevert.z)) + rip;
-        tau = time < tF ? time : (time < tB ? tF : time - (tB - tF));
-        float fA = clamp((time - tF) / 0.18, 0.0, 1.0), fB = clamp((time - tB) / 0.18, 0.0, 1.0);
+      if (kind < 7.5 || kind > 8.5) b *= mix(iPos.z, 1.0, smoothstep(0.55, 1.0, u));
+      float px = iPos.x + 960.0;
+      if (kind < 5.5) {
+        float L = kind < 2.5 ? kind : kind - 3.0;
+        b *= mix(1.0, kind < 2.5 ? uMicro : uDustLvl, landed);
+        float br = L < 0.5 ? uBr.x : (L < 1.5 ? uBr.y : uBr.z);
+        float lv = L < 0.5 ? uLive.x : (L < 1.5 ? uLive.y : uLive.z);
+        float fq = L < 0.5 ? 0.25 : (L < 1.5 ? 0.20 : 0.31);
+        b *= mix(1.0, br, landed);
+        p.xy += iB.xy * 2.5 * sin(6.28318 * fq * time + 6.28318 * iA.w) * landed * lv;   // ≤ 0.2 px/frame along the stroke
+        if (L < 0.5) {
+          float c = clamp(floor((px - 722.0) / 108.0), 0.0, 3.0);
+          float sxc = c < 0.5 ? uQAsx.x : (c < 1.5 ? uQAsx.y : (c < 2.5 ? uQAsx.z : uQAsx.w));
+          float cx = 722.0 + 108.0 * c + 54.0 - 960.0;
+          p.x = cx + (p.x - cx) * sxc; sx = max(sxc, 0.06); b *= step(0.001, sxc);
+        } else if (L < 1.5) {
+          p.x = -238.0 + (p.x + 238.0) * uQB.x; sx = max(uQB.x, 0.06);
+          col = mix(col, uAsh, uQB.y); b *= mix(1.0, 0.3 * uSync, uQB.y);
+        } else {
+          col = mix(col, uAsh, uQC.y); b *= uQC.x * mix(1.0, uSync, uQC.y);
+        }
+        b *= uSurge;
+      } else if (kind < 6.5) {
+        // the cloud: flips (4 frames, by hash) to white mono 我 / 在 f4776–4823 and back with the
+        // three deletions (30 % / 70 % / all, a small ripple from the answer position)
+        float tF = 4776.0 + 46.0 * iA.z;
+        float rip = 6.0 * length(iPos.xy - vec2(560.0, 0.0)) / 1600.0;
+        float tB = (iA.w < 0.3 ? 4848.0 : (iA.w < 0.7 ? 4872.0 : 4896.0)) + rip;
+        float fA = clamp((F - tF) / 4.0, 0.0, 1.0), fB = clamp((F - tB) / 4.0, 0.0, 1.0);
         sel = step(0.5, fA) * (1.0 - step(0.5, fB));
         if (fA > 0.0 && fA < 1.0) sx = max(0.06, abs(cos(3.14159 * fA)));
         if (fB > 0.0 && fB < 1.0) sx = max(0.06, abs(cos(3.14159 * fB)));
-        float since = time - tF - 0.09, back = time - tB - 0.09;
-        vec3 fc = mix(uCur * 2.2, uAsh * 0.3, smoothstep(0.06, 0.11, since));
-        col = mix(col, fc, sel);
-        col = mix(col, uCur * 2.2, step(0.0, back) * (1.0 - smoothstep(0.06, 0.11, back)) * (1.0 - sel));
-        b *= 1.0 + 0.2 * breath(tau, ph) * landed * (1.0 - sel);
-      } else if (kind < 1.5) {
-        tau = uTauD;
-        // dust: only density under the words (≈ 0.35 of v1), dim in flight so the converging mass
-        // never reads as a glowing ball; fully up only once the words have landed
-        b *= 0.35 * mix(0.45, 1.0, smoothstep(186.8, 188.0, time));
-        b *= uDust * (1.0 + 0.2 * (1.0 - 0.9 * uFrac) * breath(tau, ph) * landed);
-        col = mix(col, uAsh * 1.6, 0.6 * uFrac);
-      } else if (kind < 2.5) {
-        // the cursor's words: amber, then condensing to warm white; gone when the block is solid
-        b *= mix(0.55, 1.0, landed) * (1.0 + 1.3 * smoothstep(189.6, 191.0, time)) * (1.0 - step(191.0, time));
-        col = mix(col, uCur, smoothstep(189.8, 191.0, time));
-        b *= 1.0 + 0.15 * breath(time, ph) * landed;
-      } else {
-        // the rest of the sea pours in and is absorbed: it goes out as it nears the line, so the
-        // converging mass never piles up into a bright ellipse around it
+        col = mix(col, uCur * 0.9, sel);
+        b *= uCloudGain * mix(1.0, uSync, sel);
+        b *= 1.0 + 0.15 * sin(6.28318 * (0.13 + 0.22 * iA.z) * time + 6.28318 * iA.w) * landed * (1.0 - sel);
+        b *= uSurge;
+      } else if (kind < 7.5) {
+        // the cursor's words: amber, whitening with their own flight; condensing into the block
+        col = mix(col, uCur, smoothstep(0.15, 0.85, s0));
+        b *= (1.0 + 1.2 * smoothstep(4540.0, 4583.0, F)) * (1.0 - step(4583.5, F));
+      } else if (kind < 8.5) {
         b *= 1.0 - smoothstep(0.78, 0.995, u);
         b *= smoothstep(220.0, 760.0, length(vec3(off, iC.z)) * k1);
+      } else {
+        col = mix(col, uAsh, uCloudF);
+        b *= uCloudGain * mix(1.0, 0.45, uCloudF) * mix(1.0, uSync, uCloudF) * uSurge;
       }
-      if (kind < 1.5) p.xy += iB.xy * 3.5 * sin(6.28318 * 0.25 * tau + 0.7 * ph + 3.0 * iA.z) * landed * (kind < 0.5 ? 1.0 : 1.0 - 0.9 * uFrac);
-      b *= uSurge;
-      p.y += uShift;`,
+      p.y += uShift;
+      if (uShift > 0.0) b *= smoothstep(128.0, 178.0, 540.0 - p.y);`,
   };
-  // legible layer (large in flight) as quads — no frame-edge popping; everything else as points
-  const nL = legible.length;
-  const subA = (lo, hi) => ({ iPos: iPos.subarray(3 * lo, 3 * hi), iRect: iRect.subarray(4 * lo, 4 * hi), iRect2: iRect2.subarray(4 * lo, 4 * hi), iA: iA.subarray(4 * lo, 4 * hi), iB: iB.subarray(4 * lo, 4 * hi), iC: iC.subarray(4 * lo, 4 * hi), iCol: iCol.subarray(3 * lo, 3 * hi) });
-  const humanQ = glyphMesh(nL, subA(0, nL), { ...HOPTS, points: false });
-  const humanP = glyphMesh(total - nL, subA(nL, total), { ...HOPTS, points: true });
-  humanP.material.uniforms = humanQ.material.uniforms;
-  const human = new T.Group(); human.add(humanQ); human.add(humanP);
-  const HU = humanQ.material.uniforms;
+  // the words of the lines and the cloud (large in flight) as quads; everything else as points
+  // reorder so that quads (kinds 0–2, 6) come first
+  const order = [], isQuad = k => k < 2.5 || k === 6;
+  for (let i = 0; i < total; i++) if (isQuad(iB[4 * i + 2])) order.push(i);
+  const nQ = order.length;
+  for (let i = 0; i < total; i++) if (!isQuad(iB[4 * i + 2])) order.push(i);
+  const perm = (A, sz) => { const out = new Float32Array(A.length); order.forEach((i, k) => out.set(A.subarray(sz * i, sz * i + sz), sz * k)); return out; };
+  const ord = { iPos: perm(iPos, 3), iRect: perm(iRect, 4), iRect2: perm(iRect2, 4), iA: perm(iA, 4), iB: perm(iB, 4), iC: perm(iC, 4), iCol: perm(iCol, 3) };
+  const subO = (lo, hi) => ({ iPos: ord.iPos.subarray(3 * lo, 3 * hi), iRect: ord.iRect.subarray(4 * lo, 4 * hi), iRect2: ord.iRect2.subarray(4 * lo, 4 * hi), iA: ord.iA.subarray(4 * lo, 4 * hi), iB: ord.iB.subarray(4 * lo, 4 * hi), iC: ord.iC.subarray(4 * lo, 4 * hi), iCol: ord.iCol.subarray(3 * lo, 3 * hi) });
+  const fieldQ = glyphMesh(nQ, subO(0, nQ), { ...HOPTS, points: false });
+  const fieldP = glyphMesh(total - nQ, subO(nQ, total), { ...HOPTS, points: true });
+  fieldP.material.uniforms = fieldQ.material.uniforms;
+  const HU = fieldQ.material.uniforms;
   HU.res.value.set(W, H); HU.minPx.value = 1.0; HU.capPx.value = [700, 900]; HU.nearFade.value = [60, 300];
+  const field = new T.Group(); field.add(fieldQ); field.add(fieldP);
+  // the drain (kind 8) is not drawn once it has been absorbed: it is the tail of the point list
+  let nDrainP = 0; for (let k = nQ; k < total; k++) if (ord.iB[4 * k + 2] === 8) nDrainP++;
+  // points: sort the drain to the end
+  {
+    const g = fieldP.geometry, n = total - nQ, idx = [];
+    for (let k = 0; k < n; k++) if (ord.iB[4 * (nQ + k) + 2] !== 8) idx.push(k);
+    for (let k = 0; k < n; k++) if (ord.iB[4 * (nQ + k) + 2] === 8) idx.push(k);
+    for (const name of ['iPos', 'iRect', 'iRect2', 'iA', 'iB', 'iC', 'iCol']) {
+      const a = g.getAttribute(name), sz = a.itemSize, src = a.array.slice();
+      idx.forEach((s, d) => a.array.set(src.subarray(sz * s, sz * s + sz), sz * d)); a.needsUpdate = true;
+    }
+  }
+  const nPointsNoDrain = total - nQ - nDrainP;
 
   // =========================================================================================
-  // The AI line: typed glyphs (canvas2D, 2×), then micro mono glyphs + motes that breathe
-  const cv = document.createElement('canvas'); cv.width = 128 * 4; cv.height = 128 * 2;
-  { const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.font = '400 128px "Noto Sans Mono CJK SC"'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    ROWS.forEach((row, ri) => Array.from(row).forEach((ch, ci) => g.fillText(ch, 128 * ci + 64, 128 * ri + 64))); }
-  const aiTex = new T.CanvasTexture(cv);
-  aiTex.minFilter = T.LinearMipmapLinearFilter; aiTex.magFilter = T.LinearFilter; aiTex.generateMipmaps = true;
-  const aiMat = new T.ShaderMaterial({
-    transparent: true, depthTest: false, depthWrite: false, blending: T.AdditiveBlending,
-    uniforms: { tex: { value: aiTex }, color: { value: new T.Vector3(...PAL.CURSOR.map(v => v * 1.6)) }, cellUV: { value: new T.Vector4() }, dissolve: { value: 0 } },
-    vertexShader: /* glsl */ `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-    fragmentShader: /* glsl */ `uniform sampler2D tex; uniform vec3 color; uniform vec4 cellUV; uniform float dissolve; varying vec2 vUv;
-      float hh(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
-      float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
-        return mix(mix(hh(i), hh(i + vec2(1, 0)), f.x), mix(hh(i + vec2(0, 1)), hh(i + vec2(1, 1)), f.x), f.y); }
-      void main(){ vec2 uv = mix(cellUV.xy, cellUV.zw, vUv); float a = texture2D(tex, uv).a;
-        // the solid stroke crumbles (pixel-scale noise threshold) as the micro glyphs take over
-        float n = vn(vUv * 64.0 / 2.5) * 0.7 + vn(vUv * 64.0 / 9.0 + 7.0) * 0.3;
-        a *= smoothstep(dissolve - 0.06, dissolve + 0.06, n);
-        gl_FragColor = vec4(color * a, 1.0); }`,
-  });
-  const aiScene = new T.Scene();
-  const aiCells = [];
-  for (let ri = 0; ri < 2; ri++) for (let ci = 0; ci < Array.from(ROWS[ri]).length; ci++) {
-    const m = new T.Mesh(new T.PlaneGeometry(AI.cell, AI.cell), aiMat.clone());
-    m.material.uniforms.tex.value = aiTex;
-    m.material.uniforms.cellUV.value.set(ci / 4, 1 - (ri + 1) / 2, (ci + 1) / 4, 1 - ri / 2);   // flipY: v = 1 is the canvas top
-    m.userData = { ri, ci, x: X(AI.x + AI.cell * ci + AI.cell / 2) };
-    m.frustumCulled = false; aiScene.add(m); aiCells.push(m);
-  }
-  // micro glyphs in the strokes of 有人吗？ (each cell's own character; ？ cycles through 有人吗)
-  const AM = inkMask(ROWS[1], AI.font, AI.x, AI.y, { cell: AI.cell, region: [712, 500, 280, 80] });
+  // The AI question dissolving into micro mono glyphs that breathe with QA (f5112 on)
+  const AM = inkMask(['有', '人', '吗', '？'].map((ch, k) => { const it = monoAt(ch, 64, 722 + 64 * k, 540); it.x = 722 + 64 * k + (64 - inkBox(ch, it.font).adv) / 2; return it; }), [712, 500, 280, 80]);
   const ra = rng(55 * 38 + 3);
-  const micro = gridInk(AM, Math.sqrt(AM.ink / N_AI_MICRO), ra, 0.5);     // ≈ 700 micro glyphs in the strokes
-  const mN = Math.min(micro.length, N_AI_MICRO + 200);
-  const adust = randInk(AM, N_AI_DUST, ra, 0.45);
-  const an = mN + adust.length;
+  const micro = gridInk(AM, Math.sqrt(AM.ink / 700), ra, 0.5);
+  const mN = Math.min(micro.length, 900), adust = randInk(AM, 5000, ra, 0.45), an = mN + adust.length;
   const aPos = new Float32Array(an * 3), aA = new Float32Array(an * 4), aB = new Float32Array(an * 4), aRect = new Float32Array(an * 4), aCol = new Float32Array(an * 3);
   const monoOf = ['有', '人', '吗'].map(ch => lex.mono[ch]);
   for (let i = 0; i < an; i++) {
     const isM = i < mN, p = isM ? micro[i] : adust[i - mN];
     aPos.set([X(p[0]), Y(p[1]), 0], 3 * i);
-    const ci = Math.min(3, Math.max(0, Math.floor((p[0] - AI.x) / AI.cell)));
+    const ci = Math.min(3, Math.max(0, Math.floor((p[0] - 722) / 64)));
     const tok = ci < 3 ? monoOf[ci] : monoOf[Math.floor(ra() * 3)];
     aRect.set(lex.rects.subarray(tok * 4, tok * 4 + 4), 4 * i);
-    const em = isM ? 4 + 2 * ra() : 1.3 + 0.4 * ra();
-    aA.set([em * 1.6, isM ? 0.85 : 0.2, ra(), ra()], 4 * i);
+    aA.set([(isM ? 4 + 2 * ra() : 1.3 + 0.4 * ra()) * 1.6, isM ? 0.42 : 0.1, ra(), ra()], 4 * i);
     const tg = AM.tangent(p[0], p[1]);
-    aB.set([tg[0], tg[1], isM ? 0 : 1, 211.0 + 2.0 * ra()], 4 * i);
-    aCol.set(PAL.CURSOR, 3 * i);
+    aB.set([tg[0], tg[1], isM ? 0 : 1, KF.question[3] / 24 + 1.4 * ra()], 4 * i);
+    aCol.set(CUR_LIN, 3 * i);
   }
-  console.log(`WARN q_apex: AI micro ${mN}, AI dust ${adust.length}, human dust ${dust.length}, drain ${drainPts.length}`);
   const aiField = glyphMesh(an, { iPos: aPos, iRect: aRect, iA: aA, iB: aB, iCol: aCol }, {
-    uniforms: { uShift: { value: 0 } },
-    header: /* glsl */ `uniform float uShift;
-      float breath(float tau, float ph){ return sin(6.28318 * 0.25 * tau + ph) * 0.65 + sin(6.28318 * 0.13 * tau + 1.7 * ph + 1.3) * 0.35; }`,
+    uniforms: { uShift: { value: 0 }, uBrA: { value: 1 }, uLiveA: { value: 0 } },
+    header: /* glsl */ `uniform float uShift, uBrA, uLiveA;`,
     vertexBody: /* glsl */ `
       float appear = smoothstep(iB.w, iB.w + 0.3, time);
-      float live = smoothstep(211.4, 214.0, time);
       float ph = iPos.x * 0.011 + iA.w * 1.1;
-      b *= appear * (1.0 + 0.2 * breath(time, ph) * live);
-      p.xy += iB.xy * 3.0 * sin(6.28318 * 0.25 * time + 0.7 * ph + 3.0 * iA.z) * live;
-      p.y += uShift;`,
+      b *= appear * mix(1.0, uBrA, uLiveA);
+      p.xy += iB.xy * 2.5 * sin(6.28318 * 0.25 * time + 0.7 * ph + 3.0 * iA.z) * uLiveA;
+      p.y += uShift;
+      if (uShift > 0.0) b *= smoothstep(128.0, 178.0, 540.0 - p.y);`,
   });
-  aiField.material.uniforms.res.value.set(W, H); aiField.material.uniforms.minPx.value = 1.0;
-  aiField.material.uniforms.capPx.value = [700, 900]; aiField.material.uniforms.nearFade.value = [60, 300];
+  const AU = aiField.material.uniforms;
+  AU.res.value.set(W, H); AU.minPx.value = 1.0; AU.capPx.value = [700, 900]; AU.nearFade.value = [60, 300];
 
-  const scene = new T.Scene(); scene.add(human); scene.add(aiField);
-  const cursor = screenRect(); cursor.material.uniforms.color.value.set(...PAL.CURSOR.map(v => v * 2.0));
-  const overlay = new T.Scene(); overlay.add(cursor);
+  const scene = new T.Scene(); scene.add(field); scene.add(aiField);
+
+  // =========================================================================================
+  // The cursor block (screen space): HDR 2.0, exact pixels; analytic box blur while it moves
+  const curMat = new T.ShaderMaterial({
+    transparent: true, depthTest: false, depthWrite: false, blending: T.AdditiveBlending,
+    uniforms: { xa: { value: 0 }, xb: { value: 0 }, y0: { value: 508 }, col: { value: new T.Vector3(...CUR_LIN.map(v => v * 2.0)) }, rect: { value: new T.Vector4() } },
+    vertexShader: /* glsl */ `uniform vec4 rect; varying vec2 vPx; void main(){ vec2 c = position.xy * 0.5 + 0.5;
+      vPx = mix(rect.xy, rect.zw, vec2(c.x, 1.0 - c.y)); gl_Position = vec4(vPx.x / 960.0 - 1.0, 1.0 - vPx.y / 540.0, 0.0, 1.0); }`,
+    fragmentShader: /* glsl */ `uniform float xa, xb, y0; uniform vec3 col; varying vec2 vPx;
+      void main(){
+        if (vPx.y < y0 || vPx.y >= y0 + 64.0) discard;
+        float x = vPx.x, cov;
+        float lo = min(xa, xb), hi = max(xa, xb);
+        if (hi - lo < 0.01) cov = step(xa, x) * step(x, xa + 24.0);
+        else cov = max(0.0, min(x, hi) - max(x - 24.0, lo)) / (hi - lo);   // time the pixel spends inside the block
+        if (cov <= 0.0) discard;
+        gl_FragColor = vec4(col * cov, 1.0); }`,
+  });
+  const curMesh = new T.Mesh(new T.PlaneGeometry(2, 2), curMat); curMesh.frustumCulled = false;
+  const overlay = new T.Scene(); overlay.add(curMesh);
   const ortho = new T.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  // V2 mask rectangles
+  const maskScene = new T.Scene(), maskRects = [];
+  for (let i = 0; i < 4; i++) { const m = new T.Mesh(new T.PlaneGeometry(2, 2), maskRectMaterial()); m.frustumCulled = false; maskScene.add(m); maskRects.push(m); }
   const cam = kit.filmCamera(W, H, { focalMM: 50, near: 10, far: 20000 });
 
   const draw = (sc, camera, target, clear) => {
     const ac = renderer.autoClear; renderer.autoClear = !!clear;
     renderer.setRenderTarget(target); renderer.render(sc, camera); renderer.autoClear = ac;
   };
+  const setCol = (m, c, k = 1) => m.material.uniforms.col.value.set(c[0] * k, c[1] * k, c[2] * k);
+  const mixC = (a, b, k) => a.map((v, j) => v + (b[j] - v) * k);
 
-  function renderAt(t, target, clear) {
-    // camera: slight pull-back 184 → 188 (ease-out), then locked
+  function renderAt(t, target, clear, mask) {
+    const F = t * 24;
     const D = FPX50 * (1 - 0.075 * (1 - outCubic((t - T37) / 4)));
     cam.position.set(0, 0, D); cam.lookAt(0, 0, 0); cam.updateMatrixWorld();
-    const shift = 130 * outCubic((t - 215.0) / 0.25) * (t >= 215.0 - EPS ? 1 : 0);
+    const shift = scrollAt(F), sync = syncGain(F), sg = surge(F);
+    // --- states
+    const live0 = sstep(QA.land[1] - 0.2, 188.4, t);   // breathing begins once a line has landed
+    const qa = [0, 1, 2, 3].map(c => qaChar(F, c));
+    const qb = qbState(F), qc = qcState(F), cf = cloudFrac(F);
+    const qaLive = qa.reduce((s, c) => s + (c.orig >= 0.999 ? 0.25 : 0), 0);
+    const liveA = live0 * qaLive, liveB = sstep(QB.land[1] - 0.2, 188.4, t) * qb.live, liveC = sstep(QC.land[1] - 0.2, 188.6, t) * qc.live;
+    const brA = 1 + 0.12 * liveA * breath(0, t), brB = 1 + 0.12 * liveB * breath(1, t), brC = 1 + 0.12 * liveC * breath(2, t);
+    // --- glyph field
     HU.time.value = t; HU.focus.value = D; HU.aperture.value = 5;
-    // 108° shutter while the words fly: arcs of light in the fast vortex, but a word settling into
-    // its stroke (≤ 7 px/frame) smears ≤ 2 px and stays readable
     HU.shutter.value = (t > 184.6 && t < 188.4) ? 0.3 / 24 : 0;
-    // the far sea is a starfield of words (sub-legible words are points of light, as in S34–S35);
-    // as the words come close and land they are words again
-    const mk = smooth(186.2, 187.2, t);
-    HU.moteRange.value = [6.5 + (-2 - 6.5) * mk, 12 + (-1 - 12) * mk];
-    HU.uShift.value = shift;
-    const fr = flipFrac(t);
-    HU.uFrac.value = fr; HU.uDust.value = 1 - 0.6 * fr; HU.uTauD.value = tauDust(t);
-    HU.uSurge.value = 1 + 0.15 * smooth(204.0, 204.12, t) * (1 - smooth(204.3, 206.0, t));
-    // the absorbed sea (drain, last in the arrays) is no longer drawn once it has landed
-    const nSmall = t > 188.05 ? total - nL - drainPts.length : total - nL;
-    humanP.geometry.setDrawRange(0, nSmall);
-    const AU = aiField.material.uniforms;
-    AU.time.value = t; AU.focus.value = D; AU.aperture.value = 0; AU.uShift.value = shift;
-    aiField.visible = t >= 211.0 - EPS;
-    // typed glyphs
-    const L = aiLine(t);
-    for (const m of aiCells) {
-      const { ri, ci, x } = m.userData;
-      const vis = t >= T38 - EPS && ri === L.row && ci < L.n;
-      m.visible = vis;
-      if (!vis) continue;
-      m.position.set(x, Y(AI.y) + shift, 0);
-      m.material.uniforms.dissolve.value = ri === 1 ? smooth(211.0, 213.6, t) * 1.12 : 0;
+    const mk2 = sstep(186.2, 187.2, t);
+    HU.moteRange.value = [6.5 + (-2 - 6.5) * mk2, 12 + (-1 - 12) * mk2];
+    HU.uShift.value = shift; HU.uSync.value = sync; HU.uSurge.value = sg; HU.uCloudF.value = cf;
+    HU.uBr.value.set(brA, brB, brC); HU.uLive.value.set(liveA, liveB, liveC);
+    HU.uQAsx.value.set(qa[0].orig, qa[1].orig, qa[2].orig, qa[3].orig);
+    HU.uQB.value.set(qb.sx, qb.ash); HU.uQC.value.set(qc.dim, qc.ash);
+    fieldP.geometry.setDrawRange(0, t > 188.05 ? nPointsNoDrain : total - nQ);
+    // --- planes: the three lines
+    for (const m of planeScene.children) { m.material.uniforms.time.value = t; m.visible = false; }
+    if (t > QA.land[0] - 0.3) {
+      qaPlanes.forEach((m, c) => {
+        const [x, a] = m.userData.cell; squash(m, qa[c].orig, x + a / 2, shift);
+        setCol(m, QA.col, brA * sg);
+      });
+      qaWhite.forEach((m, c) => {
+        const [x, a] = qaPlanes[c].userData.cell; squash(m, qa[c].white, x + a / 2, shift);
+        setCol(m, atLevel(CUR_LIN, 0.40), sync * sg);
+      });
+      // QB: squeezed about its left edge, greying; the white chain pushed in from the right end
+      squash(qbPlane, qb.sx, LX, shift);
+      setCol(qbPlane, mixC(QB.col, atLevel(ASH_LIN, 0.11), qb.ash), brB * sg * (qb.ash > 0 ? 1 + (sync - 1) * qb.ash : 1));
+      const fadeTop = shift > 0 ? sstep(128, 182, QB.y - shift) : 1;
+      qbPlane.material.uniforms.alpha.value = fadeTop;
+      qbWhite.forEach((m, k) => {
+        const xL = qb.left + 84 * k, emerge = clamp((1232 - xL) / 34);
+        if (emerge <= 0 || qb.whiteA <= 0) return;
+        m.visible = true; m.scale.x = 1;
+        m.position.set(X(xL + 42) + (m.userData.cx0 - 42), Y(m.userData.cy) + shift, 0);
+        m.material.uniforms.alpha.value = emerge * qb.whiteA * fadeTop;
+        m.material.uniforms.dissolve.value = qb.whiteDis;
+        setCol(m, atLevel(CUR_LIN, 0.40), sync * sg);
+      });
+      // QC: dimmed and grey under the bar
+      qcPlane.visible = true; qcPlane.position.y = Y(qcPlane.userData.cy) + shift;
+      setCol(qcPlane, mixC(QC.col, atLevel(ASH_LIN, 0.25), qc.ash), qc.dim * brC * sg * (1 + (sync - 1) * qc.ash));
+      if (qc.barA > 0 && qc.dis < 1) {
+        qcBar.visible = true;
+        qcBar.position.set(X(qc.x0 + 240) + (qcBar.userData.cx - 240), Y(qcBar.userData.cy) + shift, 0);
+        qcBar.material.uniforms.alpha.value = qc.barA; qcBar.material.uniforms.dissolve.value = qc.dis;
+        setCol(qcBar, atLevel(CUR_LIN, 0.40), sync * sg);
+      }
     }
+    // --- the AI's glyphs
+    const ai = aiState(F);
+    ansPlanes.forEach((m, k) => { m.visible = k < ai.ans; setCol(m, AI_COL); });
+    const liveQ = sstep(KF.question[3] / 24 + 0.3, KF.question[3] / 24 + 2.0, t);
+    const dissolveQ = sstep(KF.question[3] / 24, KF.question[3] / 24 + 1.6, t) * 0.82;
+    qPlanes.forEach((m, k) => {
+      m.visible = k < ai.q; m.position.y = Y(m.userData.cy) + shift;
+      setCol(m, AI_COL, 1 + 0.12 * breath(0, t) * liveQ);
+      m.material.uniforms.dissolve.value = dissolveQ;
+    });
+    AU.time.value = t; AU.focus.value = D; AU.aperture.value = 0; AU.uShift.value = shift;
+    AU.uBrA.value = 1 + 0.12 * breath(0, t); AU.uLiveA.value = liveQ;
+    aiField.visible = F >= KF.question[3];
     draw(scene, cam, target, clear);
-    draw(aiScene, cam, target, false);
-    if (cursorOn(t)) {
-      const n = L.returned ? 0 : L.n;
-      const x0 = AI.x + AI.cell * n;
-      // carriage return: the cursor drops to the head of the new line (130 px below, under the AI
-      // line) and rides the scroll up with both lines, so it lands on R exactly as shift reaches 130
-      const y0 = 508 + (L.returned ? 130 - shift : 0);
-      cursor.material.uniforms.rect.value.set(x0, y0, x0 + 24, y0 + 64);
+    draw(planeScene, cam, target, false);
+    // --- the cursor
+    if (cursorOn(F)) {
+      const moving = F > KF.move[0] && F < KF.move[1] - 1;
+      const c = cursorPos(F), ca = moving ? cursorPos(F - 0.25) : c, cb = moving ? cursorPos(F + 0.25) : c;
+      curMat.uniforms.xa.value = ca.x; curMat.uniforms.xb.value = cb.x; curMat.uniforms.y0.value = c.y;
+      curMat.uniforms.rect.value.set(Math.min(ca.x, cb.x) - 1, c.y, Math.max(ca.x, cb.x) + 25, c.y + 64);
       draw(overlay, ortho, target, false);
+    }
+    // --- V2 mask: the strokes of the cursor's own row receive no streak (B) and fade out its bloom
+    // (G); the AI's strokes feed no bloom (R)
+    if (mask) {
+      for (const m of maskRects) m.visible = false;
+      let k = 0;
+      const row = (x0, x1, y0) => {
+        if (x1 <= x0) return;
+        const m1 = maskRects[k++]; m1.visible = true;
+        m1.material.uniforms.rect.value.set(x0, y0 - 6, x1, y0 + 70); m1.material.uniforms.feather.value.set(3, 6); m1.material.uniforms.rgb.value.set(1, 0, 1);
+        const m2 = maskRects[k++]; m2.visible = true;
+        m2.material.uniforms.rect.value.set(x0 + 6, y0, x1 - 6, y0 + 64); m2.material.uniforms.feather.value.set(16, 14); m2.material.uniforms.rgb.value.set(0, 1, 0);
+      };
+      if (ai.ans > 0) row(1508, 1508 + 64 * ai.ans, 508);
+      if (ai.q > 0) row(722, 722 + 64 * ai.q, 508 - shift);
+      const ac = renderer.autoClear; renderer.autoClear = false;
+      renderer.setRenderTarget(mask); renderer.render(maskScene, ortho);
+      renderer.autoClear = ac;
     }
   }
 
-  // S37 has motionBlur 4 (timeline). The engine's sub-frame average would draw every fast word as
-  // four stepped copies (it reads as a column of repeated words). Instead every sub-frame is snapped
-  // to the frame time and memoised (identical image, one render), and the blur is analytic: each
-  // word is integrated along its own spiral over a 180° shutter in the shader (streak taps).
+  // S37 has motionBlur 4 (timeline): every sub-frame is snapped to the frame time and memoised (one
+  // render); the blur is analytic along each word's own spiral (lexicon.js streak).
   const cacheRT = makeRT(W, H, { depth: false });
   const blit = new FSQ(new T.ShaderMaterial({ uniforms: { tex: { value: cacheRT.texture } }, depthTest: false, depthWrite: false,
     vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
     fragmentShader: `uniform sampler2D tex; varying vec2 vUv; void main(){ gl_FragColor = vec4(texture2D(tex, vUv).rgb, 1.0); }` }));
   let cacheKey = null;
+  const POST = { bloom: 0.75, bloomRadius: 0.8, streak: 0.2 };
 
   return {
+    bloomMask: f => f.shot.id === 'S38',
     render(shot, f) {
       const t = f.t;
       if (shot.id === 'S37') {
         const ts = Math.round(t * 24) / 24;
-        if (cacheKey !== ts) { renderAt(ts, cacheRT, true); cacheKey = ts; }
+        if (cacheKey !== ts) { renderAt(ts, cacheRT, true, null); cacheKey = ts; }
         const ac = renderer.autoClear; renderer.autoClear = false; blit.render(renderer, f.target); renderer.autoClear = ac;
-      } else renderAt(t, f.target, false);
+      } else renderAt(t, f.target, false, f.mask && f.sub === 0 ? f.mask : null);
       renderer.setRenderTarget(f.target);
     },
-    post(shot, f) {
-      if (shot.id === 'S37') return { bloom: 0.85, streak: 0.22 };
-      return { bloom: 0.8, streak: 0.28 };
-    },
+    post() { return POST; },
   };
 }

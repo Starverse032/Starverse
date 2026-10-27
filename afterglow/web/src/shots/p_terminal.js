@@ -261,7 +261,7 @@ export async function create(ctx) {
     tText: { value: textTex }, uTextRect: { value: new THREE.Vector4(TX.x0, TX.y0, TX.w, TX.h) }, uScroll: { value: 0 }, uTextA: { value: 1 },
     tEnd: { value: endTex }, uEndOn: { value: 0 },
     tTag: { value: tagTex }, uTag: { value: new THREE.Vector3() }, uRoleOld: { value: new THREE.Vector3(0, 0, 0) }, uRoleNew: { value: new THREE.Vector3(1, 0, 0) },
-    uTagGeom: { value: new THREE.Vector4(TAG.w, TAG.row, 22, 0) }, uLink: { value: new THREE.Vector4() },
+    uTagGeom: { value: new THREE.Vector4(TAG.w, TAG.row, TAG.roleDy, 0) }, uLink: { value: new THREE.Vector4() },
     uCur: { value: new THREE.Vector4(CUR.x0, CUR.y0, CUR.x1, CUR.y1) }, uCurI: { value: 1 }, uCurOn: { value: 0 },
     uGlow: { value: 0 }, uLight: { value: 0 },
     uPointP: { value: 0 }, uPointSig: { value: 1.6 }, uCurW: { value: 0 }, uPointLine: { value: 0 }, uR: { value: new THREE.Vector2(...R) },
@@ -588,9 +588,12 @@ export async function create(ctx) {
   }
 
   // cursor visibility: heartbeat square wave, solid while typing (relocks at the next whole second)
-  const SOLID = [[132, 264], [456, 480], [504, 1e9]];
+  // v2: solid while typing the command [430, 480); f480 the hesitant beat (lit 480–491, dark 492–503);
+  // hidden while the program runs [504, 522); solid on the new prompt row from f522 into the collapse
+  const SOLID = [[132, 264], [430, 480], [522, 1e9]];
   function cursorOn(F) {
     if (F < 48) return 0;
+    if (F >= CURSOR_HIDDEN[0] && F < CURSOR_HIDDEN[1]) return 0;
     for (const [a, b] of SOLID) if (F >= a && F < b) return 1;
     return F % 24 < 12 ? 1 : 0;
   }
@@ -604,17 +607,17 @@ export async function create(ctx) {
     U.uLight.value = light * (1 - clamp((fr - 504) / 24));
     U.uAir.value = light * (1 - clamp((fr - 504) / 48)); U.uTime.value = t;
     // script text (canvas) until the stars take over
-    const counts = LINES.map((L, k) => typedCount(k, F));
+    const counts = ITEMS.map((L, k) => itemCount(k, F));
     drawText(counts);
     U.uScroll.value = scrollAt(fr);
-    U.uTextA.value = 1 - clamp((fr - 504) / 12);
+    U.uTextA.value = 1 - clamp((fr - 527.5) / 6);          // f528–533 cross-fade into the stars
     U.uEndOn.value = 0;
     // name plate (f120–450)
     const tagA = ease.outCubic(clamp((fr - 120) / 12)) * (1 - ease.inOutSine(clamp((fr - 432) / 18)));
     const curL = cursorLeftAt(F);
     if (tagA > 0) {
       const sx = springX(fr), rise = 4 * (1 - ease.outCubic(clamp((fr - 120) / 12)));
-      const nameBase = CUR.y1 + 28 + rise;
+      const nameBase = CUR.y1 + 40 + rise;                // v2: name baseline = cursor bottom + 40 px (y 598)
       U.uTag.value.set(sx + 14, nameBase - TAG.base, tagA);
       let ri = 0; for (let i = 0; i < ROLE_F.length; i++) if (fr >= ROLE_F[i]) ri = i;
       const fl = ROLE_F[ri], v0 = clamp((fr - fl) / 8), v1 = clamp((fr - fl - 2) / 8);
@@ -645,6 +648,14 @@ export async function create(ctx) {
       pointP = fs >= 6 ? 1.5 : lerp(8, 1.5, ease.outCubic(clamp(fs / 6)));
     }
     U.uCur.value.set(curL + 7 - cw / 2, R[1] - ch / 2, curL + 7 + cw / 2, R[1] + ch / 2);
+    // the text already standing on the cursor's row (the anamorphic line and streak skip it)
+    const curRow = Math.round((540 + scrollAt(fr) - 540) / 64);   // doc row under R
+    const rowItems = ITEMS.filter((L, k) => L.row === curRow && counts[k] > 0);
+    if (rowItems.length) {
+      const x0 = Math.min(...rowItems.map(L => L.x)) - 1;
+      const x1 = Math.max(...rowItems.map(L => L.x + adv(L.font, [...L.text].slice(0, counts[ITEMS.indexOf(L)]).join('')))) + 1;
+      U.uRow.value.set(R[1], x0, Math.min(x1, curL - 1), 1);
+    } else U.uRow.value.set(0, 0, 0, 0);
     U.uCurI.value = ci; U.uCurOn.value = on; U.uGlow.value = glow * (t < 22.5 ? 1 : 1 - clamp((t - 22.5) / 0.5) * 0.7);
     U.uPointP.value = pointP; U.uPointSig.value = 1.6; U.uCurW.value = curW; U.uPointLine.value = t >= 24 ? 0.035 : 0;
     // HUD: frame lines f36–47, counter from f312
@@ -658,11 +669,12 @@ export async function create(ctx) {
     if (DBG.noTag) U.uTag.value.z = 0;
     renderer.setRenderTarget(f.target);
     if (!DBG.noScreen) screen.render(renderer, f.target);
+    writeMask(f);
 
-    // stars (f504 →): one instanced draw; `sh` > 0 spreads each star over its shutter interval
-    if (fr >= 504 - 0.5 && uC < 0.93 && !DBG.noStars) {
-      PU.uT0.value = t; PU.uSh.value = sh; PU.uGain.value = gain;
-      const need = sh > 0 ? trailPx(t - sh / 2, t + sh / 2) / 1.3 : 1;
+    // stars (f528 →): one instanced draw; `sh` > 0 spreads each star over its shutter interval
+    if (fr >= 528 - 0.5 && uC < 0.93 && !DBG.noStars) {
+      PU.uT0.value = t; PU.uSh.value = sh; PU.uGain.value = gain; PU.uPScroll.value = scrollAt(fr);
+      const need = sh > 0 ? trailPx(t - sh / 2, t + sh / 2) / 1.6 : 1;   // ≤ 1.6 px between trail samples
       const K = Math.max(1, Math.min(KMAX, Math.ceil(need)));
       PU.uK.value = K; PU.uSigK.value = need > KMAX ? Math.sqrt(need / KMAX) : 1;   // widen the PSF rather than leave beads
       for (const g of [geoText, geoSky]) g.setDrawRange(0, K);
@@ -675,54 +687,80 @@ export async function create(ctx) {
     }
   }
 
+  // S44 cursor: heartbeat square wave; on a printing beat it stays lit for the whole beat
+  const PRINT_BEATS = ALT.map(c => c.frames[0]);
+  function endCursorOn(F) {
+    if (PRINT_BEATS.some(b => F >= b && F < b + 24)) return 1;
+    return F % 24 < 12 ? 1 : 0;
+  }
   function renderEnd(f) {
     const t = f.t, fr = t * FPS, F = Math.round(fr);
     pose(t);
     const open = ease.inOutCubic(clamp(t - S44_T));
     U.uBg.value = open; U.uAir.value = 0; U.uLight.value = 0; U.uTextA.value = 0; U.uTag.value.z = 0; U.uPointP.value = 0; U.uGlow.value = 0;
-    const alt = t >= ALT_IN && t < ALT_OUT;
-    const nBlocks = alt ? Math.floor(t - ALT_IN + 1e-6) + 1 : 0;
+    U.uRow.value.set(0, 0, 0, 0);
+    const alt = F >= ALT_IN_F && F < ALT_OUT_F;
+    const nBlocks = alt ? ALT.filter(c => c.frames[0] <= F).length : 0;
     drawEnd(alt ? 'alt' : 'main', nBlocks);
     U.uEndOn.value = 1;
-    // cursor: on the empty prompt line (R) on the main screen; below the printed log on the alternate one
+    // cursor: on the empty prompt row (R) on the main screen; on the alternate screen it waits on the row
+    // where the next block will print (below the last printed line)
     let cy = R[1];
     if (alt) {
-      let last = -1; for (const [tp, li] of LOG) if (tp <= ALT_IN + nBlocks - 1 + 1e-6) last = Math.max(last, li);
-      cy = LOG_Y0 + LOG_LH * (last + 1);
+      const next = ALT[nBlocks], last = ALT[nBlocks - 1];
+      cy = next ? next.ys[0] : last.ys[last.ys.length - 1] + 64;
     }
     U.uCur.value.set(CUR.x0, cy - 18, CUR.x1, cy + 18);
-    // blink = heartbeat (235, 236, 244, 246–249). While the system prints (237–243, one block per beat) the
-    // cursor stays lit and silent; it drops at 243.5 so the 244 heartbeat is a visible onset. 245 prints
-    // one block (lit on its tick), then the normal phase gives 246 its own onset.
-    U.uCurI.value = 1; U.uCurOn.value = (F >= ALT_IN * FPS && F < (ALT_IN + 6.5) * FPS) || F % 24 < 12 ? 1 : 0;
+    U.uCurI.value = 1; U.uCurOn.value = endCursorOn(F);
     U.uHudLine.value = 1; U.uHudOn.value = 1;
     drawHud(F >= 5999 ? 'frame 6000 / 6000' : 'frame ' + String(F + 1).padStart(4, '0'));
     renderer.setRenderTarget(f.target);
     screen.render(renderer, f.target);
+    writeMask(f);
+  }
+
+  // ---- V2 bloom mask: the same plane shader in mask mode (strokes neither emit nor receive bloom) --
+  function writeMask(f) {
+    if (!f.mask || (f.sub | 0) !== 0) return;
+    U.uMaskMode.value = 1;
+    const ac = renderer.autoClear; renderer.autoClear = false;
+    renderer.setRenderTarget(f.mask);
+    screen.render(renderer, f.mask);
+    renderer.autoClear = ac;
+    U.uMaskMode.value = 0;
+    renderer.setRenderTarget(f.target);
   }
 
   // ---- S05 motion blur ---------------------------------------------------------------------------
-  // The stars are blurred analytically (each draws its trail from up to 40 sub-time samples inside the
-  // 180° shutter), so the screen pass runs once per frame instead of 8×.
-  // Engine bug (shared request): Post.accumulate() renders through FSQ with renderer.autoClear = true,
-  // so the accumulation target is cleared before every sub-frame and the result is the LAST sub-frame
-  // × 1/n. While the bug is present (accumulate() does not mention autoClear), this module renders the
-  // whole shutter on the engine's last sub-frame call with gain n and skips the others; once fixed,
-  // each engine sub-frame renders its own 1/n slice of the shutter.
-  const MB_BUG = !/autoClear/.test(String(ctx.engine.post.accumulate));
+  // The stars are blurred analytically: each star draws its own trail from up to KMAX sub-time samples
+  // across the whole 180° shutter in one instanced draw. The engine still asks for n sub-frames
+  // (timeline S05 motionBlur 8) and averages them; the module renders the whole shutter once per output
+  // frame into its own target and hands the same image to every sub-frame (the average is then exact,
+  // and the screen pass runs once instead of n times). Pure function of the frame number.
+  let mbRT = null, mbKey = -1;
+  const copy = ctx.kit.fullscreen(`uniform sampler2D tex; void main(){ gl_FragColor = vec4(texture2D(tex, vUv).rgb, 1.0); }`, { tex: { value: null } });
   function renderBlurred(shot, f) {
-    const n = shot.motionBlur, sh = (shot.shutter ?? 0.5) / FPS;
-    const t0 = Math.round(f.t * FPS) / FPS;
-    if (MB_BUG) {
-      const k = Math.round(((f.t - t0) / sh + 0.5) * n - 0.5);
-      if (k < n - 1) return;                                 // discarded by the (buggy) accumulator
-      renderOpening({ ...f, t: t0, lt: t0 - shot.start, p: (t0 - shot.start) / f.dur }, sh, n);
-    } else renderOpening(f, sh / n, 1);
+    const sh = (shot.shutter ?? 0.5) / FPS;
+    const F = Math.round(f.t * FPS), t0 = F / FPS;
+    if (!mbRT) mbRT = ctx.makeRT(W, H);
+    if (mbKey !== F) {
+      mbKey = F;
+      const ac = renderer.autoClear;
+      renderer.setRenderTarget(mbRT); renderer.setClearColor(0x000000, 1); renderer.clear(true, false, false);
+      renderOpening({ ...f, t: t0, lt: t0 - shot.start, p: (t0 - shot.start) / f.dur, target: mbRT, sub: 0 }, sh, 1);
+      renderer.autoClear = ac;
+    }
+    copy.material.uniforms.tex.value = mbRT.texture;
+    renderer.setRenderTarget(f.target);
+    copy.render(renderer, f.target);
   }
 
   const THR_UI = 3.6; // UI text peaks at HDR ≈ 2.6 (UI_TEXT 100 % lit +25 %): it never blooms; the cursor (5.3) does
   return {
     _dbg: { apply(o) { for (const k of Object.keys(DBG)) delete DBG[k]; Object.assign(DBG, o); } },
+    // V2 bloom mask while there is UI text under a non-zero bloom (name plate, command line, echo;
+    // the terminal while the film look leaves it)
+    bloomMask(f) { const F = f.frame; return f.shot.id === 'S44' ? F < S44_F + 26 : F >= 300 && F < 536; },
     render(shot, f) {
       if (shot.id === 'S44') renderEnd(f);
       else if ((shot.motionBlur || 0) > 1) renderBlurred(shot, f);

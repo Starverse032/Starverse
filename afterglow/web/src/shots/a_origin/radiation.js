@@ -100,12 +100,15 @@ export function radState(fr) {
   const ev = smoothPL(EV_KEYS, fr);
   let gain = Math.pow(2, ev);
   // white f603–610 (field at WHITE gain), falling from f611 (outCubic over f611–f646)
-  const W = 7.0;
+  const W = 1.9, L0 = 0.62;
   if (x < 2.5) gain = 0;
   else if (x < 11) gain = W * sstep(2.5, 3.0, x) + 0 * (1 - sstep(2.5, 3.0, x));
-  else if (fr < 648) gain = logLerp(W, 1.0, outCubic(clamp((x - 11) / 36))) * Math.pow(2, Math.min(0, ev));
+  else if (fr < 648) gain = logLerp(W, L0, outCubic(clamp((x - 11) / 36))) * Math.pow(2, Math.min(0, ev));
+  else gain *= L0;
   if (fr > 900) gain *= 1 - sstep(900, 915, fr);
   s.gain = gain;
+  // near fog: luminous (brighter than the field); on the white frames it carries the ≥ 5 % relief
+  s.nearBoost = x < 11 ? 11.0 : lerp(11.0, 1.9, outCubic(clamp((x - 11) / 30)));
   s.white = x >= 2.5 && x < 11 ? 1 : x < 2.5 ? 0 : 1 - sstep(11, 30, x);     // warm-white tint weight
   // temperature (log-linear keys, smoothed); the white frames are 6500 K → 4500 K by f648
   s.T = x < 48 ? logLerp(6500, 4500, sstep(8, 48, x)) : Math.exp(smoothPL(LT_KEYS, fr, 20));
@@ -221,7 +224,7 @@ export function createRadiation(ctx) {
     const float FPX = ${FPX.toFixed(1)};
     const vec2 RR = vec2(${R[0].toFixed(1)}, ${R[1].toFixed(1)});
     const int NM = 12; const float DM = 1.0, ZM0 = 1.2, ZM1 = 13.2;
-    const int NN = 10; const float DN = 0.5, ZN0 = 0.28, ZN1 = 5.2;
+    const int NN = 9; const float DN = 0.36, ZN0 = 0.26, ZN1 = 3.3;
     vec3 bbN(float T){ vec3 b = blackbody(T); return b / max(1e-3, luma(b)); }
     void main(){
       vec2 px = vec2(gl_FragCoord.x, uHt - gl_FragCoord.y) * uPxScale;   // 1080p px, y down
@@ -241,11 +244,11 @@ export function createRadiation(ctx) {
         float tpp = z / FPX * 0.5 * 1024.0 * pxw;                         // texels per target px
         float lod = log2(max(1.0, tpp)) + 2.2 * smoothstep(4.0, 1.2, z);  // defocus near the lens
         vec4 g = textureLod(tGrain, uv, lod);
-        float grain = mix(0.45, g.r * 1.6, uAmpMid);                      // contrast → 0 at decoupling
+        float grain = mix(0.45, pow(g.r, 1.3) * 2.2, uAmpMid);                      // contrast → 0 at decoupling
         float dens = grain * (0.55 + 0.9 * g.g) * smoothstep(0.03, 0.12, length(P));
-        float a = 0.045 * dens * w * uMidGain;
+        float a = 0.07 * dens * w * uMidGain;
         float Te = uTemp * (1.0 + 0.10 * (g.g - 0.5));
-        col = col * (1.0 - a) + bbN(Te) * (0.085 * dens * w * uMidGain);
+        col = col * (1.0 - a) + bbN(Te) * (0.11 * dens * w * uMidGain);
         T *= 1.0 - a;
       }
       // ---- near: big soft fog clouds (far → near) ----
@@ -255,7 +258,7 @@ export function createRadiation(ctx) {
         float k = kTopN - float(i);
         float z = k * DN - uCamS;
         if (z < ZN0) break;
-        float w = smoothstep(ZN1, ZN1 - 1.6, z) * smoothstep(ZN0, ZN0 + 0.35, z);
+        float w = smoothstep(ZN1, ZN1 - 1.2, z) * smoothstep(ZN0, ZN0 + 0.30, z);
         vec2 P = d * z / FPX;
         vec2 h = hash22(vec2(k * 2.11, 9.7));
         vec2 uv = rot2(h.y * TAU) * P / 6.0 + h * 5.0;                   // tile = 6 u
@@ -263,7 +266,7 @@ export function createRadiation(ctx) {
         float lod = log2(max(1.0, tpp)) + 1.6 * smoothstep(2.5, 0.3, z) + 0.6;
         vec4 fg = textureLod(tFog, uv, lod);
         // after the decoupling only the thin wisps (B) of 1–2 clouds remain
-        float c = mix(fg.r, fg.b, uNearThin) * step(thr, hash11(k * 3.7 + 0.31));
+        float c = mix(fg.r, fg.b, uNearThin) * step(mix(0.45, 0.80, uNearThin), hash11(k * 3.7 + 0.31));
         float tunnel = smoothstep(0.30, 0.62, length(P));
         float dens = c * tunnel * w;
         float a = (0.55 * (1.0 - uWhite) + 0.25 * uWhite) * dens * (0.6 + 0.4 * fg.g);
@@ -311,7 +314,7 @@ export function createRadiation(ctx) {
         vec3 far = bbN(Te) * I;
         // S02-b: the gas around R drains into the afterglow — a darker moat 30–150 px
         float r = length(px - RR);
-        far *= 1.0 - 0.75 * uMoat * smoothstep(170.0, 40.0, r);
+        far *= 1.0 - 0.5 * uMoat * smoothstep(190.0, 30.0, r);
         col = far * (1.0 - L.a) + L.rgb;
         col *= uGain;
         col *= mix(vec3(1.0), uWhiteTint, uWhite);
@@ -376,7 +379,7 @@ export function createRadiation(ctx) {
       layUni.uCamS.value = S.camS; layUni.uTemp.value = S.T;
       layUni.uAmpMid.value = S.ampMid; layUni.uMidGain.value = mode === 'dust' ? 0 : S.midGain;
       layUni.uNearThin.value = S.nearThin; layUni.uWhite.value = S.white;
-      layUni.uNearGain.value = mode === 'dust' ? 0 : 1;
+      layUni.uNearGain.value = mode === 'dust' ? 0 : S.nearBoost;
       // dust: absolute HDR emission ≈ 0.004–0.012 (display 3–8)
       layUni.uDust.value = mode === 'dust' || S.gain < 0.02 ? 0.010 * S.dust : 0;
       if (mode === 'base' && S.dust > 0 && S.gain < 0.02) layUni.uNearGain.value = 0;
