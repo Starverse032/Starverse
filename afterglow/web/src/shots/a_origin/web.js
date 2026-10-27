@@ -48,7 +48,7 @@ export function webState(fr) {
   hero *= heroFade;
   const glowFWHM = lerp(6, 20, s5(1176, 1200, fr));        // 6 → 20 px over the sprint
   const glowA = (0.55 + 0.9 * s5(1176, 1200, fr)) * (fr < 889 ? 0 : 1) * heroFade;
-  const cluster = 1 + 1.4 * sel;                           // the knot of ≈ 40 stars around R
+  const cluster = 1 + 1.4 * sel * (1 - s5(1190, 1210, fr));   // the knot of ≈ 40 stars around R
   return { fr, t: fr / FPS, sel, gain, sprint, hero, glowFWHM, glowA, cluster, heroFade };
 }
 
@@ -133,7 +133,7 @@ export function createWebLayer(ctx) {
         float d = -mv.z;
         float e = uT - aD.x;
         float lit = smoothstep(0.0, 0.3, e) * (1.0 + 0.9 * exp(-max(e, 0.0) / 0.3));
-        float g = aD.w > 0.5 ? uCluster * max(uGain, 0.7) : uGain;
+        float g = aD.w > 0.5 ? uCluster * min(1.0, uGain / 0.7) : uGain;
         float I = aD.y * lit * g * uSub * pow(30.0 / max(d, 9.0), 1.05);
         I *= smoothstep(0.25, 1.4, d) * (1.0 - smoothstep(330.0, 430.0, d));
         // distance: near = 7000 K, whiter, sharper; far = 15000 K, colder, dimmer, softer
@@ -189,7 +189,8 @@ export function createWebLayer(ctx) {
   for (let k = 0; k < N_KNOT; k++) {
     const lat = Math.max(0.12, 0.32 / Math.sqrt(Math.pow(Math.max(1e-3, rk()), -2 / 3) - 1));
     const a = rk() * Math.PI * 2;
-    const dep = -2.5 + 9.5 * Math.pow(rk(), 1.6);
+    // depth towards the camera: 80 % in front of hero.first (they pass the lens in the sprint), 20 % behind
+    const dep = rk() < 0.8 ? 0.8 + 11.0 * Math.pow(rk(), 0.9) : -2.0 + 2.5 * rk();
     const p = FIRST.clone().addScaledVector(dirC, dep).addScaledVector(rgt, Math.min(lat, 1.6) * Math.cos(a)).addScaledVector(up, Math.min(lat, 1.6) * Math.sin(a));
     kn.push([p, 42.2 + 1.6 * k / N_KNOT + 0.2 * rk(), 5 + 9 * Math.pow(rk(), 2)]);
   }
@@ -229,7 +230,7 @@ export function createWebLayer(ctx) {
         float I;
         if (vFirst > 0.5) I = uHero * uSub;                           // explicit schedule (webState)
         else {
-          float g = knot > 0.5 ? uCluster * max(uGain, 0.7) : uGain;
+          float g = knot > 0.5 ? uCluster * min(1.0, uGain / 0.7) : uGain;
           // stars stay points: brightness rises gently as the camera nears (not 1/d²)
           I = aS.y * mix(0.04, 1.0, rise) * over * on * g * uSub * pow(30.0 / max(d, 0.5), knot > 0.5 ? 0.6 : 0.9);
           I *= smoothstep(0.4, 2.0, d) * (1.0 - smoothstep(330.0, 430.0, d));
@@ -371,7 +372,7 @@ export function createWebLayer(ctx) {
         float d = -mv.z;
         float e = uT - aH.x;
         float lit = smoothstep(0.0, 0.5, e);
-        float g = aH.w > 1.5 ? uCluster * max(uGain, 0.7) : uGain;
+        float g = aH.w > 1.5 ? uCluster * min(1.0, uGain / 0.7) : uGain;
         float px = aH.y * uFpxQ / max(d, 0.05);
         float sz = clamp(2.0 * px * 2.2, 1.0, 160.0);
         float a = aH.z * g * lit * min(1.0, pow(2.0 * px * 2.2 / sz, 2.0));

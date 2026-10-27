@@ -451,7 +451,7 @@ export async function create(ctx) {
     pos.push(nx * depth, ny * depth, C - depth);
     col.push(0, 0, 0); rnd.push(r(), r(), r(), r()); kind.push(1); flw.push(0, 0, 0);
   }
-  const KMAX = 192;   // v2: the longer command line starts its stars ≈ 360 px from R (was 96)
+  const KMAX = 160;   // v2: the longer command line starts its stars ≈ 360 px from R (was 96)
   // Two instanced geometries (text stars, sky stars), each sorted bright → faint, so a frame that needs
   // many trail sub-samples (S05) can draw only the stars that will be visible (a prefix).
   const blackbodyJS = T => { // same approximation as GLSL blackbody() (lib/glsl.js), linear
@@ -674,7 +674,7 @@ export async function create(ctx) {
     // stars (f528 →): one instanced draw; `sh` > 0 spreads each star over its shutter interval
     if (fr >= 528 - 0.5 && uC < 0.93 && !DBG.noStars) {
       PU.uT0.value = t; PU.uSh.value = sh; PU.uGain.value = gain; PU.uPScroll.value = scrollAt(fr);
-      const need = sh > 0 ? trailPx(t - sh / 2, t + sh / 2) / 1.6 : 1;   // ≤ 1.6 px between trail samples
+      const need = sh > 0 ? trailPx(t - sh / 2, t + sh / 2) / 1.9 : 1;   // ≤ 1.9 px between trail samples (K7: ≤ 2 px)
       const K = Math.max(1, Math.min(KMAX, Math.ceil(need)));
       PU.uK.value = K; PU.uSigK.value = need > KMAX ? Math.sqrt(need / KMAX) : 1;   // widen the PSF rather than leave beads
       for (const g of [geoText, geoSky]) g.setDrawRange(0, K);
@@ -733,22 +733,21 @@ export async function create(ctx) {
 
   // ---- S05 motion blur ---------------------------------------------------------------------------
   // The stars are blurred analytically: each star draws its own trail from up to KMAX sub-time samples
-  // across the whole 180° shutter in one instanced draw. The engine still asks for n sub-frames
-  // (timeline S05 motionBlur 8) and averages them; the module renders the whole shutter once per output
-  // frame into its own target and hands the same image to every sub-frame (the average is then exact,
-  // and the screen pass runs once instead of n times). Pure function of the frame number.
+  // across the whole 180° shutter in one instanced draw (adjacent samples ≤ 1.9 px). The shot uses no
+  // engine sub-frames (timeline S05 has no motionBlur): the screen pass runs once and nothing has to be
+  // accumulated. If an engine sub-frame count is ever set again, every sub-frame gets the same
+  // full-shutter image (rendered once per output frame into a private target), so the average is exact.
   let mbRT = null, mbKey = -1;
   const copy = ctx.kit.fullscreen(`uniform sampler2D tex; void main(){ gl_FragColor = vec4(texture2D(tex, vUv).rgb, 1.0); }`, { tex: { value: null } });
   function renderBlurred(shot, f) {
     const sh = (shot.shutter ?? 0.5) / FPS;
+    if ((f.subs | 0) <= 1) { renderOpening(f, sh, 1); return; }
     const F = Math.round(f.t * FPS), t0 = F / FPS;
     if (!mbRT) mbRT = ctx.makeRT(W, H);
     if (mbKey !== F) {
       mbKey = F;
-      const ac = renderer.autoClear;
       renderer.setRenderTarget(mbRT); renderer.setClearColor(0x000000, 1); renderer.clear(true, false, false);
-      renderOpening({ ...f, t: t0, lt: t0 - shot.start, p: (t0 - shot.start) / f.dur, target: mbRT, sub: 0 }, sh, 1);
-      renderer.autoClear = ac;
+      renderOpening({ ...f, t: t0, lt: t0 - shot.start, p: (t0 - shot.start) / f.dur, target: mbRT, sub: 0, mask: null }, sh, 1);
     }
     copy.material.uniforms.tex.value = mbRT.texture;
     renderer.setRenderTarget(f.target);
@@ -763,7 +762,7 @@ export async function create(ctx) {
     bloomMask(f) { const F = f.frame; return f.shot.id === 'S44' ? F < S44_F + 26 : F >= 300 && F < 536; },
     render(shot, f) {
       if (shot.id === 'S44') renderEnd(f);
-      else if ((shot.motionBlur || 0) > 1) renderBlurred(shot, f);
+      else if (shot.id === 'S05') renderBlurred(shot, f);
       else renderOpening(f);
     },
     post(shot, f) {

@@ -246,7 +246,11 @@ export function createClouds(ctx) {
         float shape = c.r * 0.62 + c.b * 0.22 + c2.g * 0.22 + c2.a * 0.10;
         // flat-ish bases, rounded tops: the threshold rises towards the top
         float thr = (1.0 - l.cov) * 0.95 + 0.2 + 0.30 * smoothstep(0.45, 1.0, h) + 0.25 * smoothstep(0.18, 0.0, h);
-        return smoothstep(thr, thr + 0.14, shape) * regionMask(p);
+        float dd = smoothstep(thr, thr + 0.30, shape);
+        // fine billows and tears: what streams past the lens inside the deck (the ≥ 8 % texture)
+        vec4 c3 = texture2D(uTex, q * 17.0 + vec2(0.0, p.y / l.s * 9.0) + 0.61);
+        dd *= 0.25 + 1.5 * smoothstep(0.30, 0.75, c3.r * 0.7 + c3.a * 0.3);
+        return dd * regionMask(p);
       }
       void main(){
         vec3 rd = rayDir(vUv), ro = uCam;
@@ -280,15 +284,15 @@ export function createClouds(ctx) {
             // a dim warm floor below; the further west (−x) the warmer the light (the sun is still on the far west)
             float wpos = clamp(0.5 - p.x / 60000.0, 0.0, 1.0);
             float edge = 1.0 - dens(l, p + vec3(-260.0, 0.0, 0.0), uN) * 0.8;    // west-facing edges catch the glow
-            vec3 amb = mix(vec3(0.030, 0.036, 0.060), vec3(0.085, 0.090, 0.125), h) + skyUp * 0.25 * h;
-            vec3 warm = vec3(0.30, 0.150, 0.085) * (0.25 + 0.75 * edge) * (0.35 + 0.65 * wpos) * (0.45 + 0.55 * h) * phase;
+            vec3 amb = mix(vec3(0.050, 0.058, 0.085), vec3(0.120, 0.125, 0.165), h) + skyUp * 0.30 * h;
+            vec3 warm = vec3(0.34, 0.170, 0.090) * (0.25 + 0.75 * edge) * (0.35 + 0.65 * wpos) * (0.45 + 0.55 * h) * phase;
             float topLit = smoothstep(0.55, 1.0, h) * (0.4 + 0.6 * wpos) * float(i < 2);
             vec3 col = amb + warm + vec3(0.30, 0.15, 0.13) * topLit;              // tops of the high decks: pink-orange
             float sigma = l.sig * dn;
             float tau = sigma * (tb - ta);
             float a = 1.0 - exp(-tau);
             // aerial perspective on the cloud itself
-            float fogk = 1.0 - exp(-(0.5 * (ta + tb)) / 70000.0);
+            float fogk = 1.0 - exp(-(0.5 * (ta + tb)) / 140000.0);
             col = mix(col, duskHaze(rd, ro.y), fogk);
             acc += T * a * col; T *= 1.0 - a;
             if (T < 0.01) break;
@@ -309,9 +313,8 @@ export function createClouds(ctx) {
       vec3 farGround(vec3 ro, vec3 rd, float t){
         vec3 p = ro + rd * t;
         float v = 0.5 + 0.5 * sin(p.x / 3100.0) * sin(p.z / 2700.0 + 1.3);
-        vec3 alb = mix(vec3(0.016, 0.014, 0.011), vec3(0.030, 0.025, 0.018), v);
-        vec3 c = alb;
-        return mix(c, duskHaze(rd, ro.y), 1.0 - exp(-t / 26000.0));
+        vec3 alb = mix(vec3(0.014, 0.013, 0.012), vec3(0.024, 0.021, 0.018), v);
+        return mix(alb, duskHaze(rd, ro.y) * 0.55, 1.0 - exp(-t / 45000.0));
       }
       void main(){
         vec3 rd = rayDir(vUv), ro = uCam;
