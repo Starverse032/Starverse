@@ -138,7 +138,7 @@ vec3 duskHaze(vec3 dir, float alt){
 export const CLOUD_LAYERS = [
   { base: 5900, top: 6400, scale: 9000, cov: 0.52, sigma: 0.0030, off: [0.13, 0.71] },
   { base: 5000, top: 5550, scale: 6500, cov: 0.62, sigma: 0.0032, off: [0.57, 0.29] },
-  { base: 4050, top: 4900, scale: 5200, cov: 0.86, sigma: 0.0036, off: [0.83, 0.47] },
+  { base: 4050, top: 4900, scale: 5200, cov: 0.74, sigma: 0.0017, off: [0.83, 0.47] },
   { base: 3300, top: 3750, scale: 4200, cov: 0.62, sigma: 0.0032, off: [0.31, 0.92] },
 ];
 const CLOUD_Z = [25000, 150000];
@@ -284,10 +284,12 @@ export function createClouds(ctx) {
             // a dim warm floor below; the further west (−x) the warmer the light (the sun is still on the far west)
             float wpos = clamp(0.5 - p.x / 60000.0, 0.0, 1.0);
             float edge = 1.0 - dens(l, p + vec3(-260.0, 0.0, 0.0), uN) * 0.8;    // west-facing edges catch the glow
+            float occ = dens(l, p + vec3(-90.0, 140.0, 40.0), uN);                 // cloud between this sample and the sky above-west
+            float shade = mix(1.25, 0.45, occ);
             vec3 amb = mix(vec3(0.050, 0.058, 0.085), vec3(0.120, 0.125, 0.165), h) + skyUp * 0.30 * h;
             vec3 warm = vec3(0.34, 0.170, 0.090) * (0.25 + 0.75 * edge) * (0.35 + 0.65 * wpos) * (0.45 + 0.55 * h) * phase;
             float topLit = smoothstep(0.55, 1.0, h) * (0.4 + 0.6 * wpos) * float(i < 2);
-            vec3 col = amb + warm + vec3(0.30, 0.15, 0.13) * topLit;              // tops of the high decks: pink-orange
+            vec3 col = (amb + warm) * shade + vec3(0.30, 0.15, 0.13) * topLit;              // tops of the high decks: pink-orange
             float sigma = l.sig * dn;
             float tau = sigma * (tb - ta);
             float a = 1.0 - exp(-tau);
