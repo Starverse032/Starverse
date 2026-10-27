@@ -255,7 +255,7 @@ export function createWorld(ctx) {
   scene.add(sky);
 
   // ---- terrain: camera-centred radial grid -----------------------------------------------------------
-  const NA = 512, NR = 900;
+  const NA = 320, NR = 600;
   const tg = new THREE.BufferGeometry();
   {
     const pos = new Float32Array(NA * NR * 3);
@@ -459,7 +459,7 @@ export function createWorld(ctx) {
       const down = 4.5 * Math.PI / 180 + Math.atan(560 / fpx);
       const rmin = Math.max(0.3, c.alt / Math.tan(down) * 0.7 - 2.0);
       const C = 0.0045, J1 = 600 / 4.5 * 0.6;                  // regime 1 until r = rmin / (1 − C·J1) ≈ 1.6 rmin, then 1 %/ring … 2 %
-      const Q2 = 0.0125;
+      const Q2 = 0.024;
       const r1 = rmin / (1 - C * J1);
       const rmax = 330000;
       const nr = Math.min(NR, Math.ceil(J1 + Math.log(rmax / r1) / Q2) + 1);
