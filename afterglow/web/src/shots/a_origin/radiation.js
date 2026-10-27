@@ -318,11 +318,9 @@ export function createRadiation(ctx) {
         vec2 n = (RR + (px - RR) / uFarZoom - vec2(960.0, 540.0)) / 1280.0;
         vec2 uv = (vec2(n.x, -n.y) + vec2(uDrift, 0.3 * uDrift) - uPlane.xz) / (uPlane.yw - uPlane.xz);
         float Ff = 0.0;
-        Ff += textureLod(tFar, uv + vec2( 0.7,  0.3) * uTexel * uSpread, uLod).r;
-        Ff += textureLod(tFar, uv + vec2(-0.3,  0.7) * uTexel * uSpread, uLod).r;
-        Ff += textureLod(tFar, uv + vec2(-0.7, -0.3) * uTexel * uSpread, uLod).r;
-        Ff += textureLod(tFar, uv + vec2( 0.3, -0.7) * uTexel * uSpread, uLod).r;
-        Ff *= 0.25 * (1.0 + 0.10 * uLod);
+        Ff += textureLod(tFar, uv + vec2( 0.6,  0.35) * uTexel * uSpread, uLod).r;
+        Ff += textureLod(tFar, uv + vec2(-0.6, -0.35) * uTexel * uSpread, uLod).r;
+        Ff *= 0.5 * (1.0 + 0.10 * uLod);
         float F = uAmpFar * Ff;
         float Te = uTemp * (1.0 + 0.20 * clamp(0.25 * F, -0.75, 0.75));
         float I = pow(Te / uTemp, 4.0) * exp(uFGain * F);
