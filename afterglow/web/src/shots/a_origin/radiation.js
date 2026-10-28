@@ -100,7 +100,7 @@ export function radState(fr) {
   const ev = smoothPL(EV_KEYS, fr);
   let gain = Math.pow(2, ev);
   // white f603–610 (field at WHITE gain), falling from f611 (outCubic over f611–f646)
-  const W = 1.2, L0 = 0.4;
+  const W = 1.45, L0 = 0.4;
   if (x < 2.5) gain = 0;
   else if (x < 11) gain = W * lerp(1, 0.72, clamp((x - 3) / 8)) * sstep(2.5, 3.0, x);
   else if (fr < 648) gain = logLerp(W * 0.72, L0, outCubic(clamp((x - 11) / 36))) * Math.pow(2, Math.min(0, ev));

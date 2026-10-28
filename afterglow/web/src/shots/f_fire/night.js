@@ -816,6 +816,7 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
     s.spU.uT.value = t; s.spU.uInvDF.value = 1 / FD; s.spU.uCocK.value = COCK35 * 2.04;
     const ac = s.setMat.blending;
     s.setMat.blending = THREE.CustomBlending; addOnly(s.setMat);
+    s.f1.liveScene.add(s.setMesh, s.flMesh, s.spMesh);
     renderer.setRenderTarget(f.target); renderer.clear(false, true, false);
     renderer.render(s.f1.liveScene, cam50);
     s.setMat.blending = ac; s.setMat.transparent = false;
