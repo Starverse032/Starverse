@@ -45,7 +45,26 @@ vec3 duskGlow(vec3 d){
   float az = atan(d.x, -d.z) / 0.0174533;              // 0 = north, −90 = west
   float w = smoothstep(18.0, -40.0, az);               // only on the left
   float h = exp(-max(el, 0.0) / 0.030) + 0.25 * exp(-max(el, 0.0) / 0.12);
-  return vec3(0.034, 0.0075, 0.0030) * h * w * uDuskK;
+  return vec3(0.090, 0.020, 0.0075) * h * w * uDuskK;
+}`;
+
+// ground albedo (rgb) and bump height by world xz (rf = distance to the fire); baked inside GBOX
+const GROUND_GLSL = /* glsl */ `
+const vec4 GBOX = vec4(-3.5, -10.0, 7.0, 10.4);
+void groundAlb(vec2 q, float rf, out vec3 alb, out float h){
+  float n1 = fbm(q * 2.3, 4), n2 = fbm(q * 19.0 + 7.0, 3), n3 = fbm(q * 0.7 + 3.0, 3);
+  vec3 soil = mix(vec3(0.050, 0.036, 0.026), vec3(0.095, 0.068, 0.045), smoothstep(0.3, 0.7, n1)) * (0.7 + 0.6 * n2);
+  float litter = smoothstep(0.45, 0.62, fbm(q * 4.0 + 11.0, 4)) * smoothstep(0.7, 1.4, rf);
+  vec3 straw = vec3(0.22, 0.16, 0.085) * (0.6 + 0.8 * vnoise(q * vec2(90.0, 23.0)));
+  alb = mix(soil, straw, litter * 0.8) * (0.85 + 0.3 * n3);
+  float n4 = fbm(q * 7.0 + 4.0, 4);
+  float ash = smoothstep(0.52, 0.22, rf + 0.12 * (n4 - 0.5) + 0.05 * (n2 - 0.5));
+  vec3 ashC = mix(vec3(0.035, 0.03, 0.027), vec3(0.12, 0.115, 0.108), smoothstep(0.35, 0.7, n4)) * (0.6 + 0.7 * n2);
+  float fleck = step(0.8, vnoise(q * 140.0)) * ash;
+  ashC = mix(ashC, vec3(0.012, 0.010, 0.009), fleck);
+  alb = mix(alb, ashC, ash * 0.9);
+  alb = mix(alb, vec3(0.025, 0.022, 0.02), smoothstep(0.30, 0.22, rf) * 0.7);
+  h = n2 * 0.004 + litter * 0.002 * vnoise(q * 60.0);
 }`;
 
 export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
@@ -130,7 +149,7 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
   for (let i = 0; i < NR; i++) {
     const az = -100 + 200 * i / (NR - 1);
     let el = 4.2 + 5.0 * (fbm1(az / 16 + 3.3, 5, 161) - 0.5) + 1.2 * (fbm1(az / 2.2, 4, 162) - 0.5) + 0.25 * (fbm1(az / 0.35, 3, 163) - 0.5);
-    const dip = Math.exp(-Math.pow((az + 13) / 9, 2));
+    const dip = Math.exp(-Math.pow((az + 9) / 8, 2));
     el = el * (1 - 0.8 * dip) + 0.6 * dip;
     r16[4 * i] = el;
   }
@@ -252,7 +271,7 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
 
   const nz = (t, fr, s) => util.shake(t, s, fr, 1)[0];
   const flick = t => 1 + 0.13 * nz(t, 6.5, 41) + 0.07 * nz(t, 13.0, 43) + 0.10 * nz(t, 2.1, 47);
-  const C_FL = bbCPU(1600);
+  const C_FL = bbCPU(1850);                            // the light the fire throws (the flame itself is drawn 1200–1900 K)
   const setSky = (cam, M, gain, air, dusk) => {
     skyU.uInvVP.value.copy(invVP(cam)); skyU.uCamPos.value.copy(cam.position); skyU.uM.value.copy(M);
     skyU.uGain.value = gain; skyU.uAir.value = air; skyU.uDuskK.value = dusk;
@@ -332,8 +351,8 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
       const top = new THREE.Vector3(...base).addScaledVector(dir, 0.94 + 0.12 * rng());
       log(base, [top.x + (rng() - 0.5) * 0.05, top.y, top.z + (rng() - 0.5) * 0.05], 0.009 + rng() * 0.009, 0.37 + k * 0.29);
     }
-    log([FP.x - 0.52, 0.03, FP.z + 0.16], [FP.x + 0.14, 0.05, FP.z - 0.04], 0.035, 0.91);
-    log([FP.x + 0.46, 0.025, FP.z + 0.22], [FP.x - 0.05, 0.06, FP.z - 0.08], 0.03, 0.53);
+    log([FP.x - 0.50, 0.03, FP.z - 0.10], [FP.x + 0.10, 0.05, FP.z - 0.20], 0.035, 0.91);
+    log([FP.x + 0.46, 0.025, FP.z - 0.02], [FP.x - 0.08, 0.06, FP.z - 0.22], 0.03, 0.53);
     {
       const g = plain(new THREE.CircleGeometry(0.22, 64, 0, Math.PI * 2));
       g.rotateX(-Math.PI / 2);
@@ -389,8 +408,14 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
       return rt;
     };
 
+    // the ground's albedo + relief near the fire, baked once (the noise stack is the costliest part of the set)
+    const groundTex = kit.bake(renderer, {
+      w: 2048, h: 2048, mipmaps: true, float: true, wrap: THREE.ClampToEdgeWrapping,
+      frag: GROUND_GLSL + /* glsl */ `
+        void main(){ vec2 q = GBOX.xy + vUv * GBOX.zw; vec3 alb; float h; groundAlb(q, length(q - vec2(0.0, -3.2)), alb, h); gl_FragColor = vec4(alb, h / 0.006); }`,
+    });
     const setU = {
-      ...handU, uLP: { value: new THREE.Vector3() }, uLC: { value: new THREE.Vector3() }, uShadow: { value: null }, uLP0: { value: new THREE.Vector3() },
+      ...handU, uGround: { value: groundTex }, uLP: { value: new THREE.Vector3() }, uLC: { value: new THREE.Vector3() }, uShadow: { value: null }, uLP0: { value: new THREE.Vector3() },
       uFP: { value: FP }, uT: { value: 0 }, uSky: { value: new THREE.Vector3() }, uEmb: { value: 1 }, uMode: { value: 0 }, uFs: { value: 1 },
     };
     // uMode: 0 = full shading (F2 live), 1 = light only (bake), 2 = sky only (bake), 3 = emission only (F1 live)
@@ -406,6 +431,8 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
         }`,
       fragmentShader: GLSL.all + /* glsl */ `
         uniform vec3 uLP, uLC, uLP0, uFP, uSky; uniform samplerCube uShadow; uniform float uT, uEmb, uFs; uniform int uMode;
+        uniform sampler2D uGround;
+        ${GROUND_GLSL}
         varying vec3 vW, vN; varying float vMat, vSeed; varying vec2 vRu;
         vec3 bumpN(vec3 p, vec3 n, float h){
           vec3 dpx = dFdx(p), dpy = dFdy(p); float dhx = dFdx(h), dhy = dFdy(h);
@@ -416,11 +443,11 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
           vec3 D = P - uLP0; float d = length(D); vec3 n = D / d;
           vec3 t1 = normalize(cross(n, abs(n.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0))), t2 = cross(n, t1);
           float bias = 0.01 + 0.02 * d, rot = hash12(gl_FragCoord.xy) * 6.2832, v = 0.0;
-          for (int i = 0; i < 10; i++){
-            float a = float(i) * 2.39996 + rot, r = sqrt((float(i) + 0.5) / 10.0) * 0.07;
+          for (int i = 0; i < 8; i++){
+            float a = float(i) * 2.39996 + rot, r = sqrt((float(i) + 0.5) / 8.0) * 0.07;
             v += step(d - bias, textureCube(uShadow, n + (t1 * cos(a) + t2 * sin(a)) * r).r * 50.0);
           }
-          return v / 10.0;
+          return v / 8.0;
         }
         void main(){
           vec3 P = vW;
@@ -454,20 +481,10 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
           if (dot(N, V) < 0.0) N = -N;
           vec3 alb = vec3(0.1), emi = vec3(0.0); float trans = 0.0, h = 0.0; bool bump = false;
           if (vMat < 0.5) {
-            vec2 q = P.xz;
-            float n1 = fbm(q * 2.3, 4), n2 = fbm(q * 19.0 + 7.0, 3), n3 = fbm(q * 0.7 + 3.0, 3);
-            vec3 soil = mix(vec3(0.050, 0.036, 0.026), vec3(0.095, 0.068, 0.045), smoothstep(0.3, 0.7, n1)) * (0.7 + 0.6 * n2);
-            float litter = smoothstep(0.45, 0.62, fbm(q * 4.0 + 11.0, 4)) * smoothstep(0.7, 1.4, rf);
-            vec3 straw = vec3(0.22, 0.16, 0.085) * (0.6 + 0.8 * vnoise(q * vec2(90.0, 23.0)));
-            alb = mix(soil, straw, litter * 0.8) * (0.85 + 0.3 * n3);
-            float n4 = fbm(q * 7.0 + 4.0, 4);
-            float ash = smoothstep(0.52, 0.22, rf + 0.12 * (n4 - 0.5) + 0.05 * (n2 - 0.5));
-            vec3 ashC = mix(vec3(0.035, 0.03, 0.027), vec3(0.12, 0.115, 0.108), smoothstep(0.35, 0.7, n4)) * (0.6 + 0.7 * n2);
-            float fleck = step(0.8, vnoise(q * 140.0)) * ash;
-            ashC = mix(ashC, vec3(0.012, 0.010, 0.009), fleck);
-            alb = mix(alb, ashC, ash * 0.9);
-            alb = mix(alb, vec3(0.025, 0.022, 0.02), smoothstep(0.30, 0.22, rf) * 0.7);
-            h = n2 * 0.004 + litter * 0.002 * vnoise(q * 60.0); bump = true;
+            vec2 gu = (P.xz - GBOX.xy) / GBOX.zw;
+            if (gu.x > 0.0 && gu.x < 1.0 && gu.y > 0.0 && gu.y < 1.0) { vec4 g = texture2D(uGround, gu); alb = g.rgb; h = g.a * 0.006; }
+            else groundAlb(P.xz, rf, alb, h);
+            bump = true;
           } else if (vMat < 1.5) {
             vec3 q = P * 18.0 + vSeed * 31.0;
             float n1 = fbm(q, 4), n2 = fbm(q * 5.0, 3);
@@ -552,7 +569,7 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
           float core = smoothstep(wy * 0.7, 0.0, abs(x)) * smoothstep(0.6, 0.06, y) * smoothstep(-0.02, 0.1, y);
           // 1200–1900 K; the body is kept in HDR 0.3–1.5 so that it stays orange through the tone curve
           float Tk = mix(1200.0, 1900.0, clamp(core * 0.75 + (1.0 - y) * 0.2 + (n2.b - 0.5) * 0.2, 0.0, 1.0));
-          vec3 c = blackbody(Tk) * (dens * 0.55 + core * 0.9) * vP.y;
+          vec3 c = blackbody(Tk) * (dens * 0.62 + core * 1.05) * vP.y;
           gl_FragColor = vec4(c * uF, 0.0);
         }`,
     });
@@ -782,8 +799,7 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
   // operator keeps it on R with a small tilt (a 2D vertical shift for the 50 mm lens)
   const f1Follow = n => {
     const fs = fireScale(n);
-    const yc = 0.02 + 0.24 * fs;                         // m above the pit floor (calibrated on the stills)
-    return (Math.atan2(yc - 0.4, FD) - Math.atan2(F1_AIM - 0.4, FD)) * FPX50;   // px (up is negative y)
+    return 112 * (fs - 0.37);                            // px the image moves down (calibrated: L ≥ 180 centroid)
   };
 
   function renderF1(n, f) {
@@ -791,7 +807,7 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
     const fs = fireScale(n), fk = flick(t);
     const b = breath(util, t, { px: 1.5, deg: 0.15, hz: 0.3, seed: 16 });
     const oy = f1Follow(n);
-    setHandV({ ox: b.ox, oy: b.oy - oy, rot: b.rot });
+    setHandV({ ox: b.ox, oy: b.oy + oy, rot: b.rot });
     setSky(cam50, M50, 0.75, 2.2, 1.0);
     stars.uniforms.uFieldLow.value = 2.6;
     skyPass.render(renderer, f.target);
@@ -859,7 +875,7 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
   function renderF3(n, f) {
     const t = T(n);
     setHandV(breath(util, t, { px: 0.5, deg: 0.05, hz: 0.3, seed: 17, zeroAt: T(NF.end - 1) }));
-    setSky(cam24, M24, 1.0, 1.9, 0.35);
+    setSky(cam24, M24, 1.0, 1.9, 0.14);
     stars.uniforms.uFieldLow.value = 1.0;
     skyPass.render(renderer, f.target);
     stars.uniforms.uCoc.value = 0;

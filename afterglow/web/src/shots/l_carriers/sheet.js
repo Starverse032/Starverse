@@ -285,72 +285,80 @@ export async function createSheet(ctx, noiseTex, T, shot) {
     const vec2 SOFF = vec2(48.0, -20.0);
     float cityDensity(vec2 m){ float r = length(m - vec2(900.0, 1600.0)); return exp(-r / 5200.0) * 0.85 + 0.15 * exp(-length(m) / 9000.0); }
     float ledness(vec2 m){ return ss(2200.0, 900.0, length(m - vec2(1500.0, 2300.0))); }
-    // one row of lamps along a street (axis 0: along x at y = y0; axis 1: along y at x = x0)
-    vec3 lampRows(vec2 m, vec2 cellLo, float dens){
+    float knee(float x, float cap){ return cap * (1.0 - exp(-x / cap)); }
+    // parks, rivers and rail yards are dark; districts differ in how lit they are
+    float urbanMask(vec2 m){
+      float park = ss(0.66, 0.74, nz(m / 5200.0 + 0.37).r) + ss(0.70, 0.76, nz(m / 1900.0 + 0.11).g);
+      float district = 0.55 + 0.9 * nz(m / 2600.0 + 0.73).b;
+      return clamp(1.0 - park, 0.0, 1.0) * district;
+    }
+    // street lamps (sodium; LED downtown): points → rows → area, flux-conserving with soft knees
+    vec3 lampRows(vec2 m, float dens){
       vec3 c = vec3(0.0);
-      // nearest horizontal and vertical street centre lines
       vec2 rel = m - SOFF;
       vec2 k = floor(rel / PITCH + 0.5);
-      vec2 cl = SOFF + k * PITCH;                         // nearest street centre (x of a N–S street, y of an E–W street)
-      float arterialX = step(0.5, mod(k.x, 5.0) < 0.5 ? 1.0 : 0.0), arterialY = mod(k.y, 4.0) < 0.5 ? 1.0 : 0.0;
+      vec2 cl = SOFF + k * PITCH;
       float led = ledness(m);
-      vec3 colr = mix(SOD, LEDC, step(0.5, led * ihash2(ivec2(k) + ivec2(3, 3)) + led * 0.4));
-      float B = 2.4 * (0.6 + 0.4 * dens);
-      // E–W street (lamps along x on both kerbs, 28 m apart, staggered)
-      for (int sgn = 0; sgn < 2; sgn++) {
-        float sd = sgn == 0 ? -1.0 : 1.0;
-        float y0 = cl.y + sd * (5.8 + 4.0 * arterialY);
-        float S = 28.0 - 6.0 * arterialY;
-        float ph = sgn == 0 ? 0.0 : 0.5 * S;
-        float spx = S / FP;
-        float kk = floor((m.x - ph) / S + 0.5);
-        float lx = ph + kk * S;
-        float on = step(0.12 * (1.0 - dens), ihash2(ivec2(int(kk), int(k.y) * 2 + sgn)));
-        float pt = psf(vec2(m.x - lx, m.y - y0)) * on;
-        float line = 2.67 / max(spx, 1e-3) * exp(-pow((m.y - y0) / FP, 2.0) / 1.45) * 0.8;   // flux per px along the row
-        c += colr * B * mix(line, pt, ss(2.0, 4.0, spx)) * (1.0 + 0.6 * arterialY);
-        // the pool of light on the road under each lamp (only while it is resolved)
-        float pool = exp(-dot(vec2(m.x - lx, (m.y - y0) * 1.4), vec2(m.x - lx, (m.y - y0) * 1.4)) / 60.0) * on;
-        c += colr * 0.035 * pool * ss(1.5, 0.3, FP);
+      float um = urbanMask(m) * (0.35 + 0.65 * dens);
+      vec3 colr = mix(SOD, LEDC, step(0.62, led * (0.6 + 0.4 * ihash2(ivec2(k) + ivec2(3, 3)))));
+      float B = 2.2;
+      float stpx = PITCH.y / FP;                                 // street spacing in px
+      float wRows = ss(2.5, 5.0, stpx);
+      if (wRows > 0.0) {
+        for (int ax = 0; ax < 2; ax++) {
+          for (int sgn = 0; sgn < 2; sgn++) {
+            float sd = sgn == 0 ? -1.0 : 1.0;
+            // ax 0: E–W street (lamps along x); ax 1: N–S street (lamps along y)
+            float along = ax == 0 ? m.x : m.y;
+            float perp0 = ax == 0 ? cl.y : cl.x;
+            float perp = ax == 0 ? m.y : m.x;
+            float p0 = perp0 + sd * 5.8;
+            float S = 28.0;
+            float ph = (ax == 0 ? 0.0 : 7.0) + (sgn == 0 ? 0.0 : 0.5 * S);
+            float spx = S / FP;
+            float kk = floor((along - ph) / S + 0.5);
+            float la = ph + kk * S;
+            float on = step(0.25 * (1.0 - dens), ihash2(ivec2(int(kk), int(ax == 0 ? k.y : k.x) * 2 + sgn + ax * 77)));
+            vec2 dm = ax == 0 ? vec2(along - la, perp - p0) : vec2(perp - p0, along - la);
+            float pt = psf(dm) * on;
+            float line = knee(2.4 / max(spx, 1e-3), 0.9) * exp(-pow((perp - p0) / FP, 2.0) / 1.45) * 0.75;
+            c += colr * B * mix(line / B * 1.0, pt, ss(2.0, 4.0, spx)) ;
+          }
+        }
+        c *= wRows;
       }
-      // N–S street
-      for (int sgn = 0; sgn < 2; sgn++) {
-        float sd = sgn == 0 ? -1.0 : 1.0;
-        float x0 = cl.x + sd * (5.8 + 4.0 * arterialX);
-        float S = 28.0 - 6.0 * arterialX;
-        float ph = sgn == 0 ? 7.0 : 7.0 + 0.5 * S;
-        float spx = S / FP;
-        float kk = floor((m.y - ph) / S + 0.5);
-        float ly = ph + kk * S;
-        float on = step(0.12 * (1.0 - dens), ihash2(ivec2(int(k.x) * 2 + sgn + 77, int(kk))));
-        float pt = psf(vec2(m.x - x0, m.y - ly)) * on;
-        float line = 2.67 / max(spx, 1e-3) * exp(-pow((m.x - x0) / FP, 2.0) / 1.45) * 0.8;
-        c += colr * B * mix(line, pt, ss(2.0, 4.0, spx)) * (1.0 + 0.6 * arterialX);
-        float pool = exp(-dot(vec2((m.x - x0) * 1.4, m.y - ly), vec2((m.x - x0) * 1.4, m.y - ly)) / 60.0) * on;
-        c += colr * 0.035 * pool * ss(1.5, 0.3, FP);
-      }
-      return c;
+      // area average once the streets are sub-pixel: ≈ 1.6e-3 lamps per m²
+      float area = knee(2.67 * B * 1.6e-3 * FP * FP * um, 0.10);
+      c += colr * area * (1.0 - wRows);
+      // arterials: wider, brighter roads every 5 × 4 blocks stay lines to much larger scales
+      vec2 AP = PITCH * vec2(5.0, 4.0);
+      vec2 ka = floor((m - SOFF) / AP + 0.5);
+      vec2 ca = SOFF + ka * AP;
+      float apx = AP.y / FP;
+      float wArt = ss(1.5, 4.0, apx) * ss(0.5, 4.0, FP);
+      float lineA = exp(-pow((m.y - ca.y) / max(FP, 9.0), 2.0) / 1.2) + exp(-pow((m.x - ca.x) / max(FP, 9.0), 2.0) / 1.2);
+      c += SOD * knee(lineA * 0.5 * (FP > 3.0 ? 1.0 : 0.0), 0.35) * wArt * (0.5 + 0.5 * um);
+      return c * (0.4 + 0.6 * um);
     }
-    // windows of the other blocks as lights: a 3 × 3.2 m lattice inside each block, lit by hash
+    // windows of the blocks as lights: a 3 × 3.2 m lattice inside each block, lit by hash
     vec3 blockLights(vec2 m, float dens){
       vec2 rel = m - SOFF;
       vec2 k = floor(rel / PITCH);
-      vec2 inb = rel - k * PITCH;                         // position inside the block cell (street at 0 and PITCH)
-      float inside = mcov1(8.0, PITCH.x - 8.0, inb.x) * mcov1(8.0, PITCH.y - 8.0, inb.y);
+      vec2 inb = rel - k * PITCH;
+      float inside = FP < 20.0 ? mcov1(8.0, PITCH.x - 8.0, inb.x) * mcov1(8.0, PITCH.y - 8.0, inb.y) : 0.69;
       if (inside <= 0.0) return vec3(0.0);
-      // our own block: our building is drawn as the facade, the rest of the block like the others
       float led = ledness(m);
+      float um = urbanMask(m) * dens;
       vec2 wq = m / vec2(3.0, 3.2);
       vec2 wi = floor(wq + 0.5);
       float h = ihash2(ivec2(wi) + ivec2(5, 17));
-      float pLit = (0.10 + 0.22 * dens) * (1.0 + led);
+      float pLit = (0.04 + 0.12 * um) * (1.0 + led);
       float on = step(h, pLit);
-      vec3 K = mix(kmax(mix(2400.0, 3600.0, ihash2(ivec2(wi) + 3))), vec3(0.88, 0.92, 1.0), step(0.6, led + 0.3 * ihash2(ivec2(wi) + 9)));
+      vec3 K = mix(kmax(mix(2400.0, 3600.0, ihash2(ivec2(wi) + 3))), vec3(0.88, 0.92, 1.0), step(0.75, led + 0.3 * ihash2(ivec2(wi) + 9)));
       float spx = 3.0 / FP;
       float pt = psf((wq - wi) * vec2(3.0, 3.2)) * on;
-      float area = 2.67 * pLit / (spx * spx * 1.07);       // mean flux per px²
-      float B = 0.9;
-      return K * B * mix(area, pt, ss(2.0, 4.0, spx)) * inside;
+      float area = knee(2.67 * pLit / (spx * spx * 1.07) * 0.8, 0.06);
+      return K * mix(area, pt * 0.8, ss(2.0, 4.0, spx)) * inside;
     }
 
     // ======================= EARTH (night lights from lib/earth.js) =======================
@@ -428,7 +436,7 @@ export async function createSheet(ctx, noiseTex, T, shot) {
       vec4 BLD = vec4(-13.5, -12.0, 10.5, 11.6);
       float inBld = mcovR(BLD, m);
       float dens = cityDensity(m);
-      float facW = ss(0.9, 0.3, FP);                       // facade mode while windows are resolvable
+      float facW = ss(0.45, 0.18, FP);                     // facade mode while windows are resolvable
       // block cell and interior (streets between blocks)
       vec2 rel = m - SOFF;
       vec2 kb = floor(rel / PITCH);
@@ -460,14 +468,14 @@ export async function createSheet(ctx, noiseTex, T, shot) {
           float cov, lit;
           vec3 wcol = facadeWindow(m, cell, vec2(0.0), vec2(3.0, 3.2), bld, lev, cov, lit);
           // other buildings: fewer lit at the edge of town, more downtown
-          if (bld > 0.5) wcol *= 0.55 + 0.9 * dens * step(ihash2(ivec2(cell) + ivec2(3, 1)), 0.35 + 0.5 * dens);
+          if (bld > 0.5) wcol *= step(ihash2(ivec2(cell) + ivec2(3, 1)), 0.25 + 0.35 * dens);
           fac = mix(fac, wcol, cov);
         }
         col += fac * inside * facW;
       }
       // 2) streets and blocks as lights (sodium / LED)
       if (FP > 0.004 && s < 60000.0) {
-        vec3 city = lampRows(m, vec2(0.0), dens) * ss(0.004, 0.012, FP);
+        vec3 city = lampRows(m, dens) * ss(0.004, 0.012, FP);
         city += blockLights(m, dens) * (1.0 - facW);
         float extent = ss(16000.0, 8000.0, length(m - vec2(900.0, 1600.0)));
         col += city * extent * ss(400.0, 120.0, FP);
@@ -481,13 +489,13 @@ export async function createSheet(ctx, noiseTex, T, shot) {
         vec3 el = earthLights(gp, landAmt);
         float w = ss(15.0, 180.0, FP);
         // night land faintly seen (airglow / starlight), the ocean darker
-        vec3 night = vec3(0.004, 0.005, 0.008) * (0.4 + 0.6 * landAmt) * ss(200.0, 2000.0, FP);
+        vec3 night = mix(vec3(0.0015, 0.002, 0.0035), vec3(0.010, 0.010, 0.012), landAmt) * ss(200.0, 2000.0, FP);
         // dawn on the right limb: pale blue twilight beyond the terminator (east = into tomorrow)
         float mu = dot(gp, uSun);
         vec3 tw = vec3(0.10, 0.22, 0.50) * 0.10 * ss(-0.18, 0.05, mu) * ss(1500.0, 7000.0, FP);
         tw += vec3(0.5, 0.6, 0.75) * 0.06 * ss(0.0, 0.25, mu) * (0.3 + 0.7 * landAmt) * ss(1500.0, 7000.0, FP);
         float nightSide = ss(0.12, -0.10, mu);
-        col += (el * 1.1 * nightSide + night) * w + tw;
+        col += (el * 3.2 * nightSide + night) * w + tw;
       }
       // the lamp itself at every scale: once the window is under ~4 px its light is one point on C
       float sub = ss(0.03, 0.12, FP);

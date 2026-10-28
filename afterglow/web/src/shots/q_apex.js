@@ -58,7 +58,7 @@ export async function create(ctx) {
   const { THREE: T, renderer, W, H, kit, makeRT, FSQ } = ctx;
   const P38 = ctx.timeline.shots.find(s => s.id === 'S38')?.params || {};
   const LQ = [
-    { id: 'QA', text: '有人吗？', font: '600 108px "Noto Serif CJK SC"', color: '#FFB36B', y: 320, hdr: 0.33, rtl: false, land: [185.95, 187.0] },
+    { id: 'QA', text: '有人吗？', font: '600 108px "Noto Serif CJK SC"', color: '#FFB36B', y: 320, hdr: 0.30, rtl: false, land: [185.95, 187.0] },
     { id: 'QB', text: 'Is anyone there?', font: 'italic 500 84px "Cormorant Garamond"', color: '#F2C98A', y: 210, hdr: 0.31, rtl: false, land: [186.4, 187.5] },
     { id: 'QC', text: 'هل يوجد أحد هنا؟', font: '400 80px "Noto Naskh Arabic"', color: '#FF9A5C', y: 430, hdr: 0.20, rtl: true, land: [186.85, 188.0] },
   ];

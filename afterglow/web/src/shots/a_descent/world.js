@@ -99,12 +99,13 @@ float wLv(int k, vec2 p, float fp){
   return smoothstep(uE[k] * 0.97, uE[k] * 0.8, m) * smoothstep(uX[k] * 24.0, uX[k] * 12.0, fp);
 }
 #define TL(T, k) textureLod(T, p / (2.0 * uE[k]) + 0.5, max(0.0, log2(fp / uX[k])))
+uniform float uOn[5];                        // per-frame, CPU: can level k contribute anywhere in view?
 vec4 tOf(vec2 p, float fp){
   vec4 s = TL(uT0, 0);
-  s = mix(s, TL(uT1, 1), wLv(1, p, fp));
-  s = mix(s, TL(uT2, 2), wLv(2, p, fp));
-  s = mix(s, TL(uT3, 3), wLv(3, p, fp));
-  s = mix(s, TL(uT4, 4), wLv(4, p, fp));
+  if (uOn[1] > 0.5) s = mix(s, TL(uT1, 1), wLv(1, p, fp));
+  if (uOn[2] > 0.5) s = mix(s, TL(uT2, 2), wLv(2, p, fp));
+  if (uOn[3] > 0.5) s = mix(s, TL(uT3, 3), wLv(3, p, fp));
+  if (uOn[4] > 0.5) s = mix(s, TL(uT4, 4), wLv(4, p, fp));
   return s;
 }
 float hOf(vec2 p, float fp){ return tOf(p, fp).r; }
@@ -127,10 +128,16 @@ vec3 albedoOf(float a){
   c = mix(c, c3, smoothstep(0.62, 0.86, a));
   return mix(c, c4, smoothstep(0.86, 1.0, a));
 }
-// aerial perspective: dusk air between the camera and a point dist metres away
+// aerial perspective: dusk air between the camera and a point dist metres away (cheap: the haze colour is
+// the dusk horizon colour by azimuth only — warm to the west / left, cold to the east / right)
+vec3 hazeCol(vec3 dir){
+  float s = clamp(dir.x / max(length(dir.xz), 1e-4), -1.0, 1.0);   // sin(azimuth): −1 west … +1 east
+  vec3 w = vec3(0.150, 0.098, 0.074), nn = vec3(0.088, 0.084, 0.108), e = vec3(0.040, 0.042, 0.072);
+  return s < 0.0 ? mix(nn, w, smoothstep(0.0, 1.0, -s)) : mix(nn, e, smoothstep(0.0, 1.0, s));
+}
 vec3 aerial(vec3 col, vec3 dir, float dist, float alt){
   float k = 1.0 - exp(-dist / 95000.0);
-  return mix(col, duskHaze(dir, alt) * 0.55, k);
+  return mix(col, hazeCol(dir), k);
 }
 `;
 
@@ -200,7 +207,7 @@ export function createWorld(ctx) {
   const U0 = {
     uT0: { value: levels[0] }, uT1: { value: levels[1] }, uT2: { value: levels[2] }, uT3: { value: levels[3] }, uT4: { value: levels[4] },
     uE: { value: LEVELS.map(l => l[0]) }, uX: { value: LEVELS.map(([e, n]) => 2 * e / n) },
-    uCam: { value: new THREE.Vector3() }, uFpx: { value: 1000 }, uH0: { value: 0 },
+    uCam: { value: new THREE.Vector3() }, uFpx: { value: 1000 }, uH0: { value: 0 }, uOn: { value: [1, 1, 1, 1, 1] },
   };
   // read back the target height from the finest level (centre texel) — a one-off in create()
   {
@@ -277,7 +284,7 @@ export function createWorld(ctx) {
           // water: the dusk sky mirrored (Fresnel at grazing angles), a little dark body colour
           vec3 rd = reflect(dir, vec3(0.0, 1.0, 0.0));
           float fr = 0.02 + 0.98 * pow(1.0 - max(-dir.y, 0.0), 5.0);
-          col = duskSky(normalize(vec3(rd.x, max(rd.y, 0.002), rd.z)), 0.0) * fr * 0.92 + vec3(0.004, 0.005, 0.007);
+          col = hazeCol(rd) * (2.6 - 1.6 * smoothstep(0.0, 0.06, rd.y)) * fr + vec3(0.004, 0.005, 0.007);
         } else {
           col = albedoOf(s.y) * duskLight(n);
           // grazing: the dry grass sheen towards the west glow (forward scatter, left of frame)
@@ -430,6 +437,12 @@ export function createWorld(ctx) {
       const fpx = 1920 / 36 * c.F;                              // 1080p px per unit tangent
       const camPos = cam.position;
       for (const m of mats) { m.uniforms.uCam.value.copy(camPos); m.uniforms.uFpx.value = fpx * S; m.uniforms.uAlt.value = c.alt; }
+      // which levels can matter this frame (nearest visible point of each level's square vs its useful footprint)
+      for (let k = 1; k < 5; k++) {
+        const [ext, res] = LEVELS[k], tex = 2 * ext / res;
+        const near = Math.max(0, Math.hypot(camPos.x, camPos.z) - ext * 1.42, c.alt);
+        U0.uOn.value[k] = near / (fpx * S) < tex * 24 ? 1 : 0;
+      }
       skyMat.uniforms.uProjInv.value.copy(cam.projectionMatrixInverse);
       rot.setFromMatrix4(cam.matrixWorld); skyMat.uniforms.uRot.value.copy(rot);
       skyMat.uniforms.uAlt.value = c.alt;

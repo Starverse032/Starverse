@@ -457,7 +457,7 @@ export function createMacro(ctx) {
     uA: { value: COC_A }, uMax: { value: COC_MAX }, uS: { value: S },
   });
 
-  const DUSK_K = 2.1, DUSK_AMB = [0.085, 0.100, 0.145];   // tuned: tinder lit face L 30–50, ground darker
+  const DUSK_K = 2.5, DUSK_AMB = [0.095, 0.112, 0.160];   // tuned: tinder lit face L 30–50, ground darker
   const plates = [];
   const prevClear = new THREE.Color(); renderer.getClearColor(prevClear); const prevAlpha = renderer.getClearAlpha();
   const bakeOne = (li, camera, out, uS) => {
@@ -650,8 +650,8 @@ export function createMacro(ctx) {
       attribute vec2 corner; attribute vec4 par; attribute float gain;
       uniform float uHt; uniform vec2 uBase; varying vec2 vQ; varying vec2 vP;
       void main(){
-        float h = uHt * par.z, w = par.y * uHt * 0.5;
-        vec2 px = uBase + vec2(par.x * uHt * 0.5 * (1.0 - 0.55 * corner.y) + corner.x * w, -corner.y * h);
+        float h = uHt * par.z * 0.9, w = par.y * uHt * 0.7;
+        vec2 px = uBase + vec2(par.x * uHt * 0.75 * (1.0 - 0.45 * corner.y) + corner.x * w, -corner.y * h);
         vQ = corner; vP = vec2(par.w, gain);
         gl_Position = handClip(vec4(px.x / 1920.0 * 2.0 - 1.0, 1.0 - px.y / 1080.0 * 2.0, 0.0, 1.0));
       }`,
@@ -760,25 +760,36 @@ export function createMacro(ctx) {
       vec2 d = min(min(vec2(dot(pq0, pq0), s * (v0.x * e0.y - v0.y * e0.x)), vec2(dot(pq1, pq1), s * (v1.x * e1.y - v1.y * e1.x))), vec2(dot(pq2, pq2), s * (v2.x * e2.y - v2.y * e2.x)));
       return -sqrt(d.x) * sign(d.y);
     }
-    // a knapped flake: triangle with a lumpy edge
-    float stoneSD(vec2 p, vec2 a, vec2 b, vec2 tip, float seed){
-      float d = sdTri(p, a, b, tip) - 14.0;
-      d += 7.0 * (vnoise(p * 0.035 + seed) - 0.5) + 3.0 * (vnoise(p * 0.11 + seed * 3.0) - 0.5);
+    float sdUC(vec2 p, vec2 pa, vec2 pb, float ra, float rb){         // uneven capsule (iq)
+      p -= pa; pb -= pa; float h = dot(pb, pb);
+      vec2 q = vec2(dot(p, vec2(pb.y, -pb.x)), dot(p, pb)) / h;
+      q.x = abs(q.x);
+      float b = ra - rb; vec2 c = vec2(sqrt(h - b * b), b);
+      float k = c.x * q.y - c.y * q.x, m = dot(c, q), n = dot(q, q);
+      if (k < 0.0) return sqrt(h * n) - ra;
+      else if (k > c.x) return sqrt(h * (n + 1.0 - 2.0 * q.y)) - rb;
+      return m - ra;
+    }
+    // a hand-sized stone seen end-on: a blunt, slightly faceted point, lumpy outline
+    float stoneSD(vec2 p, vec2 base, vec2 tip, float ra, float rb, float seed){
+      vec2 pb = tip - normalize(tip - base) * rb;
+      float d = sdUC(p, base, pb, ra, rb);
+      d += 10.0 * (vnoise(p * 0.022 + seed) - 0.5) + 3.0 * (vnoise(p * 0.07 + seed * 3.0) - 0.5);
       return d;
     }
     void main(){
       vec2 px = handInv(vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) / uS);
       if (px.x > 560.0 || uIn <= 0.0) { gl_FragColor = vec4(0.0); return; }
-      const float BL = 17.0;                                  // defocus half-width
+      const float BL = 24.0;                                  // defocus half-width
       vec3 col = vec3(0.0); float al = 0.0;
       for (int k = 0; k < 2; k++){
         vec2 tip = k == 0 ? uT1 : uT2;
-        vec2 a = k == 0 ? tip + vec2(-360.0, -230.0) : tip + vec2(-330.0, 20.0);
-        vec2 b = k == 0 ? tip + vec2(-300.0, 70.0) : tip + vec2(-380.0, 260.0);
-        float sd = stoneSD(px, a, b, tip, float(k) * 5.1);
+        vec2 base = k == 0 ? tip + vec2(-400.0, -170.0) : tip + vec2(-380.0, 180.0);
+        float ra = k == 0 ? 125.0 : 140.0, rb = k == 0 ? 20.0 : 28.0;
+        float sd = stoneSD(px, base, tip, ra, rb, float(k) * 5.1);
         float cov = smoothstep(BL, -BL, sd);
         if (cov <= 0.0) continue;
-        vec2 g = vec2(stoneSD(px + vec2(4.0, 0.0), a, b, tip, float(k) * 5.1) - sd, stoneSD(px + vec2(0.0, 4.0), a, b, tip, float(k) * 5.1) - sd);
+        vec2 g = vec2(stoneSD(px + vec2(4.0, 0.0), base, tip, ra, rb, float(k) * 5.1) - sd, stoneSD(px + vec2(0.0, 4.0), base, tip, ra, rb, float(k) * 5.1) - sd);
         vec2 nrm = normalize(g + 1e-5);                      // outward normal (screen, y down)
         float edge = smoothstep(-34.0, -4.0, sd);
         vec3 rock = (k == 0 ? vec3(0.016, 0.0155, 0.016) : vec3(0.022, 0.019, 0.016)) * (0.7 + 0.6 * vnoise(px * 0.018 + float(k) * 3.0));

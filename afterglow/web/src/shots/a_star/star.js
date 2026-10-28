@@ -98,7 +98,7 @@ export function createStar(ctx) {
           float sg = A.b;
           float limb = 0.10 + 0.90 * pow(mu, 0.95);
           // granulation contrast fades towards the limb, where bright faculae (supergranule network) take over
-          float gc = 0.62 * mix(1.0, 0.35, smoothstep(0.0, 0.7, 1.0 - mu));
+          float gc = mix(1.05, 1.35, uTight) * mix(1.0, 0.4, smoothstep(0.0, 0.7, 1.0 - mu));
           float fac = smoothstep(0.55, 0.8, sg) * smoothstep(0.35, 0.95, 1.0 - mu);
           float I = uI * limb * (1.0 + gc * (g - 0.55) + 0.14 * (sg - 0.5) + 0.55 * fac);
           I *= 1.0 + 0.35 * uPulse;

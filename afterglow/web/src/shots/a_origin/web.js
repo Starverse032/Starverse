@@ -420,10 +420,10 @@ export function createWebLayer(ctx) {
     for (let s = 0; s <= SEG; s++) {
       const u = s / SEG - 0.5;
       const bend = 0.12 * z * Math.sin(u * 3.1 + j);                        // a gentle curve (depth)
-      const lat = 0.10 * z * Math.sin(u * 4.4 + 1.7 * j) + 0.04 * z * Math.sin(u * 11.0 + j);   // and a sway
+      const lat = 0.05 * z * Math.sin(u * 2.6 + 1.7 * j);                    // and a slight sway
       const p = anchor.clone().addScaledVector(tan, u * L).addScaledVector(P.forward, bend)
         .addScaledVector(P.right, lat * dirS[0]).addScaledVector(P.up, -lat * dirS[1]);
-      for (const sd of [-1, 1]) { fPos.push(p.x, p.y, p.z); fSide.push(sd); fAttr.push(u + 0.5, j, 0); }
+      for (const sd of [-1, 1]) { fPos.push(p.x, p.y, p.z); fSide.push(sd); fAttr.push(u + 0.5, j, fc); }
     }
     for (let s = 0; s < SEG; s++) { const a = base + 2 * s; fIdx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
   });
@@ -443,11 +443,11 @@ export function createWebLayer(ctx) {
   const filMat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, depthTest: false, side: THREE.DoubleSide,
     blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
-    uniforms: { ...common, uFilA: { value: 0 }, uRes: { value: new THREE.Vector2(W, H) } },
+    uniforms: { ...common, uFilA: { value: 0 }, uFr: { value: 0 }, uRes: { value: new THREE.Vector2(W, H) } },
     vertexShader: GLSL.common + /* glsl */ `
       attribute vec3 aTan, aF; attribute float aSide;
-      uniform float uS; uniform mat4 uVPa, uVPb; uniform vec2 uRes;
-      varying float vSide, vU, vW, vBlur;
+      uniform float uS, uFr; uniform mat4 uVPa, uVPb; uniform vec2 uRes;
+      varying float vSide, vU, vW, vBlur, vWin;
       void main(){
         vec4 c0 = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         vec4 c1 = projectionMatrix * modelViewMatrix * vec4(position + aTan, 1.0);
@@ -463,20 +463,22 @@ export function createWebLayer(ctx) {
         vec2 off = n * aSide * hw;
         gl_Position = c0 + vec4(off / (0.5 * uRes) * c0.w, 0.0, 0.0);
         vSide = aSide; vU = aF.x;
+        // each thread is seen only around its own pass (≈ ±1.2 s), as it sweeps out of the frame edge
+        float dt = (uFr - aF.z) / 26.0; vWin = exp(-dt * dt) * smoothstep(-2.2, -1.2, dt);
         if (c0.w < 0.05) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
       }`,
     fragmentShader: /* glsl */ `
       uniform float uFilA, uS;
-      varying float vSide, vU, vW, vBlur;
+      varying float vSide, vU, vW, vBlur, vWin;
       void main(){
         float x = vSide * vW;                                     // px from the centre line
         float w0 = 1.5 * uS / max(vBlur, 1e-3);
         float prof = exp(-0.5 * x * x / (w0 * w0 * 0.5));
         float ends = smoothstep(0.0, 0.18, vU) * smoothstep(1.0, 0.82, vU);
         float skirt = exp(-0.5 * x * x / (36.0 * uS * uS));
-        float a = uFilA * 0.85 * prof * ends * vBlur;
+        float a = uFilA * vWin * 0.85 * prof * ends * vBlur;
         // the strand itself glows faintly (cold white) and has a soft defocused skirt
-        vec3 rim = vec3(0.075, 0.085, 0.11) * (prof + 0.25 * skirt) * ends * vBlur * uFilA;
+        vec3 rim = vec3(0.06, 0.068, 0.088) * (prof + 0.25 * skirt) * ends * vBlur * uFilA * vWin;
         gl_FragColor = vec4(rim, a);
       }`,
   });
@@ -516,6 +518,7 @@ export function createWebLayer(ctx) {
       }
       const su = starMat.uniforms;
       su.uHero.value = St.hero; su.uStarDim.value = St.starDim; su.uGlowS.value = St.glowFWHM / 2.355; su.uGlowA.value = St.glowA;
+      filMat.uniforms.uFr.value = fr;
       filMat.uniforms.uFilA.value = sstep(985, 1010, fr) * (1 - sstep(1190, 1205, fr));
       hazeMat.uniforms.uFpxQ.value = cam.projectionMatrix.elements[5] * gasRT.rt.height * 0.5;
       // shutter poses (180°): fr ± 0.25
