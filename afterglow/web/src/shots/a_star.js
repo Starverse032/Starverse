@@ -53,7 +53,7 @@ export async function create(ctx) {
   const post = (shot, f) => postAt(f.t * 24, cloudsPostFn);
   if (!ctx.shotInRange(A2, 0.5)) return { render() {}, post };
 
-  const needWeb = near(1200, 1440), needStar = near(1200, 1350), needShell = near(1340, 1530);
+  const needWeb = near(1200, 1392), needStar = near(1200, 1350), needShell = near(1340, 1530);
   const needEarth = near(1388, 1692), needClouds = near(1656, 1700);
   const t0 = performance.now();
   const corona = createCorona(ctx);
@@ -69,8 +69,8 @@ export async function create(ctx) {
   const copy = ctx.kit.compositor();
 
   function drawWeb(fr, target) {
-    if (!web || fr >= 1440) return;
-    const fade = 1 - C.s5(1392, 1430, fr);
+    if (!web || fr >= 1392) return;
+    const fade = 1 - C.s5(1366, 1392, fr);              // swallowed by the shell's glare before it passes the lens
     if (fade <= 0) return;
     web.camera.setFocalLength(C.focalAt(fr));
     if (fade >= 1) { web.render(renderer, target, fr, { clear: true }); return; }
@@ -97,7 +97,7 @@ export async function create(ctx) {
           if (shell && fr < 1530) shell.render(fr, target, fr < 1440 ? 1 : 0);
           if (earth && fr < 1500) earth.renderBowl(fr, target);
           if (earth) earth.render(f, { shell, clouds });
-          if (shell && fr < 1440) shell.render(fr, target, 2, 1 - 0.6 * C.s5(1392, 1400, fr));
+          if (shell && fr < 1430) shell.render(fr, target, 2, 1 - 0.6 * C.s5(1392, 1400, fr));
           if (earth && fr < 1440) earth.renderSweep(fr, target);
         }
         corona.render(renderer, target, fr);

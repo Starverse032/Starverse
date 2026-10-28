@@ -672,7 +672,7 @@ export function createMacro(ctx) {
         float core = smoothstep(wy * 0.8, 0.0, abs(x)) * exp(-pow((y - 0.22) / 0.25, 2.0));
         // 1200–1900 K: the body sits at 1300–1600 K (orange, saturated through the tone curve), only the
         // small core goes to 1900 K and HDR ≈ 3
-        float Tk = 1200.0 + 700.0 * clamp(0.85 * core * core + 0.30 * (1.0 - y) * body - 0.18 * y + 0.12 * (n2.b - 0.5), 0.0, 1.0);
+        float Tk = 1200.0 + 620.0 * clamp(0.85 * core * core + 0.30 * (1.0 - y) * body - 0.18 * y + 0.12 * (n2.b - 0.5), 0.0, 1.0);
         vec3 c = blackbody(Tk) * dens * (0.22 + 1.2 * core * core + 0.2 * (1.0 - y)) * vP.y;
         gl_FragColor = vec4(c * uF * uFlick, 1.0);
       }`,

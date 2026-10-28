@@ -117,7 +117,7 @@ vec3 duskLight(vec3 n){
   vec3 wdir = normalize(vec3(-0.95, 0.30, -0.10));
   float sky = 0.55 + 0.45 * n.y;
   float wst = max(0.0, 0.25 + 0.75 * dot(n, wdir));
-  return vec3(0.115, 0.130, 0.180) * sky + vec3(0.200, 0.125, 0.075) * wst;
+  return vec3(0.165, 0.185, 0.250) * sky + vec3(0.300, 0.185, 0.110) * wst;
 }
 vec3 albedoOf(float a){
   // 0 lava/bush · 0.35 olive-brown · 0.6 straw · 0.85 pale dust · 1.0 salt (water handled apart)
@@ -311,7 +311,7 @@ export function createWorld(ctx) {
           // water: the dusk sky mirrored (Fresnel at grazing angles), a little dark body colour
           vec3 rd = reflect(dir, vec3(0.0, 1.0, 0.0));
           float fr = 0.02 + 0.98 * pow(1.0 - max(-dir.y, 0.0), 5.0);
-          col = hazeCol(rd) * (2.6 - 1.6 * smoothstep(0.0, 0.06, rd.y)) * fr + vec3(0.004, 0.005, 0.007);
+          col = hazeCol(rd) * (4.2 - 2.4 * smoothstep(0.0, 0.06, rd.y)) * fr + vec3(0.004, 0.005, 0.007);
         } else {
           col = albedoOf(s.y) * duskLight(n);
           // grazing: the dry grass sheen towards the west glow (forward scatter, left of frame)
@@ -382,24 +382,24 @@ export function createWorld(ctx) {
 
   // acacias: thin over the floor, clumped near the target, none on the walls, the lake or the cones
   const rT = rng(1728);
-  const trees = mkBoards(40000, i => {
-    const near = i < 6000;
+  const trees = mkBoards(60000, i => {
+    const near = i < 14000;
     const x = near ? (rT() - 0.5) * 5000 : -7000 + rT() * 17000;
     const z = near ? -4500 + rT() * 8000 : -42000 + rT() * 46000;
     if (x < wallW(z) + 1800 || x > wallE(z) - 1500) return null;
     const lr = Math.hypot((x - LAKE.x) / LAKE.rx, (z - LAKE.z) / LAKE.rz); if (lr < 1.5) return null;
     for (const [cx, cz, , cr] of CONES) if (Math.hypot(x - cx, z - cz) < cr) return null;
     const dens = Math.pow(vnoise2(x / 2200, z / 2200, 3) * 0.7 + vnoise2(x / 600, z / 600, 5) * 0.3, 2.2) * 2.4;
-    if (rT() > dens * (near ? 1.0 : 0.55)) return null;
+    if (rT() > dens * (near ? 1.6 : 0.9)) return null;
     if (Math.hypot(x, z) < 60) return null;                    // keep the target itself clear
     const wd = 6 + 9 * rT();
     return [x, z, wd * 1.25, wd * (0.62 + 0.25 * rT()), Math.floor(rT() * 4), 0.7 + 0.6 * rT()];
-  }, canvasTex(acaciaAtlas()), { body: [0.012, 0.011, 0.011], rim: [0.060, 0.042, 0.030] });
+  }, canvasTex(acaciaAtlas()), { body: [0.006, 0.0058, 0.006], rim: [0.070, 0.048, 0.034] });
   trees.mesh.renderOrder = 1; scene.add(trees.mesh);
 
   // grass tufts around the end of the path (the last ~400 m), denser near R
   const rG = rng(1746);
-  const tufts = mkBoards(45000, i => {
+  const tufts = mkBoards(32000, i => {
     const zf = Math.pow(rG(), 1.6);
     const z = 150 - zf * 520;                                  // z ∈ [−370, 150]
     const span = 30 + Math.max(0, 150 - z) * 0.32;

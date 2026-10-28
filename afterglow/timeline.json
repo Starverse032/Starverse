@@ -988,7 +988,7 @@
    "was": [
     "S15"
    ],
-   "msaa": true,
+   "msaa": false,
    "params": {
     "fireAt": "R",
     "stopFrame": 1776,

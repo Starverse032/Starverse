@@ -73,7 +73,7 @@ export function createShell(ctx) {
           // one-sided asymmetry + patchy brightness
           float asym = 1.0 + 0.60 * dot(normalize(position), uA) + 0.5 * (aPatch - 0.5);
           // near the lens a particle spreads: larger, dimmer (energy kept)
-          float near = clamp(0.35 / max(depth, 0.035), 1.0, 5.0);
+          float near = clamp(0.35 / max(depth, 0.035), 1.0, 3.0);
           float size = (${sizeAdd.toFixed(2)} + ${sizeK.toFixed(2)} * (1.1 * aFil + 0.6 * aSeed)) * near;
           gl_PointSize = max(size * uS, 1.0);
           // thin shell: the line of sight crosses more glowing gas near the limb (path length ∝ 1/|cos|)
@@ -123,12 +123,10 @@ export function createShell(ctx) {
       fine.U.uGain.value = FINE_GAIN * st.energy * gainMul;
       gas.U.uGain.value = GAS_GAIN * st.energy * gainMul;
       const ac = renderer.autoClear; renderer.autoClear = false;
-      renderer.setRenderTarget(gasRT); renderer.setClearColor(0x000000, 1); renderer.clear(true, false, false);
-      renderer.render(sceneGas, cam);
+            { renderer.setRenderTarget(gasRT); renderer.setClearColor(0x000000, 1); renderer.clear(true, false, false); renderer.render(sceneGas, cam); }
       renderer.setRenderTarget(rt); renderer.setClearColor(0x000000, 1); renderer.clear(true, false, false);
       renderer.render(sceneFine, cam);
-      up.material.uniforms.tex.value = gasRT.texture; up.material.uniforms.gain.value = 1;
-      up.render(renderer, rt);
+      { up.material.uniforms.tex.value = gasRT.texture; up.material.uniforms.gain.value = 1; up.render(renderer, rt); }
       // shutter: the image a quarter frame earlier / later is scaled about R by limb(fr ± ¼)/limb(fr)
       const l0 = limb(fr), lo = limb(fr - 0.25) / l0, hi = limb(fr + 0.25) / l0;
       // sampling the current image at p·s reproduces the image at the time whose limb is limb/s
