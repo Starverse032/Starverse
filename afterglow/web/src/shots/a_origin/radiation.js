@@ -100,7 +100,7 @@ export function radState(fr) {
   const ev = smoothPL(EV_KEYS, fr);
   let gain = Math.pow(2, ev);
   // white f603–610 (field at WHITE gain), falling from f611 (outCubic over f611–f646)
-  const W = 1.2, L0 = 0.5;
+  const W = 1.2, L0 = 0.4;
   if (x < 2.5) gain = 0;
   else if (x < 11) gain = W * lerp(1, 0.72, clamp((x - 3) / 8)) * sstep(2.5, 3.0, x);
   else if (fr < 648) gain = logLerp(W * 0.72, L0, outCubic(clamp((x - 11) / 36))) * Math.pow(2, Math.min(0, ev));
@@ -108,10 +108,10 @@ export function radState(fr) {
   if (fr > 900) gain *= 1 - sstep(900, 915, fr);
   s.gain = gain;
   // near fog: luminous (brighter than the field); on the white frames it carries the ≥ 5 % relief
-  s.nearBoost = x < 11 ? 22.0 : lerp(22.0, 1.9, outCubic(clamp((x - 11) / 30)));
+  s.nearBoost = x < 11 ? 22.0 : lerp(22.0, 2.0, outCubic(clamp((x - 11) / 30)));
   s.white = x >= 2.5 && x < 11 ? 1 : x < 2.5 ? 0 : 1 - sstep(11, 30, x);     // warm-white tint weight
   // temperature (log-linear keys, smoothed); the white frames are 6500 K → 4500 K by f648
-  s.T = x < 48 ? logLerp(6500, 4500, sstep(8, 48, x)) : Math.exp(smoothPL(LT_KEYS, fr, 20));
+  s.T = x < 48 ? logLerp(6500, 4500, Math.min(1, sstep(8, 30, x) * 1.0)) : Math.exp(smoothPL(LT_KEYS, fr, 20));
   // decoupling f720–744: mid contrast → 0, far speckle σ 6 → 1 px, near thins to 1–2 wisps
   const dec = clamp((fr - 720) / 24); s.dec = dec * dec * (3 - 2 * dec);
   s.sigmaFar = lerp(6, 1, s.dec);
@@ -255,8 +255,8 @@ export function createRadiation(ctx) {
         float patchy = mix(1.0, 2.6 * smoothstep(0.42, 0.72, g.b), uAmpMid);
         float dens = grain * (0.55 + 0.9 * g.g) * patchy * smoothstep(0.03, 0.12, length(P));
         float a = 0.07 * dens * w * uMidGain;
-        float Te = uTemp * (1.0 + 0.22 * (g.g - 0.5) + 0.12 * (grain - 0.5));
-        col = col * (1.0 - a) + bbN(Te) * (0.11 * dens * w * uMidGain);
+        float Te = uTemp * (1.0 + 0.18 * (g.g - 0.5) + 0.04 * clamp(grain - 0.5, -0.5, 1.0));
+        col = col * (1.0 - a) + bbN(Te) * (0.085 * dens * w * uMidGain);
         T *= 1.0 - a;
       }
 #endif
@@ -276,7 +276,7 @@ export function createRadiation(ctx) {
         float lod = log2(max(1.0, tpp)) + 1.6 * smoothstep(2.5, 0.3, z) + 0.6;
         vec4 fg = textureLod(tFog, uv, lod);
         // after the decoupling only the thin wisps (B) of 1–2 clouds remain
-        float c = mix(mix(fg.r, fg.b, uNearThin), max(fg.b, 0.55 * fg.r), uDustMix) * step(uPresence, hash11(k * 3.7 + 0.31));
+        float c = mix(mix(fg.r, fg.b, uNearThin), max(fg.b, 0.55 * fg.r), uDustMix) * smoothstep(uPresence, uPresence + 0.12, hash11(k * 3.7 + 0.31));
         float tunnel = smoothstep(0.12, 0.75, length(P) * (0.85 + 0.3 * fg.g));   // soft, irregular clear channel
         float dens = c * tunnel * w;
         float a = (0.55 * (1.0 - uWhite) + 0.25 * uWhite) * dens * (0.6 + 0.4 * fg.g);
@@ -322,7 +322,7 @@ export function createRadiation(ctx) {
         Ff += textureLod(tFar, uv + vec2(-0.6, -0.35) * uTexel * uSpread, uLod).r;
         Ff *= 0.5 * (1.0 + 0.10 * uLod);
         float F = uAmpFar * Ff;
-        float Te = uTemp * (1.0 + 0.20 * clamp(0.25 * F, -0.75, 0.75));
+        float Te = uTemp * (1.0 + 0.32 * clamp(0.25 * F, -0.75, 0.75));
         float I = pow(Te / uTemp, 4.0) * exp(uFGain * F);
         vec3 far = bbN(Te) * I;
         // S02-b: the gas around R drains into the afterglow — a darker moat 30–150 px
@@ -407,7 +407,7 @@ export function createRadiation(ctx) {
       layUni.uDust.value = mode === 'dust' || S.gain < 1e-4 ? dustAbs : dustAbs / S.gain;
       layUni.uNearAbs.value = 1 - S.dust;
       layUni.uDustMix.value = S.dust;
-      layUni.uPresence.value = lerp(lerp(0.45, 0.80, S.nearThin), 0.35, S.dust);
+      layUni.uPresence.value = lerp(lerp(lerp(0.55, 0.45, S.white), 0.80, S.nearThin), 0.35, S.dust);
       const ac = r.autoClear; r.autoClear = true;
       r.setClearColor(0x000000, 0);
       if (mode !== 'dust' && S.gain > 1e-4) {
@@ -425,7 +425,7 @@ export function createRadiation(ctx) {
       uni.uFarZoom.value = farZoom;
       uni.uLod.value = Math.max(0, Math.log2(Math.max(1e-3, sig * texPerPx / farZoom / 0.45)));
       uni.uSpread.value = Math.pow(2, uni.uLod.value) * 0.6;
-      uni.uAmpFar.value = S.ampFar; uni.uTemp.value = S.T; uni.uFGain.value = lerp(0.22, 0.30, S.dec);
+      uni.uAmpFar.value = S.ampFar; uni.uTemp.value = S.T; uni.uFGain.value = lerp(0.45, 0.32, S.dec);
       uni.uDrift.value = 0.00004 * (fr - 600);
       uni.uWhite.value = S.white;
       const dustOnly = mode === 'dust' || (S.gain < 1e-4 && S.P <= 0);

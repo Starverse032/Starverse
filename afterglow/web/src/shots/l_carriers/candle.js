@@ -24,7 +24,7 @@ export async function createCandle(ctx, noiseTex, T) {
     const float RW = 55.0;           // pillar radius (110 px wide)
     const float TOPY = 622.0;        // rim (ellipse centre)
     const float RB = 6.5;            // rim ellipse semi-minor (we look down ~7°)
-    const float FB = 615.0;          // flame bottom
+    const float FB = 612.0;          // flame bottom
     const float FHT = 150.0;         // flame height
     float TT;
     vec3 nz(vec2 uv){ return texture2D(uNoise, uv).rgb; }
@@ -56,7 +56,7 @@ export async function createCandle(ctx, noiseTex, T) {
       // soft glow just outside the edge (thin outer flame)
       float edge = exp(-max(d, 0.0) / 1.6) * ss(-0.02, 0.05, v) * step(v, 1.0);
       // blue root: the lowest ~12 px, strongest at the outside of the bowl
-      float root = ss(0.16, 0.04, v) * ss(-0.08, 0.02, v) * exp(-max(d, 0.0) / 2.5) * (0.55 + 0.45 * ss(0.2, 0.9, abs(x) / max(A, 1.0)));
+      float root = ss(0.15, 0.05, v) * ss(-0.10, -0.01, v) * exp(-max(d, 0.0) / 2.0) * ss(0.25, 0.85, abs(x) / max(A, 1.0) + 0.25 * ss(0.02, -0.06, v));
       // the dark zone around the wick: an ellipse low in the flame
       vec2 dz = vec2(x / max(9.0 * g, 1.0), (v - 0.17) / 0.14);
       float dark = exp(-dot(dz, dz) * 1.6) * ss(0.4, 1.0, g);
@@ -100,20 +100,20 @@ export async function createCandle(ctx, noiseTex, T) {
       // sub-surface scattering: light enters at the top and glows through the translucent wax
       float sss = exp(-depth / 9.0) * 0.9 + exp(-depth / 42.0) * 0.28 + exp(-depth / 160.0) * 0.06;
       sss *= 0.55 + 0.45 * nzc;
-      vec3 col = vec3(1.0, 0.56, 0.24) * sss * 0.30;
+      vec3 col = vec3(1.0, 0.50, 0.19) * sss * 0.34;
       // a little direct wrap light on the front face, and wax texture
       float tex = 0.85 + 0.3 * nz(vec2(x / 30.0, p.y / 140.0)).r;
-      col += ivory * vec3(1.0, 0.7, 0.42) * 0.05 * nzc * exp(-depth / 120.0) * tex;
+      col += ivory * vec3(1.0, 0.68, 0.40) * 0.035 * nzc * exp(-depth / 90.0) * tex;
       col += ivory * 0.0035 * nzc;                                 // never quite black
       // the lip: thin translucent wall lit through, brightest
       float lip = exp(-pow((p.y - frontRim) / 2.2, 2.0)) * step(abs(x), RW);
-      col += vec3(1.0, 0.62, 0.30) * lip * 0.30;
+      col += vec3(1.0, 0.58, 0.26) * lip * 0.40;
       // molten pool (seen at a grazing angle), glowing
-      vec3 pool = vec3(1.0, 0.60, 0.26) * (0.38 + 0.12 * nz(vec2(x / 20.0, TT * 0.2)).g);
+      vec3 pool = vec3(1.0, 0.55, 0.22) * (0.30 + 0.10 * nz(vec2(x / 20.0, TT * 0.2)).g) * (0.7 + 0.3 * ss(RW, 0.0, abs(x)));
       col = mix(col, pool, inTop);
       // drips: wax runs, a specular streak of the flame on each
-      col = mix(col, vec3(1.0, 0.6, 0.28) * 0.10 * sss + ivory * 0.02, drip * 0.6);
-      col += vec3(1.0, 0.86, 0.62) * dripHi * 0.55;
+      col = mix(col, vec3(1.0, 0.52, 0.2) * 0.42 * sss + ivory * 0.012, drip * 0.7);
+      col += vec3(1.0, 0.80, 0.55) * dripHi * 0.16 * exp(-max(p.y - TOPY, 0.0) / 70.0);
       col *= light;
       col += vec3(0.0035, 0.0032, 0.0028) * nzc * (1.0 - light);
       // silhouette outline (dark phase): the two sides, the rim ellipse, the drips
@@ -143,7 +143,7 @@ export async function createCandle(ctx, noiseTex, T) {
       float E = 0.236 / pow(dist2 + 0.236 * 0.236 + 0.02, 1.5);
       float grain = 0.75 + 0.35 * nz(vec2(X * 1.6, z * 0.12)).r + 0.15 * sin(X * 140.0 + nz(vec2(X, z * 0.3)).g * 9.0);
       vec3 wood = vec3(0.16, 0.085, 0.045) * grain;
-      return wood * vec3(1.0, 0.62, 0.32) * E * 0.022 * light;
+      return wood * vec3(1.0, 0.62, 0.32) * E * 0.045 * light;
     }
 
     vec3 smoke(vec2 p, float k){
@@ -181,10 +181,10 @@ export async function createCandle(ctx, noiseTex, T) {
         float v = (FB - lift - P.y) / (FHT * max(g, 0.08));
         vec3 outer = kel(1500.0) * 0.22;
         vec3 inner = mix(kel(1800.0), kel(2700.0), 0.65) * 0.95;
-        vec3 fc = outer * f.x;
+        vec3 fc = outer * f.x * ss(0.04, 0.16, v);
         fc = mix(fc, inner * mix(1.0, 1.45, ss(0.2, 0.5, v) * ss(0.85, 0.5, v)), f.y);
         fc *= 1.0 - 0.75 * f.w;                                    // dark zone around the wick
-        fc += ROOT * 0.30 * f.z;
+        fc = mix(fc, ROOT * 0.34, clamp(f.z * 1.2, 0.0, 1.0));
         col = col * (1.0 - 0.6 * f.x) + fc * I;
         // ignition bead (2 frames, blue)
         if (bead > 0.5) col += ROOT * 0.55 * exp(-dot(P - vec2(CX + 3.0, FB - 10.0), P - vec2(CX + 3.0, FB - 10.0)) / 7.0);

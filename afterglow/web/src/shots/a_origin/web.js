@@ -400,7 +400,7 @@ export function createWebLayer(ctx) {
   // ============================== near filaments (occluding) ==================================
   // 4 thin threads, each placed at the pose of frame fc at the depth where it crosses the frame edge
   // at ≈ 30–50 px/frame; drawn "over" (premultiplied): they hide the nodes behind them.
-  const NF = [[1010, 0.62, 2.3], [1065, 0.90, -0.4], [1118, 0.70, 3.6], [1160, 0.82, 1.1]];   // frame, edge fraction, angle
+  const NF = [[1010, 0.55, 2.6], [1065, 0.80, -0.25], [1118, 0.62, 3.4], [1160, 0.75, 0.3]];   // frame, edge fraction, angle
   const fPos = [], fSide = [], fAttr = [], fIdx = [];
   const SEG = 48;
   NF.forEach(([fc, ef, ang], j) => {
@@ -419,8 +419,10 @@ export function createWebLayer(ctx) {
     const base = fPos.length / 3;
     for (let s = 0; s <= SEG; s++) {
       const u = s / SEG - 0.5;
-      const bend = 0.12 * z * Math.sin(u * 3.1 + j);                        // a gentle curve
-      const p = anchor.clone().addScaledVector(tan, u * L).addScaledVector(P.forward, bend);
+      const bend = 0.12 * z * Math.sin(u * 3.1 + j);                        // a gentle curve (depth)
+      const lat = 0.10 * z * Math.sin(u * 4.4 + 1.7 * j) + 0.04 * z * Math.sin(u * 11.0 + j);   // and a sway
+      const p = anchor.clone().addScaledVector(tan, u * L).addScaledVector(P.forward, bend)
+        .addScaledVector(P.right, lat * dirS[0]).addScaledVector(P.up, -lat * dirS[1]);
       for (const sd of [-1, 1]) { fPos.push(p.x, p.y, p.z); fSide.push(sd); fAttr.push(u + 0.5, j, 0); }
     }
     for (let s = 0; s < SEG; s++) { const a = base + 2 * s; fIdx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
@@ -455,8 +457,8 @@ export function createWebLayer(ctx) {
         vec4 ca = uVPa * vec4(position, 1.0), cb = uVPb * vec4(position, 1.0);
         vec2 mv = (ca.w > 0.05 && cb.w > 0.05) ? (cb.xy / cb.w - ca.xy / ca.w) * 0.5 * uRes : vec2(0.0);
         float across = abs(dot(mv, n));
-        float wpx = 3.0 * uS;                                   // 3 px thread (1080p)
-        float hw = 0.5 * wpx + 0.5 * across + 1.5 * uS;
+        float wpx = 3.5 * uS;                                   // 3.5 px thread (1080p)
+        float hw = 0.5 * wpx + 0.5 * across + 9.0 * uS;           // + a soft out-of-focus glow skirt
         vW = hw; vBlur = wpx / (wpx + across);
         vec2 off = n * aSide * hw;
         gl_Position = c0 + vec4(off / (0.5 * uRes) * c0.w, 0.0, 0.0);
@@ -471,8 +473,10 @@ export function createWebLayer(ctx) {
         float w0 = 1.5 * uS / max(vBlur, 1e-3);
         float prof = exp(-0.5 * x * x / (w0 * w0 * 0.5));
         float ends = smoothstep(0.0, 0.18, vU) * smoothstep(1.0, 0.82, vU);
+        float skirt = exp(-0.5 * x * x / (36.0 * uS * uS));
         float a = uFilA * 0.85 * prof * ends * vBlur;
-        vec3 rim = vec3(0.020, 0.024, 0.032) * prof * ends * vBlur * uFilA;   // faint scattered light
+        // the strand itself glows faintly (cold white) and has a soft defocused skirt
+        vec3 rim = vec3(0.075, 0.085, 0.11) * (prof + 0.25 * skirt) * ends * vBlur * uFilA;
         gl_FragColor = vec4(rim, a);
       }`,
   });

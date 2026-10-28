@@ -45,7 +45,7 @@ export function postA(fr) {
   return {
     ...base,
     bloom: lerp(0.35 * u, 0.75, v), streak: 0.12 * w, vignette: 0.2 * u, ca: 0.0006 * u,
-    saturation: lerp(lerp(1, 1.6, u), 1, v),
+    saturation: lerp(lerp(1, lerp(1.8, 1.35, sstep(690, 744, fr)), u), 1, v), contrast: lerp(lerp(1, 1.12, u), 1, v),
   };
 }
 

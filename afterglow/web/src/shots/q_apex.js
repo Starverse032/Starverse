@@ -140,7 +140,7 @@ export async function create(ctx) {
 
   // =========================================================================================
   // The glyph field: the words that land in the lines, the cloud, the cursor's words, the drain
-  const N_MICRO = [1800, 1500, 1500], N_DUST = 1800, N_CUR = 700, N_DRAIN = 7000;
+  const N_MICRO = [1800, 1500, 1500], N_DUST = 1800, N_CUR = 700, N_DRAIN = 3200;
   const groups = [];   // { kind, pts: [[px, py]], line }
   const masks = LQ.map(L => inkMask([{ text: L.text, font: L.font, x: LX, baseline: L.baseline, rtl: L.rtl }],
     [Math.floor(L.rect[0]), Math.floor(L.rect[1]), Math.ceil(L.rect[2] - L.rect[0]), Math.ceil(L.rect[3] - L.rect[1])]));
@@ -202,7 +202,7 @@ export async function create(ctx) {
     const lx = (dx * P9.right.x + dy * P9.right.y + dz * P9.right.z) * 52;
     const ly = (dx * P9.up.x + dy * P9.up.y + dz * P9.up.z) * 52;
     const lz = -(dx * P9.forward.x + dy * P9.forward.y + dz * P9.forward.z) * 52;
-    if (Math.abs(lx) > 3400 || Math.abs(ly) > 2000 || lz > 1500 || lz < -5200) continue;
+    if (Math.abs(lx) > 3400 || Math.abs(ly) > 2000 || lz > 700 || lz < -5200) continue;
     starts.push([lx, ly, lz]);
   }
   const CEN = [X(1000), Y(380)];
@@ -242,7 +242,7 @@ export async function create(ctx) {
       else if (G.kind === 6) { tok = G.toks[pk][2]; em = G.toks[pk][3]; b = 0.5 * Math.exp(0.25 * r.gauss()); }
       else if (G.kind === 9) { tok = seaShort[Math.floor(r() * seaShort.length)]; em = 1.2 + 0.5 * r(); b = 0.25 * Math.exp(0.4 * r.gauss()); }
       else if (G.kind === 7) { tok = seaShort[Math.floor(r() * seaShort.length)]; em = 2.0 + 0.5 * r(); b = 0.55; }
-      else { tok = seaShort[Math.floor(r() * seaShort.length)]; em = 4 + 4 * r(); b = Math.min(8, 1.1 * Math.exp(0.8 * r.gauss())); }
+      else { tok = seaShort[Math.floor(r() * seaShort.length)]; em = 2.6 + 2.2 * r(); b = Math.min(8, 2.0 * Math.exp(0.8 * r.gauss())); }
       // two spiral arms in the start offsets — brighter words trace the arms (flight only)
       if (G.kind !== 7) {
         const a0 = Math.atan2(s[1] - CEN[1], s[0] - CEN[0]), r0 = Math.hypot(s[0] - CEN[0], s[1] - CEN[1]) + 60;
@@ -279,7 +279,7 @@ export async function create(ctx) {
     }
   }
   const HOPTS = {
-    streak: 28,
+    streak: 8,
     uniforms: {
       uShift: { value: 0 }, uSurge: { value: 1 }, uSync: { value: 1 }, uMicro: { value: 0.16 }, uDustLvl: { value: 0.12 },
       uBr: { value: new T.Vector3(1, 1, 1) }, uLive: { value: new T.Vector3(1, 1, 1) }, uQAsx: { value: new T.Vector4(1, 1, 1, 1) },
@@ -372,7 +372,7 @@ export async function create(ctx) {
   const fieldP = glyphMesh(total - nQ, subO(nQ, total), { ...HOPTS, points: true });
   fieldP.material.uniforms = fieldQ.material.uniforms;
   const HU = fieldQ.material.uniforms;
-  HU.res.value.set(W, H); HU.minPx.value = 1.0; HU.capPx.value = [700, 900]; HU.nearFade.value = [60, 300];
+  HU.res.value.set(W, H); HU.minPx.value = 1.0; HU.capPx.value = [90, 160]; HU.nearFade.value = [60, 300];
   const field = new T.Group(); field.add(fieldQ); field.add(fieldP);
   // the drain (kind 8) is not drawn once it has been absorbed: it is the tail of the point list
   let nDrainP = 0; for (let k = nQ; k < total; k++) if (ord.iB[4 * k + 2] === 8) nDrainP++;

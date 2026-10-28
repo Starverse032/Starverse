@@ -85,51 +85,29 @@ vec2 world(vec2 p, float tex){
   return vec2(h, a);
 }`;
 
-export const LEVELS = [[256000, 4096], [32000, 2048], [4000, 2048], [500, 2048], [64, 2048]];
+export const LEVELS = [[256000, 2048], [48000, 2048], [4000, 2048], [500, 2048], [64, 2048]];
 
 // the sampler chain (vertex and fragment): finest level that covers p, blended at its border
 const SAMPLE = /* glsl */ `
 uniform sampler2D uT0, uT1, uT2, uT3, uT4;
 uniform float uE[5], uX[5];                  // half extent, texel (m)
-float hLv(int k, vec2 p, float fp){
-  float lod = max(0.0, log2(fp / uX[k])); vec2 uv = p / (2.0 * uE[k]) + 0.5;
-  if (k == 0) return textureLod(uT0, uv, lod).r; if (k == 1) return textureLod(uT1, uv, lod).r;
-  if (k == 2) return textureLod(uT2, uv, lod).r; if (k == 3) return textureLod(uT3, uv, lod).r;
-  return textureLod(uT4, uv, lod).r;
-}
-vec4 sLv(int k, vec2 p, float fp){
-  float lod = max(0.0, log2(fp / uX[k])); float e = uX[k] * exp2(lod);
-  vec2 uv = p / (2.0 * uE[k]) + 0.5, du = vec2(e / (2.0 * uE[k]), 0.0);
-  vec4 c; float hx, hz;
-  if (k == 0) { c = textureLod(uT0, uv, lod); hx = textureLod(uT0, uv + du, lod).r; hz = textureLod(uT0, uv + du.yx, lod).r; }
-  else if (k == 1) { c = textureLod(uT1, uv, lod); hx = textureLod(uT1, uv + du, lod).r; hz = textureLod(uT1, uv + du.yx, lod).r; }
-  else if (k == 2) { c = textureLod(uT2, uv, lod); hx = textureLod(uT2, uv + du, lod).r; hz = textureLod(uT2, uv + du.yx, lod).r; }
-  else if (k == 3) { c = textureLod(uT3, uv, lod); hx = textureLod(uT3, uv + du, lod).r; hz = textureLod(uT3, uv + du.yx, lod).r; }
-  else { c = textureLod(uT4, uv, lod); hx = textureLod(uT4, uv + du, lod).r; hz = textureLod(uT4, uv + du.yx, lod).r; }
-  return vec4(c.r, c.g, (hx - c.r) / e, (hz - c.r) / e);
-}
-// the finest level that covers p and is not far finer than the footprint; w = weight of that level
-// against the next coarser one (blended at its border)
-int pickLv(vec2 p, float fp, out float w){
+// SwiftShader runs both sides of a branch, so no per-pixel sampler selection: every level is fetched
+// once (rgba = height, albedo, dh/dx, dh/dz, baked) and blended by arithmetic weights — finest level
+// that covers p (fading at its border) and is not much finer than the footprint
+float wLv(int k, vec2 p, float fp){
   float m = max(abs(p.x), abs(p.y));
-  for (int k = 4; k >= 1; k--) {
-    if (m < uE[k] * 0.97 && fp < uX[k] * 24.0) { w = smoothstep(uE[k] * 0.97, uE[k] * 0.8, m) * smoothstep(uX[k] * 24.0, uX[k] * 12.0, fp); if (w > 0.0) return k; }
-  }
-  w = 1.0; return 0;
+  return smoothstep(uE[k] * 0.97, uE[k] * 0.8, m) * smoothstep(uX[k] * 24.0, uX[k] * 12.0, fp);
 }
-float hOf(vec2 p, float fp){
-  float w; int k = pickLv(p, fp, w);
-  float h = hLv(k, p, fp);
-  if (w < 1.0) h = mix(hLv(k - 1, p, fp), h, w);
-  return h;
-}
-// (height, albedo, dh/dx, dh/dz)
+#define TL(T, k) textureLod(T, p / (2.0 * uE[k]) + 0.5, max(0.0, log2(fp / uX[k])))
 vec4 tOf(vec2 p, float fp){
-  float w; int k = pickLv(p, fp, w);
-  vec4 s = sLv(k, p, fp);
-  if (w < 1.0) s = mix(sLv(k - 1, p, fp), s, w);
+  vec4 s = TL(uT0, 0);
+  s = mix(s, TL(uT1, 1), wLv(1, p, fp));
+  s = mix(s, TL(uT2, 2), wLv(2, p, fp));
+  s = mix(s, TL(uT3, 3), wLv(3, p, fp));
+  s = mix(s, TL(uT4, 4), wLv(4, p, fp));
   return s;
 }
+float hOf(vec2 p, float fp){ return tOf(p, fp).r; }
 `;
 
 // the light after sunset: a cold dome + the warm west; n = surface normal
@@ -214,7 +192,9 @@ export function createWorld(ctx) {
     uniforms: { uExt: { value: ext }, uTex: { value: 2 * ext / n } },
     frag: MACRO + /* glsl */ `
       uniform float uExt, uTex;
-      void main(){ vec2 p = (vUv - 0.5) * 2.0 * uExt; vec2 w = world(p, uTex); gl_FragColor = vec4(w.x, w.y, 0.0, 1.0); }`,
+      void main(){ vec2 p = (vUv - 0.5) * 2.0 * uExt; vec2 w = world(p, uTex);
+        float e = uTex; float hx = world(p + vec2(e, 0.0), uTex).x, hz = world(p + vec2(0.0, e), uTex).x;
+        gl_FragColor = vec4(w.x, w.y, (hx - w.x) / e, (hz - w.x) / e); }`,
   }));
   // the target must sit exactly on the ground: its height (≈ 26 m + noise) is subtracted everywhere
   const U0 = {
@@ -255,7 +235,7 @@ export function createWorld(ctx) {
   scene.add(sky);
 
   // ---- terrain: camera-centred radial grid -----------------------------------------------------------
-  const NA = 320, NR = 600;
+  const NA = 160, NR = 600;
   const tg = new THREE.BufferGeometry();
   {
     const pos = new Float32Array(NA * NR * 3);
