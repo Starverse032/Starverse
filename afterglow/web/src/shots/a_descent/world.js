@@ -219,6 +219,33 @@ export function createWorld(ctx) {
     const px = new Float32Array(4); renderer.readRenderTargetPixels(rt, 0, 0, 1, 1, px);
     U0.uH0.value = px[0]; renderer.setRenderTarget(null); rt.dispose(); m.dispose();
   }
+  // CPU copies of levels 1–4 (1024², lod 1) so instance bases are placed once, not fetched per vertex
+  // (vertex texture fetch is the slow path on SwiftShader)
+  const cpuLv = [];
+  {
+    const N = 1024;
+    const rt = new THREE.WebGLRenderTarget(N, N, { type: THREE.FloatType, depthBuffer: false });
+    const m = new THREE.ShaderMaterial({ uniforms: { t: { value: null } }, vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+      fragmentShader: `varying vec2 vUv; uniform sampler2D t; void main(){ gl_FragColor = vec4(textureLod(t, vUv, 1.0).r, 0.0, 0.0, 1.0); }` });
+    const fsq = new ctx.FSQ(m);
+    for (let k = 1; k < 5; k++) {
+      m.uniforms.t.value = levels[k]; fsq.render(renderer, rt);
+      const px = new Float32Array(N * N * 4); renderer.readRenderTargetPixels(rt, 0, 0, N, N, px);
+      const hgt = new Float32Array(N * N); for (let i = 0; i < N * N; i++) hgt[i] = px[i * 4];
+      cpuLv[k] = { ext: LEVELS[k][0], N, h: hgt };
+    }
+    renderer.setRenderTarget(null); rt.dispose(); m.dispose();
+  }
+  const groundAt = (x, z) => {
+    for (let k = 4; k >= 1; k--) {
+      const L = cpuLv[k]; if (Math.max(Math.abs(x), Math.abs(z)) > L.ext * 0.95) continue;
+      const u = (x / (2 * L.ext) + 0.5) * L.N - 0.5, v = (z / (2 * L.ext) + 0.5) * L.N - 0.5;
+      const i = Math.max(0, Math.min(L.N - 2, Math.floor(u))), j = Math.max(0, Math.min(L.N - 2, Math.floor(v)));
+      const fu = Math.min(1, Math.max(0, u - i)), fv = Math.min(1, Math.max(0, v - j)), H_ = L.h, N = L.N;
+      return (H_[j * N + i] * (1 - fu) + H_[j * N + i + 1] * fu) * (1 - fv) + (H_[(j + 1) * N + i] * (1 - fu) + H_[(j + 1) * N + i + 1] * fu) * fv - U0.uH0.value;
+    }
+    return 0;
+  };
   const COMMON = GLSL.common + GLSL.noise + SKY_GLSL + SAMPLE + LIGHT + /* glsl */ `
     uniform vec3 uCam; uniform float uFpx, uH0;
     // render height of the ground at p (target-relative, with the Earth's curvature about the camera nadir)
@@ -303,13 +330,13 @@ export function createWorld(ctx) {
     const g = new THREE.InstancedBufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-0.5, 0, 0, 0.5, 0, 0, 0.5, 1, 0, -0.5, 1, 0]), 3));
     g.setIndex([0, 1, 2, 0, 2, 3]);
-    const A = new Float32Array(count * 4), B = new Float32Array(count * 2);
+    const A = new Float32Array(count * 4), B = new Float32Array(count * 3);
     const list = [];
     for (let i = 0; i < count; i++) { const it = place(i); if (it) list.push(it); }
     list.sort((p, q) => p[1] - q[1]);                           // north (far) first: back to front
-    list.forEach((it, i) => { A.set(it.slice(0, 4), i * 4); B.set(it.slice(4, 6), i * 2); });
+    list.forEach((it, i) => { A.set(it.slice(0, 4), i * 4); B.set([it[4], it[5], groundAt(it[0], it[1])], i * 3); });
     g.setAttribute('a', new THREE.InstancedBufferAttribute(A.subarray(0, list.length * 4), 4));
-    g.setAttribute('b', new THREE.InstancedBufferAttribute(B.subarray(0, list.length * 2), 2));
+    g.setAttribute('b', new THREE.InstancedBufferAttribute(B.subarray(0, list.length * 3), 3));
     g.instanceCount = list.length;
     const m = new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, depthTest: true,
@@ -317,7 +344,7 @@ export function createWorld(ctx) {
       uniforms: { ...U0, uAtlas: { value: atlasTex }, uAlt: { value: 0 }, uFade: { value: new THREE.Vector2(0, 1e9) },
         uBody: { value: new THREE.Vector3(...look.body) }, uRim: { value: new THREE.Vector3(...look.rim) }, uMinPx: { value: 1.2 * S } },
       vertexShader: COMMON + /* glsl */ `
-        attribute vec4 a; attribute vec2 b; uniform float uMinPx; uniform vec2 uFade;
+        attribute vec4 a; attribute vec3 b; uniform float uMinPx; uniform vec2 uFade;
         varying vec2 vUv; varying float vV, vShade, vCov, vDist; varying vec3 vDir;
         void main(){
           vec2 p = a.xy;
@@ -327,7 +354,7 @@ export function createWorld(ctx) {
           float hpx = a.w / fp;
           float g = max(1.0, uMinPx / max(hpx, 1e-3));
           vCov = 1.0 / (g * g) * smoothstep(uFade.y, uFade.y * 0.8, dist) * smoothstep(uFade.x, uFade.x * 1.25, dist);
-          vec3 base = vec3(p.x, yOf(p, fp) - 0.04 * a.w, p.y);
+          vec2 dc = p - uCam.xz; vec3 base = vec3(p.x, b.z - dot(dc, dc) / ${(2 * R_EARTH).toFixed(1)} - 0.04 * a.w, p.y);
           vec3 toC = uCam - base; vec2 side = normalize(vec2(toC.z, -toC.x));    // face the camera (cylindrical)
           vec3 w = base + vec3(side.x, 0.0, side.y) * position.x * a.z * g + vec3(0.0, position.y * a.w * g, 0.0);
           vUv = vec2((b.x + position.x + 0.5) / 4.0, 1.0 - position.y);
@@ -372,7 +399,7 @@ export function createWorld(ctx) {
 
   // grass tufts around the end of the path (the last ~400 m), denser near R
   const rG = rng(1746);
-  const tufts = mkBoards(70000, i => {
+  const tufts = mkBoards(45000, i => {
     const zf = Math.pow(rG(), 1.6);
     const z = 150 - zf * 520;                                  // z ∈ [−370, 150]
     const span = 30 + Math.max(0, 150 - z) * 0.32;
@@ -401,17 +428,19 @@ export function createWorld(ctx) {
       A.set([(r() - 0.5) * 2 * span, z, 0.03 + Math.pow(r(), 3) * 0.28, r() * 6.283], i * 4);
     }
     sg.setAttribute('a', new THREE.InstancedBufferAttribute(A, 4)); sg.instanceCount = NST;
+    const HB = new Float32Array(NST); for (let i = 0; i < NST; i++) HB[i] = groundAt(A[i * 4], A[i * 4 + 1]);
+    sg.setAttribute('hb', new THREE.InstancedBufferAttribute(HB, 1));
   }
   const stoneMat = new THREE.ShaderMaterial({
     uniforms: { ...U0, uAlt: { value: 0 } },
     vertexShader: COMMON + /* glsl */ `
-      attribute vec4 a; varying vec3 vN, vW;
+      attribute vec4 a; attribute float hb; varying vec3 vN, vW;
       void main(){
         float c = cos(a.w), s = sin(a.w);
         vec3 lp = position * a.z; lp.xz = mat2(c, -s, s, c) * lp.xz;
         vec2 p = a.xy;
         float dist = length(vec3(p.x - uCam.x, 0.0, p.y - uCam.z));
-        vec3 w = vec3(p.x, yOf(p, max(dist, 0.5) / uFpx) - a.z * 0.15, p.y) + lp;
+        vec2 dc = p - uCam.xz; vec3 w = vec3(p.x, hb - dot(dc, dc) / ${(2 * R_EARTH).toFixed(1)} - a.z * 0.15, p.y) + lp;
         vec3 n = normal; n.xz = mat2(c, -s, s, c) * n.xz;
         vN = n; vW = w;
         gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.0);

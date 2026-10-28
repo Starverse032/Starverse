@@ -63,7 +63,7 @@ export async function create(ctx) {
   if (needShell) { const { createShell } = await import('./a_star/shell.js'); shell = createShell(ctx); }
   if (needEarth) { const { createEarthView } = await import('./a_star/earth.js'); earth = await createEarthView(ctx, { needShellOverlap: needShell }); }
   if (needClouds && cloudsMod) clouds = cloudsMod.createClouds(ctx);
-  console.error(`[a_star] built web=${!!web} star=${!!star} shell=${!!shell} earth=${!!earth} clouds=${!!clouds} in ${Math.round(performance.now() - t0)} ms`);
+  console.log(`[a_star] built web=${!!web} star=${!!star} shell=${!!shell} earth=${!!earth} clouds=${!!clouds} in ${Math.round(performance.now() - t0)} ms`);
 
   const webRT = needWeb ? ctx.makeRT(W, H) : null;
   const copy = ctx.kit.compositor();
