@@ -38,7 +38,7 @@ export async function createCandle(ctx, noiseTex, T) {
       float k = clamp((fr - uOff) / 4.5, 0.0, 1.0);              // extinction
       lift = 26.0 * k * k;
       g *= 1.0 - 0.72 * k;
-      I = (fr < uDark ? 1.0 : 0.0) * (1.0 - 0.8 * k) * (0.35 + 0.65 * g);
+      I = (fr < uDark ? 1.0 : 0.0) * (1.0 - 0.8 * k) * (1.0 - 0.5 * ss(0.0, 0.3, k)) * (0.35 + 0.65 * g);
     }
 
     // teardrop: returns (density, inner, rootBlue, darkZone) for a point
@@ -98,7 +98,7 @@ export async function createCandle(ctx, noiseTex, T) {
       inTop *= step(abs(x), RW - 1.0);
       vec3 ivory = vec3(0.86, 0.78, 0.62);
       // sub-surface scattering: light enters at the top and glows through the translucent wax
-      float sss = exp(-depth / 9.0) * 0.9 + exp(-depth / 42.0) * 0.28 + exp(-depth / 160.0) * 0.06;
+      float sss = exp(-depth / 9.0) * 0.9 + exp(-depth / 48.0) * 0.40 + exp(-depth / 190.0) * 0.12;
       sss *= 0.55 + 0.45 * nzc;
       vec3 col = vec3(1.0, 0.50, 0.19) * sss * 0.34;
       // a little direct wrap light on the front face, and wax texture
@@ -143,7 +143,7 @@ export async function createCandle(ctx, noiseTex, T) {
       float E = 0.236 / pow(dist2 + 0.236 * 0.236 + 0.02, 1.5);
       float grain = 0.75 + 0.35 * nz(vec2(X * 1.6, z * 0.12)).r + 0.15 * sin(X * 140.0 + nz(vec2(X, z * 0.3)).g * 9.0);
       vec3 wood = vec3(0.16, 0.085, 0.045) * grain;
-      return wood * vec3(1.0, 0.62, 0.32) * E * 0.045 * light;
+      return wood * vec3(1.0, 0.62, 0.32) * E * 0.08 * light;
     }
 
     vec3 smoke(vec2 p, float k){
@@ -171,7 +171,7 @@ export async function createCandle(ctx, noiseTex, T) {
       vec3 pc = pillar(P, L, 0.0, pm, outl);
       col = mix(col, pc, pm);
       // wick (in front of the pool, behind the flame)
-      vec3 tip; float hot = clamp((uDark + 4.0 - uFr) / 4.0, 0.0, 1.0) * (before ? 0.0 : 1.0);
+      vec3 tip; float hot = (before ? 0.0 : 1.0) * (uFr < uDark ? 1.0 : 0.0);
       float wm = wick(P, tip, hot);
       col = mix(col, vec3(0.002), wm);
       col += tip;
@@ -180,9 +180,9 @@ export async function createCandle(ctx, noiseTex, T) {
         vec4 f = teardrop(P, g, lift);
         float v = (FB - lift - P.y) / (FHT * max(g, 0.08));
         vec3 outer = kel(1500.0) * 0.22;
-        vec3 inner = mix(kel(1800.0), kel(2700.0), 0.65) * 0.95;
+        vec3 inner = mix(kel(1800.0), kel(2700.0), 0.45) * 0.95;
         vec3 fc = outer * f.x * ss(0.04, 0.16, v);
-        fc = mix(fc, inner * mix(1.0, 1.45, ss(0.2, 0.5, v) * ss(0.85, 0.5, v)), f.y);
+        fc = mix(fc, inner * mix(1.0, 1.45, ss(0.2, 0.5, v) * ss(0.85, 0.5, v)) * mix(0.55, 1.0, ss(0.8, 1.0, g)), f.y);
         fc *= 1.0 - 0.75 * f.w;                                    // dark zone around the wick
         fc = mix(fc, ROOT * 0.34, clamp(f.z * 1.2, 0.0, 1.0));
         col = col * (1.0 - 0.6 * f.x) + fc * I;

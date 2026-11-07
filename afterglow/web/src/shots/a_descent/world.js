@@ -75,7 +75,7 @@ vec2 world(vec2 p, float tex){
   // rock on the scarps, pale salt / dust round the lake
   float a = 0.55 + 0.9 * (oct(p, 5200.0, 0.30, tex) + oct(q, 1400.0, 0.30, tex) + oct(RT * q, 380.0, 0.26, tex) + oct(q, 95.0, 0.22, tex)
           + oct(RT * q, 24.0, 0.20, tex) + oct(q, 6.0, 0.18, tex) + oct(RT * q, 1.6, 0.16, tex) + oct(q, 0.45, 0.14, tex));
-  a = mix(a, 0.25, onWall * 0.6);
+  a = mix(a, 0.12, onWall * 0.75);
   ${CONES.map(([cx, cz, , cr]) => `a = mix(a, 0.08, smoothstep(1.2, 0.5, length(p - vec2(${cx.toFixed(1)}, ${cz.toFixed(1)})) / ${cr.toFixed(1)}));`).join('\n  ')}
   a = mix(a, 0.95, smoothstep(1.6, 1.05, lr) * smoothstep(0.75, 1.0, lr));
   // the water: below its level the surface is flat (albedo code 1.0 = water)
@@ -136,8 +136,8 @@ vec3 hazeCol(vec3 dir){
   return s < 0.0 ? mix(nn, w, smoothstep(0.0, 1.0, -s)) : mix(nn, e, smoothstep(0.0, 1.0, s));
 }
 vec3 aerial(vec3 col, vec3 dir, float dist, float alt){
-  float k = 1.0 - exp(-dist / 95000.0);
-  return mix(col, hazeCol(dir), k);
+  float k = 1.0 - exp(-dist / 230000.0);
+  return mix(col, hazeCol(dir) * 0.8, k);
 }
 `;
 
@@ -383,7 +383,7 @@ export function createWorld(ctx) {
   // acacias: thin over the floor, clumped near the target, none on the walls, the lake or the cones
   const rT = rng(1728);
   const trees = mkBoards(60000, i => {
-    const near = i < 14000;
+    const near = i < 20000;
     const x = near ? (rT() - 0.5) * 5000 : -7000 + rT() * 17000;
     const z = near ? -4500 + rT() * 8000 : -42000 + rT() * 46000;
     if (x < wallW(z) + 1800 || x > wallE(z) - 1500) return null;
@@ -392,7 +392,7 @@ export function createWorld(ctx) {
     const dens = Math.pow(vnoise2(x / 2200, z / 2200, 3) * 0.7 + vnoise2(x / 600, z / 600, 5) * 0.3, 2.2) * 2.4;
     if (rT() > dens * (near ? 1.6 : 0.9)) return null;
     if (Math.hypot(x, z) < 60) return null;                    // keep the target itself clear
-    const wd = 6 + 9 * rT();
+    const wd = 8 + 9 * rT();
     return [x, z, wd * 1.25, wd * (0.62 + 0.25 * rT()), Math.floor(rT() * 4), 0.7 + 0.6 * rT()];
   }, canvasTex(acaciaAtlas()), { body: [0.006, 0.0058, 0.006], rim: [0.070, 0.048, 0.034] });
   trees.mesh.renderOrder = 1; scene.add(trees.mesh);

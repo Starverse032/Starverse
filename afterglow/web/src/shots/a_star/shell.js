@@ -47,7 +47,7 @@ export function createShell(ctx) {
   const { renderer, W, H, kit, makeRT } = ctx;
   const S = H / 1080;
   const shell = buildShell(300000, 55012);
-  const A = new THREE.Vector3(-0.62, 0.45, 0.64).normalize();      // the brighter side (upper left, towards us)
+  const A = new THREE.Vector3(-0.72, 0.52, 0.35).normalize();      // the brighter side (upper left, towards us)
 
   function makeMat(sizeK, sizeAdd, filW, quarter) {
     const U = { uQ: { value: 0.01 }, uGain: { value: 1 }, uHot: { value: 1 }, uS: { value: S * (quarter ? 0.25 : 1) }, uSpread: { value: 1 }, uMode: { value: 0 }, uA: { value: A } };
@@ -71,7 +71,7 @@ export function createShell(ctx) {
           c /= max(0.12, dot(c, vec3(0.2126, 0.7152, 0.0722)));
           vCol = mix(c, vec3(0.93, 0.97, 1.0) * 1.0, uHot);
           // one-sided asymmetry + patchy brightness
-          float asym = 1.0 + 0.60 * dot(normalize(position), uA) + 0.5 * (aPatch - 0.5);
+          float asym = exp(1.25 * dot(normalize(position), uA)) * (0.7 + 0.6 * aPatch) / 1.28;   // one-sided ejecta (Cas A-like), K21 CoV ≥ 0.3
           // near the lens a particle spreads: larger, dimmer (energy kept)
           float near = clamp(0.35 / max(depth, 0.035), 1.0, 3.0);
           float size = (${sizeAdd.toFixed(2)} + ${sizeK.toFixed(2)} * (1.1 * aFil + 0.6 * aSeed)) * near;
@@ -80,7 +80,7 @@ export function createShell(ctx) {
           vec3 nv = normalize(mat3(modelViewMatrix) * position);
           float cosv = abs(dot(nv, normalize(mv.xyz)));
           float path = pow(min(1.0 / max(cosv, 0.1), 6.0), 0.85);
-          vI = path * aB * uGain * max(asym, 0.15) * mix(1.0, 0.1 + 0.9 * aFil, ${filW.toFixed(2)}) / (near * near) * (1.0 - 0.35 * ha);
+          vI = path * aB * uGain * asym * mix(1.0, 0.1 + 0.9 * aFil, ${filW.toFixed(2)}) / (near * near) * (1.0 - 0.35 * ha);
         }`,
       fragmentShader: /* glsl */ `
         varying vec3 vCol; varying float vI;

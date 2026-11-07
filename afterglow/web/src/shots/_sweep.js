@@ -246,7 +246,7 @@ export function createSweep(ctx) {
   // where the blades thin out (light through dry grass)
   const LOOK = {
     acacia: { body: [0.0045, 0.0040, 0.0038], rim: [0.10, 0.072, 0.055], trans: [0.004, 0.003, 0.002], rimPx: 16, shadeK: 0 },
-    grass: { body: [0.032, 0.025, 0.016], rim: [0.120, 0.085, 0.052], trans: [0.010, 0.008, 0.005], rimPx: 12, shadeK: 0.8 },
+    grass: { body: [0.046, 0.036, 0.022], rim: [0.170, 0.120, 0.072], trans: [0.014, 0.011, 0.007], rimPx: 12, shadeK: 0.8 },
   };
   function drawLayer(target, n, pose, tex, look) {
     const U = layerMat.uniforms;

@@ -382,7 +382,8 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
       tufts.push([x, z, 14 + Math.floor(rng() * 22), 0.16 + rng() * 0.4]);
     }
     for (const [x, z, n, h] of [[-0.55, -1.45, 34, 0.42], [-0.95, -1.9, 28, 0.5], [0.62, -1.6, 30, 0.38], [1.05, -2.2, 26, 0.46], [-0.38, -2.35, 18, 0.3], [0.33, -2.6, 16, 0.28]]) tufts.push([x, z, n, h]);
-    for (const [tx, tz, nb, ht] of tufts) {
+    for (const [tx, tz, nb0, ht] of tufts) {
+      const nb = Math.hypot(tx - FP.x, tz - FP.z) > 4.5 ? Math.ceil(nb0 * 0.5) : nb0;   // far tufts: fewer, sub-pixel blades
       for (let i = 0; i < nb; i++) {
         const az = rng() * Math.PI * 2, rr = Math.sqrt(rng()) * 0.05;
         blade(tx + Math.cos(az) * rr, tz + Math.sin(az) * rr, ht * (0.4 + 0.75 * rng()), 0.003 + rng() * 0.0035,
@@ -415,7 +416,7 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
         void main(){ vec2 q = GBOX.xy + vUv * GBOX.zw; vec3 alb; float h; groundAlb(q, length(q - vec2(0.0, -3.2)), alb, h); gl_FragColor = vec4(alb, h / 0.006); }`,
     });
     const setU = {
-      ...handU, uGround: { value: groundTex }, uNoShadow: { value: 0 }, uLMap: { value: null }, uLM: { value: 0 }, uLMOnly: { value: 0 }, uLP: { value: new THREE.Vector3() }, uLC: { value: new THREE.Vector3() }, uShadow: { value: null }, uLP0: { value: new THREE.Vector3() },
+      ...handU, uGround: { value: groundTex }, uNoShadow: { value: 0 }, uLMap: { value: null }, uLM: { value: 0 }, uLMOnly: { value: 0 }, uDbgHide: { value: -9 }, uLP: { value: new THREE.Vector3() }, uLC: { value: new THREE.Vector3() }, uShadow: { value: null }, uLP0: { value: new THREE.Vector3() },
       uFP: { value: FP }, uT: { value: 0 }, uSky: { value: new THREE.Vector3() }, uEmb: { value: 1 }, uMode: { value: 0 }, uFs: { value: 1 },
     };
     // uMode: 0 = full shading (F2 live), 1 = light only (bake), 2 = sky only (bake), 3 = emission only (F1 live)
@@ -423,7 +424,7 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
       side: THREE.DoubleSide, uniforms: setU,
       vertexShader: HAND_GLSL + /* glsl */ `
         attribute float mat; attribute float seed; attribute vec2 ru;
-        uniform vec3 uLP, uLP0, uLC; uniform samplerCube uShadow; uniform float uLM;
+        uniform vec3 uLP, uLP0, uLC; uniform samplerCube uShadow; uniform float uLM, uDbgHide;
         varying vec3 vW, vN, vBL; varying float vMat, vSeed; varying vec2 vRu;
         void main(){
           vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vN = normalize(mat3(modelMatrix) * normal);
@@ -439,12 +440,13 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
             float bias = 0.01 + 0.02 * d, v = 0.0;
             for (int i = 0; i < 6; i++){
               float a = float(i) * 2.39996 + seed * 6.2832, r = sqrt((float(i) + 0.5) / 6.0) * 0.07;
-              v += step(d - bias, textureCube(uShadow, n + (t1 * cos(a) + t2 * sin(a)) * r).r * 50.0);
+              v += step(d - bias, texture(uShadow, n + (t1 * cos(a) + t2 * sin(a)) * r).r * 50.0);
             }
             float nl = dot(N, L);
             vBL = (max(nl, 0.0) + 0.55 * max(-nl, 0.0) * vec3(1.0, 0.8, 0.55)) / 3.14159265 / (d2 + 0.0225) * (v / 6.0) * uLC;
           }
           gl_Position = handClip(projectionMatrix * viewMatrix * w);
+          if (abs(mat - uDbgHide) < 0.5) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
         }`,
       fragmentShader: GLSL.all + /* glsl */ `
         uniform vec3 uLP, uLC, uLP0, uFP, uSky; uniform samplerCube uShadow; uniform float uT, uEmb, uFs; uniform int uMode;
@@ -494,6 +496,14 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
             }
             gl_FragColor = vec4(emi * uEmb, 0.0);
             return;
+          }
+          if (uLM > 0.5 && vMat < 0.5) {                     // F2 live, near ground: baked fire light + albedo, no bump search
+            vec2 lu0 = (P.xz - LBOX.xy) / LBOX.zw;
+            if (lu0.x > 0.0 && lu0.x < 1.0 && lu0.y > 0.0 && lu0.y < 1.0) {
+              vec3 albG = texture2D(uGround, (P.xz - GBOX.xy) / GBOX.zw).rgb;
+              gl_FragColor = vec4(texture2D(uLMap, vec2(lu0.x, 1.0 - lu0.y)).rgb * uLC + albG * uSky * (0.55 + 0.45 * normalize(vN).y), 1.0);
+              return;
+            }
           }
           if (uLM > 0.5 && vMat > 1.5 && vMat < 2.5) {
             float sd = vSeed;
@@ -919,10 +929,12 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
     const sc = s.f2.scene; sc.add(s.setMesh, s.flMesh, s.spMesh);
     s.nearRT.scissor.set(0, Math.floor(f.barPx), W, H - 2 * Math.floor(f.barPx)); s.nearRT.scissorTest = true;
     s.setU.uNoShadow.value = dbg.skip.has('shadow') ? 1 : 0;
+    s.setU.uDbgHide.value = dbg.skip.has('noblades') ? 2 : dbg.skip.has('noground') ? 0 : -9;
     const flatM = dbg.skip.has('flat') ? (dbg.flatM ||= new THREE.MeshBasicMaterial({ color: 0x101010, side: THREE.DoubleSide })) : null;
     if (flatM) s.setMesh.material = flatM;
-    if (dbg.skip.has('nomsaa')) {
-      s.nearRT1 ||= ctx.makeRT(W, H, { depth: true });
+    if (dbg.skip.has('nomsaa') || dbg.skip.has('msaa2')) {
+      if (dbg.skip.has('msaa2')) s.nearRT1 ||= ctx.makeRT(W, H, { depth: true, samples: 2 });
+      else s.nearRT1 ||= ctx.makeRT(W, H, { depth: true });
       renderer.setRenderTarget(s.nearRT1); renderer.setClearColor(0x000000, 0); renderer.clear(true, true, false); renderer.setClearColor(0x000000, 1);
       renderer.render(sc, cam35);
       s.nearComp.material.uniforms.tex.value = s.nearRT1.texture; s.nearComp.render(renderer, f.target); s.nearComp.material.uniforms.tex.value = s.nearRT.texture;

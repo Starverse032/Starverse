@@ -23,7 +23,7 @@ export async function createLantern(ctx, noiseTex, T) {
     const vec3 GHI = ${v3(GLASS_HI)};
     const float GT = 350.0, GB = 730.0;          // glass top / bottom (y)
     const float GR = 130.0;                      // glass max radius
-    const float WICKY = 579.0;                   // wick slot (flame bottom)
+    const float WICKY = 575.0;                   // wick slot (flame bottom)
     float TT;
     vec3 nz(vec2 uv){ return texture2D(uNoise, uv).rgb; }
     float gr(float y){ float yn = clamp((y - 0.5 * (GT + GB)) / (0.5 * (GB - GT)), -1.0, 1.0); return GR * (0.80 + 0.20 * sqrt(1.0 - yn * yn)); }
@@ -36,7 +36,7 @@ export async function createLantern(ctx, noiseTex, T) {
       hgt = mix(1.0, 0.0, k);
       bead = ss(0.55, 0.85, k) * (1.0 - step(uDark, fr));
       float up = ss(0.0, 1.0, (fr - uOn - 3.0) / 3.0);          // full brightness only once the whole wick burns
-      I = (fr >= uOn && fr < uDark ? 1.0 : 0.0) * (0.45 + 0.55 * up) * (1.0 - 0.85 * k);
+      I = (fr >= uOn && fr < uDark ? 1.0 : 0.0) * (0.45 + 0.55 * up) * pow(1.0 - k, 2.5);
     }
 
     // the flat fan flame: returns (density, core)
@@ -59,7 +59,7 @@ export async function createLantern(ctx, noiseTex, T) {
       return vec2(max(dens, glow * 0.5) * caught, core * caught);
     }
     vec3 fanColour(vec2 f, float v){
-      vec3 body = mix(kel(2600.0), kel(3400.0), 0.55);
+      vec3 body = kel(2480.0);
       vec3 c = kel(1900.0) * 0.45 * f.x;
       c = mix(c, body * 1.25, f.y);
       // a little blue at the wick ends
@@ -89,7 +89,7 @@ export async function createLantern(ctx, noiseTex, T) {
         for (int i = 0; i < 6; i++) { float a0 = (float(i) - 2.5) * 0.52 + 0.08 * sin(float(i) * 3.0); sh *= 1.0 - 0.75 * exp(-pow((ang - a0) / 0.022, 2.0)) * ss(0.15, 0.4, r); }
         float boards = 0.7 + 0.5 * nz(vec2(X * 0.6, z * 0.05)).r * (0.6 + 0.4 * sin(X * 52.0)) + 0.25 * nz(vec2(X * 9.0, z * 2.0)).g;
         float gap = 1.0 - 0.7 * exp(-pow(fract(X * 6.0) - 0.5, 2.0) / 0.0004);
-        col += vec3(0.20, 0.12, 0.07) * vec3(1.0, 0.62, 0.30) * E * 0.020 * boards * gap * sh * L;
+        col += vec3(0.20, 0.12, 0.07) * vec3(1.0, 0.62, 0.30) * E * 0.045 * boards * gap * sh * L;
       }
 
       // ---------- fount (oil tank): a squat rounded drum ----------
@@ -133,7 +133,7 @@ export async function createLantern(ctx, noiseTex, T) {
       vec3 inside = mix(vec3(0.0), brass, mB) + flameC;
       // light scattered in the hot glass and the warm air: a faint fill so the globe reads as a volume
       float vol = exp(-pow((y - 560.0) / 150.0, 2.0)) * (0.5 + 0.5 * nzg);
-      vec3 glass = vec3(1.0, 0.56, 0.24) * 0.022 * vol * L;
+      vec3 glass = vec3(1.0, 0.56, 0.24) * 0.040 * vol * L;
       // Fresnel edges reflect the flame's light (warm), the far side's inner reflection
       glass += vec3(1.0, 0.62, 0.30) * fres * 0.10 * exp(-pow((y - 545.0) / 120.0, 2.0)) * L;
       // the flame refracted and stretched at the globe's edges
@@ -213,10 +213,10 @@ export async function createLantern(ctx, noiseTex, T) {
       }
       col = mix(col, wc, mW);
       // dark phase: tin silhouettes (ember-warm, faint) + the glass outline by its residual reflections
-      vec3 o = emberLine(outl, 0.9) * 0.85 + vec3(0.032, 0.036, 0.042) * outlCold;
-      o += kel(1200.0) * 0.12 * exp(-dot(P - vec2(960.0, WICKY), P - vec2(960.0, WICKY)) / 10.0) * ss(uDark + 5.0, uDark, uFr);  // wick ember
+      vec3 o = max(emberLine(outl, 0.9) * 0.85, vec3(0.032, 0.036, 0.042) * outlCold);
+      o += kel(1200.0) * 0.040 * exp(-dot(P - vec2(960.0, WICKY), P - vec2(960.0, WICKY)) / 10.0) * ss(uDark + 5.0, uDark, uFr);  // wick ember
       bool lit = uFr >= uOn && uFr < uDark;
-      col = lit ? col : o * uOutline + (uFr >= uDark ? kel(1200.0) * 0.10 * exp(-dot(P - vec2(960.0, WICKY), P - vec2(960.0, WICKY)) / 10.0) * ss(uDark + 5.0, uDark, uFr) : vec3(0.0));
+      col = lit ? col : o * uOutline + (uFr >= uDark ? kel(1200.0) * 0.030 * exp(-dot(P - vec2(960.0, WICKY), P - vec2(960.0, WICKY)) / 10.0) * ss(uDark + 5.0, uDark, uFr) : vec3(0.0));
       gl_FragColor = vec4(col * uGain, 1.0);
     }`, U);
   return {

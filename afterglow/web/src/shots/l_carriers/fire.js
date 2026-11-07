@@ -72,10 +72,10 @@ export function createFire(ctx, noiseTex, T) {
       stri = 0.45 + 1.1 * ss(0.30, 0.75, stri * 0.7 + n3.g * 0.45);
       // white-hot body: a stable ellipse centred on C (it is what K1 measures), breathing in brightness only
       vec2 cq = vec2((p.x - CC.x) / 84.0, (p.y - CC.y) / 120.0);
-      float core = exp(-pow(dot(cq, cq), 1.3) * 1.9) * ss(0.25, 0.9, hf) * (0.75 + 0.25 * n2.g) * (0.7 + 0.3 * stri);
-      float T = mix(1250.0, 1700.0, clamp(dens * 0.45 + (1.0 - hn) * 0.40 + (n3.b - 0.5) * 0.25, 0.0, 1.0));
+      float core = exp(-pow(dot(cq, cq), 1.3) * 1.9) * ss(0.82, 0.97, hf) * (0.75 + 0.25 * n2.g) * (0.7 + 0.3 * stri);
+      float T = mix(1060.0, 1400.0, clamp(dens * 0.45 + (1.0 - hn) * 0.40 + (n3.b - 0.5) * 0.25, 0.0, 1.0));
       vec3 c = kel(T) * pow(dens, 1.6) * (0.16 + 0.32 * (1.0 - hn)) * stri;
-      c += kel(mix(1600.0, 1900.0, core)) * core * core * 1.7 * ss(0.1, 0.6, dens);
+      c += kel(mix(1380.0, 1650.0, core)) * core * core * 1.9 * ss(0.1, 0.6, dens);
       return c * If;
     }
 
@@ -262,7 +262,7 @@ export function createFire(ctx, noiseTex, T) {
       float k = clamp((uFr - uOff) / 5.0, 0.0, 1.0);               // collapse progress
       float alive = 1.0 - step(uDark, uFr);                         // main light on?
       float hf = mix(1.0, 0.11, k * k * (3.0 - 2.0 * k));
-      float If = (1.0 - 0.55 * k) * alive;
+      float If = (1.0 - 0.55 * k) * (1.0 - 0.55 * ss(0.0, 0.35, k)) * alive;
       float lit = mix(1.0, 0.45, k) * alive;                        // flame light on the set
       vec3 col = vec3(0.0);
       float outl = 0.0;
@@ -279,6 +279,9 @@ export function createFire(ctx, noiseTex, T) {
       vec3 st = stones(P, lit, socc, soutl);
       col = mix(col, st, socc);
       col += sparks(P, alive * (1.0 - k));
+      // while the flames sink onto the bed, the hot gas they leave still glows round the light centre
+      vec2 gq = (P - vec2(CC.x, CC.y + 10.0)) / vec2(70.0, 95.0);
+      col += kel(1350.0) * 0.16 * exp(-dot(gq, gq)) * ss(0.0, 0.15, k) * (1.0 - 0.55 * k) * alive;
       // a faint ruddy haze around the fire (light scattered by smoke), very low
       vec2 hq = (P - vec2(CC.x, 560.0)) / vec2(330.0, 300.0);
       col += vec3(1.0, 0.45, 0.16) * 0.006 * exp(-dot(hq, hq) * 1.5) * If;
@@ -295,7 +298,7 @@ export function createFire(ctx, noiseTex, T) {
     U,
     render(target, fr, t, outline, additive, util) {
       U.uFr.value = fr; U.uOutline.value = outline;
-      const s = shake(util, t); U.uShake.value.set(s[0], s[1]);
+      const s = shake(util, t); U.uShake.value.set(s[0], s[1] + 10.0);
       p.draw(renderer, target, additive);
     },
   };

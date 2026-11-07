@@ -196,7 +196,7 @@ export async function createSheet(ctx, noiseTex, T, shot) {
       vec3 trc = K * 0.022 + vec3(0.002) + K * 0.06 * mcov1(ty + 0.5 * tb - max(FP, 0.004), ty + 0.5 * tb, g.y * GH);  // lower edge catches the lamp
       c = mix(c, trc, tr);
       // the lamp over everything behind it
-      vec3 lamp = K * 1.32 * (1.0 + 0.06 * (1.0 - ss(0.0, LAMPR, length(m - vec2(0.0, 0.25 * LAMPR)))));
+      vec3 lamp = K * 1.32 * (1.0 + 0.06 * (1.0 - ss(0.0, LAMPR, length(m))));
       c *= lev;
       c = mix(c, lamp * lev, shade);
       // glass: a faint cool reflection of the city sky (≈ 4 %), stronger toward the head; a few dust motes
@@ -544,7 +544,7 @@ export async function createSheet(ctx, noiseTex, T, shot) {
       gl_FragColor = vec4(col * uGain, 1.0);
     }`, U);
 
-  const LAMP = [0.59, 0.84, 1.0];                           // f2568, f2569, f2570: 85 % / 96 % / 100 % display
+  const LAMP = [0.63, 0.87, 1.0];                           // f2568, f2569, f2570: 85 % / 96 % / 100 % display
   return {
     U,
     render(target, fr, t, outline, additive) {

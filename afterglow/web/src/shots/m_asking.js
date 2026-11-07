@@ -32,7 +32,7 @@ export async function create(ctx) {
     if (ctx.shotInRange(s, 0.5)) cuts[s.id] = BUILD[s.id](ctx, s);
   }
   return {
-    msaa: true,
+    msaa: false,
     render(shot, f) {
       const c = cuts[shot.id];
       if (c) return c.render(shot, f);

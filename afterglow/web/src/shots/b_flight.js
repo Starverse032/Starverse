@@ -186,6 +186,7 @@ export async function create(ctx) {
     // 6. the reading targets
     if (words && words.heroes) {
       const st = heroState(n);
+      if (globalThis.__bfDiag) console.log('b_flight diag hero', n, JSON.stringify(st));
       if (words.heroes.apply(st)) {
         words.heroes.render(target);
         if (mask) words.heroes.renderMask(mask);
@@ -206,6 +207,7 @@ export async function create(ctx) {
     motionBlur: f => { const n = f.t * P.FPS; return n >= 3792 && n < 3816 ? 3 : 0; },
     render(shot, f) {
       const n = f.t * P.FPS;
+      globalThis.__bfDiag = true;
       draw(n, f.target, f.mask && f.sub === 0 ? f.mask : null);
     },
     post,

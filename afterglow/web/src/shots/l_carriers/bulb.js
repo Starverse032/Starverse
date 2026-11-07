@@ -94,6 +94,7 @@ export async function createBulb(ctx, noiseTex, T) {
         vec3 g = vec3(0.0);
         // edges: Fresnel reflections of the filament's light
         g += lc * fres * 0.09 * (0.6 + 0.4 * ss(740.0, 450.0, y));
+        g += lc * 0.012 * nzg * ss(740.0, 520.0, y);                    // the glass faintly lit through: the envelope reads as a volume
         // two soft vertical highlights (≈ 10 %) and one small hot spot — restrained
         float vfall = ss(400.0, 450.0, y) * ss(600.0, 500.0, y);
         g += lc * 0.016 * (exp(-pow((u + 0.55) / 0.10, 2.0)) + 0.7 * exp(-pow((u - 0.50) / 0.08, 2.0))) * vfall;
@@ -144,7 +145,7 @@ export async function createBulb(ctx, noiseTex, T) {
     if (fr < T.on - 0.5) return { lum: 0, Tk: 800 };
     if (fr < T.off) {
       const u = Math.min(1, Math.max(0, (fr - T.on) / 9));
-      const e = 1 - Math.pow(1 - u, 1.6);
+      const e = Math.pow(u, 1.8);
       const Tk = 800 + 1900 * e;
       return { lum: lumOf(Tk), Tk };
     }
@@ -161,7 +162,7 @@ export async function createBulb(ctx, noiseTex, T) {
       const s = state(fr);
       U.uFr.value = fr; U.uOutline.value = outline; U.uLum.value = s.lum;
       // apparent colour: below ~1450 K a dull glow reads deep red-orange, never magenta (ACES)
-      U.uTk.value = Math.max(s.Tk, 1450 + (s.Tk - 800) * 0.25);
+      U.uTk.value = Math.max(s.Tk, 1450 + (s.Tk - 800) * 0.25) + 300 * Math.min(1, Math.max(0, (s.Tk - 1900) / 800));
       p.draw(renderer, target, additive);
     },
   };

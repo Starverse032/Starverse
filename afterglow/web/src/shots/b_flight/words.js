@@ -107,7 +107,7 @@ export async function createWords(ctx, { lensCam, needStream = true, needHeroes 
     for (let w = 0.2; w < W_MAX; w += 0.02) {
       if (R() > RHO0 * 0.02 * P.streamDensity(w)) continue;
       const k = Math.floor(R() * ORDER.length), rc = atlas.rects[k];
-      const lat = 0.13 * Math.min(2.6, Math.abs(gauss(R()))) , ang = R() * 6.2831853;
+      const lat = 0.13 * Math.min(2.6, Math.abs(gauss(R))) , ang = R() * 6.2831853;
       const hh = 0.04 + 0.09 * Math.pow(R(), 1.8);
       const tint = R(), col = tint < 0.55 ? QA : tint < 0.82 ? QB : QC;
       inst.push({ rc, w: w + 0.02 * R(), x: P.BOFF[0] + lat * Math.cos(ang), y: P.BOFF[1] + lat * Math.sin(ang), h: hh, b: 0.75 + 0.5 * R(), col, ap: 1, near: 0 });
@@ -226,8 +226,8 @@ export async function createWords(ctx, { lensCam, needStream = true, needHeroes 
           float fy = projectionMatrix[1][1] * uRes.y * 0.5;
           float sig = fy * uSig / c.w;                               // render px
           float sg = max(sig, 0.8 * uPx);
-          float half = 3.2 * sg;
-          vec2 q = s + nrm * position.y * half;
+          float hw = 3.2 * sg;
+          vec2 q = s + nrm * position.y * hw;
           gl_Position = vec4(q / uRes * 2.0 - 1.0, c.z / c.w, 1.0);
           vAcross = position.y * 3.2; vZ = z; vW = uZF - z; vSigPx = sig / uPx;
           vI = min(1.0, sig / sg);
