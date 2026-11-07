@@ -318,9 +318,9 @@ export function createClouds(ctx) {
   const compMat = new THREE.ShaderMaterial({
     vertexShader: VS_UV, depthTest: false, depthWrite: false,
     uniforms: { uProjInv: { value: new THREE.Matrix4() }, uRot: { value: new THREE.Matrix3() }, uCam: { value: new THREE.Vector3() }, uN: { value: 0 },
-      uClouds: { value: rtC.texture }, uBase: { value: null }, uUseBase: { value: 0 } },
+      uClouds: { value: rtC.texture }, uBase: { value: null }, uUseBase: { value: 0 }, uBaseMix: { value: 1 } },
     fragmentShader: COMMON + /* glsl */ `
-      uniform sampler2D uClouds, uBase; uniform float uUseBase;
+      uniform sampler2D uClouds, uBase; uniform float uUseBase, uBaseMix;
       vec3 farGround(vec3 ro, vec3 rd, float t){
         vec3 p = ro + rd * t;
         float v = 0.5 + 0.5 * sin(p.x / 3100.0) * sin(p.z / 2700.0 + 1.3);
@@ -330,8 +330,8 @@ export function createClouds(ctx) {
       void main(){
         vec3 rd = rayDir(vUv), ro = uCam;
         vec3 bg;
-        if (uUseBase > 0.5) bg = texture2D(uBase, vUv).rgb;
-        else { float g = groundHit(ro, rd); bg = g > 0.0 ? farGround(ro, rd, g) : duskSky(rd, ro.y); }
+        float g = groundHit(ro, rd); bg = g > 0.0 ? farGround(ro, rd, g) : duskSky(rd, ro.y);
+        if (uUseBase > 0.5) bg = mix(bg, texture2D(uBase, vUv).rgb, uBaseMix);
         vec4 c = texture2D(uClouds, vUv);
         gl_FragColor = vec4(bg * (1.0 - c.a) + c.rgb, 1.0);
       }`,
@@ -360,7 +360,8 @@ export function createClouds(ctx) {
     texture: tex,
     coverAt,
     // Draw the cloud frame into f.target (or opts.target). opts.base: a texture with the world under the
-    // clouds (A3's terrain) in place of the built-in sky + far ground; opts.blur = false: no zoom blur.
+    // clouds (A3's terrain) in place of the built-in sky + far ground (opts.baseMix: its weight, default 1);
+    // opts.blur = false: no zoom blur.
     render(f, opts = {}) {
       const n = f.t * 24;
       const target = opts.target || f.target;
@@ -371,6 +372,7 @@ export function createClouds(ctx) {
       setCam(compMat, n);
       compMat.uniforms.uUseBase.value = opts.base ? 1 : 0;
       compMat.uniforms.uBase.value = opts.base || null;
+      compMat.uniforms.uBaseMix.value = opts.baseMix ?? 1;
       if (opts.blur === false) compPass.render(renderer, target);
       else { compPass.render(renderer, rtComp); blur.apply(rtComp.texture, target, n); }
       renderer.autoClear = ac;

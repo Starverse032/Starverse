@@ -265,7 +265,16 @@ export async function createSheet(ctx, noiseTex, T, shot) {
       }
       lit = on * lev;
       vec3 col = vec3(0.004, 0.0042, 0.005) * glass;               // unlit glass: the faintest sky reflection
-      if (on > 0.0) col = mix(col, room(clamp(g, 0.0, 1.0), type, h1, h2, lev, K) * on, glass);
+      if (on > 0.0) {
+        vec3 rc = room(clamp(g, 0.0, 1.0), type, h1, h2, lev, K) * on;
+        // the same window type as ours: transom 1/3 down, a shadowed reveal round the glass
+        float tb = GH / 32.0;
+        float tr = mcov1(TRANSOM * GH - 0.5 * tb, TRANSOM * GH + 0.5 * tb, g.y * GH);
+        rc = mix(rc, K * 0.02 * lit + vec3(0.002), tr);
+        float rev = ss(0.0, 0.06, min(min(g.x, 1.0 - g.x) * GW / GH * 2.0, min(g.y, 1.0 - g.y)));
+        rc *= 0.55 + 0.45 * rev;
+        col = mix(col, rc, glass);
+      }
       // jamb: dark aluminium, faint lamp catch on the inner edge
       float jam = cov - glass;
       col += vec3(0.003) * jam + K * 0.02 * lit * jam;
@@ -276,7 +285,7 @@ export async function createSheet(ctx, noiseTex, T, shot) {
       float jx = mline(fract(m.x / 3.0 + 0.5) * 3.0 - 1.5, 1.2) * 0.4;
       float jy = mline(fract((m.y + 1.6) / 3.2) * 3.2 - 1.6, 1.2) * 0.4;
       float t = 0.8 + 0.4 * nz(m * 0.8).r;
-      return vec3(0.0042, 0.0040, 0.0038) * t * (1.0 + jx + jy) * 0.9;
+      return vec3(0.0090, 0.0084, 0.0078) * t * (1.0 + jx + jy) * 0.9;
     }
 
     // ======================= CITY (metres around the lamp; north up) =======================
@@ -289,7 +298,7 @@ export async function createSheet(ctx, noiseTex, T, shot) {
     // parks, rivers and rail yards are dark; districts differ in how lit they are
     float urbanMask(vec2 m){
       float park = ss(0.66, 0.74, nz(m / 5200.0 + 0.37).r) + ss(0.70, 0.76, nz(m / 1900.0 + 0.11).g);
-      float district = 0.55 + 0.9 * nz(m / 2600.0 + 0.73).b;
+      float district = 0.25 + 1.5 * pow(nz(m / 2600.0 + 0.73).b, 2.0) + 0.3 * nz(m / 700.0 + 0.1).r;
       return clamp(1.0 - park, 0.0, 1.0) * district;
     }
     // street lamps (sodium; LED downtown): points → rows → area, flux-conserving with soft knees
@@ -333,7 +342,7 @@ export async function createSheet(ctx, noiseTex, T, shot) {
         c *= wRows;
       }
       // area average once the streets are sub-pixel: ≈ 1.6e-3 lamps per m²
-      float area = knee(2.67 * B * 1.6e-3 * FP * FP * um * um, 0.07);
+      float area = knee(2.67 * B * 1.6e-3 * FP * FP, 0.06) * um * (0.7 + 0.6 * nz(m / 450.0).g);
       c += colr * area * (1.0 - wRows);
       // arterials: wider, brighter roads every 5 × 4 blocks stay lines to much larger scales
       vec2 AP = PITCH * vec2(5.0, 4.0);
@@ -362,15 +371,20 @@ export async function createSheet(ctx, noiseTex, T, shot) {
       vec3 K = mix(kmax(mix(2400.0, 3600.0, ihash2(ivec2(wi) + 3))), vec3(0.88, 0.92, 1.0), step(0.75, led + 0.3 * ihash2(ivec2(wi) + 9)));
       float spx = 3.0 / FP;
       float pt = psf((wq - wi) * vec2(3.0, 3.2)) * on;
-      float area = knee(2.67 * pLit / (spx * spx * 1.07) * 0.8, 0.03);
+      float area = knee(2.67 * 0.1 / (spx * spx * 1.07) * 0.8, 0.03) * pLit * 8.0;
       return K * mix(area, pt * 0.8, ss(2.0, 4.0, spx)) * inside;
     }
 
     // ======================= EARTH (night lights from lib/earth.js) =======================
+    vec3 lightsAt(vec2 uv){
+      vec2 tx = vec2(0.6 / 8192.0, 0.6 / 4096.0);
+      return 0.25 * (texture2D(uLights, uv + tx * vec2(1.0, 0.4)).rgb + texture2D(uLights, uv + tx * vec2(-0.4, 1.0)).rgb
+                   + texture2D(uLights, uv + tx * vec2(-1.0, -0.4)).rgb + texture2D(uLights, uv + tx * vec2(0.4, -1.0)).rgb);
+    }
     vec3 earthLights(vec3 n, out float landAmt){
       float lon = atan(n.x, n.z); float lat = asin(clamp(n.y, -1.0, 1.0));
       vec2 uv = vec2(lon / TAU + 0.5, lat / PI + 0.5);
-      vec3 li = texture2D(uLights, uv).rgb;
+      vec3 li = lightsAt(uv);
       landAmt = texture2D(uLand, uv).r;
       float lum = dot(li, vec3(0.333)) * 3.0;
       lum = lum * (0.35 + 0.65 * ss(0.0, 0.6, lum));
@@ -386,7 +400,7 @@ export async function createSheet(ctx, noiseTex, T, shot) {
       vec2 q = m / 1200.0; vec2 qi = floor(q + 0.5);
       float spx = 1200.0 / FP;
       float lon = atan(gp.x, gp.z), lat = asin(clamp(gp.y, -1.0, 1.0));
-      vec3 li = texture2D(uLights, vec2(lon / TAU + 0.5, lat / PI + 0.5)).rgb;
+      vec3 li = lightsAt(vec2(lon / TAU + 0.5, lat / PI + 0.5));
       float L = dot(li, vec3(0.333)) * 3.0;
       float pr = clamp(L * 1.6, 0.0, 1.0);
       vec2 jit = vec2(ihash2(ivec2(qi) + ivec2(3, 9)), ihash2(ivec2(qi) + ivec2(17, 2))) - 0.5;
@@ -498,7 +512,7 @@ export async function createSheet(ctx, noiseTex, T, shot) {
       if (FP > 0.004 && s < 60000.0) {
         vec3 city = lampRows(m, dens) * ss(0.004, 0.012, FP);
         city += blockLights(m, dens) * (1.0 - facW);
-        float extent = ss(16000.0, 8000.0, length(m - vec2(900.0, 1600.0)));
+        float extent = ss(16000.0, 7000.0, length(m - vec2(900.0, 1600.0)) + 7000.0 * (nz(m / 11000.0 + 0.45).r - 0.5) + 2500.0 * (nz(m / 3000.0).g - 0.5));
         col += city * extent * ss(2400.0, 500.0, FP);
       }
       // 3) region and planet: earth.js night lights mapped through the same arc length

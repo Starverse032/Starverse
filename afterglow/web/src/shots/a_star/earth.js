@@ -39,7 +39,7 @@ export async function createEarthView(ctx, { needShellOverlap = false } = {}) {
   const U = {
     uProjInv: { value: new THREE.Matrix4() }, uCamW: { value: new THREE.Matrix4() }, uCam: { value: new THREE.Vector3() },
     albedoTex: { value: T.albedoTex }, cloudTex: { value: T.cloudTex }, landTex: { value: T.landTex },
-    uE: { value: 1 }, uAppear: { value: 1 }, uBack: { value: 0 }, uRimPx: { value: 1 }, uAir: { value: 0 }, uSky: { value: 0 }, uNight: { value: 0.2 }, uAltM: { value: 1e7 },
+    uE: { value: 1 }, uAppear: { value: 1 }, uBack: { value: 0 }, uRimPx: { value: 1 }, uAir: { value: 0 }, uSky: { value: 0 }, uNight: { value: 0.2 }, uLimbK: { value: 1 }, uAltM: { value: 1e7 },
     uFpx: { value: C.FPX35 * S }, uFr: { value: 0 }, uStarDim: { value: 1 },
   };
   const mat = new THREE.ShaderMaterial({
@@ -51,7 +51,7 @@ export async function createEarthView(ctx, { needShellOverlap = false } = {}) {
       varying vec2 vUv;
       uniform mat4 uProjInv, uCamW; uniform vec3 uCam;
       uniform sampler2D albedoTex, cloudTex, landTex;
-      uniform float uE, uAppear, uBack, uRimPx, uAir, uSky, uNight, uAltM, uFpx, uFr;
+      uniform float uE, uAppear, uBack, uRimPx, uAir, uSky, uNight, uLimbK, uAltM, uFpx, uFr;
       const vec3 SUN = ${v3s(SUN)};
       const vec3 GE = ${v3s(ENU.east)}, GN = ${v3s(ENU.north)}, GU = ${v3s(ENU.up)}, GP = ${v3s(G)};
       const float HS = 0.0035;           // atmosphere scale height (unit radius; ≈ 22 km, exaggerated ×2.7 for the frame)
@@ -125,7 +125,7 @@ export async function createEarthView(ctx, { needShellOverlap = false } = {}) {
           // the deck the camera falls into: broken stratocumulus around R_geo (≈ 600 km), joining A3's decks
           float nearG = smoothstep(0.11, 0.03, distance(pcld, GP));
           // footprint-aware: cells smaller than a few px fade to their mean (no shimmer from far away)
-          float wLo = 1.0 - smoothstep(3.0, 8.0, pxKm), wHi = 1.0 - smoothstep(0.8, 2.0, pxKm);
+          float wLo = 1.0 - smoothstep(1.5, 4.0, pxKm), wHi = 1.0 - smoothstep(0.5, 1.4, pxKm);
           float nLo = wLo > 0.0 ? fbm(pcld * 150.0 + 3.0, 4) : 0.47;
           float nHi = wHi > 0.0 ? fbm(pcld * 640.0 + 11.0, 3) : 0.47;
           float deckN = mix(0.47, nLo, wLo) * 0.62 + mix(0.47, nHi, wHi) * 0.38;
@@ -177,6 +177,10 @@ export async function createEarthView(ctx, { needShellOverlap = false } = {}) {
             float night = 1.0 - smoothstep(-0.15, 0.05, dot(normalize(pc), L));
             sky += vec3(0.10, 0.55, 0.25) * 0.10 * exp(-pow((hmin - 0.0090) / 0.0016, 2.0)) * night * step(tg, 0.0) * mix(0.25, 1.0, uE) * (1.0 - uSky);
           }
+          // the thin blue limb seen from far away (2–4 px at 720p on the lit side, K27): the atmosphere is
+          // thinner than a pixel at these distances, so its integrated glow is drawn at the pixel scale
+          float litL = smoothstep(-0.12, 0.35, dot(normalize(pc), L));
+          sky += vec3(0.20, 0.45, 1.0) * 0.30 * uLimbK * litL * exp(-max(dpx, 0.0) / (2.6 * uFpx / ${C.FPX35.toFixed(3)})) * smoothstep(-1.5, 0.0, dpx) * uE;
           // the far shell's light scattered forward through the limb: a cold-white line (substitution ②)
           float hpx = dpx;
           vec2 sd = normalize((vUv - vec2(${(C.RX/1920).toFixed(5)}, ${(1 - C.RY/1080).toFixed(5)})) * vec2(1.7778, 1.0) + 1e-5);
@@ -346,7 +350,8 @@ export async function createEarthView(ctx, { needShellOverlap = false } = {}) {
     U.uSky.value = C.s5(1640, 1668, fr);                                 // inside the air: A3's dusk sky
     U.uAir.value = C.s5(1658, 1677, fr);
     // night-side clouds: ≤ L 6 on the disc (no city lights, K27), grey-blue once we fly over them (S02-f)
-    U.uNight.value = 0.22 + 0.78 * C.s5(1590, 1640, fr);                                 // and A3's far-ground haze
+    U.uNight.value = 0.22 + 0.78 * C.s5(1590, 1640, fr);
+    U.uLimbK.value = 1 - C.s5(1596, 1624, fr);                           // the resolved atmosphere takes over                                 // and A3's far-ground haze
     return pose;
   }
   function drawStars(fr, target) {
@@ -391,7 +396,7 @@ export async function createEarthView(ctx, { needShellOverlap = false } = {}) {
       renderer.setRenderTarget(rtE); renderer.setClearColor(0x000000, 0); renderer.clear(true, false, false);
       fsq.render(renderer, rtE);
       let src = rtE;
-      const wc = opts.clouds ? C.s5(1660, 1679, fr) : 0;
+      const wc = opts.clouds ? C.s5(1666, 1679, fr) : 0;
       if (wc > 0) {
         // A3's decks drawn from their own camera at the same slant distance (on the 4.5° glide line;
         // our line of sight is within ≈ 2° of it by f1660), over our frame as the base

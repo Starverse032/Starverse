@@ -415,7 +415,7 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
         void main(){ vec2 q = GBOX.xy + vUv * GBOX.zw; vec3 alb; float h; groundAlb(q, length(q - vec2(0.0, -3.2)), alb, h); gl_FragColor = vec4(alb, h / 0.006); }`,
     });
     const setU = {
-      ...handU, uGround: { value: groundTex }, uLP: { value: new THREE.Vector3() }, uLC: { value: new THREE.Vector3() }, uShadow: { value: null }, uLP0: { value: new THREE.Vector3() },
+      ...handU, uGround: { value: groundTex }, uNoShadow: { value: 0 }, uLMap: { value: null }, uLM: { value: 0 }, uLMOnly: { value: 0 }, uLP: { value: new THREE.Vector3() }, uLC: { value: new THREE.Vector3() }, uShadow: { value: null }, uLP0: { value: new THREE.Vector3() },
       uFP: { value: FP }, uT: { value: 0 }, uSky: { value: new THREE.Vector3() }, uEmb: { value: 1 }, uMode: { value: 0 }, uFs: { value: 1 },
     };
     // uMode: 0 = full shading (F2 live), 1 = light only (bake), 2 = sky only (bake), 3 = emission only (F1 live)
@@ -423,17 +423,35 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
       side: THREE.DoubleSide, uniforms: setU,
       vertexShader: HAND_GLSL + /* glsl */ `
         attribute float mat; attribute float seed; attribute vec2 ru;
-        varying vec3 vW, vN; varying float vMat, vSeed; varying vec2 vRu;
+        uniform vec3 uLP, uLP0, uLC; uniform samplerCube uShadow; uniform float uLM;
+        varying vec3 vW, vN, vBL; varying float vMat, vSeed; varying vec2 vRu;
         void main(){
           vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vN = normalize(mat3(modelMatrix) * normal);
           vMat = mat; vSeed = seed; vRu = ru;
+          vBL = vec3(0.0);
+          if (uLM > 0.5 && mat > 1.5 && mat < 2.5) {
+            // F2 live: grass blades are lit per vertex (fire light with its shadow), the fragment only applies albedo
+            vec3 P = w.xyz, N = vN;
+            if (dot(N, cameraPosition - P) < 0.0) N = -N;
+            vec3 Lv = uLP - P; float d2 = dot(Lv, Lv); vec3 L = Lv * inversesqrt(d2);
+            vec3 D = P - uLP0; float d = length(D); vec3 n = D / d;
+            vec3 t1 = normalize(cross(n, abs(n.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0))), t2 = cross(n, t1);
+            float bias = 0.01 + 0.02 * d, v = 0.0;
+            for (int i = 0; i < 6; i++){
+              float a = float(i) * 2.39996 + seed * 6.2832, r = sqrt((float(i) + 0.5) / 6.0) * 0.07;
+              v += step(d - bias, textureCube(uShadow, n + (t1 * cos(a) + t2 * sin(a)) * r).r * 50.0);
+            }
+            float nl = dot(N, L);
+            vBL = (max(nl, 0.0) + 0.55 * max(-nl, 0.0) * vec3(1.0, 0.8, 0.55)) / 3.14159265 / (d2 + 0.0225) * (v / 6.0) * uLC;
+          }
           gl_Position = handClip(projectionMatrix * viewMatrix * w);
         }`,
       fragmentShader: GLSL.all + /* glsl */ `
         uniform vec3 uLP, uLC, uLP0, uFP, uSky; uniform samplerCube uShadow; uniform float uT, uEmb, uFs; uniform int uMode;
-        uniform sampler2D uGround;
+        uniform sampler2D uGround, uLMap; uniform float uNoShadow, uLM, uLMOnly;
+        const vec4 LBOX = vec4(-1.7, -5.4, 3.4, 4.2);
         ${GROUND_GLSL}
-        varying vec3 vW, vN; varying float vMat, vSeed; varying vec2 vRu;
+        varying vec3 vW, vN, vBL; varying float vMat, vSeed; varying vec2 vRu;
         vec3 bumpN(vec3 p, vec3 n, float h){
           vec3 dpx = dFdx(p), dpy = dFdy(p); float dhx = dFdx(h), dhy = dFdy(h);
           vec3 r1 = cross(dpy, n), r2 = cross(n, dpx); float det = dot(dpx, r1);
@@ -477,6 +495,14 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
             gl_FragColor = vec4(emi * uEmb, 0.0);
             return;
           }
+          if (uLM > 0.5 && vMat > 1.5 && vMat < 2.5) {
+            float sd = vSeed;
+            vec3 straw = mix(vec3(0.42, 0.33, 0.19), vec3(0.31, 0.26, 0.17), fract(sd * 3.7));
+            straw = mix(straw, vec3(0.20, 0.15, 0.10), step(0.82, fract(sd * 11.3)));
+            vec3 albB = straw * (0.8 + 0.2 * vnoise(vec2(vRu.y * 4.0 + sd * 50.0, vRu.x * 40.0))) * mix(0.5, 1.05, smoothstep(0.0, 0.35, vRu.x));
+            gl_FragColor = vec4(albB * (vBL + uSky * 0.75), 1.0);
+            return;
+          }
           vec3 V = normalize(cameraPosition - P), N = normalize(vN);
           if (dot(N, V) < 0.0) N = -N;
           vec3 alb = vec3(0.1), emi = vec3(0.0); float trans = 0.0, h = 0.0; bool bump = false;
@@ -507,12 +533,16 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
             float edge = 1.0 - smoothstep(0.03, 0.22, w.y - w.x);
             alb = mix(vec3(0.10, 0.095, 0.09), vec3(0.03, 0.025, 0.022), edge);    // grey-white ash between the coals
           }
+          if (uLMOnly > 0.5 && vMat > 0.5) discard;          // lightmap bake: the ground only
           if (bump) N = bumpN(P, N, h);
           vec3 col = vec3(0.0);
-          if (uMode != 2) {
+          vec2 lu = (P.xz - LBOX.xy) / LBOX.zw;
+          bool useLM = uLM > 0.5 && vMat < 0.5 && lu.x > 0.0 && lu.x < 1.0 && lu.y > 0.0 && lu.y < 1.0;
+          if (useLM) col += texture2D(uLMap, vec2(lu.x, 1.0 - lu.y)).rgb * uLC;   // baked fire light (shadows included) on the near ground
+          else if (uMode != 2) {
             vec3 Lv = uLP - P; float d2 = dot(Lv, Lv); vec3 L = Lv * inversesqrt(d2);
             float att = 1.0 / (d2 + 0.0225);
-            float vis = shadowVis(P);
+            float vis = (uNoShadow > 0.5 || (uLM > 0.5 && vMat > 1.5 && vMat < 2.5)) ? 1.0 : shadowVis(P);
             float nl = dot(N, L);
             col += alb / PI * (max(nl, 0.0) + trans * max(-nl, 0.0) * vec3(1.0, 0.8, 0.55)) * att * vis * uLC;
           }
@@ -715,7 +745,24 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
       // F2 lights the live set with one moving light and one static shadow cube
       const LP0 = FP.clone().add(new THREE.Vector3(0, 0.17, 0));
       const cube = shadowCube(LP0);
-      out.f2 = { LP0, cube, scene: new THREE.Scene() };
+      // lightmap of the near ground under the fire light at LP0 (shadows of stones, sticks and grass included):
+      // the live F2 set then shades the ground with two texture taps instead of the shadow search
+      const LB = [-1.7, -5.4, 3.4, 4.2];
+      const lmRT = ctx.makeRT(2048, 2560, { depth: true, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
+      {
+        const oc = new THREE.OrthographicCamera(LB[0], LB[0] + LB[2], -LB[1], -(LB[1] + LB[3]), -5, 5);
+        oc.position.set(0, 2, 0); oc.up.set(0, 0, -1); oc.lookAt(0, -1, 0); oc.updateMatrixWorld(); oc.updateProjectionMatrix();
+        oc.position.set(0, 2, 0); oc.updateMatrixWorld();
+        const sc0 = new THREE.Scene(); sc0.add(setMesh);
+        setHandV({ ox: 0, oy: 0, rot: 0 });
+        setU.uMode.value = 1; setU.uLMOnly.value = 1; setU.uLP.value.copy(LP0); setU.uLP0.value.copy(LP0); setU.uShadow.value = cube.texture; setU.uLC.value.set(1, 1, 1);
+        const pc = new THREE.Color(); renderer.getClearColor(pc); const pa = renderer.getClearAlpha();
+        renderer.setRenderTarget(lmRT); renderer.setClearColor(0x000000, 1); renderer.clear(); renderer.render(sc0, oc);
+        renderer.setRenderTarget(null); renderer.setClearColor(pc, pa);
+        setU.uLMOnly.value = 0;
+      }
+      setU.uLMap.value = lmRT.texture;
+      out.f2 = { LP0, cube, lmRT, scene: new THREE.Scene() };
       out.nearRT = ctx.makeRT(W, H, { depth: true, samples: 4 });
       out.nearComp = kit.fullscreen(/* glsl */ `uniform sampler2D tex; void main(){ gl_FragColor = texture2D(tex, vUv); }`, { tex: { value: out.nearRT.texture } }, { blending: THREE.CustomBlending, transparent: true });
       premult(out.nearComp.material);
@@ -828,7 +875,7 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
     P.uW3.value.set(1, 1, 1);
     s.f1.platePass.render(renderer, f.target);
     // live: coals and stick cracks (emission, depth-tested by the set), the flame, the sparks
-    s.setU.uMode.value = 3; s.setU.uT.value = t; s.setU.uFs.value = fs; s.setU.uEmb.value = 0.55 + 0.45 * ss(0.2, 0.45, fs);
+    s.setU.uMode.value = 3; s.setU.uLM.value = 0; s.setU.uT.value = t; s.setU.uFs.value = fs; s.setU.uEmb.value = 0.55 + 0.45 * ss(0.2, 0.45, fs);
     s.flU.uT.value = t; s.flU.uF.value = 0.95 + 0.08 * (fk - 1);
     const right = new THREE.Vector3(1, 0, 0).applyQuaternion(cam50.quaternion); right.y = 0; right.normalize();
     s.flU.uRight.value.copy(right); s.flU.uFwd.value.set(-right.z, 0, right.x);
@@ -841,6 +888,7 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
     s.setMat.blending = ac; s.setMat.transparent = false;
   }
 
+  const dbg = { skip: new Set() };                    // profiling switches (empty in production)
   function renderF2(n, f) {
     const t = T(n);
     const p = setCam35(n);
@@ -850,29 +898,41 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
     const invDF = (1 / FD) * (1 - ss(0.04, 0.26, p.e));
     setSky(cam35, M35, gain, 2.2, 1.0 - 0.6 * ss(0.0, 0.6, p.e));
     stars.uniforms.uFieldLow.value = 2.6 + 4.6 * ss(83.6, 84.0, t) * (1 - ss(85.0, 85.6, t));
-    skyPass.render(renderer, f.target);
+    if (!dbg.skip.has('sky')) skyPass.render(renderer, f.target);
     stars.uniforms.uCoc.value = Math.min(6, COCK35 * invDF);
-    renderer.setRenderTarget(f.target); renderer.render(starScene, cam35);
+    if (!dbg.skip.has('stars')) { renderer.setRenderTarget(f.target); renderer.render(starScene, cam35); }
     terU.uMode.value = 0; terU.uEdge.value = Math.max(0.6, COCK35 * invDF) / FPX35 / D2R;
-    terrain.render(renderer, f.target);
+    if (!dbg.skip.has('sky')) terrain.render(renderer, f.target);
     const fs = fireScale(n), fk = flick(t);
     const lc = C_FL.map(c => c * 11 * Math.pow(fs / 0.5, 2.0) * fk);
-    s.setU.uMode.value = 0; s.setU.uLC.value.set(...lc); s.setU.uT.value = t; s.setU.uFs.value = fs; s.setU.uEmb.value = 1;
+    s.setU.uMode.value = 0; s.setU.uLM.value = dbg.skip.has('nolm') ? 0 : 1; s.setU.uLC.value.set(...lc); s.setU.uT.value = t; s.setU.uFs.value = fs; s.setU.uEmb.value = 1;
     s.setU.uLP0.value.copy(s.f2.LP0); s.setU.uShadow.value = s.f2.cube.texture;
     s.setU.uLP.value.copy(s.f2.LP0).add(new THREE.Vector3(0.03 * nz(t, 2.8, 51), 0.04 * nz(t, 3.7, 53), 0.03 * nz(t, 3.1, 57)));
     s.setU.uSky.value.set(0.0012, 0.0016, 0.0026).multiplyScalar(gain);
-    s.setMesh.visible = p.pitch < 24 * D2R;
+    s.setMesh.visible = p.pitch < 24 * D2R && !dbg.skip.has('set');
     s.flMesh.visible = p.pitch < 18 * D2R;
+    s.spMesh.visible = !dbg.skip.has('sparks');
     s.flU.uT.value = t; s.flU.uF.value = 0.92 + 0.08 * fk;
     const right = new THREE.Vector3(1, 0, 0).applyQuaternion(cam35.quaternion); right.y = 0; right.normalize();
     s.flU.uRight.value.copy(right); s.flU.uFwd.value.set(-right.z, 0, right.x);
     s.spU.uT.value = t; s.spU.uInvDF.value = invDF; s.spU.uCocK.value = COCK35;
     const sc = s.f2.scene; sc.add(s.setMesh, s.flMesh, s.spMesh);
     s.nearRT.scissor.set(0, Math.floor(f.barPx), W, H - 2 * Math.floor(f.barPx)); s.nearRT.scissorTest = true;
+    s.setU.uNoShadow.value = dbg.skip.has('shadow') ? 1 : 0;
+    const flatM = dbg.skip.has('flat') ? (dbg.flatM ||= new THREE.MeshBasicMaterial({ color: 0x101010, side: THREE.DoubleSide })) : null;
+    if (flatM) s.setMesh.material = flatM;
+    if (dbg.skip.has('nomsaa')) {
+      s.nearRT1 ||= ctx.makeRT(W, H, { depth: true });
+      renderer.setRenderTarget(s.nearRT1); renderer.setClearColor(0x000000, 0); renderer.clear(true, true, false); renderer.setClearColor(0x000000, 1);
+      renderer.render(sc, cam35);
+      s.nearComp.material.uniforms.tex.value = s.nearRT1.texture; s.nearComp.render(renderer, f.target); s.nearComp.material.uniforms.tex.value = s.nearRT.texture;
+    } else {
     renderer.setRenderTarget(s.nearRT); renderer.setClearColor(0x000000, 0); renderer.clear(true, true, false); renderer.setClearColor(0x000000, 1);
     renderer.render(sc, cam35);
     s.nearRT.scissorTest = false;
     s.nearComp.render(renderer, f.target);
+    }
+    if (flatM) s.setMesh.material = s.setMat;
   }
 
   function renderF3(n, f) {
@@ -909,7 +969,7 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
       else renderF3(n, f);
       renderer.setRenderTarget(f.target);
     },
-    fireScale, f1Follow,
+    fireScale, f1Follow, dbg,
   };
 }
 

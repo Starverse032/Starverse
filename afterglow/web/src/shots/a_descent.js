@@ -25,6 +25,7 @@ export async function create(ctx) {
     built = {
       clouds: createClouds(ctx), sweep: createSweep(ctx), world: createWorld(ctx), blur: createZoomBlur(ctx),
       rtW: makeRT(W, H, { depth: true }),
+      rtH: makeRT(Math.round(W / 2), Math.round(H / 2), { depth: true }),   // the world under the clouds: half res
     };
     return built;
   };
@@ -35,14 +36,18 @@ export async function create(ctx) {
       const n = f.t * 24;
       const ac = renderer.autoClear; renderer.autoClear = false;
       // the world (sky, terrain, trees, grass, stones) into our own HDR target, inside the visible band
-      const y0 = Math.floor(f.barPx);
+      const cloudy = !(camAt(n).alt < 4000 && n >= 1712);
+      const rt = cloudy ? B.rtH : B.rtW, k = cloudy ? 0.5 : 1;
+      const y0 = Math.floor(f.barPx * k);
       B.world.setFrame(n);
-      B.rtW.scissor.set(0, y0, W, H - 2 * y0); B.rtW.scissorTest = y0 > 0;
-      renderer.setRenderTarget(B.rtW); renderer.setClearColor(0x000000, 1); renderer.clear(true, true, true);
-      renderer.render(B.world.scene, B.world.camera);
-      B.rtW.scissorTest = false;
-      if (camAt(n).alt < 4000 + 1e-9 && n >= 1712) B.blur.apply(B.rtW.texture, f.target, n);
-      else B.clouds.render(f, { base: B.rtW.texture });   // clouds over the world, then the zoom blur
+      rt.scissor.set(0, y0, rt.width, rt.height - 2 * y0); rt.scissorTest = y0 > 0;
+      renderer.setRenderTarget(rt); renderer.setClearColor(0x000000, 1); renderer.clear(true, true, true);
+      if (n > 1692) renderer.render(B.world.scene, B.world.camera);
+      rt.scissorTest = false;
+      if (!cloudy) B.blur.apply(B.rtW.texture, f.target, n);
+      // clouds over the world, then the zoom blur. At the hand-off (f1692) the world under the clouds is the
+      // shared built-in one (= what A2 draws); ours takes over behind the deck by f1700
+      else B.clouds.render(f, { base: B.rtH.texture, baseMix: Math.min(1, Math.max(0, (n - 1692) / 8)) });
       B.sweep.drawOver(f);
       renderer.autoClear = ac;
       renderer.setRenderTarget(f.target);
