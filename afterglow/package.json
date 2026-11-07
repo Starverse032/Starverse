@@ -4,6 +4,7 @@
   "type": "module",
   "description": "AFTERGLOW — a short film rendered entirely by code (Three.js + synthesized audio)",
   "dependencies": {
-    "three": "0.180.0"
+    "three": "0.180.0",
+    "ws": "^8.22.1"
   }
 }
