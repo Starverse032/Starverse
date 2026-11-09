@@ -389,8 +389,8 @@ export async function createSheet(ctx, noiseTex, T, shot) {
       float lum = dot(li, vec3(0.333)) * 3.0;
       lum = lum * (0.35 + 0.65 * ss(0.0, 0.6, lum));
       // LED white where the light is densest (city cores); sodium elsewhere — ≈ 1 : 3 by pixel count
-      float core = ss(0.55, 1.10, lum + 0.25 * (nz(uv * 900.0).r - 0.5));
-      vec3 c = mix(SOD, LEDC * 0.9, core) * lum;
+      float core = ss(0.37, 0.43, nz(uv * 260.0).r * 0.75 + 0.45 * ss(0.15, 0.7, lum));   // whole clusters go LED (≈ 1 in 4 lit px)
+      vec3 c = mix(SOD, LEDC * 0.8, core) * lum;
       return c;
     }
 
@@ -532,7 +532,7 @@ export async function createSheet(ctx, noiseTex, T, shot) {
         vec3 tw = vec3(0.10, 0.22, 0.50) * 0.10 * ss(-0.18, 0.05, mu) * ss(1500.0, 7000.0, FP);
         tw += vec3(0.5, 0.6, 0.75) * 0.06 * ss(0.0, 0.25, mu) * (0.3 + 0.7 * landAmt) * ss(1500.0, 7000.0, FP);
         float nightSide = ss(0.12, -0.10, mu);
-        col += (el * 3.2 * nightSide + night) * w + tw;
+        col += (el * 1.7 * nightSide + night) * w + tw;
       }
       // the lamp itself at every scale: once the window is under ~4 px its light is one point on C
       float sub = ss(0.03, 0.12, FP);

@@ -1,4 +1,9 @@
-// m_asking/antenna.js — S23 天线 (112.083 → 112.5, 10 frames, f2690–2699).
+// m_asking/antenna.js — M4 · S05-d 天坑巨碟 [2874, 2892), 18 frames (v1.3 S23, f2690–2699, re-timed).
+//
+// v2 changes: the lamp is on C (RED_LAMP + its own 10 px halo, kit5 makeLamps) instead of R (FEED, HDR 2);
+// the dish is 92 m so its rim ellipse is ~1150 px wide (visual-changes S05-d: ~1200); the rim line is a
+// ≥ 3 px contour at L 25–50 (was 1.3 px); exposure 1.0 (was 1.5) with the sky, hills and steel re-balanced
+// (sky L 10–25, the bowl's back 6–12, the floor ≤ 5); drift ← (the camera trucks left); times from the shot.
 //
 // A radio dish standing in a karst sinkhole, seen from the sinkhole floor, 50 mm, looking up ≈ 14°.
 // Pure silhouette: the bowl (a real paraboloid, D = 64 m, f/D 0.38, its axis 19° off the zenith,
@@ -17,14 +22,14 @@
 // R; the dish slides against the cones and the cones against the stars — depth in ten frames.
 import * as THREE from 'three';
 import { hex, RX, RY, fbm1 } from '../f_fire/common.js';
-import { bakeGalaxy, skyFrame, SKY_GLSL, makeStars, L_SPAN, B_SPAN } from '../f_fire/sky.js';
+import { skyFrame, SKY_GLSL, L_SPAN, B_SPAN } from './sky.js';
+import { CXY, POST, shared, makeLamps } from './kit5.js';
 
 const D2R = Math.PI / 180;
-const T0 = 112.083, DUR = 0.417;
 const FEED = hex(0xFF4A3A), AIRGLOW = hex(0x7FE3C2);
 
 // dish (metres, world y up; camera on the sinkhole floor looking towards −z)
-const DISH_D = 64, DISH_F = 24.3;                  // diameter, focal length (f/D 0.38)
+const DISH_D = 92, DISH_F = 35.0;                  // diameter, focal length (f/D 0.38)
 const DEPTH = (DISH_D / 2) ** 2 / (4 * DISH_F);   // 10.5 m
 const axis = lean => new THREE.Vector3(-Math.sin(lean * D2R) * Math.sin(18 * D2R), Math.cos(lean * D2R), Math.sin(lean * D2R) * Math.cos(18 * D2R)).normalize();
 // the lamp sits at the centre of the aperture (the "heart" of the dish), at the same point in the world
@@ -39,16 +44,18 @@ const VTX = LAMP.clone().addScaledVector(AX, -(DEPTH + 0.05));   // vertex of th
 const LAYERS = [[600, 0.16], [1500, 0.34], [3500, 0.6], [120, 0.0]];
 const AZ0 = -40, AZ1 = 45, NP = 2048;
 
-export function createAntenna(ctx) {
+export function createAntenna(ctx, shot) {
   const { renderer, W, H, kit, GLSL, util } = ctx;
   const S = H / 1080;
+  const T0 = shot.start, DUR = shot.end - shot.start;
+  const G = 2.2;                                   // v2: exposure 1.0 instead of 1.5, and a brighter night (sky L 10–25)
 
   // ---- cameras: `cam` moves (meshes); `skyCam` = same rotation at the origin (sky, stars, hills) -----
   const cam = kit.filmCamera(W, H, { focalMM: 50, near: 1, far: 20000 });
-  cam.setViewOffset(W, H, (960 - RX) * S, (540 - RY) * S, W, H);
+  cam.setViewOffset(W, H, (960 - CXY[0]) * S, (540 - CXY[1]) * S, W, H);
   const skyCam = kit.filmCamera(W, H, { focalMM: 50, near: 1, far: 20000 });
-  skyCam.setViewOffset(W, H, (960 - RX) * S, (540 - RY) * S, W, H);
-  const camX = t => -1.0 + 2.0 * util.clamp((t - T0) / DUR, -0.2, 1.4);
+  skyCam.setViewOffset(W, H, (960 - CXY[0]) * S, (540 - CXY[1]) * S, W, H);
+  const camX = t => 1.5 - 3.0 * util.clamp((t - T0) / DUR, -0.2, 1.4);      // ← : trucks 3 m to the left
   const setCam = t => {
     cam.position.set(camX(t), 1.6, 0); cam.up.set(0, 1, 0); cam.lookAt(LAMP);
     cam.updateMatrixWorld(); cam.updateProjectionMatrix();
@@ -58,12 +65,8 @@ export function createAntenna(ctx) {
   setCam(T0 + DUR / 2);
 
   // ---- sky: the shared Milky Way, placed so the band climbs behind the dish from lower left ---------
-  const gal = bakeGalaxy(ctx);
-  const M = skyFrame(skyCam, [900, 560], 36, 16, -1.0);
-  const stars = makeStars(ctx, gal, { count: 300000, seed: 2323 });
-  stars.setFrame(M);
-  stars.uniforms.uExt.value = 0.16; stars.uniforms.uGain.value = 1.25;
-  const starScene = new THREE.Scene(); starScene.add(stars.pts);
+  const sh = shared(ctx), gal = sh.gal, stars = sh.stars, starScene = sh.starScene;
+  const M = skyFrame(skyCam, [1120, 520], 36, 16, -1.0);
 
   // ---- hill profiles (deg of elevation by azimuth, terrain coordinates) -----------------------------
   const prof = new Float32Array(NP * 4);
@@ -101,21 +104,21 @@ export function createAntenna(ctx) {
     uInvVP: { value: new THREE.Matrix4() }, uRes: { value: new THREE.Vector2(W, H) }, uS: { value: S },
     uM: { value: M }, uGal: { value: gal }, uL: { value: L_SPAN }, uB: { value: B_SPAN },
     uProf: { value: profTex }, uCamX: { value: 0 }, uAirC: { value: new THREE.Vector3(...AIRGLOW) },
-    uAz: { value: new THREE.Vector2(AZ0, AZ1) },
+    uAz: { value: new THREE.Vector2(AZ0, AZ1) }, uG: { value: G },
   };
   const sky = kit.fullscreen(SKY_GLSL + RAY + /* glsl */ `
-    uniform mat3 uM; uniform sampler2D uGal; uniform float uL, uB; uniform vec3 uAirC;
+    uniform mat3 uM; uniform sampler2D uGal; uniform float uL, uB, uG; uniform vec3 uAirC;
     void main(){
       vec3 d = rayDir(); float el = asin(clamp(d.y, -1.0, 1.0));
       vec3 col = skyBase(el, 1.15);
       // the airglow: a faint green layer ~10° up, brightest towards the horizon (van Rhijn)
       col += uAirC * 0.0085 * exp(-pow((el / DG - 9.0) / 7.0, 2.0)) + uAirC * 0.0040 * exp(-max(el, 0.0) / 0.30);
       col += galaxy(uGal, uM, d, uL, uB) * extinction(el, 0.16) * 0.30;
-      gl_FragColor = vec4(col, 1.0);
+      gl_FragColor = vec4(col * uG, 1.0);
     }`, U);
   // hills: premultiplied "over" (they hide the stars); also writes the near floor in a second pass
   const hillFrag = near => SKY_GLSL + RAY + /* glsl */ `
-    uniform sampler2D uProf; uniform float uCamX; uniform vec2 uAz; uniform vec3 uAirC;
+    uniform sampler2D uProf; uniform float uCamX, uG; uniform vec2 uAz; uniform vec3 uAirC;
     float ridge(float az, int k, float dist){
       float a = az + uCamX / dist / DG;                     // parallax of the truck
       vec4 p = texture2D(uProf, vec2((a - uAz.x) / (uAz.y - uAz.x), 0.5));
@@ -146,7 +149,7 @@ export function createAntenna(ctx) {
         col = mix(col, hc, c); a = a + (1.0 - a) * c;
       }
       `}
-      gl_FragColor = vec4(col * a, a);
+      gl_FragColor = vec4(col * a * uG, a);
     }`;
   const hills = kit.fullscreen(hillFrag(false), U), floor = kit.fullscreen(hillFrag(true), U);
   premult(hills.material); premult(floor.material);
@@ -154,7 +157,7 @@ export function createAntenna(ctx) {
   // ---- the structure (near-black meshes, depth-tested) ----------------------------------------------
   const darkMat = new THREE.ShaderMaterial({
     side: THREE.DoubleSide,
-    uniforms: { uLamp: { value: LAMP.clone() }, uFeed: { value: new THREE.Vector3(...FEED) } },
+    uniforms: { uLamp: { value: LAMP.clone() }, uFeed: { value: new THREE.Vector3(0.6, 0.036, 0.03) } },
     vertexShader: /* glsl */ `varying vec3 vW, vN; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vN = normalize(mat3(modelMatrix) * normal); gl_Position = projectionMatrix * viewMatrix * w; }`,
     fragmentShader: /* glsl */ `
       uniform vec3 uLamp, uFeed; varying vec3 vW, vN;
@@ -163,12 +166,12 @@ export function createAntenna(ctx) {
         // and the inside of the bowl is a dull mirror: it shows the sky it faces (a pale sliver)
         vec3 n = normalize(vN); vec3 V = normalize(cameraPosition - vW); if (dot(n, V) < 0.0) n = -n;
         float up = 0.5 + 0.5 * n.y;
-        vec3 c = vec3(0.00030, 0.00036, 0.00052) * (0.5 + 1.2 * up * up);
+        vec3 c = vec3(0.0105, 0.0120, 0.0155) * (0.75 + 0.5 * up * up);          // v2: L1' 6–12, not black
         vec3 Rf = reflect(-V, n);
-        if (Rf.y > 0.0) c += (vec3(0.0026, 0.0036, 0.0062) + vec3(0.006, 0.010, 0.009) * exp(-Rf.y / 0.2)) * 0.45;
+        if (Rf.y > 0.0) c += (vec3(0.0026, 0.0036, 0.0062) + vec3(0.006, 0.010, 0.009) * exp(-Rf.y / 0.2)) * 0.45 * 2.2;
         // the lamp's spill on the steel around it (negligible beyond a few metres)
         float dl = length(vW - uLamp);
-        c += uFeed * 0.08 / (1.0 + dl * dl * 1.2) * max(dot(n, normalize(uLamp - vW)), 0.0);
+        c += uFeed * 0.05 / (1.0 + dl * dl * 1.2) * max(dot(n, normalize(uLamp - vW)), 0.0);
         gl_FragColor = vec4(c, 1.0);
       }`,
   });
@@ -213,7 +216,7 @@ export function createAntenna(ctx) {
   }
   const lineU = {
     uRes: { value: new THREE.Vector2(W, H) }, uS: { value: S }, uCamPos: { value: new THREE.Vector3() },
-    uLamp: { value: LAMP.clone() }, uFeed: { value: new THREE.Vector3(...FEED) }, uAirC: U.uAirC,
+    uLamp: { value: LAMP.clone() }, uFeed: { value: new THREE.Vector3(0.6, 0.036, 0.03) }, uAirC: U.uAirC,
   };
   const lineMat = new THREE.ShaderMaterial({
     uniforms: lineU, transparent: true, depthWrite: false, depthTest: true,
@@ -230,8 +233,8 @@ export function createAntenna(ctx) {
         vec2 t = normalize(sb - sa + 1e-6), n = vec2(-t.y, t.x);
         float dist = mix(ca.w, cb.w, position.x);
         float wpx = iA.w * projectionMatrix[1][1] * 0.5 * uRes.y / dist;      // world width → px
-        float hw = max(wpx, uS) * 0.5;                                          // ≥ 1 px wide
-        vI = min(wpx / uS, 1.0);                                                // sub-pixel → dimmer
+        float hw = max(wpx, (iB.w < 0.5 ? 3.0 : 1.0) * uS) * 0.5;               // v2: the rim ≥ 3 px (≥ 2 px at 720p)
+        vI = iB.w < 0.5 ? 1.0 : min(wpx / uS, 1.0);                             // sub-pixel legs → dimmer
         vHW = hw; vKind = iB.w;
         float off = (hw + uS) * position.y;
         vD = off;
@@ -245,7 +248,7 @@ export function createAntenna(ctx) {
       void main(){
         float cov = clamp(vHW + 0.5 - abs(vD), 0.0, 1.0) * vI;
         vec3 c;
-        if (vKind < 0.5) c = vec3(0.020, 0.025, 0.034) + uAirC * 0.008;   // the rim: sky on the lip
+        if (vKind < 0.5) c = vec3(0.046, 0.056, 0.076) + uAirC * 0.010;   // the rim: sky on the lip (v2: L 25–50)
         else {
           c = vec3(0.00028, 0.00032, 0.00045);                            // the legs: silhouette
           float dl = length(vW - uLamp);
@@ -257,15 +260,9 @@ export function createAntenna(ctx) {
   const lineMesh = new THREE.Mesh(lineGeo, lineMat); lineMesh.frustumCulled = false;
   const lineScene = new THREE.Scene(); lineScene.add(lineMesh);
 
-  // ---- the lamp at R ----------------------------------------------------------------------------------
-  const lamp = kit.fullscreen(/* glsl */ `
-    uniform vec2 uRes; uniform float uS, uI; uniform vec3 uFeed;
-    void main(){
-      vec2 px = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) / uS - vec2(${RX.toFixed(1)}, ${RY.toFixed(1)});
-      float r2 = dot(px, px);
-      float core = exp(-0.5 * r2 / (1.25 * 1.25)), halo = exp(-sqrt(r2) / 9.0) * 0.06;
-      gl_FragColor = vec4(uFeed * uI * (core + halo) + vec3(1.0, 0.75, 0.7) * uI * 0.35 * exp(-0.5 * r2 / 0.36), 1.0);
-    }`, { uRes: U.uRes, uS: U.uS, uI: { value: 2.0 }, uFeed: lineU.uFeed }, { blending: THREE.AdditiveBlending, transparent: true });
+  // ---- the lamp on C (v2: RED_LAMP + its own halo) ---------------------------------------------------
+  const lamps = makeLamps(ctx, 1);
+  lamps.set([{ p: LAMP.toArray(), core: 2.6, halo: 10 }]);
 
   return {
     render(shot, f) {
@@ -277,19 +274,17 @@ export function createAntenna(ctx) {
       const ac = renderer.autoClear; renderer.autoClear = false;
       renderer.setRenderTarget(f.target); renderer.setClearColor(0x000000, 1); renderer.clear();
       sky.render(renderer, f.target);
-      renderer.render(starScene, skyCam);
+      stars.setFrame(M); stars.uniforms.uGain.value = 1.15 * 1.6; renderer.render(starScene, skyCam); stars.uniforms.uGain.value = 1.15;
       hills.render(renderer, f.target);
       renderer.setRenderTarget(f.target); renderer.clearDepth();
       renderer.render(meshScene, cam);
       renderer.render(lineScene, cam);
       floor.render(renderer, f.target);
-      lamp.render(renderer, f.target);
+      renderer.setRenderTarget(f.target); renderer.render(lamps.scene, cam);
       renderer.autoClear = ac;
       renderer.setRenderTarget(f.target);
     },
-    post() {
-      return { exposure: 1.5, bloom: 0.7, bloomThreshold: 1.0, streak: 0.18, streakTint: [1.0, 0.45, 0.4], vignette: 0.26, grain: 0.04 };
-    },
+    post() { return { ...POST }; },
   };
 }
 

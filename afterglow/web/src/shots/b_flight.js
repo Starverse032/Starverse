@@ -70,7 +70,11 @@ export async function create(ctx) {
   let probe = null, probeScene = null;
   if (needProbe) {
     const { createVoyager, RIM } = await import('./b_flight/voyager.js');
-    probe = await createVoyager(ctx); probe.RIM = RIM;
+    // attitude: dish axis towards the Earth, turned 35° to the left and 10° down (we see the bus behind
+    // the dish in S07-a, the dish's back in S07-c); the record panel faces the lens at f3456
+    const att = new THREE.Quaternion().setFromEuler(new THREE.Euler(10 * P.D2R, -35 * P.D2R, 0, 'YXZ'));
+    const toward = new THREE.Vector3(...P.probeRel(P.GLINT_FRAME)).negate().normalize().applyQuaternion(att.clone().invert());
+    probe = await createVoyager(ctx, { attitude: att, recordToward: toward }); probe.RIM = RIM;
     probeScene = new THREE.Scene(); probeScene.add(probe.root);
   }
   const hand = needHand ? createHandoffLayer(ctx) : null;
@@ -136,7 +140,7 @@ export async function create(ctx) {
       farCam.near = Math.max(0.3, P.earthDist(n) - 3); farCam.far = P.earthDist(n) + 3; farCam.updateProjectionMatrix();
       far.earthFar.place(n); earth.group.quaternion.copy(qFar); earth.update();
       earth.setSun(sunW);
-      earth.uniforms.lights.value = 1.6 * k; earth.uniforms.dayGain.value = k; earth.uniforms.atmo.value = k;
+      earth.uniforms.lights.value = 1.6 * k; earth.uniforms.dayGain.value = k; earth.uniforms.atmo.value = 0.8 * k; earth.uniforms.airglow.value = 0;
       far.earthFar.scene.add(earth.group);
       renderer.setRenderTarget(target); renderer.render(far.earthFar.scene, farCam);
       renderer.clearDepth();
@@ -154,7 +158,7 @@ export async function create(ctx) {
       probe.sun.target.position.set(rel[0], rel[1], rel[2]); probe.sun.target.updateMatrixWorld();
       // light levels (screenplay §0: dark side 6–12, lit faces 40–70, rims ≥ 40)
       const out = 1 - 0.7 * P.sstep(3768, 3812, n);              // S07-d: the rim fades 100 % → 30 % as it slides out
-      probe.sun.intensity = 0.55;
+      probe.sun.intensity = 0.36;
       const Rm = probe.RIM;
       Rm.uRimDir1.value.copy(sunW).transformDirection(cam.matrixWorldInverse);
       Rm.uRimCol1.value.set(0.30, 0.32, 0.36).multiplyScalar(out);
@@ -186,7 +190,7 @@ export async function create(ctx) {
     // 6. the reading targets
     if (words && words.heroes) {
       const st = heroState(n);
-      if (globalThis.__bfDiag) console.log('b_flight WARN diag hero', n, JSON.stringify(st));
+      if (globalThis.__bfDiag) void 0;
       if (words.heroes.apply(st)) {
         words.heroes.render(target);
         if (mask) words.heroes.renderMask(mask);

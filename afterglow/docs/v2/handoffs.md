@@ -65,7 +65,7 @@ import { createClouds, cloudsPost, camAt, applyCamera, rateAt, viewWidthAt, foca
          zoomBlurScale, createZoomBlur, SKY_GLSL, CLOUD_LAYERS, GLIDE_DEG, DUSK } from './_clouds.js';
 const clouds = createClouds(ctx);            // create()：烘焙一张 1024² 云图（约 0.2 s），不建别的
 clouds.render(f);                            // render()：一整帧——暮色天空 + 远处地面 + 四层云 + 径向模糊，写进 f.target
-clouds.render(f, { base: tex });             // 可选：用自己的底图（tex）代替内置的天空 + 地面（A3 在云下用它垫地形）
+clouds.render(f, { base: tex, baseMix });   // 可选：用自己的底图（tex）代替内置的天空 + 地面，baseMix 为其权重（默认 1）。A3 在 f1692 取 0（与 A2 完全相同），到 f1700 升到 1
 post(shot, f) { return cloudsPost(f.frame); }
 ```
 - **A2 在 [1680, 1692) 只需要每帧调用 `clouds.render(f)`**，不用自己画天空或云。
@@ -74,7 +74,7 @@ post(shot, f) { return cloudsPost(f.frame); }
 ### 世界与相机（A2 的 [1632, 1680) 请在 f1680 落到这里）
 - 坐标：米；原点 = 落点 R_geo（裂谷谷底一处小隆起的地面点）；x 东、y 上、**z 南**；相机朝北（看 −z），所以西（暮光）在画面左边。
 - 相机始终在穿过目标的一条 **4.5° 下滑线**上：`pos(n) = d(n)·(0, sin 4.5°, cos 4.5°)`，`lookAt(0,0,0)`，无滚转，`setViewOffset` 把光轴移到 R（734.5, 540.5）。相机沿视线走向目标，所以扩张焦点每帧都正好在 R。`applyCamera(cam, n, W, H)` 一步设好（filmGauge 36、焦距、位置、near/far、移轴）。
-- `viewWidthAt(n)` = 目标处的画幅宽度（剧本的“视野”）：f1680 90 km → f1704 30 km（×3 / 24 帧，每帧 4.68%）→ 冲刺 10% → 8% → f1740 1.35 km → 置换④ → f1746 60 m → 8%/帧 → f1756 27.8 m → 置换⑤ → f1762 0.55 m → 减速 6% → 0 → f1776 0.366 m。
+- `viewWidthAt(n)` = 目标处的画幅宽度（剧本的“视野”）：f1680 90 km → f1704 30 km（×3 / 24 帧，每帧 4.68%）→ 冲刺 10% → 8% → f1740 1.35 km → 置换④ → f1746 60 m → 8%/帧 → f1756 27.8 m → 置换⑤ → f1762 0.55 m → 减速 6% → 0 → f1776 0.366 m。两次置换内部的跳变不均匀分布，而是集中在横扫遮得最多的帧（`SUB4` / `SUB5`）：f1741–1746 每帧 9.8 / 98 / 197 / 155 / 24 / 9.8 %，f1757–1762 每帧 10.3 / 147 / 265 / 200 / 54 / 10.3 %；横扫刚进、刚出画的帧不超过冲刺档。端点（f1740、f1746、f1756、f1762）不变。
 - `focalAt(n)`：f1680 前 35 mm，[1680, 1776] 指数地 35 → 100 mm。`d = W·F/36`。`rateAt(n) = W(n−1)/W(n)` 就是 K29 量的“R 附近每帧视放大”（变焦已计入）。
 - 关键帧数值：
 
@@ -132,7 +132,7 @@ post(shot, f) { return sweepPost(f.frame); }    // = cloudsPost，与 A3 相同�
 所以 f1758 两侧画的都是“纱幕 + 草叶”，逐像素一致；A3 的世界在 f1757 溶进纱幕，A4 的微距布景在 f1759–1760 从纱幕里显出来（读作快速推进里焦点跟不上、再找回焦点）。`drawOver` 已经包含这一步，A4 不需要自己写混合。
 
 ### 交接帧参数（f1758，`HANDOFF_1758`）
-- 下降相机（A3 一侧）：焦距 82.13 mm，目标处视野 7.52 m，到目标 17.15 m，高 1.35 m，4.5° 下滑线，光轴在 R，朝北，无滚转。
+- 下降相机（A3 一侧）：焦距 82.13 mm，目标处视野 10.22 m，到目标 23.32 m，高 1.83 m，4.5° 下滑线，光轴在 R，朝北，无滚转（2026-11-09 起两次置换的尺度跳变集中到横扫最宽的几帧，见下）。
 - 微距相机（A4 一侧）不必与它一致——纱幕遮住了这次跳变。A4 只需保证：火绒（对焦点）在 R；朝北、无滚转；暮光从左（西）来，低、冷，太阳在西地平线下 4°，没有别的光；后期与 `sweepPost` 一致（或 postBlend）。轨道上 f1762 的视野是 0.55 m（`viewWidthAt(1762)`），f1776 是 0.366 m（焦距 100 mm 时 d ≈ 1.02 m）；现在的 `f_fire/macro.js` 是 100 mm、对焦 0.75 m、俯 12°（画幅约 0.27 m），取景由 A4 组定。
 - 运动模糊：横扫层自带解析运动模糊，两侧都不用子帧。泛光遮罩：都不写。
 
@@ -140,6 +140,12 @@ post(shot, f) { return sweepPost(f.frame); }    // = cloudsPost，与 A3 相同�
 1. `create()` 里 `const sweep = createSweep(ctx)`；`render()` 在 [1758, 1762) 画完微距布景后调用 `sweep.drawOver(f)`（之后调用也无害，横扫之外它什么都不画）。
 2. f1758 的后期 = `sweepPost(1758)`；如果 A4 的后期不同，在 A4 的 `transitionIn` 加 `postBlend`（引擎会从 A3 在 f1757 的后期平滑过去）。
 3. 交接验收：A3 能画到 f1758、f1759（`build/a_descent_test/` 里有把 A3 延长 2 帧的测试时间轴），两组一起比较 X(1758) 与 Y(1758)。
+
+### f1758 的 A4 一侧（火组实现记录，2026-11-09）
+- `web/src/shots/f_fire.js`：A4 每帧先画微距布景（`f_fire/macro.js`），n < 1762 时再调用 `_sweep.js` 的 `sweep.drawOver(f)`（纱幕 + 草叶，A3 组的代码，未改）。
+- 后期：`firePost('A4', n)` 以 `sweepPost(n)` 为底，[1762, 1776) 内把 bloom 0.55 → 0.75、vignette 0.22 → 0.28 平滑过去，其余（streak 0、grain 0.04、ca 0.0006、knee 0.6）不变；所以 f1758 两侧后期逐项相同，A4 的 `transitionIn` 不需要 `postBlend`。
+- 推进：A4 的微距取景按 `_clouds.js` 的 `viewWidthAt(n)` 在 f1762–1776 减速（6 % → 0），f1762 之前按 6 %/帧外推（画面藏在纱幕后）；f1776 视野 = `viewWidthAt(1776)`，此后只有手持呼吸。微距布景是按 f1776 机位烘焙的光照板，减速段用 2D 缩放（以 R 为中心）+ 一张 1.95 倍视场的暮光板补画框边缘。
+- 运动模糊：两侧都不用子帧；泛光遮罩：都不写。
 
 ---
 

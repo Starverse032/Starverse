@@ -229,7 +229,13 @@ export function nearEarth() {
   return NE;
 }
 // forward travel of the lens relative to the near Earth (m): eases in, the Earth is gone by f2972
-export const nearEarthTravel = n => { const ne = nearEarth(), u = clamp((n - 2926) / (2972 - 2926)); return ne.exit * 1.04 * (0.25 * u + 0.75 * u * u); };
+export const nearEarthTravel = n => {
+  const ne = nearEarth(), u = clamp((n - 2926) / (2972 - 2926)), e = ne.exit * 1.04;
+  if (n <= 2972) return e * (0.25 * u + 0.75 * u * u);
+  // after the limb has left the frame the planet keeps falling behind (and soon the root too)
+  const v = e * 1.75 / 46;                                     // m/frame at f2972 (C1)
+  return e + v * (n - 2972) + 0.004 * (n - 2972) ** 2;
+};
 export const rootDepth = n => ROOT_Z0 - nearEarthTravel(n);
 
 // =====================================================================================================

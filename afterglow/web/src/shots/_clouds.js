@@ -22,7 +22,8 @@
 //           [1680,1704) 90 km → 30 km (置换③, ×3 in 24 f)
 //           [1704,1740) per-frame magnification 10 % → 8 % (linear in log), → ≈ 1.35 km
 //           [1740,1746) → 60 m (置换④)       [1746,1756) 8 %/frame → 27.8 m
-//           [1756,1762) → 0.55 m (置换⑤)   (both jumps packed into the wipes' widest frames: SUB4 / SUB5)     [1762,1776) 6 % → 0 (≈ ×1.5) → 0.367 m, then held
+//           [1756,1762) → 0.55 m (置换⑤)     [1762,1776) 6 % → 0 (≈ ×1.5) → 0.367 m, then held
+//           (both jumps are packed into the wipes' widest frames: SUB4 / SUB5)
 //   F(n)  = focal length, 35 mm before f1680, 35 → 100 mm exponential over [1680, 1776] (zoom counted in W)
 //   d(n)  = W · F / 36 (36 mm film gauge on the 1920 px width)
 // The per-frame magnification at R is W(n−1)/W(n) (rateAt): this is what K29 measures.

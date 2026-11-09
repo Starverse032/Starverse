@@ -78,7 +78,7 @@ function withRim(mat) {
   return mat;
 }
 
-export async function createVoyager(ctx) {
+export async function createVoyager(ctx, { attitude = new THREE.Quaternion(), recordToward = null } = {}) {
   const { renderer, kit } = ctx;
 
   const crinkleH = kit.bake(renderer, {
@@ -173,7 +173,10 @@ export async function createVoyager(ctx) {
   const apo = BR * Math.cos(Math.PI / 10), faceW = 2 * BR * Math.sin(Math.PI / 10);
   add(new THREE.CylinderGeometry(BR * 0.995, BR * 0.995, BH, 10, 1, false).rotateX(Math.PI / 2).rotateZ(Math.PI / 10).translate(0, 0, BZC), M.dark);
   // the record faces +X (towards the lens as it overtakes the craft on its right, f3456)
-  const recordFace = 0;
+  // the record goes on the panel that faces the lens as it overtakes the craft (f3456): recordToward is
+  // that direction in the body frame (the caller knows the path)
+  let recordFace = 0;
+  if (recordToward) { let best = -2; for (let k = 0; k < 10; k++) { const d = faceN(k).dot(recordToward); if (d > best) { best = d; recordFace = k; } } }
   const panelKinds = ['gold', 'black', 'gold', 'louver', 'black', 'gold', 'black', 'gold', 'louver', 'black'];
   for (let k = 0; k < 10; k++) {
     const n = faceN(k), c = n.clone().multiplyScalar(apo + 0.004).add(V(0, 0, BZC));
@@ -290,6 +293,7 @@ export async function createVoyager(ctx) {
   const sc = sun.shadow.camera; sc.left = -8; sc.right = 8; sc.top = 8; sc.bottom = -8; sc.near = 1; sc.far = 80;
   sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.015;
   const root = new THREE.Group();
+  body.quaternion.copy(attitude);
   root.add(body, sun, sun.target);
 
   // bounding points (for the screen-space checks: span, exit)

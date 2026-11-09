@@ -61,16 +61,26 @@ const CARD_FRAG = /* glsl */ `
   }
   void main(){
     float sm = length(vSm);
-    float taps = clamp(ceil(sm / 1.5), 1.0, 20.0);
+    float taps = clamp(ceil(sm / 1.6), 1.0, 12.0);
     float j = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
-    float lod = log2(max(1.0, uAtlasH / max(vWH.y, 0.5) * max(1.0, 0.8 * vBlur)));
+    // blur = a capped mip level (no bleeding between atlas cells) + a small rotated disc of taps
+    float tpp = uAtlasH / max(vWH.y, 0.5);                    // atlas texels per screen px
+    float lod = clamp(log2(max(1.0, tpp * max(1.0, 0.45 * vBlur))), 0.0, 3.2);
+    float disc = vBlur > 2.0 ? 5.0 : 1.0;
+    float rad = 0.42 * vBlur;
+    float ang = 6.2831853 * j;
     float a = 0.0;
-    for (int k = 0; k < 20; k++) {
+    for (int k = 0; k < 12; k++) {
       if (float(k) >= taps) break;
       float tt = (float(k) + j) / taps;
-      a += inkAt(vLocal + vSm * tt / vWH, lod);
+      vec2 q0 = vLocal + vSm * tt / vWH;
+      for (int d = 0; d < 5; d++) {
+        if (float(d) >= disc) break;
+        vec2 o = d == 0 ? vec2(0.0) : rad * vec2(cos(ang + float(d) * 1.5708), sin(ang + float(d) * 1.5708)) * (d == 0 ? 0.0 : 1.0);
+        a += inkAt(q0 + o / vWH, lod);
+      }
     }
-    a /= taps;
+    a /= taps * disc;
     gl_FragColor = vec4(vCol * vA * a, a * vOcc);
   }`;
 
@@ -121,7 +131,7 @@ export async function createWords(ctx, { lensCam, needStream = true, needHeroes 
       const w = i < 10 ? 52 + 16 * R2() : 66 + 46 * Math.pow(R2(), 0.8);
       const o = 0.55 + 1.6 * R2(), a = dirAng + (R2() - 0.5) * 0.62;
       const k = Math.floor(R2() * ORDER.length), rc = atlas.rects[k];
-      inst.push({ rc, w, x: o * Math.cos(a), y: o * Math.sin(a), h: 0.32 + 0.5 * R2(), b: 0.55 + 0.25 * R2(), col: R2() < 0.6 ? QA : QB, ap: 2.6, near: 1 });
+      inst.push({ rc, w, x: o * Math.cos(a), y: o * Math.sin(a), h: 0.32 + 0.5 * R2(), b: 0.34 + 0.16 * R2(), col: R2() < 0.6 ? QA : QB, ap: 1.15, near: 1 });
     }
     const N = inst.length;
     const geo = new THREE.InstancedBufferGeometry();
@@ -138,7 +148,7 @@ export async function createWords(ctx, { lensCam, needStream = true, needHeroes 
       uAtlas: { value: atlas.texture }, uAtlasH: { value: PH * 4096 / 4096 },
       uZF: { value: 100 }, uZFp: { value: 100 }, uLat: { value: new THREE.Vector2() }, uLatP: { value: new THREE.Vector2() },
       uPVp: { value: new THREE.Matrix4() }, uRes: { value: new THREE.Vector2(W, H) }, uPx: { value: S },
-      uInvZf: { value: 1 / 45 }, uApF: { value: 0.08 * P.F35 }, uZRoot: { value: 0 }, uGain: { value: 1 }, uNearGain: { value: 1 },
+      uInvZf: { value: 1 / 45 }, uApF: { value: 0.035 * P.F35 }, uZRoot: { value: 0 }, uGain: { value: 1 }, uNearGain: { value: 1 },
       uCard: { value: new THREE.Vector4(690, 735, 1230, 830) }, uCardDim: { value: 0 }, uHole: { value: new THREE.Vector4(0, 0, 0, 0) },
     };
     const mat = new THREE.ShaderMaterial({
@@ -207,7 +217,7 @@ export async function createWords(ctx, { lensCam, needStream = true, needHeroes 
     const CU = {
       uZF: U.uZF, uLat: U.uLat, uRes: U.uRes, uPx: U.uPx, uZRoot: U.uZRoot, uZNear: { value: 0.5 }, uZFar: { value: 300 },
       uBeam: { value: new THREE.Vector2(...P.BOFF) }, uSig: { value: 0.105 }, uI: { value: 0.42 }, uBits: { value: bitTex },
-      uCol: { value: new THREE.Vector3(1.0, 0.47, 0.16) }, uDust: { value: 1 }, uCard: U.uCard, uCardDim: U.uCardDim,
+      uCol: { value: new THREE.Vector3(1.0, 0.47, 0.16) }, uDust: { value: 1 }, uCard: U.uCard, uCardDim: U.uCardDim, uHole: U.uHole,
     };
     const core = new THREE.Mesh(cg, new THREE.ShaderMaterial({
       uniforms: CU, transparent: true, depthWrite: false, depthTest: true, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
@@ -233,7 +243,7 @@ export async function createWords(ctx, { lensCam, needStream = true, needHeroes 
           vI = min(1.0, sig / sg);
         }`,
       fragmentShader: /* glsl */ `
-        uniform float uI, uZRoot, uZF, uDust, uPx, uCardDim; uniform vec3 uCol; uniform sampler2D uBits; uniform vec4 uCard; uniform vec2 uRes;
+        uniform float uI, uZRoot, uZF, uDust, uPx, uCardDim; uniform vec3 uCol; uniform sampler2D uBits; uniform vec4 uCard, uHole; uniform vec2 uRes;
         varying float vAcross, vI, vZ, vSigPx, vW;
         void main(){
           if (vZ < uZRoot) discard;
@@ -256,6 +266,7 @@ export async function createWords(ctx, { lensCam, needStream = true, needHeroes 
           vec2 p1080 = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) / uPx;
           float inCard = 1.0 - smoothstep(0.0, 50.0, max(max(uCard.x - p1080.x, p1080.x - uCard.z), max(uCard.y - p1080.y, p1080.y - uCard.w)));
           I *= 1.0 - 0.8 * uCardDim * inCard;
+          if (uHole.z > 0.0) { vec2 dh = (p1080 - uHole.xy) / uHole.zw; I *= 1.0 - 0.7 * exp(-dot(dh, dh) * 1.2); }
           gl_FragColor = vec4(uCol * I * prof, 1.0);
         }`,
     }));
@@ -288,7 +299,7 @@ export async function createWords(ctx, { lensCam, needStream = true, needHeroes 
         U.uInvZf.value = 1 / P.focusDepth(n);
         U.uZRoot.value = P.rootDepth(n);
         U.uGain.value = fade;
-        U.uNearGain.value = fade;
+        U.uNearGain.value = fade * P.sstep(3186, 3222, n);
         U.uCardDim.value = P.sstep(2944, 2960, n) * (1 - P.sstep(3040, 3054, n));
         CU.uZNear.value = Math.max(0.6, P.rootDepth(n));
         CU.uZFar.value = P.zFront(n) + 70;
@@ -447,10 +458,10 @@ function leadAt(n) {
 }
 // the four languages of S06-d: [window start, window end), key, font px at mid-window, centre at mid-window
 export const FOUR = [
-  { key: 'en', w: [3150, 3170], px: 70, c: [930, 520] },
-  { key: 'ja', w: [3165, 3185], px: 70, c: [990, 458] },
-  { key: 'es', w: [3180, 3200], px: 64, c: [930, 520] },
-  { key: 'ar', w: [3195, 3216], px: 64, c: [990, 458] },
+  { key: 'en', w: [3150, 3170], px: 70, c: [880, 515] },
+  { key: 'ja', w: [3165, 3185], px: 70, c: [930, 436] },
+  { key: 'es', w: [3180, 3200], px: 64, c: [880, 515] },
+  { key: 'ar', w: [3195, 3216], px: 64, c: [930, 436] },
 ];
 function fourAt(f, n) {
   const m = (f.w[0] + f.w[1]) / 2, g = 0.016;
