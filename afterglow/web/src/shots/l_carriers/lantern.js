@@ -213,7 +213,7 @@ export async function createLantern(ctx, noiseTex, T) {
       }
       col = mix(col, wc, mW);
       // dark phase: tin silhouettes (ember-warm, faint) + the glass outline by its residual reflections
-      vec3 o = max(emberLine(outl, 0.9) * 0.85, vec3(0.032, 0.036, 0.042) * outlCold);
+      vec3 o = max(emberLine(min(outl, 1.0), 0.8) * 0.85, vec3(0.028, 0.031, 0.037) * outlCold);
       o += kel(1200.0) * 0.040 * exp(-dot(P - vec2(960.0, WICKY), P - vec2(960.0, WICKY)) / 10.0) * ss(uDark + 5.0, uDark, uFr);  // wick ember
       bool lit = uFr >= uOn && uFr < uDark;
       col = lit ? col : o * uOutline + (uFr >= uDark ? kel(1200.0) * 0.030 * exp(-dot(P - vec2(960.0, WICKY), P - vec2(960.0, WICKY)) / 10.0) * ss(uDark + 5.0, uDark, uFr) : vec3(0.0));

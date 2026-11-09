@@ -16,9 +16,9 @@ export function createRidge(ctx, shot) {
   const { util } = ctx;
   const sh = shared(ctx);
   const view = makeView(ctx, 50);
-  const U = skyUniforms(ctx, { twiAz: -125, twiCol: [0.030, 0.052, 0.100], twiW: 2.0, low: [0.013, 0.018, 0.027], keyK: 1.8, galK: 0.22, ground: [0.05, 0.0, 0.0] });
+  const U = skyUniforms(ctx, { twiAz: -125, twiCol: [0.030, 0.052, 0.100], twiW: 2.0, low: [0.013, 0.018, 0.027], keyK: 1.8, galK: 0.22, ground: [0.0007, 0.0008, 0.0010] });
   const sky = makeSky(ctx, U);
-  const ridgeEl = az => 7.5 + 0.075 * az - 0.0022 * az * az + 1.1 * (fbm1(az / 9 + 3.1, 4, 501) - 0.5) + 0.35 * (fbm1(az / 2.2, 3, 502) - 0.5) + 0.08 * (fbm1(az / 0.35, 2, 503) - 0.5);
+  const ridgeEl = az => 8.6 + 0.06 * az - 0.0022 * az * az + 1.1 * (fbm1(az / 9 + 3.1, 4, 501) - 0.5) + 0.35 * (fbm1(az / 2.2, 3, 502) - 0.5) + 0.08 * (fbm1(az / 0.35, 2, 503) - 0.5);
   const farEl = az => 4.2 + 2.2 * (fbm1(az / 14 + 7.0, 4, 511) - 0.5) + 1.5 * Math.exp(-(((az + 30) / 9) ** 2)) + 0.4 * (fbm1(az / 2.5, 3, 512) - 0.5);
   const far = makeHills(ctx, U, [{ dist: 5200, haze: 0.62, fn: farEl }], { az0: -50, az1: 50 });
   const ridge = makeHills(ctx, U, [{ dist: 100, haze: 0.0, fn: ridgeEl }], { az0: -50, az1: 50, rim: 0.10 });   // in front of the pedestal: drawn after it

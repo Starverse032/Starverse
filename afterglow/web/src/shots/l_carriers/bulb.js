@@ -162,7 +162,7 @@ export async function createBulb(ctx, noiseTex, T) {
       const s = state(fr);
       U.uFr.value = fr; U.uOutline.value = outline; U.uLum.value = s.lum;
       // apparent colour: below ~1450 K a dull glow reads deep red-orange, never magenta (ACES)
-      U.uTk.value = Math.max(s.Tk, 1450 + (s.Tk - 800) * 0.25) + 300 * Math.min(1, Math.max(0, (s.Tk - 1900) / 800));
+      U.uTk.value = Math.max(s.Tk, 1450 + (s.Tk - 800) * 0.25) + 180 * Math.min(1, Math.max(0, (s.Tk - 1900) / 800));
       p.draw(renderer, target, additive);
     },
   };

@@ -390,7 +390,7 @@ export class Dish {
   w(x, y, z) { return new THREE.Vector3(x, y, z).applyMatrix4(this.group.matrixWorld); }
   axis() { return this.w(0, 1, 0).sub(this.w(0, 0, 0)).normalize(); }
   focus() { return this.w(0, this.off + this.F, 0); }
-  lamp() { return this.w(0, this.off + this.F + this.cabinH * 0.6 + 0.1, 0); }      // on the cabin's sky face
+  lamp() { return this.w(0, this.off + this.F + this.cabinH * 0.1, 0); }      // on the feed cabin (drawn over it)
   centre() { return this.w(0, this.off + this.depth, 0); }
   rim(a) { const R = this.D / 2 + this.lip; return this.w(R * Math.cos(a), this.off + this.depth + 0.03, R * Math.sin(a)); }
   // rim (≥ 3 px contour, brighter on the side facing the twilight) + feed legs

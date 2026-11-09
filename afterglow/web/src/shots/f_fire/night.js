@@ -773,8 +773,22 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
       }
       setU.uLMap.value = lmRT.texture;
       out.f2 = { LP0, cube, lmRT, scene: new THREE.Scene() };
-      out.nearRT = ctx.makeRT(W, H, { depth: true, samples: 4 });
-      out.nearComp = kit.fullscreen(/* glsl */ `uniform sampler2D tex; void main(){ gl_FragColor = texture2D(tex, vUv); }`, { tex: { value: out.nearRT.texture } }, { blending: THREE.CustomBlending, transparent: true });
+      // no MSAA here: on SwiftShader a multisampled target costs ~2 s/frame whatever the shading (measured);
+      // the thin grass gets an edge-aware 5-tap smoothing in the composite instead (FXAA-like)
+      out.nearRT = ctx.makeRT(W, H, { depth: true });
+      out.nearComp = kit.fullscreen(/* glsl */ `
+        uniform sampler2D tex; uniform vec2 uTx;
+        float lu(vec4 c){ return dot(c.rgb, vec3(0.2126, 0.7152, 0.0722)) / (0.02 + dot(c.rgb, vec3(0.2126, 0.7152, 0.0722))); }
+        void main(){
+          vec4 c = texture2D(tex, vUv);
+          vec4 n = texture2D(tex, vUv + vec2(0.0, uTx.y)), s2 = texture2D(tex, vUv - vec2(0.0, uTx.y));
+          vec4 e = texture2D(tex, vUv + vec2(uTx.x, 0.0)), w = texture2D(tex, vUv - vec2(uTx.x, 0.0));
+          float l = lu(c), ln = lu(n), ls = lu(s2), le = lu(e), lw = lu(w);
+          float con = max(max(ln, ls), max(max(le, lw), l)) - min(min(ln, ls), min(min(le, lw), l));
+          float k = smoothstep(0.08, 0.5, con) * 0.5;
+          vec4 avg = (n + s2 + e + w) * 0.25;
+          gl_FragColor = mix(c, avg, k);
+        }`, { tex: { value: out.nearRT.texture }, uTx: { value: new THREE.Vector2(1 / W, 1 / H) } }, { blending: THREE.CustomBlending, transparent: true });
       premult(out.nearComp.material);
     }
     distMat.dispose();
@@ -932,18 +946,10 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
     s.setU.uDbgHide.value = dbg.skip.has('noblades') ? 2 : dbg.skip.has('noground') ? 0 : -9;
     const flatM = dbg.skip.has('flat') ? (dbg.flatM ||= new THREE.MeshBasicMaterial({ color: 0x101010, side: THREE.DoubleSide })) : null;
     if (flatM) s.setMesh.material = flatM;
-    if (dbg.skip.has('nomsaa') || dbg.skip.has('msaa2')) {
-      if (dbg.skip.has('msaa2')) s.nearRT1 ||= ctx.makeRT(W, H, { depth: true, samples: 2 });
-      else s.nearRT1 ||= ctx.makeRT(W, H, { depth: true });
-      renderer.setRenderTarget(s.nearRT1); renderer.setClearColor(0x000000, 0); renderer.clear(true, true, false); renderer.setClearColor(0x000000, 1);
-      renderer.render(sc, cam35);
-      s.nearComp.material.uniforms.tex.value = s.nearRT1.texture; s.nearComp.render(renderer, f.target); s.nearComp.material.uniforms.tex.value = s.nearRT.texture;
-    } else {
     renderer.setRenderTarget(s.nearRT); renderer.setClearColor(0x000000, 0); renderer.clear(true, true, false); renderer.setClearColor(0x000000, 1);
     renderer.render(sc, cam35);
     s.nearRT.scissorTest = false;
     s.nearComp.render(renderer, f.target);
-    }
     if (flatM) s.setMesh.material = s.setMat;
   }
 

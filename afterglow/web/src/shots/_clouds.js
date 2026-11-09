@@ -22,7 +22,7 @@
 //           [1680,1704) 90 km → 30 km (置换③, ×3 in 24 f)
 //           [1704,1740) per-frame magnification 10 % → 8 % (linear in log), → ≈ 1.35 km
 //           [1740,1746) → 60 m (置换④)       [1746,1756) 8 %/frame → 27.8 m
-//           [1756,1762) → 0.55 m (置换⑤)     [1762,1776) 6 % → 0 (≈ ×1.5) → 0.367 m, then held
+//           [1756,1762) → 0.55 m (置换⑤)   (both jumps packed into the wipes' widest frames: SUB4 / SUB5)     [1762,1776) 6 % → 0 (≈ ×1.5) → 0.367 m, then held
 //   F(n)  = focal length, 35 mm before f1680, 35 → 100 mm exponential over [1680, 1776] (zoom counted in W)
 //   d(n)  = W · F / 36 (36 mm film gauge on the 1920 px width)
 // The per-frame magnification at R is W(n−1)/W(n) (rateAt): this is what K29 measures.
@@ -47,12 +47,18 @@ LN.e = LN.d - Math.log(1.08) * 10;                      // ln W(1756) ≈ ln 27.
 LN.f = Math.log(0.55);
 const GD = Math.log(1.06);
 
+// Inside the two wipes the scale jump is not spread evenly: it is packed into the frames where the
+// foreground covers most of the frame (and R), so the uncovered part never shows a big step at the
+// edges of the wipe (cumulative fraction of the jump at each integer frame, linear in between).
+const SUB4 = [0, 0.03, 0.25, 0.60, 0.90, 0.97, 1];                  // f1740 … f1746 (acacia peaks f1742–1743)
+const SUB5 = [0, 0.025, 0.255, 0.585, 0.865, 0.975, 1];             // f1756 … f1762 (grass peaks f1758–1759)
+const packed = (tab, u) => { const i = Math.min(5, Math.max(0, Math.floor(u))); return tab[i] + (tab[i + 1] - tab[i]) * (u - i); };
 export function lnViewWidth(n) {
   if (n <= 1704) return LN.a + (LN.b - LN.a) * (n - 1680) / 24;      // (extrapolates before f1680: A2 owns that part)
   if (n <= 1740) { const u = n - 1704; return LN.b - (G0 * u + (G1 - G0) * u * u / 72); }
-  if (n <= 1746) return LN.c + (LN.d - LN.c) * (n - 1740) / 6;
+  if (n <= 1746) return LN.c + (LN.d - LN.c) * packed(SUB4, n - 1740);
   if (n <= 1756) return LN.d - Math.log(1.08) * (n - 1746);
-  if (n <= 1762) return LN.e + (LN.f - LN.e) * (n - 1756) / 6;
+  if (n <= 1762) return LN.e + (LN.f - LN.e) * packed(SUB5, n - 1756);
   const u = Math.min(n - 1762, 14);
   return LN.f - (GD * u - GD * u * u / 28);
 }

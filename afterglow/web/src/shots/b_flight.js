@@ -186,7 +186,7 @@ export async function create(ctx) {
     // 6. the reading targets
     if (words && words.heroes) {
       const st = heroState(n);
-      if (globalThis.__bfDiag) console.log('b_flight diag hero', n, JSON.stringify(st));
+      if (globalThis.__bfDiag) console.log('b_flight WARN diag hero', n, JSON.stringify(st));
       if (words.heroes.apply(st)) {
         words.heroes.render(target);
         if (mask) words.heroes.renderMask(mask);

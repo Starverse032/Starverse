@@ -90,7 +90,7 @@ export async function createFar(ctx, { needStars = true, needEarthFar = false, e
       g.setAttribute('aDir', new THREE.InstancedBufferAttribute(dir, 3)); g.setAttribute('aC', new THREE.InstancedBufferAttribute(c, 4));
       g.instanceCount = arr.length;
       const U = { uPV: { value: new THREE.Matrix4() }, uPVp: { value: new THREE.Matrix4() }, uRes: { value: new THREE.Vector2(W, H) }, uPx: { value: S }, uBox: { value: box ? 1 : 0 }, uGain: { value: 1 } };
-      const m = new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: U, vertexShader: TRAIL_VS, fragmentShader: TRAIL_FS, transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending }));
+      const m = new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: U, vertexShader: TRAIL_VS, fragmentShader: TRAIL_FS, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
       m.frustumCulled = false;
       return { m, U };
     };
@@ -101,7 +101,7 @@ export async function createFar(ctx, { needStars = true, needEarthFar = false, e
     HS.forEach((s, k) => { pp.set([(s.px + 0.5) / 960 - 1, 1 - (s.py + 0.5) / 540, 0], 3 * k); pc.set(hsCol(s.level), 3 * k); });
     pg.setAttribute('position', new THREE.BufferAttribute(pp, 3)); pg.setAttribute('aCol', new THREE.BufferAttribute(pc, 3));
     const still = new THREE.Points(pg, new THREE.ShaderMaterial({
-      transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { sz: { value: Math.max(1, S) } },
+      transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, uniforms: { sz: { value: Math.max(1, S) } },
       vertexShader: `attribute vec3 aCol; uniform float sz; varying vec3 vC; void main(){ gl_Position = vec4(position, 1.0); gl_PointSize = sz; vC = aCol; }`,
       fragmentShader: `varying vec3 vC; void main(){ gl_FragColor = vec4(vC, 1.0); }`,
     }));
@@ -168,7 +168,7 @@ export async function createFar(ctx, { needStars = true, needEarthFar = false, e
         uTilt: { value: new THREE.Matrix3() }, uRing: { value: ring ? 1 : 0 }, uRingN: { value: new THREE.Vector3(0.0, 0.93, 0.36).normalize() },
       };
       const mat = new THREE.ShaderMaterial({
-        uniforms: U, transparent: true, depthTest: false, depthWrite: false,
+        uniforms: U, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
         blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
         vertexShader: /* glsl */ `uniform vec2 uC, uRes; uniform float uR, uPx, uRing; varying vec2 vQ;
           void main(){ float e = uRing > 0.5 ? 2.4 : 1.08; vec2 q = uC + (position.xy * 2.0 - 1.0) * uR * e; vQ = (q - uC) / uR;
@@ -248,7 +248,7 @@ export async function createFar(ctx, { needStars = true, needEarthFar = false, e
     const U = { dotC: { value: new THREE.Vector3(...dotHDR) }, bandC: { value: new THREE.Vector3(...bandHDR) }, kDot: { value: 0 }, kBand: { value: 0 },
       res: { value: new THREE.Vector2(W, H) }, center: { value: new THREE.Vector2(...BLUE_DOT.center) } };
     const m = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
-      uniforms: U, transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending,
+      uniforms: U, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
       vertexShader: `void main(){ gl_Position = vec4(position.xy, 0.0, 1.0); }`,
       fragmentShader: /* glsl */ `uniform float kDot, kBand; uniform vec3 dotC, bandC; uniform vec2 res, center;
         void main(){
@@ -268,7 +268,7 @@ export async function createFar(ctx, { needStars = true, needEarthFar = false, e
   {
     const U = { uC: { value: new THREE.Vector2() }, uI: { value: 0 }, uRes: { value: new THREE.Vector2(W, H) }, uPx: { value: S } };
     const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).translate(0.5, 0.5, 0), new THREE.ShaderMaterial({
-      uniforms: U, transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending,
+      uniforms: U, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
       vertexShader: `uniform vec2 uC, uRes; uniform float uPx; varying vec2 vQ; void main(){ vec2 q = uC + (position.xy * 2.0 - 1.0) * 60.0; vQ = q - uC; vec2 pr = q * uPx; pr.y = uRes.y - pr.y; gl_Position = vec4(pr / uRes * 2.0 - 1.0, 0.0, 1.0); }`,
       fragmentShader: `uniform float uI; varying vec2 vQ; void main(){ float r = length(vQ); float g = exp(-0.5 * r * r / 1.7) + 0.035 * exp(-r / 7.0) + 0.006 * exp(-r / 22.0);
         gl_FragColor = vec4(vec3(1.0, 0.80, 0.46) * uI * g, 1.0); }`,

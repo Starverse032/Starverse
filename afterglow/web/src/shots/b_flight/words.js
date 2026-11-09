@@ -142,7 +142,7 @@ export async function createWords(ctx, { lensCam, needStream = true, needHeroes 
       uCard: { value: new THREE.Vector4(690, 735, 1230, 830) }, uCardDim: { value: 0 }, uHole: { value: new THREE.Vector4(0, 0, 0, 0) },
     };
     const mat = new THREE.ShaderMaterial({
-      uniforms: U, transparent: true, depthWrite: false, depthTest: true,
+      uniforms: U, transparent: true, depthWrite: false, depthTest: true, side: THREE.DoubleSide,
       blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
       blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
       vertexShader: /* glsl */ `
@@ -210,7 +210,7 @@ export async function createWords(ctx, { lensCam, needStream = true, needHeroes 
       uCol: { value: new THREE.Vector3(1.0, 0.47, 0.16) }, uDust: { value: 1 }, uCard: U.uCard, uCardDim: U.uCardDim,
     };
     const core = new THREE.Mesh(cg, new THREE.ShaderMaterial({
-      uniforms: CU, transparent: true, depthWrite: false, depthTest: true, blending: THREE.AdditiveBlending,
+      uniforms: CU, transparent: true, depthWrite: false, depthTest: true, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
       vertexShader: /* glsl */ `
         uniform float uZF, uZRoot, uZNear, uZFar, uPx, uSig; uniform vec2 uLat, uRes, uBeam;
         varying float vAcross, vI, vZ, vSigPx, vW;
@@ -264,7 +264,7 @@ export async function createWords(ctx, { lensCam, needStream = true, needHeroes 
     // ---- the root glow (the beam lit in the air) ------------------------------------------------------
     const RG = { uC: { value: new THREE.Vector2() }, uI: { value: 0 }, uRes: U.uRes, uPx: U.uPx };
     const rootGlow = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
-      uniforms: RG, transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending,
+      uniforms: RG, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
       vertexShader: `void main(){ gl_Position = vec4(position.xy, 0.0, 1.0); }`,
       fragmentShader: /* glsl */ `uniform vec2 uC, uRes; uniform float uI, uPx;
         void main(){ vec2 p = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) / uPx; vec2 d = p - uC;
@@ -349,7 +349,7 @@ export async function createWords(ctx, { lensCam, needStream = true, needHeroes 
         uStroke: { value: new THREE.Vector3(...STROKE) }, uHalo: { value: new THREE.Vector3(...HALO) }, uMask: { value: 0 },
       };
       const mat = new THREE.ShaderMaterial({
-        uniforms: U, transparent: true, depthTest: false, depthWrite: false,
+        uniforms: U, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
         blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
         blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
         vertexShader: /* glsl */ `
