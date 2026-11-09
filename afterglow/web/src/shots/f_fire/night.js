@@ -271,7 +271,7 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
 
   const nz = (t, fr, s) => util.shake(t, s, fr, 1)[0];
   const flick = t => 1 + 0.13 * nz(t, 6.5, 41) + 0.07 * nz(t, 13.0, 43) + 0.10 * nz(t, 2.1, 47);
-  const C_FL = bbCPU(1850);                            // the light the fire throws (the flame itself is drawn 1200–1900 K)
+  const C_FL = bbCPU(1720);                            // the light the fire throws (the flame itself is drawn 1200–1900 K)
   const setSky = (cam, M, gain, air, dusk) => {
     skyU.uInvVP.value.copy(invVP(cam)); skyU.uCamPos.value.copy(cam.position); skyU.uM.value.copy(M);
     skyU.uGain.value = gain; skyU.uAir.value = air; skyU.uDuskK.value = dusk;
@@ -608,8 +608,8 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
           float dens = body * mix(1.0, tongue, smoothstep(0.06, 0.55, y)) * smoothstep(0.0, 0.05, y + 0.02);
           float core = smoothstep(wy * 0.7, 0.0, abs(x)) * smoothstep(0.6, 0.06, y) * smoothstep(-0.02, 0.1, y);
           // 1200–1900 K; the body is kept in HDR 0.3–1.5 so that it stays orange through the tone curve
-          float Tk = mix(1200.0, 1720.0, clamp(core * 0.75 + (1.0 - y) * 0.2 + (n2.b - 0.5) * 0.2, 0.0, 1.0));
-          vec3 c = blackbody(Tk) * (dens * 0.62 + core * 0.85) * vP.y;
+          float Tk = mix(1200.0, 1650.0, clamp(core * 0.75 + (1.0 - y) * 0.2 + (n2.b - 0.5) * 0.2, 0.0, 1.0));
+          vec3 c = blackbody(Tk) * (dens * 0.55 + core * 0.62) * vP.y;
           gl_FragColor = vec4(c * uF, 0.0);
         }`,
     });
@@ -871,7 +871,7 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
   const f1Follow = n => {
     const fs = fireScale(n);
     // px the picture moves (x right, y down), calibrated on the L ≥ 180 light centre at fs 0.205 / 0.366 / 0.445
-    const k = [[0.205, 2.6, -21.5], [0.366, 8.0, -12.4], [0.445, 10.7, -2.0]];
+    const k = [[0.205, 0.4, -21.8], [0.366, 14.3, -19.7], [0.445, 18.5, -13.0]];
     let i = fs <= k[1][0] ? 0 : 1; const u = Math.min(1.2, Math.max(-0.2, (fs - k[i][0]) / (k[i + 1][0] - k[i][0])));
     return [k[i][1] + (k[i + 1][1] - k[i][1]) * u, k[i][2] + (k[i + 1][2] - k[i][2]) * u];
   };

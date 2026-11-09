@@ -235,7 +235,7 @@ export async function create(ctx) {
         on = a * a * (3.0 - 2.0 * a); type = 0.0; lev = 0.30; K = kmax(mix(1700.0, 2600.0, a));
       } else if (cell == vec2(1.0, 1.0)) {                 // f5244: cool LED ceiling fading up
         float a = clamp((uFr - NB2 + 1.0) / 8.0, 0.0, 1.0);
-        on = a * a; type = 1.0; lev = 0.20; K = vec3(0.84, 0.91, 1.0);
+        on = a * a; type = 1.0; lev = 0.15; K = vec3(0.84, 0.91, 1.0);
       } else if (cell == vec2(2.0, 0.0) || cell == vec2(1.0, 0.0) || cell == vec2(0.0, 1.0) || cell == vec2(-1.0, 1.0)) on = 0.0;
       lit = on * lev; litK = K;
       vec3 col = vec3(0.0);
