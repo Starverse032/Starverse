@@ -52,7 +52,7 @@ function truss(a, b, rad, rl, rb, bay) {
 export const RIM = {
   uRimDir1: { value: new THREE.Vector3(0, 0, 1) }, uRimCol1: { value: new THREE.Vector3() },
   uRimDir2: { value: new THREE.Vector3(0, 0, 1) }, uRimCol2: { value: new THREE.Vector3() },
-  uRimPow: { value: 3.0 }, uFill: { value: new THREE.Vector3() },
+  uRimPow: { value: 2.2 }, uFill: { value: new THREE.Vector3() },
 };
 function withRim(mat) {
   mat.onBeforeCompile = sh => {
@@ -145,7 +145,7 @@ export async function createVoyager(ctx, { attitude = new THREE.Quaternion(), re
     lathe.rotateX(Math.PI / 2);
     add(lathe, M.dishFront);
     add(lathe, M.dishBack);
-    const rim = new THREE.TorusGeometry(DR, 0.03, 8, 160); rim.translate(0, 0, zPar(DR));
+    const rim = new THREE.TorusGeometry(DR, 0.05, 10, 192); rim.translate(0, 0, zPar(DR));
     add(rim, M.white);
     const ribs = [];
     for (let k = 0; k < 16; k++) {

@@ -18,7 +18,7 @@ export function createTown(ctx, shot) {
   const sky = makeSky(ctx, U);
   // the hills beyond the town (4 km), the valley floor's far edge (1.2 km), the rise the dish stands on (150 m)
   const farEl = az => 2.6 + 1.6 * (fbm1(az / 10 + 1.0, 4, 701) - 0.5) + 0.3 * (fbm1(az / 1.8, 3, 702) - 0.5);
-  const riseEl = az => -1.6 + 3.6 * Math.exp(-(((az + 9) / 15) ** 2)) + 0.25 * (fbm1(az / 2.0, 3, 711) - 0.5) + 0.06 * (fbm1(az / 0.3, 2, 712) - 0.5);
+  const riseEl = az => -9.0 + 10.6 * Math.exp(-(((az + 8) / 13) ** 2)) + 0.25 * (fbm1(az / 2.0, 3, 711) - 0.5) + 0.06 * (fbm1(az / 0.3, 2, 712) - 0.5);
   const far = makeHills(ctx, U, [{ dist: 4000, haze: 0.62, fn: farEl }], { az0: -50, az1: 50 });
   const rise = makeHills(ctx, U, [{ dist: 100, haze: 0.0, fn: riseEl }], { az0: -50, az1: 50, rim: 0.10 });
 
@@ -36,8 +36,8 @@ export function createTown(ctx, shot) {
   for (const [x0, z0, dx, dz, n] of streets) for (let i = 0; i < n; i++) {
     if (rnd() < 0.15) continue;
     const u = (i + 0.3 * rnd()) / n;
-    const x = x0 + dx * u + (rnd() - 0.5) * 12, z = z0 + dz * u + (rnd() - 0.5) * 12, y = -40;
-    const dist = Math.hypot(x, z), el = Math.atan2(y - 1.6, dist) * 180 / Math.PI, az = Math.atan2(x, -z) * 180 / Math.PI;
+    const x = x0 + dx * u + (rnd() - 0.5) * 12, z = z0 + dz * u + (rnd() - 0.5) * 12, y = -30;
+    const dist = Math.hypot(x, z), el = Math.atan2(y - 7.5, dist) * 180 / Math.PI, az = Math.atan2(x, -z) * 180 / Math.PI;
     town.push([az, el, (0.45 + 0.55 * rnd()) * Math.min(1, 900 / dist + 0.35)]);
   }
   const tg = new THREE.BufferGeometry();
@@ -66,7 +66,7 @@ export function createTown(ctx, shot) {
 
   const E = [-2, 8.3, -92];
   const T0 = shot.start, T1 = shot.end, TM = (T0 + T1) / 2;
-  const CAM0 = new THREE.Vector3(6, 1.6, 0);
+  const CAM0 = new THREE.Vector3(6, 7.5, 0);
   const RATE = -0.0216;                      // ← : 3 % of the frame per second
   const setup = t => {
     dish.pose(E, 150, 42);

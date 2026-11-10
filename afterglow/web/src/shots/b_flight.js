@@ -137,7 +137,7 @@ export async function create(ctx) {
     if (earth && far.earthFar && n >= 3440 && n < 3774) {
       const k = 1 - P.sstep(3748, 3772, n);
       setLens(farCam, n);
-      farCam.near = Math.max(0.3, P.earthDist(n) - 3); farCam.far = P.earthDist(n) + 3; farCam.updateProjectionMatrix();
+      farCam.near = Math.max(0.3, 0.97 * P.earthDist(n) - 3); farCam.far = P.earthDist(n) + 3; farCam.updateProjectionMatrix();
       far.earthFar.place(n); earth.group.quaternion.copy(qFar); earth.update();
       earth.setSun(sunW);
       earth.uniforms.lights.value = 1.6 * k; earth.uniforms.dayGain.value = k; earth.uniforms.atmo.value = 0.8 * k; earth.uniforms.airglow.value = 0;
@@ -161,11 +161,11 @@ export async function create(ctx) {
       probe.sun.intensity = 0.36;
       const Rm = probe.RIM;
       Rm.uRimDir1.value.copy(sunW).transformDirection(cam.matrixWorldInverse);
-      Rm.uRimCol1.value.set(0.30, 0.32, 0.36).multiplyScalar(out);
+      Rm.uRimCol1.value.set(0.40, 0.43, 0.48).multiplyScalar(out);
       Rm.uRimDir2.value.set(-0.08, -0.05, -1).normalize().transformDirection(cam.matrixWorldInverse);
       const amber = (1 - P.sstep(3330, 3420, n)) * P.sstep(3200, 3260, n);
       Rm.uRimCol2.value.set(0.34, 0.15, 0.05).multiplyScalar(amber);
-      Rm.uFill.value.set(0.0042, 0.0046, 0.0056).multiplyScalar(0.6 + 0.4 * out);
+      Rm.uFill.value.set(0.021, 0.023, 0.028).multiplyScalar(0.6 + 0.4 * out);
       const sm = renderer.shadowMap.enabled, st = renderer.shadowMap.type;
       renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
       renderer.setRenderTarget(target); renderer.render(probeScene, cam);

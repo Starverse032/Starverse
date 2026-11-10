@@ -32,12 +32,12 @@ export function createArray(ctx, shot) {
         // the gravel track along the line of dishes: a pale ribbon 5 m wide
         vec2 a = uTrack.xy, ab = normalize(uTrack.zw);
         vec2 q = p.xz - a; float along = dot(q, ab), across = abs(q.x * ab.y - q.y * ab.x);
-        float w = 2.5 + fp; float tr = smoothstep(w + fp, w - fp, across) * step(-60.0, along) * step(along, 640.0);
+        float w = 2.5 + fp; float tr = smoothstep(w + fp, w - fp, across) * smoothstep(-420.0, -300.0, along) * step(along, 640.0);
         vec3 Lt = normalize(vec3(uTwiDir.x, 0.22, uTwiDir.z));
         col = alb * ((uZen + uLow * 0.6) * uAmbK + uTwiCol * uKeyK * Lt.y);
         // dew on the grass mirrors the low sky at grazing angles; the gravel track catches the twilight
         col += (0.02 + 0.98 * pow(1.0 - (-d.y), 5.0)) * skyRad(reflect(d, vec3(0.0, 1.0, 0.0))) * 0.25;
-        col += tr * vec3(0.020, 0.025, 0.034);
+        col += tr * vec3(0.036, 0.041, 0.052);
         // the haze over the far floor
         col = mix(col, skyRad(vec3(d.x, 0.02, d.z)) * 0.55, 1.0 - exp(-dist / 2600.0));
       } else {
@@ -49,7 +49,7 @@ export function createArray(ctx, shot) {
   // the far side of the valley (1.6 km) and the range beyond (6 km)
   const sideEl = az => 1.2 + 2.6 * Math.exp(-(((az + 8) / 30) ** 2)) + 1.0 * (fbm1(az / 8 + 2.0, 4, 621) - 0.5) + 0.25 * (fbm1(az / 1.3, 3, 622) - 0.5);
   const rangeEl = az => 3.2 + 2.0 * (fbm1(az / 12 + 5.0, 4, 631) - 0.5) + 1.6 * Math.exp(-(((az + 25) / 7) ** 2)) + 0.4 * (fbm1(az / 2, 3, 632) - 0.5);
-  const hills = makeHills(ctx, U, [{ dist: 6000, haze: 0.70, fn: rangeEl }, { dist: 1600, haze: 0.40, fn: sideEl }], { az0: -70, az1: 70, rim: 0.0 });
+  const hills = makeHills(ctx, U, [{ dist: 6000, haze: 0.70, fn: rangeEl }, { dist: 1600, haze: 0.40, fn: sideEl }], { az0: -70, az1: 70, rim: 0.0, footH: 26 });
 
   const meshScene = new THREE.Scene();
   const dishes = [];

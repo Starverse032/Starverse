@@ -187,7 +187,9 @@ export function createDive(ctx, shot) {
       float core = clamp(uLampR.x * uS + 0.5 - r, 0.0, 1.0);
       float hl = 0.3 * pow(clamp(1.0 - (r - uLampR.x * uS) / max((uLampR.y - uLampR.x) * uS, 1.0), 0.0, 1.0), 1.6);
       vec3 lamp = vec3(${LAMP.map(v => v.toFixed(3)).join(', ')});
-      col = lamp * core + (1.0 - core) * (col + lamp * hl * uDim);
+      // under the flash the lamp is swallowed by it (keeps the flash peak ≤ 85 %, nothing clipped)
+      float lk = uDim < 0.99 ? 0.15 : 1.0;
+      col = lamp * core * lk + (1.0 - core * lk) * (col + lamp * hl * lk);
       gl_FragColor = vec4(col, 1.0);
     }`, Ud);
 
@@ -231,7 +233,7 @@ export function createDive(ctx, shot) {
 // on f2924–2927); post() supplies the rest so that the total follows TARGET. tint / saturation are the
 // timeline's v1.3 S26 values (keeps ACES from turning the flash cream) — only under the flash: before it they
 // would warm the night and push the red lamp off its hue.
-const TARGET = { 0: 0.95, 1: 0.90, 2: 0.86, 3: 0.82 };
+const TARGET = { 0: 0.90, 1: 0.86, 2: 0.83, 3: 0.80 };
 export function divePost(shot, f) {
   const fr = Math.round(f.t * 24), k = fr - (shot.frames[1] - 4);
   if (k < 0) return { ...POST };

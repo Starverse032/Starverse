@@ -127,7 +127,9 @@ export function makeSky(ctx, U) {
 // ---- hills: up to 4 profile layers, elevation (deg) by azimuth (deg; 0 = −z, + = right) -------------------
 // layers: [{ dist (m), haze 0..1, fn(az) → elevation deg }], drawn far → near. Parallax: the camera's world
 // offset (uOff, set per frame) shifts each layer by offset / dist.
-export function makeHills(ctx, U, layers, { az0 = -60, az1 = 60, n = 2048, rim = 0.0 } = {}) {
+// footH > 0: the layers stand on a floor footH below the camera and cover only down to their foot (so a
+// valley floor drawn in the sky pass stays visible in front of them).
+export function makeHills(ctx, U, layers, { az0 = -60, az1 = 60, n = 2048, rim = 0.0, footH = 0 } = {}) {
   const prof = new Float32Array(n * 4).fill(-90);
   layers.forEach((L, k) => { for (let i = 0; i < n; i++) prof[4 * i + k] = L.fn(az0 + (az1 - az0) * i / (n - 1)); });
   const tex = new THREE.DataTexture(prof, n, 1, THREE.RGBAFormat, THREE.FloatType);
@@ -136,11 +138,11 @@ export function makeHills(ctx, U, layers, { az0 = -60, az1 = 60, n = 2048, rim =
     uProf: { value: tex }, uAz: { value: new THREE.Vector2(az0, az1) }, uOff: { value: new THREE.Vector3() },
     uDist: { value: new THREE.Vector4(...[0, 1, 2, 3].map(k => layers[k] ? layers[k].dist : 1e9)) },
     uHaze: { value: new THREE.Vector4(...[0, 1, 2, 3].map(k => layers[k] ? layers[k].haze : 0)) },
-    uRim: { value: rim },
+    uRim: { value: rim }, uFootH: { value: footH },
   });
   const nl = layers.length;
   const pass = ctx.kit.fullscreen(NIGHT_GLSL + RAY_GLSL + /* glsl */ `
-    uniform sampler2D uProf; uniform vec2 uAz; uniform vec3 uOff; uniform vec4 uDist, uHaze; uniform float uRim;
+    uniform sampler2D uProf; uniform vec2 uAz; uniform vec3 uOff; uniform vec4 uDist, uHaze; uniform float uRim, uFootH;
     float ridge(float az, int k, float dist){
       vec3 side = vec3(cos(az * DG), 0.0, sin(az * DG));
       float a = az + dot(uOff, side) / dist / DG;
@@ -156,6 +158,7 @@ export function makeHills(ctx, U, layers, { az0 = -60, az1 = 60, n = 2048, rim =
         float dist = uDist[i], hz = uHaze[i];
         float r = ridge(az, i, dist);
         float c = smoothstep(r + pw, r - pw, el);
+        if (uFootH > 0.0) { float foot = -atan((uFootH + uOff.y) / dist) / DG; c *= smoothstep(foot - pw, foot + pw, el); }
         if (c <= 0.0) continue;
         vec3 sk = skyRad(normalize(vec3(d.x, max(r, 0.0) * DG * 0.5, d.z)));
         float under = exp(-max(r - el, 0.0) / 1.0);
