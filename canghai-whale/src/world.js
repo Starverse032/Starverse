@@ -94,6 +94,43 @@ function addBuilding(b, walls, roofs, col, extras, opts = {}) {
       walls.quad([ax, y0, az], [ax, y1, az], [bx, y1, bz], [bx, y0, bz], nrm, wallCol, ex,
         [[0, y0 - vOff], [0, y1 - vOff], [len, y1 - vOff], [len, y0 - vOff]]);
       if (col) col.quad([ax, y0, az], [ax, y1, az], [bx, y1, bz], [bx, y0, bz]);
+      // ---- real relief on the facades of the mapped buildings: sun-shades, fins, balconies
+      if (col && len > 3.2 && sty === st.sty) {
+        const ang = Math.atan2(dz, dx);
+        const ux = dx / len, uz = dz / len;
+        const levels = Math.max(1, Math.round((top - vOff) / fh));
+        const reliefCol = [wallCol[0] * 0.97, wallCol[1] * 0.97, wallCol[2] * 0.97];
+        const D = 0.32;
+        const mxp = (ax + bx) / 2 + nrm[0] * D / 2, mzp = (az + bz) / 2 + nrm[2] * D / 2;
+        if (sty === STYLE.ribbon) {
+          for (let k = 0; k < levels; k++) {
+            const y = vOff + k * fh + 0.875 * fh;
+            if (y < base + 0.5 || y > top - 0.3) continue;
+            roofs.box(mxp, y, mzp, len, 0.11, D, ang, reliefCol, undefined, true);
+          }
+        } else if (sty === STYLE.fins) {
+          const nb = Math.max(1, Math.round(len / bw));
+          const y0f = Math.max(base, vOff + fh), hF = top - y0f;
+          if (hF > 1) {
+            const fw = (0.24 * bw) / 3;
+            for (let q = 0; q < nb * 3; q++) {
+              const u = (q / 3) * bw + fw / 2;
+              if (u > len - 0.05) break;
+              roofs.box(ax + ux * u + nrm[0] * D / 2, y0f, az + uz * u + nrm[2] * D / 2, fw, hF, D, ang, reliefCol, undefined, false);
+            }
+          }
+        } else if (sty === STYLE.dorm) {
+          for (let k = 1; k < levels; k++) {
+            const y = vOff + k * fh;
+            if (y < base + 0.5 || y > top - 1.2) continue;
+            roofs.box(mxp, y - 0.07, mzp, len - 0.5, 0.13, D + 0.1, ang, reliefCol, undefined, true);
+            roofs.box((ax + bx) / 2 + nrm[0] * (D + 0.02), y + 0.06, (az + bz) / 2 + nrm[2] * (D + 0.02), len - 0.5, 0.9, 0.05, ang, [0.3, 0.31, 0.33], undefined, false);
+          }
+        } else if (sty === STYLE.grid || sty === STYLE.canteen) {
+          // a projecting cornice and plinth give the box a little shadow line
+          roofs.box(mxp, top - 0.35, mzp, len, 0.3, D, ang, reliefCol, undefined, true);
+        }
+      }
       // parapet: inner face + cap
       const iax = inner[i * 2], iaz = inner[i * 2 + 1], ibx = inner[j * 2], ibz = inner[j * 2 + 1];
       roofs.quad([ibx, top, ibz], [ibx, y1, ibz], [iax, y1, iaz], [iax, top, iaz], [-nrm[0], 0, -nrm[2]], wallCol);

@@ -595,17 +595,7 @@ function frame(now) {
     time += dt;
   }
 
-  if (pipe) {
-    G.uTime.value = time;
-    camera.updateMatrixWorld();
-    env.update(dt, time);
-    if (props) props.update(state === 'paused' ? 0 : dt, time, env.night, player ? player.pos : camera.position);
-    if (veg) veg.update(camera.position);
-    pipe.bloomThreshold = lerp(1.05, 3.2, env.day);
-    if (pipe.bloom) pipe.bloom.strength = lerp(0.55, 0.3, env.day);
-    const fx = player && state === 'playing' ? clamp((player.speed - 18) / 34, 0, 1) : 0;
-    pipe.render(dt, time, fx);
-  }
+  renderFrame(dt);
 
   // dynamic resolution keeps the frame rate up on weaker GPUs
   fpsAcc += raw; fpsN++;
@@ -631,6 +621,19 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
+function renderFrame(dt) {
+  if (!pipe) return;
+  G.uTime.value = time;
+  camera.updateMatrixWorld();
+  env.update(dt, time);
+  if (props) props.update(state === 'paused' ? 0 : dt, time, env.night, player ? player.pos : camera.position);
+  if (veg) veg.update(camera.position);
+  pipe.bloomThreshold = lerp(1.05, 3.2, env.day);
+  if (pipe.bloom) pipe.bloom.strength = lerp(0.55, 0.3, env.day);
+  const fx = player && state === 'playing' ? clamp((player.speed - 18) / 34, 0, 1) : 0;
+  pipe.render(dt, time, fx);
+}
+
 // headless test hook: advance the simulation without rendering
 function sim(n, dt, patch) {
   const out = [];
@@ -647,7 +650,7 @@ function sim(n, dt, patch) {
   return { mode: p.mode, pos: p.pos.toArray().map((v) => +v.toFixed(2)), vel: p.vel.toArray().map((v) => +v.toFixed(2)), speed: +p.speed.toFixed(2), out };
 }
 window.__game = {
-  sim,
+  sim, renderFrame, updateHud: (dt) => updateHud(dt), pause: () => pause(),
   get scene() { return scene; }, get camera() { return camera; }, get env() { return env; }, get world() { return world; },
   get player() { return player; }, get pipe() { return pipe; }, get girl() { return girl; }, renderer, input, setHour,
   get state() { return state; },

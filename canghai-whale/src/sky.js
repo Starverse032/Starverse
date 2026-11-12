@@ -193,8 +193,12 @@ export class Environment {
     this.hills.material.color.copy(this.fogColor).multiplyScalar(lerp(0.8, 0.86, this.day)).lerp(HILL_TINT, 0.2 * this.day);
 
     // night ambience: light pollution fill
-    this.hemi.intensity = 0.55 * this.night;
-    this.exposure = lerp(1.1, 0.62, this.day) * lerp(1.15, 1.0, low);
+    // twilight: the sun is weak but the whole sky still glows, so lift the fill light and the exposure
+    const duskK = this.day * (1 - smoothstep(2, 22, elD));
+    this.hemi.intensity = 0.55 * this.night + 0.9 * duskK;
+    this.hemi.color.setRGB(lerp(0.56, 1.0, duskK), lerp(0.7, 0.72, duskK), lerp(1.0, 0.62, duskK));
+    this.exposure = lerp(1.1, 0.62, this.day) * lerp(1.0, 1.55, duskK);
+    this.duskBoost = 1 + 0.9 * duskK;
 
     this.stars.material.opacity = smoothstep(0.55, 1.0, this.night) * 0.9;
     this.moon.material.opacity = smoothstep(0.3, 0.9, this.night);
@@ -216,7 +220,7 @@ export class Environment {
     if (this.envRT) this.envRT.dispose();
     this.envRT = rt;
     this.scene.environment = rt.texture;
-    this.scene.environmentIntensity = lerp(1.0, 1.1, this.day);
+    this.scene.environmentIntensity = lerp(1.0, 1.1, this.day) * (this.duskBoost || 1);
     this._lastEnvHour = this.hour;
     this._envDirty = false;
   }

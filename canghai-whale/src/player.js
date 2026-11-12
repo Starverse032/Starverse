@@ -805,7 +805,7 @@ export class Player {
     m.visible = true;
     m.position.copy(r.hand);
     m.quaternion.setFromUnitVectors(UP, _v1.multiplyScalar(1 / len));
-    const w = 0.018 * (0.5 + 0.5 * r.fade);
+    const w = 0.027 * (0.5 + 0.5 * r.fade);
     m.scale.set(w, len, w);
     m.material.opacity = r.fade;
     this.knot.visible = k >= 1;
