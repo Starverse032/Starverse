@@ -16,7 +16,7 @@ const params = new URLSearchParams(location.search);
 const PRESETS = {
   low: { name: '流畅', treeLod0: 60, treeLod1: 220, cascades: 2, shadowMap: 1024, shadowFar: 240, msaa: 0, ao: false, aoSamples: 8, bloom: true, pixelRatio: 0.85, treeFraction: 0.45, treeShadows: false, traffic: 0.5 },
   medium: { name: '均衡', treeLod0: 110, treeLod1: 330, cascades: 3, shadowMap: 2048, shadowFar: 380, msaa: 2, ao: false, aoSamples: 8, bloom: true, pixelRatio: 1.0, treeFraction: 0.75, treeShadows: true, traffic: 1 },
-  high: { name: '高', treeLod0: 170, treeLod1: 460, cascades: 4, shadowMap: 2048, shadowFar: 520, msaa: 4, ao: true, aoSamples: 10, bloom: true, pixelRatio: 1.25, treeFraction: 1, treeShadows: true, traffic: 1 },
+  high: { name: '高', treeLod0: 140, treeLod1: 420, cascades: 4, shadowMap: 2048, shadowFar: 520, msaa: 4, ao: true, aoSamples: 10, bloom: true, pixelRatio: 1.25, treeFraction: 1, treeShadows: true, traffic: 1 },
   ultra: { name: '极致', treeLod0: 260, treeLod1: 650, cascades: 4, shadowMap: 4096, shadowFar: 620, msaa: 4, ao: true, aoSamples: 16, bloom: true, pixelRatio: 2, treeFraction: 1, treeShadows: true, traffic: 1.3 },
   test: { name: 'test', treeLod0: 170, treeLod1: 460, cascades: 3, shadowMap: 1024, shadowFar: 380, msaa: 0, ao: true, aoSamples: 8, bloom: true, pixelRatio: 1, treeFraction: 0.5, treeShadows: true, traffic: 1 },
 };

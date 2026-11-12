@@ -264,7 +264,7 @@ export function buildVegetation(scene, data, q) {
   const species = makeSpecies(leafTexture(), frondTexture());
   const group = new THREE.Group();
   group.name = 'vegetation';
-  const CELL = 170;
+  const CELL = 220;
   const buckets = new Map();
   const trees = [];
   const rnd = mulberry32(2026);
