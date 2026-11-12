@@ -105,14 +105,15 @@ export function facadeMaterial() {
     key: 'facade',
     vpars: /* glsl */ `
       attribute vec4 aB; attribute vec4 aC;
-      varying vec4 vB; varying vec4 vC; varying vec2 vFUv;`,
+      flat varying vec4 vB; flat varying vec4 vC; varying vec2 vFUv;`,
     vmain: /* glsl */ `vB = aB; vC = aC; vFUv = uv;`,
+    // flat: per-building constants feed hash functions, which must not see interpolation jitter
     fpars: /* glsl */ `
-      varying vec4 vB; varying vec4 vC; varying vec2 vFUv;`,
+      flat varying vec4 vB; flat varying vec4 vC; varying vec2 vFUv;`,
     fdiffuse: /* glsl */ `
       float fcGlass = 0.0; float fcMetal = 0.0; float fcFrame = 0.0; vec3 fcEmis = vec3(0.0);
       {
-        float fH = vB.x; float bW = vB.y; float sty = floor(vB.z + 0.5); float seed = vB.w;
+        float fH = vB.x; float bW = vB.y; float sty = floor(vB.z + 0.5); float seed = floor(vB.w * 1000.0 + 0.5) / 1000.0;
         vec2 cellc = vec2(vFUv.x / bW, vFUv.y / fH);
         vec2 cid = floor(cellc);
         vec2 cf = cellc - cid;
@@ -422,6 +423,15 @@ export function leafMaterial(map, { base = 2.0, amp = 1.0, key = 'leaf' } = {}) 
     key,
     vpars: `#define WIND_BASE ${base.toFixed(2)}\n#define WIND_AMP ${amp.toFixed(2)}`,
     vbegin: WIND_VERT,
+    // leaves right in front of the lens dissolve so a crown never blocks the view of the heroine
+    fdiffuse: /* glsl */ `
+      {
+        float dCam = length(vViewPosition);
+        if (dCam < 5.0) {
+          float keep = smoothstep(1.6, 5.0, dCam);
+          if (hash21(floor(gl_FragCoord.xy)) > keep) discard;
+        }
+      }`,
     // keep the smooth "puffy" normals on both faces and add cheap light transmission through the leaves
     fnormal: /* glsl */ `normal = normalize(vNormal);`,
     femissive: /* glsl */ `

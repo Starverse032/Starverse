@@ -8,6 +8,7 @@ import { buildProps } from './props.js';
 import { WhaleGirl } from './character.js';
 import { Player } from './player.js';
 import { Sound } from './audio.js';
+import { Particles } from './fx.js';
 import { pointInRing, clamp, lerp } from './util.js';
 
 // ---------------------------------------------------------------------------------------------- settings
@@ -23,7 +24,20 @@ const store = {
   get(k, d) { try { const v = localStorage.getItem('cw.' + k); return v === null ? d : v; } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem('cw.' + k, v); } catch (e) { /* private mode */ } },
 };
-let qName = params.get('q') || store.get('quality', 'high');
+/** first run: pick a preset from the GPU name; the player can change it any time in the pause menu */
+function guessQuality() {
+  try {
+    const c = document.createElement('canvas');
+    const gl = c.getContext('webgl2');
+    const ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
+    const name = ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : '';
+    if (/SwiftShader|llvmpipe|Software|Mali|Adreno|PowerVR/i.test(name)) return 'low';
+    if (/Intel|UHD|Iris|HD Graphics/i.test(name) && !/Arc/i.test(name)) return 'low';
+    if (/Apple|Radeon\(TM\) Graphics|Vega|GTX 9|GTX 10[0-5]|MX[0-9]/i.test(name)) return 'medium';
+    return 'high';
+  } catch (e) { return 'medium'; }
+}
+let qName = params.get('q') || store.get('quality', '') || guessQuality();
 if (!PRESETS[qName]) qName = 'high';
 const Q = Object.assign({}, PRESETS[qName]);
 for (const k of ['ao', 'bloom', 'msaa', 'cascades', 'treeFraction', 'shadowMap', 'pixelRatio']) if (params.has(k)) Q[k] = Number(params.get(k));
@@ -47,7 +61,7 @@ const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerH
 camera.position.set(-260, 150, -260);
 camera.lookAt(40, 10, 20);
 
-let env, world, veg, props, girl, player, pipe, tokens, minimap;
+let env, world, veg, props, girl, player, pipe, tokens, minimap, fx;
 const sound = new Sound();
 sound.setMuted(store.get('mute', '0') === '1');
 let state = 'loading';       // loading | ready | playing | paused
@@ -89,6 +103,7 @@ async function boot() {
   girl = new WhaleGirl();
   player = new Player(world, veg, girl, camera, sound);
   player.addTo(scene);
+  fx = new Particles(scene);
   tokens = buildTokens();
   minimap = buildMinimap();
   buildMenus();
@@ -183,8 +198,8 @@ function buildTokens() {
   const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0.55, 1.25, 2.6), fog: false });
   const mesh = new THREE.InstancedMesh(geo, mat, list.length);
   mesh.frustumCulled = false;
-  const shell = new THREE.InstancedMesh(new THREE.OctahedronGeometry(1.0, 0), new THREE.MeshBasicMaterial({
-    color: new THREE.Color(0.25, 0.6, 1.3), transparent: true, opacity: 0.22, depthWrite: false, blending: THREE.AdditiveBlending, fog: false,
+  const shell = new THREE.InstancedMesh(new THREE.OctahedronGeometry(0.86, 0), new THREE.MeshBasicMaterial({
+    color: new THREE.Color(0.25, 0.6, 1.3), transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending, fog: false,
   }), list.length);
   shell.frustumCulled = false;
   scene.add(mesh, shell);
@@ -211,6 +226,7 @@ function buildTokens() {
           k.got = true;
           got++;
           sound.token();
+          fx.burst(p, { n: 26, speed: 5, up: 3, life: 0.7, size: 0.5, color: [0.5, 1.1, 2.4], gravity: 2 });
           $('tok').textContent = `${got} / ${list.length}`;
           if (got === list.length) { toast('全部 Token 到手 · 鲸鱼娘吃饱啦！', 5); sound.fanfare(); } else toast(`Token +1　${got} / ${list.length}`, 1.4);
         }
@@ -565,11 +581,11 @@ function frame(now) {
     player.update(dt, input);
     clearEdges();
     for (const ev of player.events) {
-      if (ev.type === 'thwip') sound.thwip();
+      if (ev.type === 'thwip') { sound.thwip(); fx.burst(player.rope.anchor, { n: 12, speed: 3.5, up: 1, life: 0.4, size: 0.3, color: [1.6, 1.9, 2.2], gravity: 4 }); }
       else if (ev.type === 'release') sound.release();
       else if (ev.type === 'jump') sound.jump();
-      else if (ev.type === 'airjump') sound.airjump();
-      else if (ev.type === 'land') sound.land(ev.k);
+      else if (ev.type === 'airjump') { sound.airjump(); fx.burst(player.pos, { n: 46, speed: 3.2, up: -2.5, spread: 0.5, life: 0.7, size: 0.34, color: [0.7, 1.3, 1.9], gravity: 12 }); }
+      else if (ev.type === 'land') { sound.land(ev.k); if (ev.k > 0.25) fx.burst(player.pos, { n: Math.round(14 + 40 * ev.k), speed: 2 + 5 * ev.k, up: 1.2, spread: 0.6, life: 0.9, size: 0.7, color: [0.5, 0.47, 0.42], gravity: 1.5 }); }
       else if (ev.type === 'step') sound.step(ev.k);
       else if (ev.type === 'grab') sound.grab();
       else if (ev.type === 'vault') sound.vault();
@@ -578,6 +594,7 @@ function frame(now) {
     }
     player.events.length = 0;
     tokens.update(dt, time);
+    fx.update(dt, renderer.domElement.height);
     if (cycle) { hour = (hour + (dt * 24) / 900) % 24; env.setTime(hour); }
     sound.update(dt, player.speed, env.night, player.pos.y);
     updateHud(dt);
@@ -652,7 +669,7 @@ function sim(n, dt, patch) {
 window.__game = {
   sim, renderFrame, updateHud: (dt) => updateHud(dt), pause: () => pause(),
   get scene() { return scene; }, get camera() { return camera; }, get env() { return env; }, get world() { return world; },
-  get player() { return player; }, get pipe() { return pipe; }, get girl() { return girl; }, renderer, input, setHour,
+  get player() { return player; }, get props() { return props; }, get veg() { return veg; }, get pipe() { return pipe; }, get girl() { return girl; }, renderer, input, setHour,
   get state() { return state; },
 };
 

@@ -849,6 +849,7 @@ export class Player {
     this._camHitDist = snap ? dist : (dist < (this._camHitDist || dist) ? dist : damp(this._camHitDist || dist, dist, 6, dt));
     dist = this._camHitDist;
     cam.position.copy(origin).addScaledVector(dir, dist);
+    this.rig.visible = dist > 0.95;          // squeezed against a wall: do not fill the screen with her shoulder
     if (this.shake > 0.001) {
       cam.position.x += (Math.random() - 0.5) * this.shake * 0.5;
       cam.position.y += (Math.random() - 0.5) * this.shake * 0.5;

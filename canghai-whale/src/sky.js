@@ -90,9 +90,10 @@ export class Environment {
       lightIntensity: 5, lightNear: 1, lightFar: 2600, lightMargin: 420,
     });
     this.csm.fade = true;
+    const texel = 2048 / q.shadowMap;
     this.csm.lights.forEach((l, i) => {
-      l.shadow.bias = -0.00012 * (i + 1);
-      l.shadow.normalBias = 0.035 + 0.07 * i;
+      l.shadow.bias = -0.0002 * (i + 1);
+      l.shadow.normalBias = (0.06 + 0.1 * i * (4 / q.cascades)) * texel;
     });
 
     // ---- ambient helpers
