@@ -486,9 +486,11 @@ function startGame() {
   canvas.focus();
   toast('深圳大学 · 沧海校区', 3);
 }
+let pausedAt = 0;
 function pause() {
   if (state !== 'playing') return;
   state = 'paused';
+  pausedAt = performance.now();
   keys.clear();
   input.swingHeld = false;
   $('pause').classList.remove('hidden');
@@ -508,7 +510,11 @@ $('go').onclick = () => { if (state === 'ready') startGame(); };
 window.addEventListener('keydown', (e) => {
   if (e.code === 'Tab' || e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
   if (state === 'ready' && (e.code === 'Enter' || e.code === 'Space')) return startGame();
-  if (e.code === 'Escape') { if (state === 'playing') pause(); else if (state === 'paused') resume(); return; }
+  if (e.code === 'Escape') {
+    // some browsers deliver the Esc that released the pointer lock as a key event too: do not un-pause on it
+    if (state === 'playing') pause(); else if (state === 'paused' && performance.now() - pausedAt > 450) resume();
+    return;
+  }
   if (state !== 'playing') return;
   if (e.repeat) return;
   keys.add(e.code);
