@@ -243,7 +243,7 @@ export function facadeMaterial() {
         fcGlass = glass * (1.0 - frame) * (1.0 - blind * 0.7);
         fcMetal = glass * (1.0 - frame) * gMetal * (1.0 - blind) + frame * 0.6;
         fcFrame = frame;
-        fcEmis = glass * (1.0 - frame) * (1.0 - spandrel) * litOn * lcol * (icol * 1.6 + 0.12) * 2.4;
+        fcEmis = glass * (1.0 - frame) * (1.0 - spandrel) * litOn * lcol * (icol * 1.5 + 0.1) * 1.35;
       }`,
     frough: /* glsl */ `
       roughnessFactor = mix(roughnessFactor, 0.06, fcGlass);

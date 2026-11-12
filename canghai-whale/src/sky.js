@@ -35,7 +35,7 @@ export class Environment {
     const u = this.sky.material.uniforms;
     u.turbidity.value = 5.5;
     u.rayleigh.value = 1.6;
-    u.mieCoefficient.value = 0.0085;
+    u.mieCoefficient.value = 0.0042;
     u.mieDirectionalG.value = 0.82;
     u.cloudCoverage.value = 0.42;
     u.cloudDensity.value = 0.55;
@@ -45,7 +45,12 @@ export class Environment {
     u.skyScale = { value: SKY_SCALE };
     this.sky.material.fragmentShader = this.sky.material.fragmentShader
       .replace('uniform float showSunDisc;', 'uniform float showSunDisc;\nuniform float skyScale;')
-      .replace('gl_FragColor = vec4( texColor, 1.0 );', 'gl_FragColor = vec4( min( texColor * skyScale, vec3( 48.0 ) ), 1.0 );');
+      .replace('gl_FragColor = vec4( texColor, 1.0 );', `
+        vec3 skyC = texColor * skyScale;
+        float skyL = dot( skyC, vec3( 0.2126, 0.7152, 0.0722 ) );
+        skyC = mix( skyC, vec3( skyL ) * vec3( 0.9, 1.0, 1.12 ), 0.3 );      // humid air: a paler, less saturated blue
+        skyC = skyC / ( 1.0 + skyC * 0.12 );                                  // soft shoulder, keeps the sun finite
+        gl_FragColor = vec4( skyC, 1.0 );`);
     scene.add(this.sky);
 
     // ---- stars and moon for the night
@@ -93,7 +98,7 @@ export class Environment {
     // ---- ambient helpers
     this.hemi = new THREE.HemisphereLight(0x8fb4ff, 0x3a3a30, 0.0);
     scene.add(this.hemi);
-    scene.fog = new THREE.FogExp2(0xbfd4e6, 0.00055);
+    scene.fog = new THREE.FogExp2(0xbfd4e6, 0.00034);
 
     // ---- image based lighting baked from the sky
     this.pmrem = new THREE.PMREMGenerator(renderer);
@@ -102,6 +107,7 @@ export class Environment {
     this.envSky.scale.setScalar(60);
     this.envSky.material.uniforms = THREE.UniformsUtils.clone(u);
     this.envSky.material.fragmentShader = this.sky.material.fragmentShader;
+    u.skyScale.value = SKY_SCALE * SKY_VISIBLE;
     this.envScene.add(this.envSky);
     this.envGround = new THREE.Mesh(new THREE.CircleGeometry(60, 24), new THREE.MeshBasicMaterial({ color: 0x333333 }));
     this.envGround.rotation.x = -Math.PI / 2;
@@ -122,7 +128,7 @@ export class Environment {
       for (let o = 1; o <= 5; o++) h += Math.sin(a * (1.7 * o + 0.3) + o * o * 1.3) / o;
       // taller towards the north (Tanglang shan) and south-west (Nanshan), low across the bay
       const north = Math.max(0, -Math.sin(a)), sw = Math.max(0, Math.cos(a + 2.2));
-      return Math.max(30, (180 + 260 * north + 320 * sw * sw) * (0.65 + 0.3 * h));
+      return Math.max(0, (40 + 330 * north * north + 300 * sw * sw + 120 * Math.max(0, Math.sin(a - 0.6))) * (0.45 + 0.55 * h));
     };
     void rnd;
     for (let i = 0; i < seg; i++) {
@@ -176,15 +182,15 @@ export class Environment {
     // sky
     const u = this.sky.material.uniforms;
     u.sunPosition.value.copy(this.sunDir);
-    u.rayleigh.value = lerp(2.5, 1.15, low);
-    u.turbidity.value = lerp(9, 7.2, low);
+    u.rayleigh.value = lerp(3.6, 2.7, low);
+    u.turbidity.value = lerp(12, 9, low);
 
     // fog / haze follows the horizon colour
     const dayFog = FOG_DAY, dusk = FOG_DUSK, nightFog = FOG_NIGHT;
     this.fogColor.copy(dusk).lerp(dayFog, smoothstep(1, 20, elD));
     this.fogColor.lerp(nightFog, 1 - this.day);
     this.scene.fog.color.copy(this.fogColor);
-    this.hills.material.color.copy(this.fogColor).multiplyScalar(lerp(0.78, 0.9, this.day)).lerp(HILL_TINT, 0.12 * this.day);
+    this.hills.material.color.copy(this.fogColor).multiplyScalar(lerp(0.8, 0.86, this.day)).lerp(HILL_TINT, 0.2 * this.day);
 
     // night ambience: light pollution fill
     this.hemi.intensity = 0.55 * this.night;
@@ -203,13 +209,14 @@ export class Environment {
       if (v && v.isVector3) e[k].value.copy(v); else e[k].value = v;
     }
     e.showSunDisc.value = 0;
+    e.skyScale.value = SKY_SCALE;
     const g = lerp(0.03, 0.55, this.day) * (0.45 + 0.55 * smoothstep(0, 30, this.elevation));
     this.envGround.material.color.setRGB(g * 1.0, g * 1.02, g * 0.9);
     const rt = this.pmrem.fromScene(this.envScene, 0, 0.1, 200);
     if (this.envRT) this.envRT.dispose();
     this.envRT = rt;
     this.scene.environment = rt.texture;
-    this.scene.environmentIntensity = lerp(1.0, 1.45, this.day);
+    this.scene.environmentIntensity = lerp(1.0, 1.1, this.day);
     this._lastEnvHour = this.hour;
     this._envDirty = false;
   }
@@ -232,9 +239,10 @@ export class Environment {
   }
 }
 
-const SKY_SCALE = 0.135;
+const SKY_SCALE = 0.2;
+const SKY_VISIBLE = 2.8;      // the dome on screen is brighter than the copy that lights the scene
 const MOON_COLOR = new THREE.Color(0.55, 0.68, 1.0);
-const FOG_DAY = new THREE.Color(0.78, 0.86, 0.96);
-const FOG_DUSK = new THREE.Color(0.86, 0.52, 0.34);
+const FOG_DAY = new THREE.Color(0.82, 1.0, 1.16);
+const FOG_DUSK = new THREE.Color(0.7, 0.46, 0.34);
 const FOG_NIGHT = new THREE.Color(0.035, 0.04, 0.065);
-const HILL_TINT = new THREE.Color(0.2, 0.32, 0.3);
+const HILL_TINT = new THREE.Color(0.22, 0.36, 0.5);

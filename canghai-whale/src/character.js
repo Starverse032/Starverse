@@ -167,7 +167,7 @@ export class WhaleGirl {
     const navy = mat(C.navy, { roughness: 0.6 });
     const cyan = mat(C.cyan, { roughness: 0.5 });
     const hairM = std({ vertexColors: true, roughness: 0.34, metalness: 0.08 });
-    const tailM = std({ vertexColors: true, roughness: 0.26, metalness: 0.0 });
+    const tailM = std({ vertexColors: true, roughness: 0.42, metalness: 0.0 });
 
     const body = J('body', this.root, 0, 0, 0);          // whole-body offset (bob / squash)
     const hips = J('hips', body, 0, 0.86, 0);

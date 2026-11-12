@@ -163,7 +163,7 @@ function makeSpecies(leafTex, frondTex) {
     const trunk = new MB(), leaves = new MB();
     tube(trunk, [0, 0, 0], 0.62, [0, 1.2, 0], 0.42, 9, [1, 1, 1]);
     tube(trunk, [0, 1.2, 0], 0.42, [0.1, 3.4, 0], 0.34, 9, [1, 1, 1]);
-    const lobes = [[0, 8.2, 0, 4.6, 3.2, 4.6, 46], [3.0, 6.9, 1.2, 3.4, 2.5, 3.4, 26], [-2.6, 7.0, -1.8, 3.5, 2.6, 3.5, 26], [-0.6, 6.8, 3.0, 3.2, 2.4, 3.2, 22], [0.8, 7.2, -3.0, 3.1, 2.4, 3.1, 22]];
+    const lobes = [[0, 8.2, 0, 4.6, 3.2, 4.6, 40], [3.0, 6.9, 1.2, 3.4, 2.5, 3.4, 20], [-2.6, 7.0, -1.8, 3.5, 2.6, 3.5, 20], [-0.6, 6.8, 3.0, 3.2, 2.4, 3.2, 17], [0.8, 7.2, -3.0, 3.1, 2.4, 3.1, 17]];
     for (const l of lobes) {
       tube(trunk, [0.1, 3.2, 0], 0.26, [l[0] * 0.75, l[1] - l[4] * 0.55, l[2] * 0.75], 0.1, 6, [1, 1, 1]);
       canopyLobe(leaves, rnd, [l[0], l[1], l[2]], [l[3], l[4], l[5]], l[6], 1.75, green([0.26, 0.42, 0.13]));
@@ -264,7 +264,7 @@ export function buildVegetation(scene, data, q) {
   const species = makeSpecies(leafTexture(), frondTexture());
   const group = new THREE.Group();
   group.name = 'vegetation';
-  const CELL = 300;
+  const CELL = 170;
   const buckets = new Map();
   const trees = [];
   const rnd = mulberry32(2026);
@@ -278,14 +278,30 @@ export function buildVegetation(scene, data, q) {
     if (!b) { b = { ty, list: [] }; buckets.set(key, b); }
     b.list.push([x, z, sc, rot]);
   }
-  const geoCache = species.map((s) => ({ trunk: s.trunk.geometry(), leaves: s.leaves.geometry() }));
+  const geoCache = species.map((s, si) => {
+    const full = shuffledLeaves(s.leaves, si === 2 ? 12 : 6, 1000 + si);
+    const lod = (frac) => {
+      const g = new THREE.BufferGeometry();
+      for (const k in full.attributes) g.setAttribute(k, full.attributes[k]);
+      const n = Math.floor((full.attributes.position.count * frac) / 6) * 6;
+      g.setDrawRange(0, n);
+      g.boundingSphere = full.boundingSphere;
+      g.boundingBox = full.boundingBox;
+      return g;
+    };
+    return { trunk: s.trunk.geometry(), leaves: [full, lod(si === 2 ? 0.6 : 0.42), lod(si === 2 ? 0.34 : 0.2)] };
+  });
+  const chunks = [];
   const m4 = new THREE.Matrix4(), pos = new THREE.Vector3(), quat = new THREE.Quaternion(), scl = new THREE.Vector3(), col = new THREE.Color();
   const yAxis = new THREE.Vector3(0, 1, 0);
   for (const b of buckets.values()) {
     const sp = species[b.ty], geo = geoCache[b.ty];
     const n = b.list.length;
     const trunk = new THREE.InstancedMesh(geo.trunk, sp.bark, n);
-    const leaves = new THREE.InstancedMesh(geo.leaves, sp.leafMat, n);
+    const leaves = new THREE.InstancedMesh(geo.leaves[0], sp.leafMat, n);
+    let cx = 0, cz = 0;
+    for (const t of b.list) { cx += t[0]; cz += t[1]; }
+    chunks.push({ trunk, leaves, geo: geo.leaves, x: cx / n, z: cz / n, lod: 0 });
     for (let i = 0; i < n; i++) {
       const [x, z, sc, rot] = b.list[i];
       pos.set(x, 0, z);
@@ -331,5 +347,40 @@ export function buildVegetation(scene, data, q) {
     }
     return out;
   };
-  return { group, trees, near };
+  // level of detail: distant groves draw a fraction of their leaf cards and stop casting shadows
+  const update = (cam) => {
+    for (const c of chunks) {
+      const d = Math.hypot(c.x - cam.x, c.z - cam.z) - 120;
+      const lod = d < q.treeLod0 ? 0 : d < q.treeLod1 ? 1 : 2;
+      if (lod !== c.lod) {
+        c.lod = lod;
+        c.leaves.geometry = c.geo[lod];
+        const sh = q.treeShadows && lod < 2;
+        c.leaves.castShadow = sh;
+        c.trunk.castShadow = sh && lod < 1;
+        c.trunk.visible = lod < 2 || d < q.treeLod1 * 1.6;
+      }
+    }
+  };
+  return { group, trees, near, update };
+}
+
+/** interleave the triangles (in blocks of `quadVerts` vertices) so every prefix samples the whole crown */
+function shuffledLeaves(mb, blockTris, seed) {
+  void blockTris;
+  const g = mb.geometry();
+  const n = g.attributes.position.count;
+  const quads = Math.floor(n / 6);
+  const order = [];
+  for (let i = 0; i < quads; i++) order.push(i);
+  const rnd = mulberry32(seed);
+  for (let i = quads - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = order[i]; order[i] = order[j]; order[j] = t; }
+  for (const name in g.attributes) {
+    const a = g.attributes[name];
+    const src = a.array, dst = new Float32Array(src.length), sz = a.itemSize * 6;
+    for (let i = 0; i < quads; i++) dst.set(src.subarray(order[i] * sz, order[i] * sz + sz), i * sz);
+    if (quads * sz < src.length) dst.set(src.subarray(quads * sz), quads * sz);
+    g.setAttribute(name, new THREE.BufferAttribute(dst, a.itemSize));
+  }
+  return g;
 }
