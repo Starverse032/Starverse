@@ -196,10 +196,12 @@
   };
   PP.rect = function (x, y, w, h) { return this.poly([x, y, x + w, y, x + w, y + h, x, y + h]); };
   // Tapered ribbon along a bezier chain. widths: [w0, w1] or [w0, wm, w1]
-  PP.rib = function (spine, w0, w1, wm) {
+  PP.rib = function (spine, w0, w1, wm, ta, tb) {
     var p = bez(spine, 24), n = p.length >> 1, L = [], R = [];
-    if (wm === undefined) wm = (w0 + w1) / 2;
+    if (wm === undefined || wm === null) wm = (w0 + w1) / 2;
+    ta = ta || 0; tb = tb === undefined ? 1 : tb;
     for (var i = 0; i < n; i++) {
+      if (i / (n - 1) < ta - 1e-9 || i / (n - 1) > tb + 1e-9) continue;
       var a = Math.max(0, i - 1), b = Math.min(n - 1, i + 1);
       var tx = p[b * 2] - p[a * 2], ty = p[b * 2 + 1] - p[a * 2 + 1], l = Math.sqrt(tx * tx + ty * ty) || 1;
       var t = i / (n - 1), u = 1 - t, wd = (u * u * w0 + 2 * u * t * wm + t * t * w1) / 2;
@@ -210,7 +212,7 @@
     return fillPoly(this.mask(), this.T(L));
   };
   // ribbon through points (Catmull-Rom smoothed)
-  PP.sr = function (pts, w0, w1, wm) { return this.rib(smooth(pts), w0, w1, wm); };
+  PP.sr = function (pts, w0, w1, wm, ta, tb) { return this.rib(smooth(pts), w0, w1, wm, ta, tb); };
   // pixel output
   PP.fill =function (m, slot) { var d = m.d, c = this.c; for (var i = 0; i < d.length; i++) if (d[i]) c[i] = slot; return m; };
   // fill + 1px line on the shape's own boundary (OOB counts as inside, so frame edges get no line)

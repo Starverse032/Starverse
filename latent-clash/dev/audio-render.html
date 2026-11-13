@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LATENT CLASH — audio offline render harness</title>
+<style>body { background: #0b0a14; color: #f4efe6; font: 13px monospace; }</style>
+</head>
+<body>
+<p>Offline render harness for <code>tools/audio-render.mjs</code> (no UI). For listening use <a href="audio-test.html">audio-test.html</a>.</p>
+<script src="../src/shared/loader.js" data-root="../src/" data-modules="audio"></script>
+<script src="../tools/audio-analyze.js"></script>
+<script>
+  window.addEventListener('load', function () {
+    LC.audio.init();
+    window.RENDER_READY = true;
+  });
+</script>
+</body>
+</html>

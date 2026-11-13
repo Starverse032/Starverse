@@ -175,6 +175,29 @@
     }
     return this;
   };
+  // Lighting by palette shift: every non-zero pixel is mixed toward `hex` by amtFn(x,y) in [0,1],
+  // quantised to `steps` levels with an ordered-dither transition, so the result stays a small,
+  // deliberate set of colours (base colour × level) instead of a smooth gradient.
+  P.tint = function (x, y, w, h, hex, amtFn, steps) {
+    x |= 0; y |= 0; steps = steps || 4;
+    var T = U.rgb(hex), cache = {};
+    var x0 = Math.max(0, x), y0 = Math.max(0, y), x1 = Math.min(this.w, x + w), y1 = Math.min(this.h, y + h);
+    for (var j = y0; j < y1; j++) for (var i = x0; i < x1; i++) {
+      var k = j * this.w + i, v = this.d[k];
+      if (!v) continue;
+      var a = amtFn(i, j);
+      if (a <= 0) continue;
+      var q = Math.floor(Math.min(1, a) * steps + (BAYER[((j & 3) << 2) | (i & 3)] + 0.5) / 16);
+      if (q <= 0) continue;
+      var key = v + ':' + q, o = cache[key];
+      if (o === undefined) {
+        var t = q / steps, r = v & 255, g = (v >>> 8) & 255, b = (v >>> 16) & 255;
+        o = cache[key] = ((255 << 24) | (Math.round(b + (T[2] - b) * t) << 16) | (Math.round(g + (T[1] - g) * t) << 8) | Math.round(r + (T[0] - r) * t)) >>> 0;
+      }
+      this.d[k] = o;
+    }
+    return this;
+  };
   P.clear = function (x, y, w, h) { return this.rect(x, y, w, h, 0); };
   // copy another Pix (non-zero pixels) at x,y; flip = mirror horizontally
   P.blit = function (src, x, y, flip) {

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>LATENT CLASH — FX viewer</title>
+<style>
+  html, body { margin: 0; background: #14121c; color: #e8e4f0; font: 12px/1.35 system-ui, sans-serif; }
+  #wrap { display: flex; gap: 10px; padding: 8px; align-items: flex-start; }
+  #side { width: 250px; flex: none; max-height: calc(100vh - 16px); overflow: auto; }
+  #side h3 { margin: 8px 0 4px; font-size: 12px; color: #ffd166; letter-spacing: .05em; }
+  #side button.fx { display: block; width: 100%; text-align: left; margin: 1px 0; padding: 2px 6px; background: #231f33;
+    color: #ddd; border: 1px solid #332d48; cursor: pointer; font: 11px monospace; }
+  #side button.fx:hover { background: #2f2945; }
+  #side button.fx.on { background: #4d3a7a; color: #fff; }
+  #main { flex: 1; min-width: 0; }
+  canvas#game { image-rendering: pixelated; image-rendering: crisp-edges; display: block; border: 1px solid #333; cursor: crosshair; }
+  .row { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 6px 0; }
+  .row label { white-space: nowrap; }
+  #stats { font: 12px monospace; color: #9fe6a8; }
+  #desc { font: 12px system-ui; color: #c9c3dd; margin-top: 6px; max-width: 1536px; }
+  button { background: #2b2540; color: #eee; border: 1px solid #4a4266; padding: 3px 8px; cursor: pointer; }
+  button:hover { background: #3a3258; }
+  select, input { background: #221e31; color: #eee; border: 1px solid #4a4266; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="side">
+    <div class="row"><input id="filter" placeholder="filter…" style="width:100%"></div>
+    <h3>spawn effects</h3><div id="effList"></div>
+    <h3>sprites (drawSprite)</h3><div id="sprList"></div>
+  </div>
+  <div id="main">
+    <canvas id="game" width="384" height="216"></canvas>
+    <div class="row">
+      <label>bg <select id="bg"><option value="mid">mid-tone</option><option value="warm">warm library</option><option value="blue">blue undersea</option><option value="dark">dark neon</option><option value="light">pale grid</option></select></label>
+      <label>zoom <select id="zoom"><option>2</option><option>3</option><option selected>4</option></select></label>
+      <label>speed <select id="speed"><option value="1">1×</option><option value="0.5">½</option><option value="0.25">¼</option><option value="0.125">⅛</option></select></label>
+      <button id="pause">pause</button><button id="step">step ▸</button>
+      <label><input type="checkbox" id="loop" checked> loop</label>
+      <label><input type="checkbox" id="dummies" checked> fighters</label>
+      <label><input type="checkbox" id="marker" checked> marker</label>
+    </div>
+    <div class="row">
+      <label>power <input type="range" id="power" min="0" max="1" step="0.05" value="1"> <span id="powerV">1</span></label>
+      <label>facing <select id="facing"><option value="1">→ 1</option><option value="-1">← -1</option></select></label>
+      <label>palette <select id="pal"><option>0</option><option>1</option></select></label>
+      <label>char <select id="char"><option value="">(none)</option><option>claude</option><option>deepseek</option></select></label>
+      <label>index <select id="index"><option>0</option><option>1</option><option>2</option></select></label>
+      <label>beam len <input type="range" id="blen" min="0" max="384" value="300"></label>
+      <label>phase <select id="phase"><option value="">auto</option><option>charge</option><option>fire</option><option>fade</option></select></label>
+      <label><input type="checkbox" id="flash" checked> settings.flash</label>
+    </div>
+    <div class="row">
+      <button id="stress">stress (fill pool)</button><button id="clear">clear</button>
+      <span id="stats"></span>
+    </div>
+    <div id="desc"></div>
+  </div>
+</div>
+<script src="../src/shared/loader.js" data-root="../src/" data-modules="fx"></script>
+<script src="fx-viewer.js"></script>
+</body>
+</html>

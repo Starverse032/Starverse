@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>RIG contact sheets</title>
+<style>body{margin:0;background:#222;color:#ddd;font:12px monospace}canvas{image-rendering:pixelated;display:block}</style>
+</head><body>
+<script src="../src/shared/loader.js" data-root="../src/" data-modules="rig"></script>
+<script>
+/* Contact-sheet renderer used by tools/rig-sheet.mjs (and usable by hand:
+ * open with ?char=claude&anim=idle&n=8&scale=4). Frames are produced by
+ * running the puppet through time (setPose + tick every frame), exactly like
+ * the engine, so secondary motion is included. */
+(function () {
+  'use strict';
+  var BG = '#4d5468', BG2 = '#454b5e', GROUND = '#2c3040';
+
+  function settle(p, anim, frames) {
+    // pre-roll so hair/cloth are at rest in the first pose
+    for (var i = 0; i < frames; i++) { p.setPose(anim, 0); p.tick({ x: 0, y: 0, vx: 0, vy: 0, facing: 1, grounded: true }); }
+  }
+
+  // render a list of frames of one anim; returns array of {canvas(1x), f, seg}
+  function runAnim(char, anim, pal, frames, opts) {
+    opts = opts || {};
+    var p = LC.rig.createPuppet(char, { palette: pal });
+    var info = LC.rig.animInfo(char, anim);
+    var maxF = Math.max.apply(null, frames.concat([0]));
+    settle(p, anim, 40);
+    var out = [], want = {}, x = 0;
+    frames.forEach(function (f) { want[f] = true; });
+    var speed = opts.walk ? (info.walk || 0) : 0;
+    for (var t = 0; t <= maxF; t++) {
+      p.setPose(anim, t);
+      x += speed;
+      p.tick({ x: x, y: 0, vx: speed, vy: 0, facing: 1, grounded: true });
+      if (want[t]) {
+        var c = document.createElement('canvas'); c.width = 160; c.height = 150;
+        var g = c.getContext('2d'); g.imageSmoothingEnabled = false;
+        p.draw(g, 80, 126, { facing: opts.facing || 1 });
+        var inf = p.info();
+        out.push({ c: c, f: t, seg: inf.seg, anchors: opts.anchors ? anchorsOf(p) : null });
+      }
+    }
+    return out;
+  }
+  function anchorsOf(p) {
+    var o = {};
+    ['head', 'chest', 'hip', 'handF', 'handB', 'footF', 'footB', 'top', 'muzzle', 'weapon', 'grab'].forEach(function (n) { o[n] = p.getAnchor(n); });
+    o.bounds = p.getBounds();
+    return o;
+  }
+
+  function sampleFrames(info, n) {
+    var total = info.total, fr = [];
+    if (!n || n >= total) { for (var i = 0; i < total; i++) fr.push(i); return fr; }
+    for (var k = 0; k < n; k++) fr.push(Math.round(k * (total - 1) / Math.max(1, n - 1)));
+    return fr;
+  }
+
+  // crop region shared by all cells
+  function cropOf(cells) {
+    var x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    cells.forEach(function (cell) {
+      var g = cell.c.getContext('2d'), d = g.getImageData(0, 0, cell.c.width, cell.c.height).data;
+      for (var y = 0; y < cell.c.height; y++) for (var x = 0; x < cell.c.width; x++) {
+        if (d[(y * cell.c.width + x) * 4 + 3]) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      }
+    });
+    if (x1 < 0) return { x: 0, y: 0, w: 10, h: 10 };
+    x0 = Math.max(0, x0 - 3); y0 = Math.max(0, y0 - 3); x1 = Math.min(159, x1 + 3); y1 = Math.max(y1 + 3, 129);
+    return { x: x0, y: y0, w: x1 - x0 + 1, h: Math.min(149, y1) - y0 + 1 };
+  }
+
+  function drawCells(cells, scale, title, labelFn, cols) {
+    var cr = cropOf(cells), cw = cr.w * scale, ch = cr.h * scale, pad = 4, lab = 16;
+    cols = cols || cells.length;
+    var rows = Math.ceil(cells.length / cols);
+    var W = cols * (cw + pad) + pad, Hh = rows * (ch + lab + pad) + pad + (title ? 20 : 0);
+    var out = document.createElement('canvas'); out.width = W; out.height = Hh;
+    var g = out.getContext('2d'); g.imageSmoothingEnabled = false;
+    g.fillStyle = '#1b1d26'; g.fillRect(0, 0, W, Hh);
+    g.font = '12px monospace'; g.textBaseline = 'top';
+    if (title) { g.fillStyle = '#e8e2d0'; g.fillText(title, pad, 4); }
+    var top0 = title ? 20 : 0;
+    cells.forEach(function (cell, i) {
+      var cx = pad + (i % cols) * (cw + pad), cy = top0 + pad + Math.floor(i / cols) * (ch + lab + pad);
+      g.fillStyle = (i & 1) ? BG2 : BG; g.fillRect(cx, cy, cw, ch);
+      // ground line
+      var gy = (126 - cr.y) * scale;
+      g.fillStyle = GROUND; g.fillRect(cx, cy + gy, cw, ch - gy);
+      g.drawImage(cell.c, cr.x, cr.y, cr.w, cr.h, cx, cy, cw, ch);
+      if (cell.anchors) {
+        var a = cell.anchors;
+        Object.keys(a).forEach(function (k) {
+          if (k === 'bounds') {
+            g.strokeStyle = 'rgba(255,255,0,0.5)';
+            g.strokeRect(cx + (80 + a.bounds.x - cr.x) * scale, cy + (126 + a.bounds.y - cr.y) * scale, a.bounds.w * scale, a.bounds.h * scale);
+            return;
+          }
+          g.fillStyle = k === 'weapon' || k === 'muzzle' ? '#ff3060' : (k === 'grab' ? '#30ff60' : '#30d0ff');
+          g.fillRect(cx + (80 + a[k].x - cr.x) * scale, cy + (126 + a[k].y - cr.y) * scale, scale, scale);
+        });
+      }
+      g.fillStyle = '#c8c3b4';
+      g.fillText(labelFn(cell), cx + 2, cy + ch + 2);
+    });
+    return out;
+  }
+
+  window.sheetAnim = function (char, anim, pal, n, scale, opts) {
+    opts = opts || {};
+    var info = LC.rig.animInfo(char, anim);
+    if (!info) return null;
+    var frames = opts.frames || sampleFrames(info, n);
+    var cells = runAnim(char, anim, pal, frames, opts);
+    var segs = info.segs.map(function (s) { return s.id + ' ' + s.f + (s.loop ? '*' : ''); }).join(' · ');
+    return drawCells(cells, scale || 4, char + ' ' + anim + (info.placeholder ? ' [PLACEHOLDER]' : '') + '  —  ' + segs + '  (pal ' + pal + ')',
+      function (c) { return 'f' + c.f + ' ' + c.seg; }, opts.cols);
+  };
+
+  // one representative pose per animation
+  window.sheetOverview = function (char, pal, scale, cols) {
+    var names = LC.rig.listAnims(char), cells = [];
+    names.forEach(function (nm) {
+      var info = LC.rig.animInfo(char, nm), f = 0;
+      var ex = window.THUMBS && window.THUMBS[nm];
+      if (ex != null) f = ex;
+      else {
+        // pick a frame in the most characteristic segment
+        var pick = { active: 1, hold: 1, lie: 1, loop: 1, reel: 0, toss: 1, act: 0, rise: 0 };
+        var acc = 0, chosen = -1;
+        info.segs.forEach(function (s) { if (chosen < 0 && pick[s.id] === 1) chosen = acc + Math.floor(s.f / 3); acc += s.f; });
+        f = chosen >= 0 ? chosen : Math.floor(info.total * 0.4);
+      }
+      var c = runAnim(char, nm, pal, [f])[0];
+      c.name = nm + (info.placeholder ? '*' : '');
+      cells.push(c);
+    });
+    return drawCells(cells, scale || 3, char + ' — all animations (one pose each; * = placeholder)  pal ' + pal, function (c) { return c.name + ' f' + c.f; }, cols || 10);
+  };
+
+  window.sheetPalettes = function (char, anims, scale) {
+    var cells = [];
+    anims.forEach(function (nm) {
+      [0, 1].forEach(function (pal) {
+        var info = LC.rig.animInfo(char, nm); if (!info) return;
+        var f = Math.floor(info.total * 0.3);
+        var c = runAnim(char, nm, pal, [f])[0]; c.name = nm + ' p' + pal; cells.push(c);
+      });
+    });
+    return drawCells(cells, scale || 4, char + ' palette comparison', function (c) { return c.name; }, 8);
+  };
+
+  // both characters side by side at game scale on a busy-ish background
+  window.sheetVersus = function (animA, animB, scale) {
+    var W = 384, Hh = 216, c = document.createElement('canvas'); c.width = W; c.height = Hh;
+    var g = c.getContext('2d'); g.imageSmoothingEnabled = false;
+    // simple busy background: bands + blocks
+    for (var y = 0; y < Hh; y++) { g.fillStyle = 'hsl(' + (230 + y * 0.1) + ',22%,' + (22 + y * 0.12) + '%)'; g.fillRect(0, y, W, 1); }
+    var rnd = 7;
+    for (var i = 0; i < 40; i++) { rnd = (rnd * 1103515245 + 12345) & 0x7fffffff; var bx = rnd % W; rnd = (rnd * 1103515245 + 12345) & 0x7fffffff; var bh = 20 + rnd % 90; g.fillStyle = 'rgba(255,220,180,' + (0.05 + (rnd % 10) / 100) + ')'; g.fillRect(bx, 186 - bh, 6 + rnd % 20, bh); }
+    g.fillStyle = '#3a3346'; g.fillRect(0, 186, W, 30);
+    g.fillStyle = '#4c4560'; g.fillRect(0, 186, W, 1);
+    var a = LC.rig.createPuppet('claude', { palette: 0 });
+    var b = LC.rig.hasAnim('deepseek', 'idle') ? LC.rig.createPuppet('deepseek', { palette: 0 }) : null;
+    settle(a, animA || 'idle', 60); a.setPose(animA || 'idle', 20); a.tick({ x: 0, y: 0, facing: 1 });
+    a.draw(g, 150, 186, { facing: 1 });
+    if (b) { settle(b, animB || 'idle', 60); b.setPose(animB || 'idle', 20); b.tick({ x: 0, y: 0, facing: -1 }); b.draw(g, 234, 186, { facing: -1 }); }
+    var out = document.createElement('canvas'); out.width = W * (scale || 2); out.height = Hh * (scale || 2);
+    var o = out.getContext('2d'); o.imageSmoothingEnabled = false; o.drawImage(c, 0, 0, out.width, out.height);
+    return out;
+  };
+
+  // every head expression at high zoom (art iteration)
+  window.sheetHeads = function (char, pal, scale, list) {
+    var I = LC.rig._, C = I.CHARS[char], pup = LC.rig.createPuppet(char, { palette: pal });
+    var set = C.headSet, pt = I.getPainter();
+    var lut = I.makeLUT(pup.cols, 0, null, null);
+    list = list || [['open', 'neutral'], ['half', 'neutral'], ['closed', 'smile'], ['focus', 'shout'], ['shut', 'teeth'],
+      ['dizzy', 'hurt'], ['happy', 'smile'], ['sad', 'frown'], ['wide', 'o'], ['open', 'smile', 'blush'], ['focus', 'neutral', '', 15], ['shut', 'hurt', '', -20]];
+    var cells = list.map(function (e) {
+      pt.clear(); pt.setLum(pup.cols.lum);
+      var img = I.H.headImage(set, e[0], e[1], e[2] || '', e[3] || 0);
+      pt.blit(img, 0, 0); pt.end();
+      var c = document.createElement('canvas'); c.width = 160; c.height = 150;
+      var g = c.getContext('2d'), id = g.createImageData(160, 150), u = new Uint32Array(id.data.buffer);
+      for (var y = 0; y < 150; y++) for (var x = 0; x < 160; x++) {
+        var v = pt.m[(y - 120 + I.OY) * I.BW + (x - 80 + I.OX)];
+        if (v) u[y * 160 + x] = lut[v];
+      }
+      g.putImageData(id, 0, 0);
+      return { c: c, f: 0, seg: e.join(' ') };
+    });
+    return drawCells(cells, scale || 10, char + ' heads pal ' + pal, function (c) { return c.seg; }, 6);
+  };
+
+  window.sheetReady = (LC.rig.init ? LC.rig.init() : Promise.resolve()).then(function () { return true; });
+
+  // manual use
+  var q = new URLSearchParams(location.search);
+  if (q.get('char')) {
+    window.sheetReady.then(function () {
+      var c = q.get('mode') === 'overview' ? sheetOverview(q.get('char'), +(q.get('pal') || 0), 3)
+        : sheetAnim(q.get('char'), q.get('anim') || 'idle', +(q.get('pal') || 0), +(q.get('n') || 8), +(q.get('scale') || 4), { anchors: q.get('anchors') === '1' });
+      if (c) document.body.appendChild(c);
+    });
+  }
+})();
+</script>
+</body></html>

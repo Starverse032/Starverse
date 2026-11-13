@@ -40,6 +40,7 @@
   var padInfo = [];              // connected pads (for UI)
   var padsBlocked = false;
   var lastDevice = 'keyboard';
+  var locked = false, ptrSaved = false;
 
   function blank() { return { up: false, down: false, left: false, right: false, L: false, M: false, H: false, S: false, throw: false, super: false, start: false, ok: false, cancel: false }; }
   function or(a, b) { for (var k in b) if (b[k]) a[k] = true; return a; }
@@ -102,6 +103,7 @@
     for (k in h) this.prev[k] = h[k];
   };
   var chAll = new Channel(), chP = [new Channel(), new Channel()];
+  var BLANK = blank();
 
   // ---------------------------------------------------------------- state
   var playerHeld = [blank(), blank()];
@@ -199,8 +201,15 @@
       if (o.up && o.down) o.down = false;
       return o;
     },
-    menuFor: function (i) { return mode === 'solo' && i === 1 ? blank() : chP[i].edge; },
-    anyPressed: function () { return anyThisTick; },
+    menuFor: function (i) { return locked || (mode === 'solo' && i === 1) ? BLANK : chP[i].edge; },
+    anyPressed: function () { return !locked && anyThisTick; },
+    // Scene transitions lock menu edges / taps (held fight state is unaffected).
+    lock: function (on) {
+      if (on === locked) return;
+      locked = on;
+      input.menu = on ? BLANK : chAll.edge;
+      if (on) { ptrSaved = pointer.pressed; pointer.pressed = false; } else pointer.pressed = ptrSaved;
+    },
     setMode: function (m) { mode = m === 'duo' ? 'duo' : 'solo'; },
     getMode: function () { return mode; },
     setOverride: function (i, state) { override[i] = state ? or(blank(), state) : null; },

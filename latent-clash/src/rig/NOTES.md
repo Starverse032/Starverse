@@ -15,9 +15,11 @@ Design (decided):
 - Secondary motion (secondary.js): verlet chains in local space, inertia from env velocity, hysteresis snapping.
 - Foot lock in tick() for walk anims (visual only; anchors stay analytic).
 
-Status:
-- [x] raster.js, skel.js
-- [ ] secondary.js, core.js (API + puppet), chars/claude.js, chars/deepseek.js
-- [ ] anims/*-base.js, anims/*-attacks.js, anims/placeholders.js, manifest.js
-- [ ] dev/rig-viewer.html, dev/rig-sheet.html, tools/rig-sheet.mjs
-- [ ] art iteration rounds, perf test, authoring guide
+Status (step 1 = pipeline end-to-end):
+- [x] raster.js, skel.js, secondary.js, core.js (full §5.3 API), placeholders.js (all §3.3 names, contract segs)
+- [x] Claude v1 renders (head v2 art, hair, capelet, skirt, pen); idle only authored
+- [x] tools/rig-sheet.mjs + dev/rig-sheet.html (anim rows, --overview, --heads, --palettes, --versus, --perf)
+- [ ] DeepSeek v1 (chars/deepseek-art.js, chars/deepseek.js, anims/deepseek-base.js)
+- [ ] dev/rig-viewer.html (minimal)
+- [ ] polish passes in lead's order: idle+faces → walk/dash → guard/hits/launch/down/getup → crouch/jump/land
+      → normals → specials → super → throws → intro/win/lose

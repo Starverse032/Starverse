@@ -38,7 +38,7 @@
     rug: '#21363c', rugDk: '#182830', rugPat: '#305058', rugPat2: '#3e6464', rugTrim: '#9a7a44', rugTrimDk: '#5e4a2e', rugRed: '#5c2a36',
     floorFar: '#2a1a26', floorNear: '#1c1018',
     // misc
-    clockFace: '#e8d8b0', clockFaceDk: '#b0a078', cat: '#3b3448', catLt: '#5a5068', catDk: '#272230', catNose: '#c88a8a',
+    clockFace: '#e8d8b0', clockFaceDk: '#b0a078', cat: '#2a2032', catLt: '#4a3c52', catDk: '#120c18', catNose: '#c88a8a',
     page: '#efe2c4', pageDk: '#c4b08c', pageEdge: '#8a7860',
     ink: '#1a1830', tea: '#e9e0cc', teaDk: '#a89c86', steam: '#c8b0a8'
   };
@@ -60,18 +60,18 @@
     // ------------------------------------------------------------ sky (0.05)
     var fS = 0.05, sw = U.layerW(fS), sky = U.pix(sw, 120);
     var sy = function (y) { return y + 8; };
-    var stops = [[0, C.sky[0]], [sy(16), C.sky[1]], [sy(30), C.sky[2]], [sy(42), C.sky[3]], [sy(52), C.sky[4]], [sy(60), C.sky[5]],
-      [sy(67), C.sky[6]], [sy(73), C.sky[7]], [sy(78), C.sky[8]], [sy(83), C.sky[9]], [sy(88), C.sky[10]]];
+    var stops = [[0, C.sky[0]], [sy(14), C.sky[1]], [sy(26), C.sky[2]], [sy(35), C.sky[3]], [sy(43), C.sky[4]], [sy(50), C.sky[5]],
+      [sy(56), C.sky[6]], [sy(61), C.sky[7]], [sy(66), C.sky[8]], [sy(71), C.sky[9]], [sy(76), C.sky[10]]];
     sky.bands(0, 0, sw, 120, stops, 3);
     // sun, low, half sunk behind the city
-    var sunX = U.wx(320, fS) + 2, sunY = sy(80);
+    var sunX = U.wx(320, fS) - 10, sunY = sy(63);
     sky.ellipse(sunX, sunY, 12, 12, c(C.sunRing)); sky.ellipse(sunX, sunY, 9.5, 9.5, c(C.sun));
     // cloud streaks: thin strata, lit from below by the low sun
-    var clouds = [[30, 40, 70], [120, 47, 90], [200, 36, 60], [60, 56, 110], [170, 62, 70], [-10, 66, 60], [230, 52, 50]];
+    var clouds = [[30, 32, 70], [120, 39, 90], [200, 28, 60], [60, 47, 110], [170, 53, 70], [-10, 57, 60], [230, 44, 50]];
     clouds.forEach(function (k, i) {
       var x = k[0], y = sy(k[1]), w = k[2];
       for (var r = 0; r < 3; r++) {
-        var inset = [6, 0, 3][r] + (i % 2) * 2, col = [C.cloudDk, C.cloudMd, (k[1] > 55 ? C.cloudHi : C.cloudLit)][r];
+        var inset = [6, 0, 3][r] + (i % 2) * 2, col = [C.cloudDk, C.cloudMd, (k[1] > 45 ? C.cloudHi : C.cloudLit)][r];
         sky.rect(x + inset, y + r, w - inset * 2 - r * 3, 1, c(col));
       }
       sky.rect(x + w * 0.3, y - 1, w * 0.3, 1, c(C.cloudDk));
@@ -82,7 +82,7 @@
     var fC = 0.13, cw = U.layerW(fC), city = U.pix(cw, 110);
     var x = 0;
     while (x < cw) {
-      var bw = 6 + Math.floor(rnd() * 12), bh = 6 + Math.floor(rnd() * 14);
+      var bw = 6 + Math.floor(rnd() * 12), bh = 14 + Math.floor(rnd() * 16);
       var top = sy(92) - bh;
       city.rect(x, top, bw, 120, c(C.city0));
       if (rnd() < 0.3) city.rect(x + (bw >> 1) - 1, top - 4, 2, 4, c(C.city0));          // chimney / spire stub
@@ -93,23 +93,23 @@
     }
     // landmarks: clock tower + dome (warm windows) at fixed spots
     var lt = U.wx(250, fC);
-    city.rect(lt, sy(54), 7, 60, c(C.city0)); city.poly([lt - 1, sy(54), lt + 8, sy(54), lt + 3.5, sy(42)], c(C.city0));
-    city.rect(lt + 2, sy(60), 3, 3, c(C.city0w));
+    city.rect(lt, sy(46), 7, 60, c(C.city0)); city.poly([lt - 1, sy(46), lt + 8, sy(46), lt + 3.5, sy(34)], c(C.city0));
+    city.rect(lt + 2, sy(52), 3, 3, c(C.city0w));
     var dm = U.wx(420, fC);
-    city.ellipse(dm, sy(70), 11, 9, c(C.city0)); city.rect(dm - 13, sy(70), 26, 30, c(C.city0)); city.rect(dm, sy(58), 1, 4, c(C.city0));
-    A.city = city.toCanvas(); A.fC = fC; A.towerX = lt + 3; A.towerY = sy(41);
+    city.ellipse(dm, sy(60), 11, 9, c(C.city0)); city.rect(dm - 13, sy(60), 26, 40, c(C.city0)); city.rect(dm, sy(48), 1, 4, c(C.city0));
+    A.city = city.toCanvas(); A.fC = fC; A.towerX = lt + 3; A.towerY = sy(33);
 
     var fHl = 0.24, hw = U.layerW(fHl), hills = U.pix(hw, 110);
     for (var i = 0; i < hw; i++) {
-      var h = 84 + Math.sin(i / 37) * 4 + Math.sin(i / 13 + 1) * 2;
+      var h = 76 + Math.sin(i / 37) * 3 + Math.sin(i / 13 + 1) * 2;
       // tree clumps
       var tr = U.hash(Math.floor(i / 5), 3) < 0.45 ? 3 + ((U.hash(Math.floor(i / 5), 9) * 4) | 0) : 0;
       var trc = tr ? Math.round(tr * Math.sqrt(Math.max(0, 1 - Math.pow(((i % 5) - 2) / 3, 2)))) : 0;
       hills.rect(i, sy(Math.round(h - trc)), 1, 120, c(C.hill));
       if (trc > 1 && (i % 5) === 1) hills.set(i, sy(Math.round(h - trc)), c(C.city0));
     }
-    hills.dither(0, sy(88), hw, 4, c(C.hillDk), 8);
-    hills.rect(0, sy(90), hw, 30, c(C.hillDk));
+    hills.dither(0, sy(80), hw, 4, c(C.hillDk), 8);
+    hills.rect(0, sy(82), hw, 40, c(C.hillDk));
     A.hills = hills.toCanvas(); A.fHl = fHl;
 
     // ------------------------------------------------------------ wall (FW): upper windows, shelves, lower shelves
@@ -125,7 +125,7 @@
     R(0, 30, ww, 1, C.w0);
 
     var winX = [120, 320, 520].map(function (X) { return U.wx(X, FW); });
-    var winW = [48, 66, 48];
+    var winW = [56, 78, 56];
     A.winX = winX; A.winW = winW;
 
     // upper level: shelves everywhere first, windows cut in after
@@ -139,7 +139,18 @@
     R(0, 164, ww, 1, C.w4); R(0, 165, ww, 3, C.w2); R(0, 167, ww, 1, C.w0);
 
     // windows (cut transparent glass, frame with warm inner rim)
-    for (i = 0; i < 3; i++) window_(U, wall, winX[i], winW[i], 34, 91, i === 1);
+    for (i = 0; i < 3; i++) window_(U, wall, winX[i], winW[i], 27, 91, i === 1);
+    // light map. Upper level: contre-jour shadow, warm pools around each lantern.
+    var lampWX = [30, 215, 425, 610].map(function (X) { return U.wx(X, FW); });
+    var lampD = function (x, y) {
+      var m = 99;
+      for (var q = 0; q < 4; q++) { var dx = x - lampWX[q], dy = (y - 8 - 58) * 1.3; m = Math.min(m, Math.sqrt(dx * dx + dy * dy)); }
+      return m;
+    };
+    wall.tint(0, 31 + 8, ww, 61, '#120a1a', function (x, y) { return 0.42 * Math.min(1, lampD(x, y) / 40); }, 8);
+    wall.tint(0, 31 + 8, ww, 61, '#f0a070', function (x, y) { var d = lampD(x, y); return d < 26 ? 0.22 * (1 - d / 26) + 0.04 : 0; }, 8);
+    // lower level: under-balcony shadow at the top, general dusk dimming, desaturated
+    wall.tint(0, 100 + 8, ww, 68, '#1a1222', function (x, y) { var sy2 = y - 8; return 0.3 + (sy2 < 116 ? (116 - sy2) / 16 * 0.3 : 0) + (sy2 > 156 ? 0.1 : 0); }, 8);
 
     // lower level centre: arched doorway into a dim reading room
     var dx = U.wx(320, FW);
@@ -152,7 +163,7 @@
     ladder(U, wall, U.wx(150, FW), 104, 166, 9);
     ladder(U, wall, U.wx(560, FW), 104, 166, -9);
     ladder(U, wall, U.wx(28, FW), 36, 92, 6);
-    A.wall = wall.toCanvas();
+    A.wall = wall.toCanvas(); A.lampWX = lampWX;
 
     // curtains (animated: 6 breath frames), drawn on the wall layer at each window
     A.curtains = U.frames(6, 18, 64, function (p, f) { curtain(U, p, f); });
@@ -194,21 +205,22 @@
 
     // ------------------------------------------------------------ light shafts (0.92)
     var fSh = 0.92, shw = U.layerW(fSh), sh = U.pix(shw, 200);
+    var beamCol = [0, c('#160b06'), c('#28160b'), c('#3c2210')];
+    A.beam = [];
     winX.forEach(function (lx, i) {
-      // window centre in world x -> shaft layer x
-      var X = [120, 320, 520][i], cx0 = U.wx(X, fSh), half = winW[i] / 2 - 4;
-      for (var y = 40; y < 168; y++) {
-        var k = (y - 40) / 128;                       // 0 top .. 1 floor
-        var xa = Math.round(cx0 - half + k * 46 - k * 6), xb = Math.round(cx0 + half + k * 46 + k * 10);
-        var lvl = Math.round(3.2 * (1 - k) * (1 - k) + 0.6);
-        if (y > 120) lvl = Math.min(lvl, 1);
+      var X = [120, 320, 520][i], cx0 = U.wx(X, fSh), half = winW[i] / 2 - 3;
+      A.beam.push({ X: X, half: half });
+      for (var y = 34; y < 168; y++) {
+        var k = (y - 34) / 134;
+        var xa = Math.round(cx0 - half + k * 40), xb = Math.round(cx0 + half + k * 72), xm = Math.round(cx0 + k * 56);
+        var L = y < 84 ? 3 : y < 112 ? 2 : y < 146 ? 1 : 0;
+        var nextY = y < 84 ? 84 : y < 112 ? 112 : 146, dd = nextY - y;
         for (var xx = xa; xx < xb; xx++) {
-          var edge = Math.min(xx - xa, xb - xx);
-          var l = edge < 3 ? lvl - 1 : lvl;
-          // streaks: 3 sub-beams with gaps
-          var band = (((xx - xa) / (xb - xa)) * 5) | 0;
-          if (band === 1 || band === 3) l -= 1;
-          if (l > 0 && U.dith(xx, y, l)) sh.set(xx, y + 8, c(y < 70 ? C.shaftHi : C.shaft));
+          var l = L;
+          if (dd <= 5 && U.dith(xx, y, Math.round((6 - dd) / 6 * 16))) l--;
+          if (xx - xa < 3 || xb - xx <= 3) l--;
+          if (Math.abs(xx - xm) <= 1) l -= 2;                    // mullion shadow
+          if (l > 0) sh.set(xx, y + 8, beamCol[l]);
         }
       }
     });
@@ -229,7 +241,6 @@
       if (f % 2 === 0) { p.rect(2, 0, 3, 7, c(col[0])); p.rect(4, 0, 1, 7, c(col[1])); p.rect(2, 1, 3, 1, c(C.gold)); }
       else { p.rect(0, 2, 7, 3, c(col[0])); p.rect(0, 4, 7, 1, c(col[1])); p.rect(1, 2, 1, 3, c(C.page)); }
     });
-    A.fg = fgStack(U);
 
     // ------------------------------------------------------------ floor (line scroll)
     A.floor = U.buildFloor(168, 224, YH, floorTexel(U));
@@ -346,25 +357,36 @@
       if (P.get(mid, yy2) === 0 || y > top + 3) {
         if (y >= top + 2) { P.set(mid - 1, yy2, c(C.frame)); P.set(mid, yy2, c(C.frame)); P.set(mid + 1, yy2, c(C.glassRim)); }
       }
-      if (big) {
-        var q = Math.round(w / 4);
-        if (y > top + r - 6) { P.set(mid - q, yy2, c(C.frame)); P.set(mid - q + 1, yy2, c(C.glassRim)); P.set(mid + q, yy2, c(C.frame)); P.set(mid + q + 1, yy2, c(C.glassRim)); }
+      var q = Math.round(w / 4);
+      if (y > top + r - 4) {
+        P.set(mid - q, yy2, c(C.frame)); P.set(mid - q + 1, yy2, c(C.glassRim)); P.set(mid + q, yy2, c(C.frame)); P.set(mid + q + 1, yy2, c(C.glassRim));
       }
+    }
+    // leaded horizontal glazing bars (only across glass)
+    for (y = top + Math.round(r) + 12; y < bot - 2; y += 10) {
+      for (var gx = x0; gx < x0 + w; gx++) if (P.get(gx, y + 8) === 0) P.set(gx, y + 8, c(C.frame));
     }
     var tr = top + Math.round(r) + 2;
     P.rect(x0, tr + 8, w, 2, c(C.frame)); P.rect(x0, tr + 10, w, 1, c(C.glassRim));
     // leaded rose in the arch of the big window
     if (big) {
-      var ry = top + r * 0.62 + 8, rr = 7;
-      for (var a = 0; a < 16; a++) {
-        var ang = a / 16 * Math.PI * 2;
-        P.set(Math.round(cx + Math.cos(ang) * rr), Math.round(ry + Math.sin(ang) * rr), c(C.frame));
+      // stained-glass starburst rose (Claude's motif): 8 amber rays on violet glass, lead lines
+      var ry = Math.round(top + r * 0.6) + 8, rr = 10;
+      for (var py = -rr - 1; py <= rr + 1; py++) for (var pxx = -rr - 1; pxx <= rr + 1; pxx++) {
+        var d = Math.sqrt((pxx + 0.5) * (pxx + 0.5) + (py + 0.5) * (py + 0.5));
+        if (d > rr + 1) continue;
+        var X2 = Math.round(cx) + pxx, Y2 = ry + py;
+        if (d > rr) { P.set(X2, Y2, c(C.frame)); continue; }
+        var an = Math.atan2(py + 0.5, pxx + 0.5), sec = an / (Math.PI / 4), k8 = Math.round(sec), off = Math.abs(sec - k8);
+        var rayLen = (k8 & 1) ? rr * 0.7 : rr;
+        var col;
+        if (d < 2.2) col = C.goldLt;
+        else if (d < 3.2) col = C.frame;
+        else if (off < 0.16 && d < rayLen) col = d < rayLen * 0.6 ? '#ffe2a0' : '#f2a868';
+        else if (off < 0.26 && d < rayLen) col = C.frame;
+        else col = d > rr - 2 ? '#7a4a86' : '#523670';
+        P.set(X2, Y2, c(col));
       }
-      for (a = 0; a < 8; a++) {
-        ang = a / 8 * Math.PI * 2 + Math.PI / 8;
-        for (var k = 2; k < rr; k++) P.set(Math.round(cx + Math.cos(ang) * k), Math.round(ry + Math.sin(ang) * k), c(C.frame));
-      }
-      P.ellipse(cx, ry, 2, 2, c(C.frame));
     }
     // sill + window seat
     P.rect(x0 - 6, bot + 8, w + 12, 2, c(C.stoneLt)); P.rect(x0 - 6, bot + 10, w + 12, 1, c(C.stoneDk));
@@ -515,32 +537,23 @@
   }
   function catFrames(U) {
     var c = U.col;
-    return U.frames(3, 18, 14, function (p, f) {
-      // sleeping loaf facing left, tail hangs over the right edge (frames: rest, twitch, curl)
-      p.ellipse(9, 5.5, 6.5, 3.5, c(C.cat));
-      p.rect(4, 3, 9, 2, c(C.catLt));
-      p.ellipse(4, 5, 3, 2.5, c(C.cat));                         // head
-      p.set(2, 2, c(C.cat)); p.set(5, 2, c(C.cat)); p.set(2, 1, f === 1 ? 0 : c(C.cat)); p.set(5, 1, c(C.cat));   // ears (twitch)
-      p.set(2, 5, c(C.catDk)); p.set(3, 5, c(C.catDk));           // closed eye
-      p.set(1, 6, c(C.catNose));
-      var tail = [[[15, 7], [16, 8], [16, 9], [16, 10], [15, 11], [15, 12]], [[15, 7], [16, 8], [17, 9], [17, 10], [17, 11], [16, 12]], [[15, 7], [16, 8], [16, 9], [15, 10], [14, 10], [13, 11]]][f];
-      tail.forEach(function (q) { p.set(q[0], q[1], c(C.cat)); });
+    return U.frames(3, 24, 16, function (p, f) {
+      // sleeping loaf facing left on the rail; tail hangs over the front edge (rest / twitch / curl)
+      var body = c(C.cat);
+      p.ellipse(12.5, 7, 8, 4, body);
+      p.ellipse(5, 6.5, 3.5, 3, body);                            // head
+      p.rect(2, 2, 2, 2, body); p.set(2, 1, f === 1 ? 0 : body); p.rect(6, 2, 2, 2, body); p.set(7, 1, body);   // ears (left one twitches)
+      p.rect(9, 10, 3, 1, body);                                  // tucked paws
+      var tail = [[[19, 9], [20, 10], [20, 11], [20, 12], [19, 13], [19, 14]], [[19, 9], [20, 10], [21, 11], [21, 12], [21, 13], [20, 14]], [[19, 9], [20, 10], [20, 11], [19, 12], [18, 12], [17, 13]]][f];
+      tail.forEach(function (q) { p.set(q[0], q[1], body); p.set(q[0] + 1, q[1], body); });
+      // rim light along the top contour (sun behind), closed eye, nose
+      for (var x = 0; x < 24; x++) for (var y = 1; y < 16; y++) {
+        if (p.get(x, y) === body && p.get(x, y - 1) === 0) { p.set(x, y, c(x > 4 && x < 18 ? C.w6 : C.w5)); break; }
+      }
+      p.rect(3, 6, 2, 1, c(C.catDk)); p.set(1, 7, c(C.catNose));
       p.outline(c(C.w0));
     });
   }
-  function fgStack(U) {
-    // foreground silhouette: a toppled pile of big books + candle, very dark with a warm rim
-    var c = U.col, p = U.pix(56, 24);
-    var st = [[0, 18, 46], [4, 12, 40], [10, 6, 30]];
-    st.forEach(function (b, i) {
-      p.rect(b[0], b[1], b[2], 6, c(i % 2 ? '#1c1220' : '#22152a'));
-      p.rect(b[0], b[1], b[2], 1, c(C.w4));
-      p.rect(b[0] + b[2] - 3, b[1] + 1, 3, 4, c('#3a2c30'));
-    });
-    p.rect(30, 0, 4, 6, c('#3a2c30')); p.rect(30, 0, 1, 6, c(C.w5));
-    return p.toCanvas();
-  }
-
   function floorTexel(U) {
     var c = U.col, pl = C.pl.map(c), seam = c(C.seam), gloss = c(C.gloss), gloss2 = c(C.gloss2);
     var pool = C.pool.map(c), rug = c(C.rug), rugDk = c(C.rugDk), rugPat = c(C.rugPat), rugPat2 = c(C.rugPat2);
@@ -575,7 +588,7 @@
         var d = Math.abs(X - winXW[i]);
         if (y < 177 && d < 30) {
           var k = (177 - y) / 9;
-          if (d < 22 * k && U.dith(Math.round(X), y, Math.round(10 * k))) return d < 10 ? gloss2 : gloss;
+          if (d < 20 * k && (y & 1)) return d < 8 * k ? gloss2 : gloss;
         }
         // light pools in front: slanted parallelograms (sun behind windows, slightly left)
         if (y > 199) {
@@ -641,13 +654,18 @@
       for (var k = 0; k < len; k += 1) g.fillRect(Math.round(px0 + Math.sin(ang) * k), py0 + k, 1, 1);
       var bx = Math.round(px0 + Math.sin(ang) * len), by = py0 + len;
       g.fillStyle = C.brass; g.fillRect(bx - 2, by - 1, 5, 3); g.fillStyle = C.goldLt; g.fillRect(bx - 1, by - 1, 2, 1);
-      var cf = ((s.t % 300) > 270) ? 1 : ((s.t % 520) > 470 ? 2 : 0);
-      g.drawImage(A.cat[cf], ox + cl.x - 9, cl.y - 24);
     } });
-    layers.push({ name: 'shafts', draw: function (g, cam, s) {
+    layers.push({ name: 'floor', draw: function (g, cam) { U.drawFloor(g, A.floor, cam); } });
+    layers.push({ name: 'mezzanine', draw: function (g, cam, s) {
+      U.layer(g, A.mez, A.F_MEZ, cam);
+      var cf = ((s.t % 300) > 266) ? 1 : ((s.t % 520) > 460 ? 2 : 0);   // cat asleep on the rail, tail twitching
+      g.drawImage(A.cat[cf], Math.round(U.sx(372, A.F_MEZ, cam)) - 12, 63);
+    } });
+    layers.push({ name: 'shafts', draw: function (g, cam) {
+      g.globalCompositeOperation = 'lighter';
       U.layer(g, A.shafts, A.fSh, cam);
+      g.globalCompositeOperation = 'source-over';
     } });
-    layers.push({ name: 'mezzanine', draw: function (g, cam) { U.layer(g, A.mez, A.F_MEZ, cam); } });
     layers.push({ name: 'lanterns', draw: function (g, cam, s) {
       var f = 0.97;
       for (var i = 0; i < s.lamps.length; i++) {
@@ -676,7 +694,6 @@
       var gx = Math.round(U.sx(572, A.fGlobe, cam)) - 13;
       g.drawImage(A.globe, gx, 174 - 40 + 1);
     } });
-    layers.push({ name: 'floor', draw: function (g, cam) { U.drawFloor(g, A.floor, cam); } });
     // falling books (event) live on the floor/wall plane
     layers.push({ name: 'debris', draw: function (g, cam, s) {
       for (var i = 0; i < s.fall.length; i++) {
@@ -696,11 +713,6 @@
         var p = s.pages[i];
         g.drawImage(A.page[((s.t + i * 5) >> 3) & 3], Math.round(U.sx(p.X, p.f, cam)) - 3, Math.round(p.y));
       }
-    } });
-    layers.push({ name: 'foreground', front: true, draw: function (g, cam) {
-      var f = 1.3;
-      g.drawImage(A.fg, Math.round(U.sx(150, f, cam)) - 28, 206);
-      g.save(); g.translate(Math.round(U.sx(500, f, cam)) + 28, 206); g.scale(-1, 1); g.drawImage(A.fg, 0, 0); g.restore();
     } });
     return layers;
   }

@@ -1,0 +1,1 @@
+(window.LC_MANIFEST = window.LC_MANIFEST || {}).rig = ['raster.js', 'skel.js', 'secondary.js', 'core.js', 'chars/common.js', 'chars/claude-art.js', 'chars/claude.js', 'anims/claude-base.js', 'anims/placeholders.js'];

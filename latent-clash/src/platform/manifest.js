@@ -1,1 +1,1 @@
-(window.LC_MANIFEST = window.LC_MANIFEST || {}).platform = ['../gen/fontdata.js', 'font.js'];
+(window.LC_MANIFEST = window.LC_MANIFEST || {}).platform = ['../gen/fontdata.js', 'font.js', 'save.js', 'input.js', 'touch.js', 'display.js', 'ui.js', 'art.js', 'app.js', 'flow.js', 'debug.js', 'scenes/boot.js', 'scenes/title.js', 'scenes/menu.js'];

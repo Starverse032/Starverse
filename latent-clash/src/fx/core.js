@@ -157,7 +157,9 @@
     try { e.fn(x, y, readOpts(opts)); } catch (err) { console.error('[fx] spawn ' + name + ' failed', err); }
   };
 
+  I.tick = 0;
   FX.update = function () {
+    I.tick++;
     updating = true;
     var n0 = nLive, j = 0, i, p;
     for (i = 0; i < n0; i++) {
@@ -311,6 +313,7 @@
   // SPARK: tapering streak along velocity; head colour ramp[i], tail ramp[i+1]; p.a = length factor, p.b = max len
   I.K_SPARK = I.kind('spark', {
     draw: function (ctx, p, sx, sy) {
+      if (p.age === 0) return;     // hidden on the (held) impact frame; emerges from the burst
       var sp = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
       var k = 1 - p.age / p.life;
       var len = Math.min(p.b, sp * p.a) * (0.35 + 0.65 * k);
