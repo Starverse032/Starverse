@@ -19,7 +19,7 @@
     star: '#b8b0e8', starDim: '#5a5290', starWarm: '#f0c8a0',
     nebW: ['#22102e', '#3c1a3a', '#5e2a40', '#8a4444', '#b86a50'],   // warm (Claude side)
     nebB: ['#0e1640', '#142254', '#1a2e6c', '#22408a', '#3458a8'],   // deep blue (DeepSeek side)
-    aur: [0, '#0a0820', '#0e1230', '#10203a', '#163444'],
+    aur: [0, '#080a1e', '#0a1a2a', '#0e2c36', '#18504c'],
     range: '#1a1240', rangeLine: '#3a2a78', rangeHi: '#5a44a8',
     haze: '#2a1c5c', hazeHi: '#4a3490', horizon: '#9a7ae8', horizonHi: '#e0d0ff',
     floor: '#0a0720', floorB: '#0d0928', grid: ['#2a1a5a', '#3c2680', '#5434a8', '#7048d0'], gridHi: '#b090ff',
@@ -100,11 +100,11 @@
     A.poly = [polyFrames(U, 'ico', 34, 0), polyFrames(U, 'oct', 26, 1), polyFrames(U, 'cube', 22, 2), polyFrames(U, 'tet', 18, 0)];
 
     // ------------------------------------------------------------ token blocks
-    var toks = ['the', '##ing', '<s>', '0.73', '思', '考', 'cat', '向量', '-1.2', '注意', 'R1', '星', '鲸', 'Q·K', '[CLS]', '0.05'];
+    var toks = ['the', 'ing', '<s>', '0.73', '思', '考', 'cat', '向量', '-1.2', '注意', 'R1', '星', '鲸', 'Q·K', '[CLS]', '0.05'];
     A.tokens = toks.map(function (tk, j) { return tokenSprite(U, tk, j); });
 
     // ------------------------------------------------------------ floor grid (line scroll to the horizon)
-    A.floor = U.buildFloor(YH + 1, 224, YH, floorTexel(U));
+    A.floor = U.buildFloor(YH + 1, 224, YH, floorTexel(U), 1120);
     A.motes = U.frames(2, 3, 3, function (p, f) { p.set(1, 1, c(f ? C.tokHi : C.gridHi)); if (f) { p.set(0, 1, c(C.grid[1])); p.set(2, 1, c(C.grid[1])); } });
     return A;
   }
@@ -225,12 +225,13 @@
       var rowPx = DZ * (186 - YH) * s * s;                    // screen px between depth lines here
       var onZ = rowPx > 3.5 && dz * rowPx < 0.5;
       var lvl = near > 0.75 ? 2 : near > 0.4 ? 1 : 0;
-      if ((onX || onZ) && y < YH + 8 && !U.dith(Math.round(X * s), y, (y - YH) * 2)) return haze;
+      if ((onX || onZ) && y < YH + 12 && !U.dith(Math.round(X * s), y, (y - YH - 4) * 2)) return haze;
       if (onX || onZ) {
         if (major && near > 0.5) return G[3];
         return G[lvl + ((onX && onZ) ? 1 : 0)];
       }
-      if (y < YH + 10 && U.dith(Math.round(X * s) + 1, y, Math.round((YH + 10 - y) * 1.6))) return haze;
+      if (y < YH + 4) return haze;
+      if (y < YH + 12 && U.dith(Math.round(X * s) + 1, y, Math.round((YH + 12 - y) * 2))) return haze;
       // subtle checker of the cells near the viewer
       var cell = (Math.floor(X / 32) + Math.floor(zz)) & 1;
       return cell && near > 0.6 ? baseB : base;

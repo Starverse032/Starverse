@@ -19,7 +19,7 @@
 
   var COMMON = {
     idle: [g('loop', 64, 1)],
-    walkF: [g('loop', 40, 1)], walkB: [g('loop', 44, 1)],
+    walkF: [g('loop', 32, 1)], walkB: [g('loop', 36, 1)],   // contract ~40/~44: shortened so strides fit the legs (see NOTES)
     crouchIn: [g('go', 4)], crouch: [g('loop', 64, 1)], crouchOut: [g('go', 4)],
     jumpSquat: [g('go', 4)], jumpRise: [g('loop', 12, 1)], jumpFall: [g('loop', 12, 1)], land: [g('go', 6)],
     dashF: [g('go', 18)], dashB: [g('go', 20)],
@@ -44,7 +44,7 @@
       guardrailHit: sar(4, 4, 22)
     }),
     deepseek: Object.assign({}, COMMON, {
-      dashF: [g('go', 16)], dashB: [g('go', 18)],
+      dashF: [g('go', 16)], dashB: [g('go', 18)], walkB: [g('loop', 32, 1)],
       super: [g('startup', 6), g('cast', 8), g('active', 44), g('recovery', 34)],
       '5L': sar(4, 3, 7), '5M': sar(7, 4, 12), '5H': sar(10, 5, 19),
       '2L': sar(4, 3, 8), '2M': sar(7, 4, 13), '2H': sar(10, 5, 22),

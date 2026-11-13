@@ -242,7 +242,7 @@
     pts.unshift(top);
     var sp = H.chaikin(pts);
     var n = sp.length, w = [];
-    for (var i = 0; i < n; i++) { var t = i / (n - 1); w.push(6.2 - t * t * 3.4); }
+    for (var i = 0; i < n; i++) { var t = i / (n - 1); w.push(5.6 - t * 2.2 - t * t * 1.6); }
     var last = sp[n - 1], prev = sp[n - 2], dx = last[0] - prev[0], dy = last[1] - prev[1], dl = Math.sqrt(dx * dx + dy * dy) || 1;
     var tip = [last[0] + dx / dl * 3, last[1] + dy / dl * 3];
     p.poly(H.ribbon(sp, w, tip), M.hair, SH.hair);
@@ -259,7 +259,7 @@
       p.darkLine(Math.round(a[0]), Math.round(a[1]), Math.round(b[0]), Math.round(b[1]), 1);
     }
     // cream tips (dithered transition)
-    var tipStart = Math.floor(n * 0.62);
+    var tipStart = Math.floor(n * 0.7);
     var tipsPoly = H.ribbon(sp.slice(tipStart + 1), 12, [tip[0] + dx / dl * 6, tip[1] + dy / dl * 6]);
     H.recolor(p, tipsPoly, M.hair, M.tip, false);
   }

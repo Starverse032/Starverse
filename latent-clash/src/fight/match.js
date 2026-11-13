@@ -380,6 +380,7 @@
   };
 
   Match.prototype.watchdog = function () {
+    if (this.state !== 'fight') return;
     for (var i = 0; i < 2; i++) {
       var f = this.f[i];
       var k = f.action + '|' + (f.mv ? f.mv.id : '');

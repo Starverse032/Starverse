@@ -118,7 +118,7 @@
       if (!touch) continue;
       var hx = (Math.max(hb.x, vic.x - 12) + Math.min(hb.x + hb.w, vic.x + 12)) / 2;
       var hy = Math.max(hb.y, vic.y - 70) + Math.min(hb.h, 14) / 2;
-      events.push({ att: att, vic: vic, h: e.h, key: e.key, x: hx, y: hy, sf: att.sf });
+      events.push({ att: att, vic: vic, h: e.h, key: e.key, x: hx, y: hy, sf: att.sf, mv: att.mv });
       return;   // one hit per attacker per tick
     }
   };
@@ -159,8 +159,9 @@
   F.applyHit = function (m, att, vic, h0, ctx) {
     var s = ctx.proj ? ctx.proj.str : att.str;
     var proj = ctx.proj || null;
-    var mv = proj ? null : att.mv;
-    var finalHit = !proj && h0.final && att.sf >= h0.final.from;
+    var mv = proj ? null : (att.mv || ctx.mv);
+    if (!proj && !mv) return 'whiff';
+    var finalHit = !proj && h0.final && (ctx.sf != null ? ctx.sf : att.sf) >= h0.final.from;
     var h = hitSpec(h0, s, finalHit ? h0.final : null);
     var lv = h.lv || 'M';
     var srcX = proj ? proj.x - proj.vx * 4 : att.x;

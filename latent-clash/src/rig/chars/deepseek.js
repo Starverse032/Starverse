@@ -41,8 +41,8 @@
 
   C.chains = [
     { id: 'tailW', n: 3, len: [5, 5, 4], rest: [25, 15, 5], stiff: [0.28, 0.2, 0.15], damp: 0.84, grav: 0.24, drag: 0.4 },
-    { id: 'pigN', n: 2, len: [4, 4], rest: [30, 50], stiff: 0.35, damp: 0.78, grav: 0.18, drag: 0.25 },
-    { id: 'pigF', n: 2, len: [4, 4], rest: [80, 65], stiff: 0.35, damp: 0.78, grav: 0.18, drag: 0.25 },
+    { id: 'pigN', n: 2, len: [3, 3], rest: [10, 25], stiff: 0.35, damp: 0.78, grav: 0.18, drag: 0.25 },
+    { id: 'pigF', n: 2, len: [3, 3], rest: [95, 110], stiff: 0.35, damp: 0.78, grav: 0.18, drag: 0.25 },
     { id: 'ahoge', n: 2, len: [3, 2], rest: [-10, 30], stiff: 0.45, damp: 0.75, grav: 0.05, drag: 0.15 },
     { id: 'strF', n: 2, len: [3, 3], rest: [0, 0], stiff: 0.2, damp: 0.8, grav: 0.25, drag: 0.3 },
     { id: 'strB', n: 2, len: [3, 3], rest: [0, 0], stiff: 0.2, damp: 0.8, grav: 0.25, drag: 0.3 },
@@ -180,12 +180,12 @@
 
   function drawPig(p, ch, sk) {
     var pts = H.chainPts(ch), n = pts.length;
-    p.poly(H.ribbon(pts, [1.8, 1.4, 1.1], null), M.hair, SH.hair);
+    p.poly(H.ribbon(pts, [2.3, 1.9, 1.5], null), M.hair, SH.hair);
     var a = pts[n - 2], b = pts[n - 1], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.sqrt(dx * dx + dy * dy) || 1;
     dx /= l; dy /= l;
     var nx = -dy, ny = dx;
-    var L1 = [b[0] + nx * 3.5 + dx * 1.5, b[1] + ny * 3.5 + dy * 1.5], L2 = [b[0] - nx * 3.5 + dx * 1.5, b[1] - ny * 3.5 + dy * 1.5];
-    p.poly(H.flat([[b[0] - dx, b[1] - dy], L1, [b[0] + dx, b[1] + dy], L2]), M.tip, null, 1);
+    var L1 = [b[0] + nx * 4.5 + dx * 2.5, b[1] + ny * 4.5 + dy * 2.5], L2 = [b[0] - nx * 4.5 + dx * 2.5, b[1] - ny * 4.5 + dy * 2.5];
+    p.poly(H.flat([[b[0] - dx * 1.5 + nx * 1.5, b[1] - dy * 1.5 + ny * 1.5], L1, [b[0] + dx * 1.2, b[1] + dy * 1.2], L2, [b[0] - dx * 1.5 - nx * 1.5, b[1] - dy * 1.5 - ny * 1.5]]), M.tip, SH.soft, 1);
     // tie (scrunchie) at the root
     p.px(pts[0][0], pts[0][1], col(M.c2, 1));
   }

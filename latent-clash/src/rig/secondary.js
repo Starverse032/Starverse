@@ -52,7 +52,7 @@
   };
 
   // dx, dy: body displacement this tick in local space; vx, vy: body velocity (local)
-  Chain.prototype.step = function (dx, dy, vx, vy, sk) {
+  Chain.prototype.step = function (dx, dy, vx, vy, sk, floor) {
     if (!this.ready) { this.reset(); return; }
     var d = this.def, n = this.n, i;
     var damp = d.damp == null ? 0.82 : d.damp, g = d.grav == null ? 0.25 : d.grav, drag = d.drag == null ? 0.12 : d.drag;
@@ -83,6 +83,7 @@
         this.x[i] = this.x[i - 1] + ex / el * tl; this.y[i] = this.y[i - 1] + ey / el * tl;
       }
       if (d.limit) d.limit(this, i, sk);
+      if (floor != null && this.y[i] > floor) { this.y[i] = floor; this.py[i] = floor + (this.py[i] - floor) * 0.5; }
     }
     // hysteresis snap
     var hys = d.hys == null ? 0.72 : d.hys;
@@ -120,7 +121,8 @@
     }
     this.lx = x; this.ly = y; this.lf = f;
     var vx = (env.vx || 0) * f, vy = env.vy || 0;
-    for (var i = 0; i < this.list.length; i++) this.list[i].step(dx, dy, vx, vy, sk);
+    var floor = env.grounded === false ? null : -1;
+    for (var i = 0; i < this.list.length; i++) this.list[i].step(dx, dy, vx, vy, sk, floor);
   };
 
   I.Sec = Sec;

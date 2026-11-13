@@ -240,7 +240,7 @@
     drawProjs(ctx, m);
     fxDraw(ctx, m, 'front');
     if (m.stage && m.stage.drawFront) { try { m.stage.drawFront(ctx, camX); } catch (e) { F.err('stage.drawFront', e); } }
-    if (m.training && m.training.hitboxes && F.drawBoxes) F.drawBoxes(ctx, m);
+    if ((m.forceBoxes || (m.training && m.training.hitboxes)) && F.drawBoxes) F.drawBoxes(ctx, m);
     ctx.restore();
     if (m.koFlash > 0) {
       if (!F.sprite(ctx, 'screen.koFlash', 0, 0, 24 - m.koFlash, {})) {

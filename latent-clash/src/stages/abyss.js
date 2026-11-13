@@ -194,7 +194,7 @@
     });
     // labels: small plates above the racks
     U.text3(wall, 'DC-01', 6, sy(44), c(C.s6));
-    U.text3(wall, 'R1 COOLING', ww - 48, sy(44), c(C.s6));
+    U.text3(wall, 'R1 COOLING', ww - 64, sy(44), c(C.s6));
     // floor skirting with hazard stripes on the console foot
     R(0, 164, ww, 4, C.s1); R(0, 164, ww, 1, C.s4);
     A.wall = wall.toCanvas();
