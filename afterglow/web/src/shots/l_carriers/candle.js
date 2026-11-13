@@ -192,7 +192,7 @@ export async function createCandle(ctx, noiseTex, T) {
       col += smoke(P, 0.0);
       // dark phase / swap: the pillar's outline, the smoking wick
       vec3 o = emberLine(min(outl, 1.0), 0.80 + 0.14 * texture2D(uNoise, P / 140.0).r) * uOutline;
-      o = max(o, emberLine(wm, 0.9) * uOutline);
+      o = max(o, emberLine(wm, 0.7) * uOutline);
       col = (uFr >= uDark || before) ? o + smoke(P, 0.0) + tip : col;
       gl_FragColor = vec4(col * uGain, 1.0);
     }`, U);

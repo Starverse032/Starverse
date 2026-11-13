@@ -672,7 +672,7 @@ export function createMacro(ctx) {
         float core = smoothstep(wy * 0.8, 0.0, abs(x)) * exp(-pow((y - 0.22) / 0.25, 2.0));
         // 1200–1900 K: the body sits at 1300–1600 K (orange, saturated through the tone curve), only the
         // small core goes to 1900 K and HDR ≈ 3
-        float Tk = 1200.0 + 560.0 * clamp(0.85 * core * core + 0.30 * (1.0 - y) * body - 0.18 * y + 0.12 * (n2.b - 0.5), 0.0, 1.0);
+        float Tk = 1200.0 + 430.0 * clamp(0.85 * core * core + 0.30 * (1.0 - y) * body - 0.18 * y + 0.12 * (n2.b - 0.5), 0.0, 1.0) + 270.0 * pow(core, 6.0);
         vec3 c = blackbody(Tk) * dens * (0.22 + 1.2 * core * core + 0.2 * (1.0 - y)) * vP.y;
         gl_FragColor = vec4(c * uF * uFlick, 1.0);
       }`,
@@ -964,7 +964,7 @@ export function createMacro(ctx) {
   };
   const DUSK_TINT = [0.84, 0.92, 1.10];                     // cold: the last of the west sky + skylight
   const C_EMB = bb(1150), C_FL = bb(1650), C_SP = bb(2300);
-  const K_EMB = 0.0045, K_FL = 0.0100, K_SP = 0.0000050;
+  const K_EMB = 0.0045, K_FL = 0.0135, K_SP = 0.0000050;
   // the ember: wakes where the spark lands, grows until ignition, then feeds the flame
   const ember = n => n < FR.land ? 0 : 0.35 * ss(FR.land, FR.land + 4, n) + 0.30 * ss(FR.land + 3, FR.ign, n) + 0.35 * ss(FR.ign, FR.ign + 14, n);
   // hot radius (m): 30 → 60 px over the 12 heating frames (7111 px/m at the focus), then the fire spreads

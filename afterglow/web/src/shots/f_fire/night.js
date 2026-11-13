@@ -608,7 +608,7 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
           float dens = body * mix(1.0, tongue, smoothstep(0.06, 0.55, y)) * smoothstep(0.0, 0.05, y + 0.02);
           float core = smoothstep(wy * 0.7, 0.0, abs(x)) * smoothstep(0.6, 0.06, y) * smoothstep(-0.02, 0.1, y);
           // 1200–1900 K; the body is kept in HDR 0.3–1.5 so that it stays orange through the tone curve
-          float Tk = mix(1200.0, 1650.0, clamp(core * 0.75 + (1.0 - y) * 0.2 + (n2.b - 0.5) * 0.2, 0.0, 1.0));
+          float Tk = mix(1200.0, 1480.0, clamp(core * 0.75 + (1.0 - y) * 0.2 + (n2.b - 0.5) * 0.2, 0.0, 1.0)) + 420.0 * pow(core, 4.0);
           vec3 c = blackbody(Tk) * (dens * 0.55 + core * 0.62) * vP.y;
           gl_FragColor = vec4(c * uF, 0.0);
         }`,
@@ -871,7 +871,7 @@ export function createNight(ctx, need = { F1: true, F2: true, F3: true }) {
   const f1Follow = n => {
     const fs = fireScale(n);
     // px the picture moves (x right, y down), calibrated on the L ≥ 180 light centre at fs 0.205 / 0.366 / 0.445
-    const k = [[0.205, 0.4, -21.8], [0.366, 14.3, -19.7], [0.445, 18.5, -13.0]];
+    const k = [[0.205, 5.0, -21.1], [0.366, 15.9, -20.9], [0.445, 20.6, -18.7]];
     let i = fs <= k[1][0] ? 0 : 1; const u = Math.min(1.2, Math.max(-0.2, (fs - k[i][0]) / (k[i + 1][0] - k[i][0])));
     return [k[i][1] + (k[i + 1][1] - k[i][1]) * u, k[i][2] + (k[i + 1][2] - k[i][2]) * u];
   };

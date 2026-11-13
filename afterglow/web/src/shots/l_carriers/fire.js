@@ -72,7 +72,7 @@ export function createFire(ctx, noiseTex, T) {
       stri = 0.45 + 1.1 * ss(0.30, 0.75, stri * 0.7 + n3.g * 0.45);
       // white-hot body: a stable ellipse centred on C (it is what K1 measures), breathing in brightness only
       vec2 cq = vec2((p.x - CC.x) / 84.0, (p.y - CC.y) / 120.0);
-      float core = exp(-pow(dot(cq, cq), 1.3) * 1.9) * ss(0.82, 0.97, hf) * (0.75 + 0.25 * n2.g) * (0.7 + 0.3 * stri);
+      float core = exp(-pow(dot(cq, cq), 1.3) * 1.9) * ss(0.82, 0.97, hf) * (0.94 + 0.06 * n2.g);   // steady: only its brightness breathes (K1)
       float T = mix(1060.0, 1400.0, clamp(dens * 0.45 + (1.0 - hn) * 0.40 + (n3.b - 0.5) * 0.25, 0.0, 1.0));
       vec3 c = kel(T) * pow(dens, 1.6) * (0.16 + 0.32 * (1.0 - hn)) * stri;
       c += kel(mix(1380.0, 1650.0, core)) * core * core * 1.9 * ss(0.1, 0.6, dens);
