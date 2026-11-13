@@ -1,0 +1,5 @@
+node_modules/
+.shots/
+.venv*/
+*.log
+.DS_Store
