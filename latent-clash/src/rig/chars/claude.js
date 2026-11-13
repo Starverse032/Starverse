@@ -182,12 +182,12 @@
       dx /= l; dy /= l;
       var n1 = [-dy, dx], n2 = [dy, -dx], pick = side > 0 ? [1, 0.6] : [-1, 0.6];
       var n = (n1[0] * pick[0] + n1[1] * pick[1]) > (n2[0] * pick[0] + n2[1] * pick[1]) ? n1 : n2;
-      var b = lerp(hip, kn, 0.5);
-      return [b[0] + n[0] * (3.6 + fl), b[1] + n[1] * (3.6 + fl)];
+      var b = lerp(hip, kn, 0.46);
+      return [b[0] + n[0] * (3.0 + fl), b[1] + n[1] * (3.0 + fl)];
     }
     var hf = hem(sk.hipF, sk.knF, 1), hb = hem(sk.hipB, sk.knB, -1);
     var wB = fr(pel, L, -4.5, -7.5), wF = fr(pel, L, 4.5, -7.5);
-    var sB = fr(pel, L, -6.5, -2), sF = fr(pel, L, 6.5, -2.5);
+    var sB = fr(pel, L, -5.5, -2.5), sF = fr(pel, L, 5.5, -3);
     // swing lag on the hem
     hb = [hb[0] + sw[0] * 0.6, hb[1] + sw[1] * 0.3]; hf = [hf[0] + sw[0] * 0.6, hf[1] + sw[1] * 0.3];
     sB = [sB[0] + sw[0] * 0.25, sB[1]]; sF = [sF[0] + sw[0] * 0.25, sF[1]];
@@ -221,8 +221,6 @@
       fr(c, ca, 0, 8), bk, fr(c, ca, -8, 3), fr(c, ca, -6, -0.5)]);
     p.poly(cape, M.c1, SH.body, 1);
     // capelet hem line (scallop shadow)
-    var h0 = fr(c, ca, -6, 7.5), h1 = fr(c, ca, 4.5, 7.5);
-    p.darkLine(Math.round(h0[0]), Math.round(h0[1]), Math.round(h1[0]), Math.round(h1[1]), 1);
     // collar V with blouse + ribbon tie
     var v = H.flat([fr(c, ca, 0.5, -2), fr(c, ca, 4, -2), fr(c, ca, 2.5, 4.5)]);
     p.poly(v, M.white, null, 1);
@@ -244,7 +242,7 @@
     pts.unshift(top);
     var sp = H.chaikin(pts);
     var n = sp.length, w = [];
-    for (var i = 0; i < n; i++) { var t = i / (n - 1); w.push(7.5 - t * t * 4.2); }
+    for (var i = 0; i < n; i++) { var t = i / (n - 1); w.push(6.2 - t * t * 3.4); }
     var last = sp[n - 1], prev = sp[n - 2], dx = last[0] - prev[0], dy = last[1] - prev[1], dl = Math.sqrt(dx * dx + dy * dy) || 1;
     var tip = [last[0] + dx / dl * 3, last[1] + dy / dl * 3];
     p.poly(H.ribbon(sp, w, tip), M.hair, SH.hair);
@@ -264,8 +262,6 @@
     var tipStart = Math.floor(n * 0.62);
     var tipsPoly = H.ribbon(sp.slice(tipStart + 1), 12, [tip[0] + dx / dl * 6, tip[1] + dy / dl * 6]);
     H.recolor(p, tipsPoly, M.hair, M.tip, false);
-    var band = H.ribbon(sp.slice(tipStart - 1, tipStart + 2), 12, null);
-    H.recolor(p, band, M.hair, M.tip, true);
   }
 
   function drawLock(p, ch, extraTop, w0) {
