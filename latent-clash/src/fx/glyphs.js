@@ -134,9 +134,16 @@
       ctx.fillRect(dir > 0 ? sx : sx - 4, sy + 3, 3, 1);
     },
     step: function (p) {
-      var ang = p.e + p.age * p.c;
-      p.x = p.a2x + Math.cos(ang) * p.d;
-      p.a2x += p.vx * 0;   // anchored centre (kept for clarity)
+      // p.rot = spiral centre x (drifts with vx); orbit radius p.d, angular speed p.c, phase p.e
+      p.rot += p.vx;
+      p.x = p.rot + Math.cos(p.e + p.age * p.c) * p.d;
     }
   });
+  /** Spawn a verse line that spirals around centre x while rising. */
+  I.textLine = function (x, y, blocks, vy, life, rampCss, facing, layer) {
+    var p = I.add(I.K_TEXTLINE, x, y, layer);
+    p.rot = x; p.a = Math.floor(I.R() * 26); p.b = blocks; p.vy = vy; p.life = life; p.ramp = rampCss;
+    p.facing = facing < 0 ? -1 : 1; p.c = 0.18 * p.facing; p.d = 4; p.e = I.R() * 6.28; p.drag = 0.94;
+    return p;
+  };
 })();
