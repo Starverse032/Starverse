@@ -151,7 +151,7 @@
           var ch = s.ch(), pal = palFor(i);
           if (i === 1 && !twoSided) {
             // arcade: mystery challenger
-            var b0 = ui.portrait(LC.app.other(ch), 'bust', 0);
+            var b0 = ui.portrait(LC.app.other(sides[0].ch()), 'bust', 0);
             if (b0) c.drawImage(ui.tint(ui.flip(b0), '#0b0a14', 0.86), W - 112, 22);
             LC.font.draw(c, '???', W - 56, 78, { size: 8, scale: 2, color: '#3b3670', align: 'center' });
             return;

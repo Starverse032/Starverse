@@ -68,11 +68,13 @@
       var tc = TYPE_COL[m.type] || U.dim;
       ui.box(c, x + 6, ry + 3, 2, rowH - 6, tc);
       var nw = LC.font.draw(c, m.name, x + 12, ry + 2, { size: 12, color: U.text });
-      LC.font.draw(c, (TYPE_NAME[m.type] || '') + (m.nameEn ? '  ' + m.nameEn : ''), x + 16 + nw, ry + 5, { size: 8, color: tc });
+      var tw2 = LC.font.draw(c, TYPE_NAME[m.type] || '', x + 16 + nw, ry + 3, { size: 10, color: tc });
       // inputs right-aligned
       var right = x + w - 10;
       var simple = m.simple ? String(m.simple) : '';
       var tmp = 0;
+      var inW = (simple ? measureNotation(simple) + 18 : 0) + measureNotation(inputStr(m));
+      if (m.nameEn && x + 22 + nw + tw2 + LC.font.measure(m.nameEn, { size: 8 }).w < right - inW - 6) LC.font.draw(c, m.nameEn, x + 20 + nw + tw2, ry + 5, { size: 8, color: '#4f4a78' });
       if (simple) {
         tmp = measureNotation(simple);
         ui.notation(c, simple, right - tmp, ry + 2, {});
@@ -124,12 +126,12 @@
       var bx = 18, by = 52;
       ui.keycap(c, bx + 15, by, first('up'));
       ui.keycap(c, bx, by + 15, first('left')); ui.keycap(c, bx + 15, by + 15, first('down')); ui.keycap(c, bx + 30, by + 15, first('right'));
-      LC.font.draw(c, '移动 / 跳跃 / 蹲', bx, by + 32, { size: 10, color: U.dim });
+      LC.font.draw(c, '移动', bx + 14, by + 32, { size: 10, color: U.dim });
       // buttons
       var ax = 92, ay = 52;
       [['throw', '投', '#c9b6ff'], ['S', '特', U.meter], ['super', '超', U.meterFull]].forEach(function (b, i) { ui.keycap(c, ax + i * 30, ay, first(b[0]), b[2], 14); LC.font.draw(c, b[1], ax + i * 30 + 16, ay + 1, { size: 10, color: b[2] }); });
       [['L', '轻', U.green], ['M', '中', U.gold], ['H', '重', '#ff6b7f']].forEach(function (b, i) { ui.keycap(c, ax + i * 30, ay + 15, first(b[0]), b[2], 14); LC.font.draw(c, b[1], ax + i * 30 + 16, ay + 16, { size: 10, color: b[2] }); });
-      LC.font.draw(c, '投 = 轻+中 · 超 = 重+特', ax, ay + 32, { size: 10, color: U.dim });
+      LC.font.draw(c, '投=轻+中  超=重+特', ax - 4, ay + 32, { size: 10, color: U.dim });
       LC.font.draw(c, '回车 / Esc：暂停 · 确认 / 返回', 16, 102, { size: 10, color: U.dim });
       LC.font.draw(c, '单人时也可用 方向键 + Z X C V', 16, 116, { size: 10, color: U.dim });
       LC.font.draw(c, '按键可在「设置 → 按键设置」中更改', 16, 130, { size: 10, color: '#4f4a78' });
@@ -137,7 +139,7 @@
       ui.panel(c, 194, 26, 182, 62, { accent: '#58d4ff' });
       LC.font.draw(c, '键盘 · 2P（双人对战）', 202, 31, { size: 12, color: '#58d4ff' });
       LC.font.draw(c, '移动：方向键', 202, 49, { size: 10, color: U.text });
-      LC.font.draw(c, '轻 中 重 特：' + ['L', 'M', 'H', 'S'].map(function (a) { return first(a, 'p2'); }).join(' '), 202, 62, { size: 10, color: U.text });
+      LC.font.draw(c, '轻 中 重 特：' + ['L', 'M', 'H', 'S'].map(function (a) { return kn((K.p2[a] || []).slice(-1)[0]); }).join(' '), 202, 62, { size: 10, color: U.text });
       LC.font.draw(c, '或 小键盘 1 2 3 5', 202, 75, { size: 10, color: U.dim });
 
       ui.panel(c, 194, 92, 182, 54, { accent: '#c9b6ff' });

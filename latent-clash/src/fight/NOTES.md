@@ -2,7 +2,7 @@
 
 ## Progress / next steps (kept current in case of interruption)
 
-Done (on disk): core.js, input.js, moves.js, chars/claude.js, chars/deepseek.js, fighter.js, combat.js, match.js.
-In progress (step 1): render.js, hud.js, manifest.js, dev/fight-stubs.js, dev/fight-sandbox.html → first Playwright smoke run.
-Next: ai.js (levels 1–5, demo), movelist.js, training.js; tools/fight-sim.mjs (invariants + balance); HUD polish,
-super flash/cut-in, dialogue; tools/fight-shots.mjs.
+Done (on disk): core, input, moves, chars/claude, chars/deepseek, fighter, combat, match, render, hud, manifest;
+dev/fight-stubs.js, dev/fight-sandbox.html. Smoke-tested: random-input best-of-3 completes with 0 errors (stubs=all).
+In progress (step 2): ai.js (levels 1–5, demo), movelist.js, training.js.
+Next: tools/fight-sim.mjs (invariants + balance); HUD polish, super flash/cut-in check, dialogue; tools/fight-shots.mjs.

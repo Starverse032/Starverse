@@ -229,15 +229,16 @@
   ui.hints = function (c, items, o) {
     o = o || {};
     var y = o.y == null ? H - 14 : o.y;
+    var isBtn = function (k) { return /^[LMHS]$/.test(k); };
     var widths = items.map(function (it) { return 13 + LC.font.measure(it[1], { size: 10 }).w + 10; });
     var total = widths.reduce(function (a, b) { return a + b; }, 0);
     var x = o.align === 'left' ? (o.x || 6) : o.align === 'right' ? W - 6 - total : ((W - total) >> 1);
     items.forEach(function (it, i) {
-      if (it[0].length === 1) ui.btnGlyph(c, it[0], x, y);
+      if (isBtn(it[0])) ui.btnGlyph(c, it[0], x, y);
       else LC.font.draw(c, it[0], x, y + 1, { size: 10, color: U.gold, shadow: U.black });
-      var lx = x + (it[0].length === 1 ? 13 : LC.font.measure(it[0], { size: 10 }).w + 3);
+      var lx = x + (isBtn(it[0]) ? 13 : LC.font.measure(it[0], { size: 10 }).w + 3);
       LC.font.draw(c, it[1], lx, y + 1, { size: 10, color: o.color || U.dim, shadow: U.black });
-      x += widths[i] + (it[0].length === 1 ? 0 : LC.font.measure(it[0], { size: 10 }).w - 10);
+      x += widths[i] + (isBtn(it[0]) ? 0 : LC.font.measure(it[0], { size: 10 }).w - 10);
     });
   };
 

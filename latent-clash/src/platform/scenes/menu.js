@@ -80,7 +80,7 @@
         LC.font.draw(c, lines.slice(0, 2).join('\n'), px + 6, 171 + (lines.length === 1 ? 6 : 0), { size: 12, color: U.text, lineGap: 1 });
         if (!sub && it.id === 'arcade') {
           var best = LC.save.get('bestScore', 0) || 0;
-          LC.font.draw(c, 'BEST ' + String(best).padStart(7, '0'), px + 200, 188, { size: 8, color: U.gold, align: 'right' });
+          LC.font.draw(c, 'BEST ' + String(best).padStart(7, '0'), px + 166, 154, { size: 8, color: U.gold, align: 'right' });
         }
         if (sub) {
           var s = ui.ease.back(subT / 14);

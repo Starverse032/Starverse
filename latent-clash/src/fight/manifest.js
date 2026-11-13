@@ -1,0 +1,1 @@
+(window.LC_MANIFEST = window.LC_MANIFEST || {}).fight = ['core.js', 'input.js', 'moves.js', 'chars/claude.js', 'chars/deepseek.js', 'fighter.js', 'combat.js', 'match.js', 'render.js', 'hud.js'];

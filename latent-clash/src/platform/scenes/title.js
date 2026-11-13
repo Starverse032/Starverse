@@ -35,6 +35,20 @@
     });
   }
 
+  var illustTitleOk = null;
+  function illustTitleUsable() {
+    if (illustTitleOk !== null) return illustTitleOk;
+    illustTitleOk = false;
+    if (!(LC.illust && LC.illust.drawTitle)) return false;
+    try {
+      var cv = ui.canvas(W, H), c = cv.getContext('2d');
+      LC.illust.drawTitle(c, 60);
+      var d = c.getImageData(0, 0, W, H).data, first = d[0] + ',' + d[1] + ',' + d[2];
+      for (var i = 0; i < d.length; i += 4 * 97) if (d[i] + ',' + d[i + 1] + ',' + d[i + 2] !== first) { illustTitleOk = true; break; }
+    } catch (e) { console.error('[platform] illust.drawTitle', e); }
+    return illustTitleOk;
+  }
+
   LC.scenes.define('title', function (params) {
     var idle = 0, out = false;
     return {
@@ -61,7 +75,7 @@
       draw: function (c) {
         var t = this.t;
         var drew = false;
-        if (LC.illust && LC.illust.drawTitle) {
+        if (illustTitleUsable()) {
           try { LC.illust.drawTitle(c, t); drew = true; } catch (e) { console.error('[platform] illust.drawTitle', e); }
         }
         if (!drew) fallbackTitle(c, t);

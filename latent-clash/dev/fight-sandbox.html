@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>LATENT CLASH — FIGHT sandbox</title>
+<style>
+  html, body { margin: 0; background: #05040a; color: #9b96b8; font: 12px monospace; }
+  #wrap { display: flex; flex-direction: column; align-items: center; padding: 8px; }
+  canvas { image-rendering: pixelated; width: 1152px; height: 648px; background: #000; }
+  #help { margin-top: 6px; max-width: 1152px; line-height: 1.5; }
+  b { color: #f4efe6; }
+</style>
+<script>
+  // ?stubs=all forces every stub (half-written modules cannot block FIGHT); ?stubs=rig,fx forces some;
+  // default: real modules where present, stubs for the rest.
+  (function () {
+    var q = new URLSearchParams(location.search);
+    window.FIGHT_FORCE_STUBS = q.get('stubs') || '';
+    window.LC_OPTS = window.LC_OPTS || {};
+    var mods = window.FIGHT_FORCE_STUBS === 'all' ? 'fight' :
+      ['platform', 'audio', 'fx', 'stages', 'illust', 'rig', 'fight'].filter(function (m) {
+        return m === 'fight' || window.FIGHT_FORCE_STUBS.split(',').indexOf(m === 'platform' ? 'font' : m === 'stages' ? 'stages' : m) < 0;
+      }).join(',');
+    document.write('<script src="../src/shared/loader.js" data-root="../src/" data-modules="' + mods + '"><\/script>');
+  })();
+</script>
+<script src="fight-stubs.js"></script>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c" width="384" height="216"></canvas>
+  <div id="help">
+    <b>P1</b> WASD move · J K L = L M H · I = S · U = throw (L+M) · O = super (H+S) &nbsp;
+    <b>P2</b> arrows · 1 2 3 (or numpad / , . /) = L M H · 5 (or ;) = S &nbsp;
+    <b>F1</b> hitboxes · <b>F2</b> frame-step (then <b>F6</b> / <b>]</b> = 1 frame) · <b>F3</b> slow-mo · <b>F4</b> restart · <b>F7</b> training reset<br>
+    Query: mode=versus|training|demo|arcade · p1/p2=claude|deepseek · ctl1/ctl2=human|cpu · lv1/lv2/level=1..5 · stage · seed · pal1/pal2 ·
+    intro=0 · rounds · time · dummy=stand|crouch|jump|cpu · guard=none|all|afterFirst|random · stubs=all|rig,fx · manual=1
+    <div id="stat"></div>
+  </div>
+</div>
+<script>
+(function () {
+  'use strict';
+  var LC = window.LC, F = LC.fight;
+  var q = new URLSearchParams(location.search);
+  var canvas = document.getElementById('c'), ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  var stat = document.getElementById('stat');
+  var FS = window.FS = { ready: false, canvas: canvas, ctx: ctx, match: null, errors: [] };
+  window.addEventListener('error', function (e) { FS.errors.push(String(e.message)); });
+
+  function num(k, d) { var v = q.get(k); return v == null || v === '' ? d : +v; }
+  FS.config = function () {
+    var mode = q.get('mode') || 'versus';
+    var lv = num('level', 3);
+    return {
+      mode: mode, stage: q.get('stage') || 'training', seed: num('seed', 12345),
+      rounds: num('rounds', 2), time: num('time', 99), intro: q.get('intro') !== '0',
+      p1: { char: q.get('p1') || 'claude', palette: num('pal1', 0), control: q.get('ctl1') || (mode === 'demo' ? 'cpu' : 'human'), level: num('lv1', lv) },
+      p2: { char: q.get('p2') || 'deepseek', palette: num('pal2', (q.get('p1') || 'claude') === (q.get('p2') || 'deepseek') ? 1 : 0),
+            control: q.get('ctl2') || (mode === 'versus' ? 'cpu' : mode === 'demo' ? 'cpu' : 'human'), level: num('lv2', lv) },
+      training: { dummy: q.get('dummy') || 'stand', guard: q.get('guard') || 'none', hitboxes: q.get('hitboxes') === '1' }
+    };
+  };
+
+  var ORDER = [['font', 'platform'], ['audio'], ['fx'], ['stages'], ['illust'], ['rig']];
+  function boot() {
+    var chain = Promise.resolve();
+    ORDER.forEach(function (o) {
+      var n = o[0];
+      chain = chain.then(function () {
+        if (!LC[n] || !LC[n].init) return;
+        return Promise.resolve().then(function () { return LC[n].init(); }).catch(function (e) {
+          console.error('[fight-sandbox] ' + n + '.init failed, using stub', e);
+          delete LC[n]; window.FIGHT_FORCE_STUBS = (window.FIGHT_FORCE_STUBS ? window.FIGHT_FORCE_STUBS + ',' : '') + n;
+          window.fightStubs();
+        });
+      });
+    });
+    return chain.then(function () { return F.init(); });
+  }
+
+  // ---- keyboard
+  var held = {};
+  var MAP0 = { KeyA: 'left', KeyD: 'right', KeyW: 'up', KeyS: 'down', KeyJ: 'L', KeyK: 'M', KeyL: 'H', KeyI: 'S' };
+  var MAP1 = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down', Digit1: 'L', Digit2: 'M', Digit3: 'H', Digit5: 'S',
+    Numpad1: 'L', Numpad2: 'M', Numpad3: 'H', Numpad5: 'S', Comma: 'L', Period: 'M', Slash: 'H', Semicolon: 'S' };
+  var paused = false, stepOnce = 0, slow = false, slowAcc = 0;
+  window.addEventListener('keydown', function (e) {
+    if (/^(F1|F2|F3|F4|F6|F7|ArrowUp|ArrowDown|ArrowLeft|ArrowRight|Space)$/.test(e.code)) e.preventDefault();
+    if (e.repeat) return;
+    if (e.code === 'F1' && FS.match) { var m = FS.match; if (!m.training) m.training = null; FS.boxes = !FS.boxes; if (m.training) m.training.hitboxes = FS.boxes; }
+    if (e.code === 'F2') paused = !paused;
+    if ((e.code === 'F6' || e.code === 'BracketRight') && paused) stepOnce++;
+    if (e.code === 'F3') slow = !slow;
+    if (e.code === 'F4') FS.newMatch();
+    if (e.code === 'F7' && FS.match) FS.match.resetPositions();
+    held[e.code] = true;
+  });
+  window.addEventListener('keyup', function (e) { held[e.code] = false; });
+  function read(map, extra) {
+    var o = {};
+    for (var k in map) if (held[k]) o[map[k]] = true;
+    if (extra) {
+      if (held[extra.t]) { o.L = true; o.M = true; }
+      if (held[extra.s]) { o.H = true; o.S = true; }
+    }
+    return o;
+  }
+
+  FS.newMatch = function (cfg) {
+    if (FS.match) FS.match.destroy();
+    FS.match = F.createMatch(cfg || FS.config());
+    if (FS.boxes && FS.match.training) FS.match.training.hitboxes = true;
+    return FS.match;
+  };
+  FS.step = function (n, in0, in1) {
+    for (var i = 0; i < (n || 1); i++) FS.match.update(in0 || {}, in1 || {});
+  };
+  FS.render = function () { FS.match.draw(ctx); };
+
+  var last = 0, acc = 0;
+  function loop(t) {
+    requestAnimationFrame(loop);
+    if (!FS.match) return;
+    var dt = Math.min(100, t - (last || t)); last = t; acc += dt;
+    var ticks = 0;
+    while (acc >= 1000 / 60) { acc -= 1000 / 60; ticks++; }
+    if (paused) { ticks = stepOnce; stepOnce = 0; }
+    else if (slow) { slowAcc += ticks; ticks = Math.floor(slowAcc / 4); slowAcc %= 4; }
+    for (var i = 0; i < Math.min(ticks, 4); i++) {
+      FS.match.update(read(MAP0, { t: 'KeyU', s: 'KeyO' }), read(MAP1));
+      if (FS.match.finished) { FS.newMatch(); break; }
+    }
+    // F1 overlay works in every mode
+    FS.match.forceBoxes = !!FS.boxes;
+    FS.render();
+    if ((t | 0) % 10 === 0) {
+      var s = FS.match.snapshot();
+      stat.textContent = 'stubs: ' + (window.FIGHT_STUBS || []).join(',') + ' | state ' + s.state + ' r' + s.round + ' | ' +
+        s.fighters.map(function (f) { return f.char + ' ' + f.action + (f.move ? ':' + f.move : '') + ' hp' + f.hp + ' m' + Math.floor(f.meter); }).join(' | ') +
+        (paused ? ' | PAUSED (F6 step)' : '') + (slow ? ' | SLOW' : '');
+    }
+  }
+
+  boot().then(function () {
+    FS.newMatch();
+    FS.ready = true;
+    if (q.get('manual') !== '1') requestAnimationFrame(loop);
+    else FS.render();
+  }).catch(function (e) { console.error('[fight-sandbox] boot failed', e); FS.errors.push(String(e)); });
+})();
+</script>
+</body>
+</html>

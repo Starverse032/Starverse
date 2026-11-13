@@ -19,7 +19,8 @@ Status (step 1 = pipeline end-to-end):
 - [x] raster.js, skel.js, secondary.js, core.js (full §5.3 API), placeholders.js (all §3.3 names, contract segs)
 - [x] Claude v1 renders (head v2 art, hair, capelet, skirt, pen); idle only authored
 - [x] tools/rig-sheet.mjs + dev/rig-sheet.html (anim rows, --overview, --heads, --palettes, --versus, --perf)
-- [ ] DeepSeek v1 (chars/deepseek-art.js, chars/deepseek.js, anims/deepseek-base.js)
-- [ ] dev/rig-viewer.html (minimal)
+- [x] DeepSeek v1 (chars/deepseek-art.js, chars/deepseek.js, anims/deepseek-base.js)
+- [x] dev/rig-viewer.html (anim list, play/step/speed, zoom, anchors/bounds/onion/grid/ground, flash/silhouette, move mode, both-chars view)
+- STEP 1 DONE: every §3.3 name exists (non-authored ones are aliased placeholders, animInfo().placeholder = true)
 - [ ] polish passes in lead's order: idle+faces → walk/dash → guard/hits/launch/down/getup → crouch/jump/land
       → normals → specials → super → throws → intro/win/lose

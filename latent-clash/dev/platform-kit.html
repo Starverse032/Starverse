@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>PLATFORM dev — font & UI kit</title>
+<style>
+  body { margin: 0; background: #05040a; color: #9b96b8; font: 13px system-ui, sans-serif; }
+  canvas { display: block; margin: 12px auto; image-rendering: pixelated; width: 1152px; height: 648px; }
+  p { text-align: center; }
+</style>
+</head>
+<body>
+<p>PLATFORM standalone page: LC.font specimen (8 / 10 / 12 px, outline, shadow, wrap, reveal) and LC.ui widgets, ×3 nearest-neighbour.</p>
+<canvas id="c" width="384" height="216"></canvas>
+<script src="../src/shared/loader.js" data-root="../src/" data-modules="platform"></script>
+<script>
+(function () {
+  var c = document.getElementById('c').getContext('2d'), U = LC.UI, t = 0;
+  c.imageSmoothingEnabled = false;
+  LC.font.init();
+  var menu = new LC.ui.Menu([{ label: '街机模式', en: 'ARCADE' }, { label: '对战', en: 'VERSUS' }, { label: '设置', en: 'OPTIONS' }], { x: 250, y: 120, w: 120, itemH: 18 });
+  var tw = new LC.ui.Typewriter('温柔又认真的文学少女。习惯先思考再出手。', { speed: 0.3, font: { size: 12, color: U.text } });
+  function frame() {
+    t++;
+    LC.ui.backdrop(c, t, {});
+    LC.ui.header(c, '字体与界面', 'FONT & UI KIT', t);
+    LC.font.draw(c, '12px 潜空间激斗！「巨著·万言长卷」——', 8, 26, { size: 12, color: U.text });
+    LC.font.draw(c, '10px 两位 AI 娘，在潜空间里一决高下！ 12:34', 8, 42, { size: 10, color: U.dim });
+    LC.font.draw(c, '8px LATENT CLASH 0123456789 ←↑→↓↖↗↘↙', 8, 56, { size: 8, color: U.gold });
+    LC.font.draw(c, 'OUTLINE 描边', 8, 70, { size: 12, color: U.gold, outline: '#7e3830' });
+    LC.font.draw(c, 'SHADOW 阴影', 120, 70, { size: 12, color: U.text, shadow: U.black });
+    LC.font.draw(c, 'x2', 230, 66, { size: 8, scale: 2, color: U.green, outline: U.black });
+    var lines = LC.font.wrap(LC.LORE.chars.deepseek.bio, 220, { size: 10 });
+    LC.ui.panel(c, 6, 86, 232, 14 + lines.length * 12, { accent: U.meter });
+    LC.font.draw(c, lines.join('\n'), 12, 92, { size: 10, color: U.text });
+    LC.ui.panel(c, 6, 160, 232, 30, {});
+    tw.update(); if (tw.done() && t % 200 === 0) tw.n = 0;
+    tw.draw(c, 12, 169, {});
+    LC.ui.panel(c, 242, 112, 136, 64, {});
+    menu.update({}, null); menu.o.appear = t; menu.draw(c, t);
+    LC.ui.bar(c, 250, 86, 120, 5, (t % 200) / 2, 100, U.meter, {});
+    LC.ui.bar(c, 250, 96, 60, 4, 3, 5, U.gold, { seg: true });
+    LC.ui.hints(c, [['L', '确认'], ['M', '返回'], ['↑↓', '选择']], { y: 202 });
+    var p = (t % 120) / 60; LC.ui.transition(c, ['wipe', 'dissolve', 'iris', 'slash'][Math.floor(t / 120) % 4], p < 1 ? p * 0.0 : 0, U.black);
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>
+</body>
+</html>

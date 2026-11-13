@@ -1,0 +1,14 @@
+{
+  "name": "latent-clash",
+  "version": "1.0.0",
+  "private": true,
+  "description": "潜空间激斗 LATENT CLASH — pixel-art browser fighting game (Claude 娘 vs DeepSeek 娘)",
+  "scripts": {
+    "serve": "python3 -m http.server 8101 --directory .",
+    "build": "node tools/build.mjs",
+    "test": "node tools/build.mjs && node tools/platform-smoke.mjs",
+    "font": ".venv-platform/bin/python tools/platform-bake-font.py && node tools/platform-font-check.mjs",
+    "shots": "node tools/platform-shots.mjs"
+  },
+  "license": "UNLICENSED"
+}
