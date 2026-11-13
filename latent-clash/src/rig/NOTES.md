@@ -2,29 +2,66 @@
 
 ## Progress / next steps (kept current for restarts)
 
-Design (decided):
-- Puppets render into a palette-INDEXED buffer (raster.js): index = 2 + material*4 + tone; 0 empty, 1 outline.
-  Groups (arm, leg, torso, head, hair…) are rasterised to scratch, then composited with a 1-px
-  4-neighbour outline (exterior = PAL.outline, interior = front part's deep tone / outline if darker behind).
-- Limbs/torso/clothes = procedural primitives (tapered capsules, polygons, ellipses) with per-primitive
-  cel shading (light from upper front). Heads = hand-authored ASCII stamps + expression overlays,
-  tilted via RotSprite (cached).
-- skel.js: pose = plain object (vectors root/hip/head/hF/hB/fF/fB/muz/grab/wpn; scalars lean, bend,
-  tilt, faF, faB, pen, sq, shr, haF, haB, pg, skirt, tail, arch; discrete eyes/mouth/handF/…),
-  per-segment keys, eased, time quantised to `step` (twos). 2-bone IK for arms/legs.
-- Secondary motion (secondary.js): verlet chains in local space, inertia from env velocity, hysteresis snapping.
-- Foot lock in tick() for walk anims (visual only; anchors stay analytic).
+- STEP 1 DONE: full §5.3 API; both characters render; every §3.3 anim exists with contract segment ids/frames.
+- ALL anims for BOTH characters are now authored (rough v1, no placeholders left; `fillPlaceholders()` still
+  guarantees names + logs an error if authored segments differ from the contract table in `anims/placeholders.js`).
+- Polish pass 1 (identity: idle, faces, hair, palettes) DONE for both; pass 2 (walk/dash) walks DONE.
+- Status per anim: see "Animation status" below. Next: polish passes in lead's order
+  (idle+faces → walk/dash → guard/hits/launch/down/getup → crouch/jump/land → normals → specials → super → throws → intro/win/lose).
+- Perf (Chromium, laptop): draw worst case (re-render every frame) 0.42 ms Claude / 0.25 ms DeepSeek; cached frames
+  are a single drawImage. init ≈ 1 ms (head expressions rotate lazily). setPose+anchor ≈ 4 µs, no canvas.
 
-Status (step 1 = pipeline end-to-end):
-- [x] raster.js, skel.js, secondary.js, core.js (full §5.3 API), placeholders.js (all §3.3 names, contract segs)
-- [x] Claude v1 renders (head v2 art, hair, capelet, skirt, pen); idle only authored
-- [x] tools/rig-sheet.mjs + dev/rig-sheet.html (anim rows, --overview, --heads, --palettes, --versus, --perf)
-- [x] DeepSeek v1 (chars/deepseek-art.js, chars/deepseek.js, anims/deepseek-base.js)
-- [x] dev/rig-viewer.html (anim list, play/step/speed, zoom, anchors/bounds/onion/grid/ground, flash/silhouette, move mode, both-chars view)
-- STEP 1 DONE: every §3.3 name exists (non-authored ones are aliased placeholders, animInfo().placeholder = true)
-- [x] ALL common anims authored (rough v1) for both chars: idle walkF walkB crouchIn crouch crouchOut jumpSquat
-      jumpRise jumpFall land dashF dashB guardStand guardCrouch hitHigh hitLow hitCrouch launch down getup
-      throw throwHit thrown intro win lose (anims/claude-base.js, anims/deepseek-base.js, gen.js = walk generators)
-- [ ] attacks rough v1 (anims/claude-attacks.js, anims/deepseek-attacks.js) — in progress
-- [ ] polish passes in lead's order: idle+faces → walk/dash → guard/hits/launch/down/getup → crouch/jump/land
-      → normals → specials → super → throws → intro/win/lose
+## How it works (design summary)
+
+- `raster.js`: palette-INDEXED buffer (index = 2 + material*4 + tone; 0 empty, 1 outline). Primitives: tapered capsules,
+  polygons, ellipses, indexed stamps, Bresenham lines — all sampled at pixel centres, no AA. Each body part is drawn as a
+  *group* into scratch, then composited with a 1-px 4-neighbour outline (exterior = `PAL.outline`; interior = the front
+  part's deep tone, or the outline colour when what is behind is darker). Cel shading is per primitive (light from the
+  upper front). Flash / silhouette / palette = LUT swaps; mirroring is done in the index→RGBA copy (exact).
+- `skel.js`: poses, eased keys per segment, time quantised to `step` frames (held drawings, default twos),
+  2-bone IK for arms/legs, integer skeleton. Anchors/bounds come from this only → deterministic, canvas-free.
+- `secondary.js`: verlet chains (hair, side locks, ahoge, capelet, skirt, tie / pigtails, whale tail, hoodie strings,
+  hem) with world inertia from `tick(env)` velocity, drag, gravity, floor, hysteresis snapping (no shimmer at rest).
+- `core.js`: API + Puppet. Re-renders only when the integer state (joints, chains, expression, blink, smear) changes.
+  Foot lock: during `walk` anims, planted feet (`plant: 'F'|'B'`) are pinned to an integer world x (visual only, ±2 px).
+- `chars/<id>-art.js`: hand-made head stamps (3/4 view) + eye/mouth overlays; tilt = RotSprite of the base with upright
+  features placed at rotated positions (exact rotation at multiples of 90°).
+- `chars/<id>.js`: proportions, rest pose, palette→material ramps, chains, part renderers, anchor helpers.
+- `anims/gen.js` (walk/shuffle generators), `anims/<id>-base.js` (common), `anims/<id>-attacks.js` (attacks).
+
+## Pose format (authoring)
+
+All coordinates are local to the origin (ground point between the feet), facing right, +x forward, +y DOWN.
+Vectors: `root` (whole-body offset), `hip` (pelvis), `head` (offset from neck), `hF`/`hB` (front/back hand targets),
+`fF`/`fB` (front/back sole points), optional anchors `muz`, `grab`, `wpn`. Scalars (deg): `lean` (torso, + forward),
+`bend` (chest relative to lean), `tilt` (head, + nods forward, -90 = lying face up), `faF`/`faB` (foot pitch, + toes down),
+`pen` (Claude pen angle, 0 = forward, +90 = down), `pg` (grip position along the pen, 0..1), `sq` (spine squash px),
+`shr` (shoulder raise px). Discrete: `eyes` (open half closed happy focus shut dizzy sad wide), `mouth` (neutral smile
+open shout teeth hurt o frown grin), `handF`/`handB` (fist grip open flat relax point), `elF/elB/knF/knB` (bend side ±1),
+`z` ({armF, armB, legF, legB, pen} layer overrides; torso = 0, head = 2, front arm = 5), `glow` (nib/glove glow),
+`blush`, `smear` ({ part: 'pen'|'hF'|'hB'|'fF'|'fB', from: 'seg+N', n }), `weapon` (DeepSeek: limb for the anchor),
+`penIn` ('F'|'B'|'none'), `plant` (walk foot lock).
+Helpers: `P(base, a, b…)` copy + overrides, `bob(base, dx, dy, ch)` move everything but the feet, `shift()`.
+
+Anim definition: `I.defAnim(char, name, { segs: [[id, frames, loop?]...], step: 2, walk: px/f,
+keys: [[time, pose, ease | {ease, step}], ...] })` — time = absolute frame or `'segId+N'`. Eases: linear in out inout
+in3 out3 back snap(hold). Missing poses before a segment's first key are interpolated from the previous segment.
+
+## Preview
+
+- `dev/rig-viewer.html` (file:// OK): anim list, play/step/speed, zoom, anchors, bounds, timeline, onion skin, grid,
+  ground, flash/silhouette, move mode (A/D, W, S, Shift+A/D), both chars at game scale.
+- `node tools/rig-sheet.mjs <char> <anim> [n|0] [--pal 1] [--scale 6] [--anchors] [--mirror] [--walk]`,
+  `--overview`, `--heads`, `--palettes`, `--versus`, `--perf`, or no args for everything → `.shots/rig/`.
+
+## Contract deviations / additions
+
+- `walkF`/`walkB` loops are 32/36 frames (Claude) and 32/32 (DeepSeek) instead of ~40/~44: with the specified walk
+  speeds a 40-frame two-step cycle needs 26-px strides, longer than the legs. Feet are planted correctly at 1.3/1.0
+  (Claude) and 1.7/1.3 (DeepSeek) px/f; `animInfo().walk` gives the authored speed.
+- Additions: `animInfo().placeholder`, `animInfo().walk`, `LC.rig.stats`, `puppet.info()`.
+- `sx` should be `Math.round(worldX - camX)` for the foot lock to be pixel-exact.
+
+## Animation status
+
+All names exist for both characters. Rough v1 = authored, readable, not yet polished.

@@ -28,6 +28,7 @@ function pageRunner() {
   window.SIM = function (cfg, opts) {
     const F = LC.fight, T = F.T;
     F.headless = !opts.draw;
+    F.AI_OFF = opts.off || null;
     const m = F.createMatch(cfg);
     const viol = [];
     const usage = [{}, {}];
@@ -108,7 +109,7 @@ async function main() {
   await Promise.all(pages.map(async p => {
     while (next < jobs.length) {
       const i = next++;
-      results[i] = await p.evaluate(([c, o]) => window.SIM(c, o), [jobs[i].cfg, { draw: !!args.draw }]);
+      results[i] = await p.evaluate(([c, o]) => window.SIM(c, o), [jobs[i].cfg, { draw: !!args.draw, off: args.off ? Object.fromEntries(String(args.off).split(',').map(k => [k, 1])) : null }]);
     }
   }));
   const secs = (Date.now() - t0) / 1000;

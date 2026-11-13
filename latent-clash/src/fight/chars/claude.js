@@ -43,8 +43,8 @@
 
     moves: {
       '5L': N('L', 'stand', 5, 3, 8,   { box: [12, -56, 18, 10], dmg: 35, adv: [3, 1] }),
-      '5M': N('M', 'stand', 8, 4, 14,  { box: [20, -54, 26, 12], dmg: 65, adv: [2, -2] }),
-      '5H': N('H', 'stand', 12, 5, 22, { box: [16, -78, 38, 44], dmg: 100, adv: [1, -5], air: 'knock' }),
+      '5M': N('M', 'stand', 8, 4, 14,  { box: [20, -50, 26, 12], dmg: 65, adv: [2, -2] }),
+      '5H': N('H', 'stand', 12, 5, 22, { box: [18, -76, 36, 34], dmg: 100, adv: [1, -5], air: 'knock' }),
       '2L': N('L', 'crouch', 5, 3, 9,  { box: [10, -16, 22, 10], dmg: 30, guard: 'low', adv: [2, 0] }),
       '2M': N('M', 'crouch', 8, 4, 15, { box: [16, -14, 32, 10], dmg: 60, guard: 'low', adv: [1, -3] }),
       '2H': N('H', 'crouch', 11, 5, 24, { box: [14, -12, 42, 12], dmg: 90, guard: 'low', kd: 'down', adv: [0, -10] }),
@@ -109,9 +109,9 @@
           ['hit3', 4, { vx: { L: 1.4, M: 1.8, H: 2.2 } }], ['recovery', 20]
         ],
         hits: [
-          { seg: 'hit1', box: [6, -62, 36, 36], dmg: { L: 45, M: 50, H: 55 }, lv: 'S', stun: [20, 14], push: [3, 4], fx: 'claude.haikuSlash', fxIndex: 0, chip: 0.2 },
-          { seg: 'hit2', box: [6, -58, 38, 38], dmg: { L: 60, M: 70, H: 77 }, lv: 'S', stun: [20, 14], push: [3, 4], fx: 'claude.haikuSlash', fxIndex: 1, chip: 0.2 },
-          { seg: 'hit3', box: [6, -60, 40, 42], dmg: { L: 45, M: 50, H: 55 }, lv: 'S', kd: 'launch', lvx: 2.6, lvy: -4.6,
+          { seg: 'hit1', box: [6, -62, 36, 36], dmg: { L: 40, M: 50, H: 50 }, lv: 'S', stun: [20, 14], push: [3, 4], fx: 'claude.haikuSlash', fxIndex: 0, chip: 0.2 },
+          { seg: 'hit2', box: [6, -58, 38, 38], dmg: { L: 56, M: 70, H: 70 }, lv: 'S', stun: [20, 14], push: [3, 4], fx: 'claude.haikuSlash', fxIndex: 1, chip: 0.2 },
+          { seg: 'hit3', box: [6, -60, 40, 42], dmg: { L: 40, M: 50, H: 50 }, lv: 'S', kd: 'launch', lvx: 2.6, lvy: -4.6,
             adv: [0, { L: -4, M: -6, H: -9 }], push: [6, 10], fx: 'claude.haikuSlash', fxIndex: 2, chip: 0.2 }
         ],
         sfx: 'claude.haiku'

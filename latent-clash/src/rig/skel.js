@@ -267,10 +267,12 @@
 
   // ---------------------------------------------------------- pose helpers for authors
   // P(base, changes): shallow copy with overrides (vectors copied).
-  I.P = function (base, ch) {
+  I.P = function (base) {
     var o = {}, k;
-    for (k in base) o[k] = Array.isArray(base[k]) ? base[k].slice() : base[k];
-    if (ch) for (k in ch) o[k] = Array.isArray(ch[k]) ? ch[k].slice() : ch[k];
+    for (var a = 0; a < arguments.length; a++) {
+      var ch = arguments[a];
+      if (ch) for (k in ch) o[k] = Array.isArray(ch[k]) ? ch[k].slice() : ch[k];
+    }
     return o;
   };
   // shift the whole body except the feet (bob / crouch)

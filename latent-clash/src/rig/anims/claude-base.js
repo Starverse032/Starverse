@@ -19,9 +19,9 @@
     segs: [['loop', 64, true]], step: 4,
     keys: [
       [0, S],
-      [16, bob(S, 0, 1, { pen: 33, hF: [11, -26], hB: [-7, -30] })],
+      [16, bob(S, 0, 1, { pen: 33, hF: [11, -26], hB: [-4, -31] })],
       [32, bob(S, 0, 1, { pen: 34, hF: [11, -26], sq: 0 })],
-      [48, P(S, { pen: 31, sq: -1, hB: [-7, -32] })]
+      [48, P(S, { pen: 31, sq: -1, hB: [-4, -33] })]
     ]
   });
 
@@ -120,13 +120,13 @@
     segs: [['loop', 24, true]], step: 4,
     keys: [[0, LA], [8, P(LA, { hB: [-18, -40], fF: [8, -6], lean: -46, pen: 240 })], [16, P(LA, { hF: [-2, -54], fB: [1, -4], lean: -40 })]]
   });
-  var DN = POSE.down = P(S, { hip: [-2, -5], lean: -90, bend: 0, tilt: -90, head: [0, 0], fF: [22, -1], fB: [19, 0], faF: -80, faB: -85, knF: -1, knB: -1,
-    hF: [-10, -14], pen: 200, hB: [-26, -2], handB: 'open', eyes: 'dizzy', mouth: 'hurt' });
+  var DN = POSE.down = P(S, { hip: [-2, -5], lean: -90, bend: 0, tilt: -90, head: [0, 0], fF: [27, -2], fB: [25, -1], faF: -80, faB: -85, knF: -1, knB: -1,
+    hF: [-6, -4], pen: 185, hB: [-26, -2], handB: 'open', eyes: 'dizzy', mouth: 'hurt' });
   def('down', {
     segs: [['impact', 10], ['lie', 30, true]], step: 2,
     keys: [
       ['impact', P(DN, { root: [0, -3], eyes: 'shut' }), 'snap'],
-      ['impact+2', P(DN, { root: [0, -6], hF: [-8, -20], fF: [21, -8], eyes: 'shut' }), 'out'],
+      ['impact+2', P(DN, { root: [0, -6], hF: [-8, -12], fF: [24, -8], eyes: 'shut' }), 'out'],
       ['impact+5', P(DN, { eyes: 'shut' }), 'in'],
       ['impact+7', P(DN, { root: [0, -1], eyes: 'dizzy' })],
       ['lie', DN], ['lie+15', P(DN, { hip: [-2, -6] })]

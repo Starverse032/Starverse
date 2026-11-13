@@ -171,6 +171,8 @@
         var pd = +th.slice(5);
         if (C === 'claude' && pd > 40 && this.chance(P.block * 0.25) && me.proj === 0) { this.push(this.special('spark', this.pick(['M', 'H'])), 'clash'); return this.emit(); }
         if (C === 'claude' && pd < 70 && pd > 24 && this.chance(P.block * 0.2)) { this.push(this.special('guardrail', 'M'), 'absorb'); return this.emit(); }
+        if (C === 'deepseek' && pd > 30 && pd < 120 && dx < 260 && this.chance(P.block * 0.3)) { this.push(this.special('dive', dx < 200 ? 'H' : 'M'), 'diveProj'); return this.emit(); }
+        if (C === 'deepseek' && pd > 50 && me.proj === 0 && this.chance(P.block * 0.15)) { this.push(this.special('wave', 'H'), 'clash'); return this.emit(); }
         if (pd > 50 && pd < 110 && dx > 110 && this.chance(P.block * 0.35)) { this.push([{ d: 9, n: 3 }], 'jumpProj'); this.jumpAtk = true; return this.emit(); }
         if (this.chance(P.block + 0.1)) { this.guardT = 12; this.guardLow = true; return this.holdGuard(me, o, null); }
       }
@@ -202,7 +204,7 @@
 
   // default between decisions: drift toward a preferred range, guard if the opponent looks active
   AI.prototype.hold = function (me, o, dx) {
-    var want = me.ch === 'claude' ? 92 : 58;
+    var want = me.ch === 'claude' ? 92 : 60;
     if (this.m.timer < 1800 && this.behind()) want -= 30;
     var out = {};
     var tow = o.x > me.x ? 'right' : 'left', away = o.x > me.x ? 'left' : 'right';
@@ -244,14 +246,14 @@
     var C = me.ch, P = this.P, m = this.m, opts = [], self = this;
     var urgency = (m.timerMax > 0 && m.timer < 1500 ? 0.5 : 0) + (this.behind() ? 0.3 : 0) + Math.min(0.6, this.idleT / 400);
     var ag = P.aggr + urgency;
-    function add(name, w, steps) { if (w > 0 && steps && steps.length) opts.push({ name: name, w: self.score(name, w), steps: steps }); }
+    function add(name, w, steps) { if (F.AI_OFF && F.AI_OFF[me.ch + '.' + name]) return; if (w > 0 && steps && steps.length) opts.push({ name: name, w: self.score(name, w), steps: steps }); }
     var r = function (id) { return self.reachOf(me, id) + 12; };
     var full = me.meter >= 100;
     // universal
     add('walkF', 0.6 + ag * 0.6, [{ d: 6, n: 10 + this.rng.int(20) }]);
     add('walkB', dx < 120 ? 0.35 : 0.1, [{ d: 4, n: 8 + this.rng.int(14) }]);
     add('wait', 0.25 * (1 - ag), [{ d: dx < 80 ? 1 : 4, n: 8 + this.rng.int(12) }]);
-    if (dx > 70) add('dashF', 0.25 + ag * 0.4 * (C === 'deepseek' ? 1.6 : 0.8), [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 1 }]);
+    if (dx > 70) add('dashF', 0.25 + ag * 0.4 * (C === 'deepseek' ? 0.9 : 0.8), [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 1 }]);
     if (dx < 70 && me.x > T.WALL + 50 && me.x < LC.STAGE_W - T.WALL - 50) add('dashB', 0.15, [{ d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }]);
     var jr = C === 'claude' ? [70, 130] : [70, 150];
     if (dx > jr[0] && dx < jr[1]) add('jumpIn', P.jump * 4 * (0.6 + ag), [{ d: 9, n: 3 }]);
@@ -271,10 +273,10 @@
       if (dx < 80 && dx > 30) add('haiku', 0.2, this.special('haiku', this.pick(['L', 'M'])));
       if (dx < 70 && this.level >= 3) add('guardrail', 0.12 + (o.action === 'attack' ? 0.1 : 0), this.special('guardrail', this.pick(['L', 'M'])));
     } else {
-      if (me.proj === 0 && dx > 110) add('wave', 0.5 + (dx > 200 ? 0.3 : 0), this.special('wave', dx > 200 ? 'H' : 'M'));
-      if (dx > 50 && dx < 110) add('chain', 0.35 + ag * 0.2, this.special('chain', dx > 90 ? 'H' : 'M'));
-      if (dx > 90 && dx < 260 && this.level >= 2) add('diveM', 0.2 + ag * 0.15, this.special('dive', 'M'));
-      if (dx > 60 && dx < 200 && this.level >= 3) add('diveH', 0.15 + ag * 0.1, this.special('dive', 'H'));
+      if (me.proj === 0 && dx > 110) add('wave', 0.7 + (dx > 200 ? 0.4 : 0), this.special('wave', dx > 200 ? 'H' : 'M'));
+      if (dx > 50 && dx < 110) add('chain', 0.5 + ag * 0.25, this.special('chain', dx > 90 ? 'H' : 'M'));
+      if (dx > 90 && dx < 260 && this.level >= 2) add('diveM', 0.07 + ag * 0.05, this.special('dive', 'M'));
+      if (dx > 60 && dx < 200 && this.level >= 3) add('diveH', 0.07 + ag * 0.05, this.special('dive', 'H'));
       if (dx > 90 && dx < 170) add('jumpKick', P.jump * 3, [{ d: 9, n: 3 }]);
     }
     if (!opts.length) return null;
@@ -340,7 +342,7 @@
       if (hit && full && P.depth >= 2 && this.chance(P.sup * 0.4)) { this.q.length = 0; this.push(this.special('super', 'H'), 'superCombo'); return {}; }
       if (mv.follow) {   // rekka: continue on hit; mix up on block
         this.lastInst = -1;
-        if (hit || (blk && this.chance(this.level >= 4 ? 0.45 : 0.75))) { this.q.length = 0; this.push([{ d: 5, n: 2 + this.rng.int(3) }, { d: 5, b: 'M', n: 2 }, { d: 5, n: 1 }]); }
+        if (hit || (blk && this.chance(this.level >= 4 ? 0.25 : this.level >= 3 ? 0.45 : 0.75))) { this.q.length = 0; this.push([{ d: 5, n: 2 + this.rng.int(3) }, { d: 5, b: 'M', n: 2 }, { d: 5, n: 1 }]); }
       }
     }
     return {};

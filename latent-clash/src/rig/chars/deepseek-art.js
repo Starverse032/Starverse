@@ -113,7 +113,7 @@
 
   var MOUTHS = {
     neutral: ['....', '.QQ.', '....'],
-    smile:   ['....', 'o..o', '.oW.'],
+    smile:   ['....', 'Q..Q', '.QW.'],
     open:    ['.oo.', 'orro', '.oo.'],
     shout:   ['oooo', 'oWrr', '.oo.'],
     teeth:   ['....', 'oWWo', '.oo.'],

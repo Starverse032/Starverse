@@ -168,17 +168,12 @@
     // ---- back hair: falls behind her shoulders, lower locks stream left in the wind (cream tips)
     var back = P.mask();
     [
-      [[43, 13, 28, 18, 19, 32, 15, 50, 13 + sw * 0.5, 68, 10 + sw, 88, 8 + sw * 1.5, 108, 7 + sw * 2, 136], 24, 16, 26, 0, [0.08, 0.4]],
-      [[38, 30, 28, 50, 24, 70, 21 + sw, 92, 18 + sw * 1.5, 114, 17 + sw * 2, 136], 22, 18, 23, 0, [0.3, 0.55]],
       [[36, 52, 33, 74, 30, 96, 28 + sw, 118, 27 + sw, 136], 20, 18, 21],
+      [[38, 30, 28, 50, 24, 70, 21 + sw, 92, 18 + sw * 1.5, 114, 17 + sw * 2, 136], 22, 18, 23, 0, [0.3, 0.55]],
+      [[43, 13, 28, 18, 19, 32, 15, 50, 13 + sw * 0.5, 68, 10 + sw, 88, 6 + sw * 1.5, 104, 1 + sw * 2, 116, -3 + sw * 3, 122], 24, 0, 26, 0.2, [0.08, 0.4]],
       [[70, 26, 82, 42, 87, 62, 87 + sw * 0.5, 84, 90 + sw, 104, 93 + sw, 124], 20, 4, 20, 0, [0.1, 0.4]]
     ].forEach(function (c) { back = back.or(hairClump(P, c, S.h2)); });
-    P.line([31, 30, 21, 48, 18, 70, 15 + sw, 94, 13 + sw * 1.5, 120], S.h3, true, true);
     P.line([31, 58, 27, 80, 24 + sw, 104, 23 + sw * 2, 130], S.h3, true, true);
-    // wind-lifted locks streaming left over the mass, cream tips
-    hairClump(P, [[20, 62, 13, 74, 8 + sw * 2, 80, 2 + sw * 3, 84], 11, 0, 9, 0.38], S.h2);
-    hairClump(P, [[22, 92, 14, 104, 8 + sw * 2, 110, 1 + sw * 3, 116], 12, 0, 10, 0.4], S.h2);
-    hairClump(P, [[20, 112, 12, 122, 6 + sw * 2, 128, 0 + sw * 3, 133], 11, 0, 10, 0.4], S.h2);
 
     // ---- body: neck, capelet, blouse, ribbon
     var neck = P.poly([49, 60, 61, 60, 61, 86, 49, 86]);
@@ -224,7 +219,8 @@
     // ---- face features
     P.map(41, 41, lose ? EYES.nearTired : win ? EYES.nearHappy : EYES.near, EL);
     P.map(62, 41, lose ? EYES.farTired : win ? EYES.farHappy : EYES.far, EL);
-    if (lose) { P.line([42, 36, 46, 35, 50, 36], S.hl); P.line([63, 36, 66, 35, 68, 36], S.hl); }
+    if (expr === 'cut') { P.line([42, 35, 46, 36, 51, 38], S.hl); P.line([62, 38, 66, 36, 69, 36], S.hl); }
+    else if (lose) { P.line([42, 36, 46, 35, 50, 36], S.hl); P.line([63, 36, 66, 35, 68, 36], S.hl); }
     else { P.line([43, 37, 46, 36, 51, 36], S.hl); P.line([63, 36, 67, 36, 69, 37], S.hl); }
     P.px(68, 56, S.s2); P.px(68, 57, S.sl);
     P.map(59, 62, win ? MOUTHS.open : lose ? MOUTHS.wobble : MOUTHS.smile, EL);

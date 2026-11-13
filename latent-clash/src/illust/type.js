@@ -221,7 +221,7 @@
     return c;
   }
   function vs() {
-    var v = T.word('V', 8, 'p1', { slant: 0.3, shadow: [3, 3] }), s = T.word('S', 8, 'p2', { slant: 0.3, shadow: [3, 3] });
+    var v = T.word('V', 8, 'p1', { slant: 0.3, shadow: [2, 2] }), s = T.word('S', 8, 'p2', { slant: 0.3, shadow: [2, 2] });
     return T.join([v, s], -6);
   }
 })();

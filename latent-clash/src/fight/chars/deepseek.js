@@ -30,7 +30,7 @@
       crouch: [[-14, -42, 28, 42]],
       air: [[-11, -60, 22, 48]]
     },
-    throwRange: 42,
+    throwRange: 44,
     projColor: 'accent',
     anchorFb: {
       head: [2, -58], chest: [2, -42], hip: [0, -28], center: [0, -34], top: [0, -76],
@@ -40,15 +40,15 @@
     grabPath: { hold: [[22, -40], [20, -42]], toss: [[18, -50], [30, -66], [44, -30]] },
 
     moves: {
-      '5L': N('L', 'stand', 4, 3, 7,   { box: [8, -52, 16, 10], dmg: 30, adv: [3, 1] }),
-      '5M': N('M', 'stand', 7, 4, 12,  { box: [14, -46, 24, 12], dmg: 60, adv: [2, -1] }),
-      '5H': N('H', 'stand', 10, 5, 19, { box: [10, -74, 34, 44], dmg: 95, adv: [1, -4], air: 'knock' }),
+      '5L': N('L', 'stand', 4, 3, 7,   { box: [8, -52, 16, 10], dmg: 32, adv: [3, 1] }),
+      '5M': N('M', 'stand', 7, 4, 12,  { box: [14, -46, 24, 12], dmg: 64, adv: [2, -1] }),
+      '5H': N('H', 'stand', 10, 5, 19, { box: [10, -74, 34, 44], dmg: 100, adv: [1, -4], air: 'knock' }),
       '2L': N('L', 'crouch', 4, 3, 8,  { box: [8, -14, 18, 10], dmg: 28, guard: 'low', adv: [2, 0] }),
-      '2M': N('M', 'crouch', 7, 4, 13, { box: [12, -16, 28, 10], dmg: 55, guard: 'low', adv: [1, -2] }),
-      '2H': N('H', 'crouch', 10, 5, 22, { box: [10, -12, 36, 12], dmg: 85, guard: 'low', kd: 'down', adv: [0, -9] }),
+      '2M': N('M', 'crouch', 7, 4, 13, { box: [12, -16, 28, 10], dmg: 58, guard: 'low', adv: [1, -2] }),
+      '2H': N('H', 'crouch', 10, 5, 22, { box: [10, -12, 36, 12], dmg: 90, guard: 'low', kd: 'down', adv: [0, -9] }),
       'jL': N('L', 'air', 4, 8, 12,    { box: [2, -40, 20, 16], dmg: 32, guard: 'high', stun: [12, 9] }),
       'jM': N('M', 'air', 6, 6, 12,    { box: [4, -32, 24, 18], dmg: 58, guard: 'high', stun: [15, 11] }),
-      'jH': N('H', 'air', 9, 6, 12,    { box: [0, -28, 30, 26], dmg: 88, guard: 'high', stun: [18, 13] }),
+      'jH': N('H', 'air', 9, 6, 12,    { box: [0, -28, 30, 26], dmg: 92, guard: 'high', stun: [18, 13] }),
 
       'throw': {
         kind: 'throw', anim: 'throw',
@@ -88,9 +88,9 @@
       },
       chain: {
         kind: 'special', motion: '214', simple: 4, lore: 'chain', anim: 'chain1', step: 0,
-        segs: [['startup', { L: 10, M: 9, H: 8 }, { vx: { L: 3.0, M: 3.9, H: 4.8 } }], ['active', 4, { vx: 1.2 }], ['recovery', 18]],
+        segs: [['startup', { L: 9, M: 8, H: 7 }, { vx: { L: 3.2, M: 4.4, H: 5.4 } }], ['active', 4, { vx: 1.2 }], ['recovery', 18]],
         follow: { to: 'chain2', from: ['active', 0], until: ['recovery', 14] },
-        hits: [{ seg: 'active', box: [8, -54, 24, 18], anchor: 'weapon', dmg: { L: 55, M: 60, H: 65 }, lv: 'S',
+        hits: [{ seg: 'active', box: [8, -54, 26, 18], anchor: 'weapon', dmg: { L: 65, M: 70, H: 75 }, lv: 'S',
           stun: [22, 15], push: [6, 8], fx: 'deepseek.chainHit', chip: 0.2 }],
         sfx: 'deepseek.chain'
       },
@@ -105,7 +105,7 @@
       chain3: {
         kind: 'special', internal: true, lore: 'chain', anim: 'chain3', step: 2,
         segs: [['startup', 9, { vx: 1.2 }], ['active', 5], ['recovery', 26]],
-        hits: [{ seg: 'active', box: [4, -82, 28, 46], anchor: 'weapon', dmg: { L: 85, M: 90, H: 95 }, lv: 'S',
+        hits: [{ seg: 'active', box: [4, -82, 28, 46], anchor: 'weapon', dmg: { L: 95, M: 100, H: 105 }, lv: 'S',
           kd: 'launch', lvx: 1.4, lvy: -7.6, adv: [0, -12], push: [4, 12], fx: 'deepseek.chainHit', chip: 0.2 }],
         sfx: 'deepseek.chain'
       },
@@ -143,7 +143,7 @@
         flashAt: 5,
         whale: { seg: 'active', x: 52 },
         hits: [{
-          seg: 'active', fr: [4, 40], every: 6, box: [30, -116, 150, 116], dmg: 40, lv: 'X', stun: [16, 12], chip: 0.25,
+          seg: 'active', fr: [4, 40], every: 6, box: [24, -116, 176, 116], dmg: 40, lv: 'X', stun: [16, 12], chip: 0.25,
           push: [0, 2], noCatch: true, juggleAny: true, lvx: 0, lvy: -3.0, air: 'knock', pull: 100, fx: 'deepseek.whaleSplash',
           final: { from: 40, dmg: 90, kd: 'launch', lvx: 2.4, lvy: -8.6, lv: 'H', fx: 'hit.heavy' }
         }],

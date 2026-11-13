@@ -182,7 +182,8 @@
     // ---- face features
     P.map(41, 43, lose ? EYES.nearSpin : win ? EYES.nearWink : EYES.near, EL);
     P.map(62, 43, lose ? EYES.farSpin : EYES.far, EL);
-    if (lose) { P.line([42, 37, 46, 38, 50, 39], S.hl); P.line([63, 39, 66, 38, 69, 37], S.hl); }
+    if (expr === 'cut') { P.line([42, 37, 46, 38, 51, 40], S.hl); P.line([62, 40, 66, 38, 69, 38], S.hl); }
+    else if (lose) { P.line([42, 37, 46, 38, 50, 39], S.hl); P.line([63, 39, 66, 38, 69, 37], S.hl); }
     else { P.line([43, 38, 46, 37, 50, 38], S.hl); P.line([63, 38, 67, 37, 69, 38], S.hl); }
     P.px(68, 58, S.s2); P.px(68, 59, S.sl);
     if (lose) P.map(58, 64, MOUTHS.wavy, EL);
@@ -304,8 +305,8 @@
     'hHHHhfwBBwfffwBBwfhHh...',
     'hHHHhfffffffffffffhHh...',
     'hHHHhbbfffffffbbfhHh....',
-    '.hHHhffffmmmmmffhHh.....',
-    '.hTThfffffmWmfffhTh.....',
+    '.hHHhffffmWmmfffhHh.....',
+    '.hTThfffffmmffffhTh.....',
     '..hhhhhffffffffhhh......',
     '...hddddhffffhdddh......',
     '..hdddddhcccchdddddh....',

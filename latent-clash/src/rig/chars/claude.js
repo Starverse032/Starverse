@@ -18,7 +18,7 @@
     // default stance: poised, fencing-like, pen low and diagonal like a rapier
     rest: {
       root: [0, 0], hip: [0, -30], lean: 2, bend: 0, head: [0, 0], tilt: 0,
-      hF: [11, -27], hB: [-7, -31], fF: [9, 0], fB: [-8, 0], faF: 0, faB: 0,
+      hF: [11, -27], hB: [-4, -32], fF: [9, 0], fB: [-8, 0], faF: 0, faB: 0,
       pen: 32, sq: 0, shr: 0, haF: 0, haB: 0, pg: 0.3, skirt: 0, tail: 0, arch: 0,
       eyes: 'open', mouth: 'neutral', handF: 'grip', handB: 'relax',
       elF: 1, elB: 1, knF: -1, knB: -1, penIn: 'F', glow: 0, blush: 0
@@ -45,10 +45,10 @@
 
   // ------------------------------------------------------------ chains
   C.chains = [
-    { id: 'hair', n: 5, len: [8, 8, 8, 7, 7], rest: [14, 9, 6, 3, 1], stiff: [0.3, 0.2, 0.14, 0.1, 0.08], damp: 0.86, grav: 0.22, drag: 0.35,
+    { id: 'hair', n: 5, len: [8, 8, 8, 7, 7], rest: [14, 9, 6, 3, 1], stiff: [0.3, 0.2, 0.14, 0.1, 0.08], damp: 0.86, grav: 0.22, drag: 0.1,
       limit: function (c, i, sk) { var lim = sk.chest[0] + 1; if (c.x[i] > lim) c.x[i] = lim; } },
-    { id: 'lockN', n: 3, len: [4, 4, 4], rest: [6, 2, -4], stiff: 0.32, damp: 0.8, grav: 0.2, drag: 0.2 },
-    { id: 'lockF', n: 2, len: [4, 4], rest: [-6, 0], stiff: 0.35, damp: 0.8, grav: 0.2, drag: 0.2 },
+    { id: 'lockN', n: 2, len: [4, 3], rest: [2, -6], stiff: 0.32, damp: 0.8, grav: 0.2, drag: 0.2 },
+    { id: 'lockF', n: 1, len: [3], rest: [-4], stiff: 0.35, damp: 0.8, grav: 0.2, drag: 0.2 },
     { id: 'ahoge', n: 2, len: [3, 3], rest: [-25, 45], stiff: 0.45, damp: 0.75, grav: 0.05, drag: 0.15 },
     { id: 'cape', n: 1, len: [4], rest: [0], stiff: 0.25, damp: 0.84, grav: 0.18, drag: 0.4 },
     { id: 'skirt', n: 1, len: [7], rest: [0], stiff: 0.22, damp: 0.84, grav: 0.2, drag: 0.4 },
@@ -122,8 +122,9 @@
     var an = s === 'F' ? sk.anF : sk.anB, ft = s === 'F' ? sk.ftF : sk.ftB, fa = s === 'F' ? sk.faF : sk.faB;
     var lo = lockOff || 0;
     an = [an[0] + lo, an[1]]; ft = [ft[0] + lo, ft[1]];
-    p.cap(hip[0], hip[1], kn[0], kn[1], 2.7, 2.1, M.legs, SH.limbL);
-    p.cap(kn[0], kn[1], an[0], an[1], 2.1, 1.5, M.legs, SH.limbL);
+    var lt = s === 'F' ? 2 : 2;
+    p.cap(hip[0], hip[1], kn[0], kn[1], 2.6, 2.0, M.legs, SH.limbL, lt);
+    p.cap(kn[0], kn[1], an[0], an[1], 2.0, 1.5, M.legs, SH.limbL, lt);
     // ankle boot (foot frame: origin = sole point, +x toward toe)
     var b = [[-2.5, 0], [4.5, 0], [5.4, -1], [4.2, -2.4], [1.6, -3.2], [1.6, -6.4], [-2.4, -6.4], [-3, -1.2]];
     var pts = [];
@@ -246,11 +247,11 @@
     var last = sp[n - 1], prev = sp[n - 2], dx = last[0] - prev[0], dy = last[1] - prev[1], dl = Math.sqrt(dx * dx + dy * dy) || 1;
     var tip = [last[0] + dx / dl * 3, last[1] + dy / dl * 3];
     p.poly(H.ribbon(sp, w, tip), M.hair, SH.hair);
-    // two extra wavy tip locks
+    // notch the tip into two locks (one wavy point each side of the centre)
     var side = [-dy / dl, dx / dl];
-    var a1 = [last[0] + side[0] * 3, last[1] + side[1] * 3], a2 = [last[0] - side[0] * 3, last[1] - side[1] * 3];
-    p.poly(H.flat([[a1[0] - dx / dl * 4, a1[1] - dy / dl * 4], [a1[0] + side[0] * 1.5 + dx / dl * 1, a1[1] + side[1] * 1.5 + dy / dl * 2], [a1[0] - side[0] * 2, a1[1] - side[1] * 2]]), M.hair, null, 1);
-    p.poly(H.flat([[a2[0] - dx / dl * 4, a2[1] - dy / dl * 4], [a2[0] - side[0] * 1.2 + dx / dl * 1.5, a2[1] - side[1] * 1.2 + dy / dl * 2], [a2[0] + side[0] * 2, a2[1] + side[1] * 2]]), M.hair, null, 2);
+    var nb = [last[0] + dx / dl * 1, last[1] + dy / dl * 1];
+    p.px(Math.round(nb[0]), Math.round(nb[1] + 1), 0);
+    p.px(Math.round(nb[0]), Math.round(nb[1] + 2), 0);
     // strand lines
     var k0 = Math.floor(n * 0.2), k1 = Math.floor(n * 0.92);
     for (i = k0; i < k1; i++) {
@@ -291,7 +292,7 @@
       [-3, function () { drawLeg(p, sk, 'F', D.lock.F); p.end(); }],
       [-2, function () { drawSkirt(p, sk, sec); p.end(); }],
       [0, function () { drawTorso(p, sk, sec, ds); p.end(); }],
-      [1, function () { drawLock(p, sec.lockF, null, 1.6); p.end(); }],
+      [1, function () { drawLock(p, sec.lockF, null, 1.3); p.end(); }],
       [2, function () {
         var img = H.headImage(head, eyes, ds.mouth || 'neutral', ds.blush ? 'blush' : '', sk.headAng);
         p.blit(img, sk.neck[0], sk.neck[1]);
@@ -300,7 +301,7 @@
         p.cap(ah[1][0], ah[1][1], ah[2][0], ah[2][1], 0.7, 0.5, M.hair, null, 0);
         p.end();
       }],
-      [3, function () { drawLock(p, sec.lockN, fr(sk.neck, sk.headAng, -3, -9), 1.8); p.end(); }],
+      [3, function () { drawLock(p, sec.lockN, fr(sk.neck, sk.headAng, -3, -9), 1.5); p.end(); }],
       [4, function () { if (D.smear) { H.smear(p, D.smear, M.smear); p.end({ outline: false }); } }],
       [4.5, function () { if (ds.penIn !== 'B' && ds.penIn !== 'none') { drawPen(p, sk, ds); p.end(); } }],
       [5, function () { drawArm(p, sk, 'F', ds); p.end(); }]

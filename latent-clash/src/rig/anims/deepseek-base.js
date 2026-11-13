@@ -113,13 +113,13 @@
     segs: [['loop', 24, true]], step: 4,
     keys: [[0, LA], [8, P(LA, { hB: [-16, -36], fF: [8, -6], lean: -48 })], [16, P(LA, { hF: [-2, -48], fB: [1, -4], lean: -42 })]]
   });
-  var DN = P(S, { hip: [-2, -5], lean: -90, bend: 0, tilt: -90, fF: [19, -1], fB: [17, 0], faF: -80, faB: -85,
-    hF: [-8, -14], hB: [-22, -2], handF: 'open', handB: 'open', eyes: 'dizzy', mouth: 'hurt' });
+  var DN = P(S, { hip: [-2, -5], lean: -90, bend: 0, tilt: -90, fF: [24, -2], fB: [22, -1], faF: -80, faB: -85,
+    hF: [-4, -3], hB: [-24, -2], handF: 'open', handB: 'open', eyes: 'dizzy', mouth: 'hurt' });
   def('down', {
     segs: [['impact', 10], ['lie', 30, true]], step: 2,
     keys: [
       ['impact', P(DN, { root: [0, -3], eyes: 'shut' }), 'snap'],
-      ['impact+2', P(DN, { root: [0, -7], hF: [-6, -20], fF: [18, -8], eyes: 'shut' }), 'out'],
+      ['impact+2', P(DN, { root: [0, -7], hF: [-6, -12], fF: [21, -8], eyes: 'shut' }), 'out'],
       ['impact+5', P(DN, { eyes: 'shut' }), 'in'],
       ['impact+7', P(DN, { root: [0, -1] })],
       ['lie', DN], ['lie+15', P(DN, { hip: [-2, -6] })]

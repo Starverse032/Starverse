@@ -170,7 +170,7 @@
     if (!sm) return;
     var pts = sm.pts, n = pts.length / 4, i;
     opts = opts || {};
-    var inner = opts.inner == null ? 0.45 : opts.inner;     // fraction of the limb covered
+    var inner = opts.inner == null ? 0.62 : opts.inner;     // fraction of the limb covered
     for (i = 0; i < n - 1; i++) {
       var b0 = [pts[i * 4], pts[i * 4 + 1]], t0 = [pts[i * 4 + 2], pts[i * 4 + 3]];
       var b1 = [pts[i * 4 + 4], pts[i * 4 + 5]], t1 = [pts[i * 4 + 6], pts[i * 4 + 7]];

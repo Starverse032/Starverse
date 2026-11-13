@@ -40,7 +40,7 @@
   };
 
   C.chains = [
-    { id: 'tailW', n: 3, len: [5, 5, 4], rest: [25, 15, 5], stiff: [0.28, 0.2, 0.15], damp: 0.84, grav: 0.24, drag: 0.4 },
+    { id: 'tailW', n: 3, len: [4, 4, 3], rest: [40, 32, 22], stiff: [0.35, 0.28, 0.22], damp: 0.84, grav: 0.24, drag: 0.4 },
     { id: 'pigN', n: 2, len: [3, 3], rest: [10, 25], stiff: 0.35, damp: 0.78, grav: 0.18, drag: 0.25 },
     { id: 'pigF', n: 2, len: [3, 3], rest: [95, 110], stiff: 0.35, damp: 0.78, grav: 0.18, drag: 0.25 },
     { id: 'ahoge', n: 2, len: [3, 2], rest: [-10, 30], stiff: 0.45, damp: 0.75, grav: 0.05, drag: 0.15 },
@@ -207,7 +207,7 @@
         p.blit(img, sk.neck[0], sk.neck[1]);
         var ah = H.chainPts(sec.ahoge);
         p.cap(ah[0][0], ah[0][1] + 1, ah[1][0], ah[1][1], 0.8, 0.7, M.hair, null);
-        p.px(ah[2][0], ah[2][1], col(M.tip, 1)); p.px(ah[2][0] + 1, ah[2][1] - 1, col(M.tip, 0)); p.px(ah[2][0] - 1, ah[2][1] - 1, col(M.tip, 1));
+        p.cap(ah[1][0], ah[1][1], ah[2][0], ah[2][1], 0.6, 0.5, M.hair, null, 0); p.px(ah[2][0] + 1, ah[2][1], col(M.tip, 1));
         p.end();
       }],
       [3, function () { drawPig(p, sec.pigN, sk); p.end(); }],
