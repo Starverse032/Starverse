@@ -88,10 +88,10 @@
   });
 
   // ---------------------------------------------------------------- guard
-  var GS = POSE.guard = P(S, { hip: [-1, -29], lean: -5, fB: [-10, 0], hF: [9, -36], pen: -8, pg: 0.45, hB: [3, -41],
+  var GS = POSE.guard = P(S, { hip: [-1, -29], lean: -5, fB: [-10, 0], hF: [8, -33], pen: -66, pg: 0.5, hB: [14, -45],
     handB: 'flat', eyes: 'focus', mouth: 'teeth', z: { armB: 6 } });
   def('guardStand', { segs: [['loop', 30, true]], step: 3, keys: [[0, GS], [15, bob(GS, 0, 1)]] });
-  var GC = POSE.guardCrouch = P(C, { lean: 8, hF: [10, -22], pen: -12, pg: 0.45, hB: [4, -27], handB: 'flat', eyes: 'focus', mouth: 'teeth', z: { armB: 6 } });
+  var GC = POSE.guardCrouch = P(C, { lean: 8, hF: [10, -20], pen: -62, pg: 0.5, hB: [15, -31], handB: 'flat', eyes: 'focus', mouth: 'teeth', z: { armB: 6 } });
   def('guardCrouch', { segs: [['loop', 30, true]], step: 3, keys: [[0, GC], [15, bob(GC, 0, 1)]] });
 
   // ---------------------------------------------------------------- hits
@@ -117,8 +117,13 @@
   var LA = POSE.launch = P(S, { hip: [0, -24], lean: -42, bend: -10, tilt: -35, head: [-1, 0], fF: [7, -8], fB: [0, -2], faF: 40, faB: 30,
     hF: [-4, -52], pen: 230, hB: [-16, -44], handB: 'open', eyes: 'shut', mouth: 'open' });
   def('launch', {
-    segs: [['loop', 24, true]], step: 4,
-    keys: [[0, LA], [8, P(LA, { hB: [-18, -40], fF: [8, -6], lean: -46, pen: 240 })], [16, P(LA, { hF: [-2, -54], fB: [1, -4], lean: -40 })]]
+    segs: [['loop', 24, true]], step: 3,
+    keys: [
+      [0, LA],
+      [6, P(LA, { hB: [-20, -36], hF: [-8, -50], fF: [9, -4], fB: [-3, -6], lean: -48, tilt: -40, pen: 250 })],
+      [12, P(LA, { hB: [-14, -48], hF: [0, -54], fF: [5, -10], fB: [2, -2], lean: -38, tilt: -30, pen: 215 })],
+      [18, P(LA, { hB: [-19, -42], hF: [-5, -48], fF: [8, -6], fB: [-2, -4], lean: -45, pen: 235 })]
+    ]
   });
   var DN = POSE.down = P(S, { hip: [-2, -5], lean: -90, bend: 0, tilt: -90, head: [0, 0], fF: [27, -2], fB: [25, -1], faF: -80, faB: -85, knF: -1, knB: -1,
     hF: [-6, -4], pen: 2, z: { pen: -11 }, hB: [-26, -2], handB: 'open', eyes: 'dizzy', mouth: 'hurt' });

@@ -2,14 +2,15 @@
 
 ## Progress / next steps (kept current for restarts)
 
-- STEP 1 DONE: full §5.3 API; both characters render; every §3.3 anim exists with contract segment ids/frames.
-- ALL anims for BOTH characters are now authored (rough v1, no placeholders left; `fillPlaceholders()` still
-  guarantees names + logs an error if authored segments differ from the contract table in `anims/placeholders.js`).
-- Polish pass 1 (identity: idle, faces, hair, palettes) DONE for both; pass 2 (walk/dash) walks DONE.
-- Status per anim: see "Animation status" below. Next: polish passes in lead's order
-  (idle+faces → walk/dash → guard/hits/launch/down/getup → crouch/jump/land → normals → specials → super → throws → intro/win/lose).
-- Perf (Chromium, laptop): draw worst case (re-render every frame) 0.42 ms Claude / 0.25 ms DeepSeek; cached frames
-  are a single drawImage. init ≈ 1 ms (head expressions rotate lazily). setPose+anchor ≈ 4 µs, no canvas.
+- DONE: full §5.3 API; both characters render (v1 look); EVERY §3.3 anim is authored for both (no aliases in use;
+  `fillPlaceholders()` still guarantees names and logs an error if authored segments differ from the table in
+  `anims/placeholders.js`). Viewer + sheet tool done. Determinism verified (anchor hash identical across runs).
+- Polish done: identity pass (faces, hair, palettes), walks, hitHigh, down/getup, guards, launch, Claude 5H, DS breach/5M.
+- NEXT (lead's order): dash/crouch/jump/land review → normals (anticipation/smear timing per move, reach checks vs
+  §3.3 reach guide) → specials → super → throws → intro/win/lose. Art: Claude torso (capelet + collar/tie read
+  weakly), DeepSeek hood (whale eyes barely visible), hand stamps, Claude hair flip on fast rises.
+- Perf (Chromium): draw worst case (re-render every frame) 0.39–0.46 ms Claude / 0.24–0.29 ms DeepSeek; cached frames
+  are one drawImage. init 1–1.6 ms (head expressions are composed/rotated lazily). setPose+anchor ≈ 3–4 µs, no canvas.
 
 ## How it works (design summary)
 
@@ -64,4 +65,10 @@ in3 out3 back snap(hold). Missing poses before a segment's first key are interpo
 
 ## Animation status
 
-All names exist for both characters. Rough v1 = authored, readable, not yet polished.
+All §3.3 names exist for both characters and every one is AUTHORED (no aliases in use).
+- Reviewed + corrected at ×3–×6 (v1.1): idle, walkF, walkB, hitHigh, down, getup (both chars where applicable),
+  Claude 5H, DeepSeek breach, faces (all expressions), palettes 0/1.
+- Rough v1 (authored, checked only in the one-pose-per-anim overview): crouchIn/crouch/crouchOut, jumpSquat,
+  jumpRise, jumpFall, land, dashF, dashB, guardStand, guardCrouch, hitLow, hitCrouch, launch, thrown, throw,
+  throwHit, intro, win, lose, 5L 5M 2L 2M 2H jL jM jH, Claude spark airSpark sonnet haiku guardrail guardrailHit super,
+  DeepSeek 5H wave chain1-3 diveIn diveOut diveKick super.

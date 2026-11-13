@@ -41,23 +41,22 @@ function inPage() {
     const q = []; let maxCombo = 0, t = 0, log = [];
     const hp0 = B.hp;
     function queue(seq) { for (const s of seq) q.push(s); }
-    let si = 0, lastInst = A.moveInst, waitHit = false;
+    let si = 0, acted = -1, waitHit = false;
     while (t < 600) {
       let inp = {};
       if (q.length) { const s = q.shift(); inp = Object.assign({}, DIR[s.d || 5]); for (const b of (s.b || '')) inp[b] = 1; }
       else if (si < c.steps.length) {
         const st = c.steps[si];
-        const ready = !waitHit || (A.connected === 'hit' && A.moveInst === lastInst) || A.combo > 0 && A.action !== 'attack';
+        const ready = !waitHit || (A.connected === 'hit' && A.moveInst !== acted);
         if (st === 'j9') { queue([{ d: 9 }, { d: 9 }, { d: 9 }]); si++; }
-        else if (st === 'jH') { if (A.air && A.vy > 0 && (LC.GROUND_Y - A.y) < 30) { queue([{ b: 'H' }, { b: 'H' }]); si++; waitHit = true; lastInst = -1; } }
-        else if (ready && (A.connected === 'hit' || !waitHit) && A.stop <= 0) {
-          lastInst = A.moveInst;
+        else if (st === 'jH') { if (A.air && A.vy > 0 && (LC.GROUND_Y - A.y) < 58) { queue([{ b: 'H' }, { b: 'H' }]); si++; waitHit = true; acted = -1; } }
+        else if (ready) {
+          acted = A.moveInst;
           if (st === 'SUPER') queue([{ b: 'HS' }, { b: 'HS' }]);
           else if (st === 'S') queue([{ b: '' }, { b: 'M' }, { b: 'M' }]);
           else if (/^\d{3}/.test(st)) { const mm = MOT[st.slice(0, 3)]; mm.forEach((d, i) => { q.push({ d, b: i === mm.length - 1 ? st[3] : '' }); q.push({ d, b: i === mm.length - 1 ? st[3] : '' }); }); }
           else { const d = +st[0]; queue([{ d, b: st[1] }, { d, b: st[1] }, { d }]); }
           si++; waitHit = true;
-          q.unshift({}, {});   // human-ish: 2 frames after the confirm
         }
       }
       m.update(inp, {});

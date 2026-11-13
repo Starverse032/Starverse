@@ -110,8 +110,13 @@
   var LA = P(S, { hip: [0, -22], lean: -45, bend: -10, tilt: -35, fF: [7, -8], fB: [0, -2], faF: 40, faB: 30,
     hF: [-4, -46], hB: [-14, -40], handF: 'open', handB: 'open', eyes: 'shut', mouth: 'open' });
   def('launch', {
-    segs: [['loop', 24, true]], step: 4,
-    keys: [[0, LA], [8, P(LA, { hB: [-16, -36], fF: [8, -6], lean: -48 })], [16, P(LA, { hF: [-2, -48], fB: [1, -4], lean: -42 })]]
+    segs: [['loop', 24, true]], step: 3,
+    keys: [
+      [0, LA],
+      [6, P(LA, { hB: [-18, -32], hF: [-8, -44], fF: [9, -4], fB: [-3, -6], lean: -50, tilt: -40 })],
+      [12, P(LA, { hB: [-12, -44], hF: [0, -48], fF: [5, -10], fB: [2, -2], lean: -40, tilt: -30 })],
+      [18, P(LA, { hB: [-17, -38], hF: [-5, -44], fF: [8, -6], fB: [-2, -4], lean: -46 })]
+    ]
   });
   var DN = P(S, { hip: [-2, -5], lean: -90, bend: 0, tilt: -90, fF: [24, -2], fB: [22, -1], faF: -80, faB: -85,
     hF: [-4, -3], hB: [-24, -2], handF: 'open', handB: 'open', eyes: 'dizzy', mouth: 'hurt' });
