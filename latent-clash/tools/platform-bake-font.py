@@ -35,6 +35,9 @@ EXTRA = ('←↑→↓↖↗↘↙↔↕·…—–「」『』（）！？：�
          '〈〉《》【】〔〕〖〗﹏￥％＋－＝＜＞＠＃＆＊／＼｜＾＿｀')
 
 
+SPECIALS = {'\ue000': 'u003A.centered', '\ue001': 'u2014.connected'}
+
+
 def gb2312_chars():
     out = set()
     for hi in range(0xA1, 0xF8):
@@ -155,6 +158,14 @@ def main():
     cmaps = {s: fonts[s].getBestCmap() for s in SIZES}
     # keep only chars that at least one size has
     chars = sorted(c for c in chars if any(ord(c) in cmaps[s] for s in SIZES))
+    # GSUB alternates the runtime applies itself (same rules as the font's calt/ccmp):
+    # ':' between digits -> centred colon, '—' followed by '—' -> connected dash.
+    for s_ in SIZES:
+        order = set(fonts[s_].getGlyphOrder())
+        for pua, gname in SPECIALS.items():
+            if gname in order:
+                cmaps[s_][ord(pua)] = gname
+    chars = sorted(set(chars) | set(SPECIALS))
     index = {c: i for i, c in enumerate(chars)}
     missing_src = sorted(c for c in src if all(ord(c) not in cmaps[s] for s in SIZES) and not c.isspace())
     if missing_src:

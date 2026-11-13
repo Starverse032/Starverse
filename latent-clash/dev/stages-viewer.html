@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>LATENT CLASH — stages viewer</title>
+<style>
+  body { margin: 0; background: #0b0a14; color: #f4efe6; font: 12px/1.4 monospace; }
+  #wrap { display: flex; gap: 12px; padding: 10px; align-items: flex-start; }
+  #view { image-rendering: pixelated; image-rendering: crisp-edges; background: #000; display: block; }
+  #panel { width: 300px; display: flex; flex-direction: column; gap: 8px; }
+  fieldset { border: 1px solid #3b3670; padding: 6px 8px; margin: 0; }
+  legend { color: #9b96b8; }
+  button { background: #231f45; color: #f4efe6; border: 1px solid #3b3670; padding: 3px 7px; margin: 2px; cursor: pointer; font: inherit; }
+  button.on { background: #d97757; border-color: #ffb58a; color: #fff; }
+  label { display: inline-block; margin-right: 8px; white-space: nowrap; }
+  input[type=range] { width: 100%; }
+  #meter { color: #5ee6a8; }
+  #thumbs canvas { image-rendering: pixelated; width: 96px; height: 54px; margin: 2px; border: 1px solid #3b3670; cursor: pointer; }
+  .dim { color: #9b96b8; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div>
+    <canvas id="view" width="384" height="216"></canvas>
+    <div class="dim" style="margin-top:6px">keys: ←/→ pan · space pause · . step · H hit at centre · K ko · S super</div>
+  </div>
+  <div id="panel">
+    <fieldset><legend>stage</legend><div id="stages"></div><div id="thumbs"></div><div id="info" class="dim"></div></fieldset>
+    <fieldset><legend>camera</legend>
+      <input id="cam" type="range" min="0" max="256" step="1" value="128">
+      <label><input id="pan" type="checkbox" checked> auto-pan</label>
+      <label><input id="shake" type="checkbox"> shake ±4</label>
+      <label>zoom <select id="zoom"><option>1</option><option>2</option><option selected>3</option><option>4</option></select></label>
+      <div id="camv" class="dim"></div>
+    </fieldset>
+    <fieldset><legend>overlays</legend>
+      <label><input id="lane" type="checkbox" checked> fighters (dummies)</label>
+      <label><input id="hud" type="checkbox"> HUD band / lane guide</label>
+      <label><input id="paused" type="checkbox"> paused</label>
+    </fieldset>
+    <fieldset><legend>layers</legend><div id="layers"></div></fieldset>
+    <fieldset><legend>events</legend>
+      <button data-ev="roundStart">roundStart</button><button data-ev="hit">hit</button><button data-ev="hitBig">hit (power 1)</button>
+      <button data-ev="ko">ko</button><button data-ev="super0">super L</button><button data-ev="super1">super R</button>
+    </fieldset>
+    <fieldset><legend>timing</legend><div id="meter">–</div></fieldset>
+  </div>
+</div>
+<script src="../src/shared/loader.js" data-root="../src/" data-modules="stages"></script>
+<script>
+(function () {
+  'use strict';
+  var LC = window.LC, U = LC.stages.U, W = LC.W, H = LC.H;
+  var view = document.getElementById('view'), vctx = view.getContext('2d');
+  var t0 = performance.now();
+  LC.stages.init();
+  var initMs = performance.now() - t0;
+
+  // ---- dummy fighters (readability check), drawn in each character's main colours
+  function dummy(char) {
+    var P = LC.PAL[char][0], p = U.pix(40, 80), c = U.col, ox = 20, oy = 79;
+    function R(x, y, w, h, col) { p.rect(ox + x, oy + y, w, h, c(col)); }
+    if (char === 'claude') {
+      p.ellipse(ox - 3, oy - 52, 8, 18, c(P.hair[1]));             // long hair behind
+      R(-10, -40, 6, 12, P.hair[2]); R(-9, -30, 5, 4, P.hairTip[1]);
+      R(-6, -21, 4, 17, P.cloth2[1]); R(2, -21, 4, 17, P.cloth2[1]); // legs (tights)
+      R(-7, -4, 6, 4, P.cloth1[1]); R(2, -4, 6, 4, P.cloth1[1]);   // boots
+      p.poly([ox - 9, oy - 21, ox + 9, oy - 21, ox + 6, oy - 31, ox - 6, oy - 31], c(P.cloth2[1])); // skirt
+      R(-6, -46, 12, 16, P.cloth1[1]); R(-9, -46, 18, 8, P.cloth1[0]);   // jacket + capelet
+      R(-1, -45, 2, 5, P.accent[2]);                                    // ribbon
+      p.ellipse(ox + 1, oy - 56, 6, 7, c(P.skin[1]));
+      p.ellipse(ox, oy - 60, 7, 5, c(P.hair[1])); R(-6, -60, 3, 12, P.hair[1]);
+      R(3, -57, 2, 2, P.eye[2]); R(-4, -63, 2, 2, P.accent[1]);
+      for (var i = 0; i < 18; i++) p.set(ox + 8 + i, oy - 36 + (i >> 1), c(i > 14 ? P.metal[1] : P.cloth2[0])); // pen
+      R(6, -38, 4, 4, P.skin[1]);
+      p.outline(c(P.outline));
+    } else {
+      R(-5, -20, 4, 15, P.skin[1]); R(2, -20, 4, 15, P.skin[1]);
+      R(-7, -6, 7, 6, P.cloth1[1]); R(2, -6, 7, 6, P.cloth1[1]); R(-7, -2, 7, 2, P.cloth2[1]); R(2, -2, 7, 2, P.cloth2[1]);
+      R(-6, -24, 12, 4, P.cloth2[1]);                                   // shorts
+      p.ellipse(ox, oy - 34, 11, 13, c(P.cloth1[1]));                    // big hoodie
+      R(-11, -36, 3, 10, P.cloth1[2]); R(-11, -32, 3, 2, P.cloth2[1]); R(8, -36, 3, 10, P.cloth1[2]);
+      R(9, -28, 4, 4, P.accent[1]); R(-12, -27, 4, 4, P.accent[1]);      // gloves
+      R(-9, -46, 8, 5, P.cloth2[1]);                                    // hood (whale back)
+      p.ellipse(ox + 1, oy - 52, 6, 6, c(P.skin[1]));
+      p.ellipse(ox, oy - 57, 8, 6, c(P.hair[1])); R(-8, -57, 3, 9, P.hair[1]); R(6, -57, 3, 7, P.hair[1]);
+      R(-10, -66, 4, 4, P.hair[1]); R(-12, -68, 3, 2, P.hairTip[1]); R(7, -66, 4, 4, P.hair[1]); R(10, -68, 3, 2, P.hairTip[1]);
+      R(3, -53, 2, 2, P.eye[1]);
+      p.outline(c(P.outline));
+    }
+    return p.toCanvas();
+  }
+  var DUM = { claude: dummy('claude'), deepseek: dummy('deepseek') };
+  function drawShadow(ctx, sx, col) {
+    ctx.fillStyle = col;
+    ctx.fillRect(sx - 12, 185, 24, 3); ctx.fillRect(sx - 9, 184, 18, 1); ctx.fillRect(sx - 9, 188, 18, 1);
+  }
+  function drawDummies(ctx, camX, st, t) {
+    var x1 = Math.round(camX + 150 + Math.sin(t / 70) * 30), x2 = Math.round(camX + 236 - Math.sin(t / 55) * 26);
+    drawShadow(ctx, x1 - camX, st.shadowColor); drawShadow(ctx, x2 - camX, st.shadowColor);
+    ctx.drawImage(DUM.claude, x1 - camX - 20, 186 - 79);
+    ctx.save(); ctx.translate(x2 - camX + 20, 0); ctx.scale(-1, 1); ctx.drawImage(DUM.deepseek, 0, 186 - 79); ctx.restore();
+  }
+  function drawGuides(ctx) {
+    ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fillRect(0, 0, W, 34);
+    ctx.fillStyle = '#ffd166';
+    for (var x = 0; x < W; x += 4) { ctx.fillRect(x, 34, 2, 1); ctx.fillRect(x, 100, 2, 1); ctx.fillRect(x, 190, 2, 1); }
+    ctx.fillStyle = '#ff4d6d'; for (x = 0; x < W; x += 2) ctx.fillRect(x, 186, 1, 1);
+    // fake HUD bars
+    ctx.fillStyle = '#05040a'; ctx.fillRect(8, 10, 150, 9); ctx.fillRect(226, 10, 150, 9); ctx.fillRect(180, 6, 24, 18);
+    ctx.fillStyle = '#ffd23f'; ctx.fillRect(9, 11, 148, 7); ctx.fillRect(227, 11, 148, 7);
+  }
+
+  // ---- state
+  var ids = LC.stages.ids(), cur = null, curId = null, camX = 128, frame = 0, acc = 0, last = 0;
+  var samples = [], params = new URLSearchParams(location.search);
+  var $ = function (id) { return document.getElementById(id); };
+
+  function select(id) {
+    curId = id; cur = LC.stages.create(id); frame = 0;
+    Array.prototype.forEach.call($('stages').children, function (b) { b.className = b.textContent.indexOf(id) === 0 ? 'on' : ''; });
+    var L = $('layers'); L.innerHTML = '';
+    cur.layers.forEach(function (l) {
+      var lab = document.createElement('label'), cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.checked = l.on; cb.onchange = function () { l.on = cb.checked; };
+      lab.appendChild(cb); lab.appendChild(document.createTextNode(' ' + l.name + (l.front ? ' (front)' : '')));
+      L.appendChild(lab);
+    });
+    var lore = LC.LORE.stages[id] || {};
+    $('info').textContent = (lore.zh || '') + ' ' + (lore.en || '') + ' · music ' + cur.music + ' · build ' + LC.stages.buildTime(id).toFixed(0) + ' ms';
+    samples = [];
+  }
+  ids.forEach(function (id) {
+    var b = document.createElement('button'); b.textContent = id + ' ' + ((LC.LORE.stages[id] || {}).zh || '');
+    b.onclick = function () { select(id); }; $('stages').appendChild(b);
+    var th = LC.stages.thumb(id), c = document.createElement('canvas'); c.width = 96; c.height = 54;
+    c.getContext('2d').drawImage(th, 0, 0); c.title = id; c.onclick = function () { select(id); }; $('thumbs').appendChild(c);
+  });
+  function setZoom() { var z = +$('zoom').value; view.style.width = W * z + 'px'; view.style.height = H * z + 'px'; }
+  $('zoom').onchange = setZoom; setZoom();
+  $('cam').oninput = function () { camX = +$('cam').value; $('pan').checked = false; };
+  document.querySelectorAll('[data-ev]').forEach(function (b) {
+    b.onclick = function () { fire(b.getAttribute('data-ev')); };
+  });
+  function fire(ev) {
+    if (!cur) return;
+    if (ev === 'hit') cur.event('hit', { x: camX + 100 + Math.random() * 184, power: 0.4 });
+    else if (ev === 'hitBig') cur.event('hit', { x: camX + 192, power: 1 });
+    else if (ev === 'super0') cur.event('super', { side: 0 });
+    else if (ev === 'super1') cur.event('super', { side: 1 });
+    else cur.event(ev, {});
+  }
+  window.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowLeft') { camX = Math.max(0, camX - 8); $('pan').checked = false; }
+    if (e.key === 'ArrowRight') { camX = Math.min(256, camX + 8); $('pan').checked = false; }
+    if (e.key === ' ') { $('paused').checked = !$('paused').checked; e.preventDefault(); }
+    if (e.key === '.') tick();
+    if (e.key === 'h') fire('hitBig'); if (e.key === 'k') fire('ko'); if (e.key === 's') fire('super0');
+  });
+
+  function tick() {
+    cur.update(); frame++;
+    if ($('pan').checked) camX = 128 - Math.cos(frame / 240) * 128;
+  }
+  function render(ctx, cam, opts) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.save();
+    ctx.fillStyle = '#ff00ff'; ctx.fillRect(0, 0, W, H);           // magenta = any gap shows up
+    if (opts.shake) ctx.translate(opts.shake[0], opts.shake[1]);
+    var a = performance.now();
+    cur.drawBack(ctx, cam);
+    var b = performance.now();
+    if (opts.lane) drawDummies(ctx, cam, cur, opts.t || 0);
+    var c2 = performance.now();
+    cur.drawFront(ctx, cam);
+    var d = performance.now();
+    ctx.restore();
+    if (opts.hud) drawGuides(ctx);
+    return (b - a) + (d - c2);
+  }
+  function loop(now) {
+    requestAnimationFrame(loop);
+    if (!cur) return;
+    var dt = Math.min(100, now - (last || now)); last = now;
+    if (!$('paused').checked) { acc += dt; while (acc >= 1000 / 60) { tick(); acc -= 1000 / 60; } }
+    var sh = $('shake').checked ? [Math.round(Math.random() * 8 - 4), Math.round(Math.random() * 8 - 4)] : null;
+    var ms = render(vctx, camX, { lane: $('lane').checked, hud: $('hud').checked, shake: sh, t: frame });
+    samples.push(ms); if (samples.length > 120) samples.shift();
+    if (frame % 15 === 0) {
+      var avg = samples.reduce(function (s, v) { return s + v; }, 0) / samples.length, mx = Math.max.apply(null, samples);
+      $('meter').textContent = 'drawBack+drawFront avg ' + avg.toFixed(3) + ' ms · max ' + mx.toFixed(3) + ' ms · init(all) ' + initMs.toFixed(0) + ' ms';
+      $('camv').textContent = 'camX ' + camX.toFixed(1) + ' · t ' + cur.t;
+      if (!$('pan').checked) $('cam').value = camX;
+    }
+  }
+
+  // ---- API for tools/stages-shots.mjs
+  window.STV = {
+    ids: ids, initMs: initMs,
+    buildTimes: function () { var o = {}; ids.forEach(function (id) { o[id] = LC.stages.buildTime(id); }); return o; },
+    // render one frame of a fresh stage after `t` ticks (events: [[tick, name, data]]); returns PNG data URL
+    render: function (o) {
+      select(o.stage);
+      var evs = o.events || [];
+      for (var i = 0; i < (o.t || 0); i++) {
+        for (var k = 0; k < evs.length; k++) if (evs[k][0] === i) cur.event(evs[k][1], evs[k][2] || {});
+        cur.update();
+      }
+      var c = U.canvas(W, H), g = c.getContext('2d');
+      if (o.layers) cur.layers.forEach(function (l) { l.on = o.layers.indexOf(l.name) >= 0; });
+      render(g, o.camX || 0, { lane: !!o.lane, hud: !!o.hud, shake: o.shake, t: o.t || 0 });
+      var cr = o.crop || [0, 0, W, H], s = o.scale || 3;
+      var out = U.canvas(cr[2] * s, cr[3] * s), og = out.getContext('2d');
+      og.imageSmoothingEnabled = false;
+      og.drawImage(c, cr[0], cr[1], cr[2], cr[3], 0, 0, cr[2] * s, cr[3] * s);
+      return out.toDataURL('image/png');
+    },
+    thumb: function (id, s) {
+      var th = LC.stages.thumb(id), out = U.canvas(96 * s, 54 * s), og = out.getContext('2d');
+      og.imageSmoothingEnabled = false; og.drawImage(th, 0, 0, 96 * s, 54 * s); return out.toDataURL('image/png');
+    },
+    // average draw cost over n frames while panning, with dummies off
+    bench: function (id, n) {
+      select(id);
+      var c = U.canvas(W, H), g = c.getContext('2d'), tot = 0, mx = 0;
+      for (var i = 0; i < n; i++) {
+        cur.update();
+        var cam = 128 - Math.cos(i / 40) * 128;
+        var ms = render(g, cam, { lane: false });
+        if (i > 20) { tot += ms; mx = Math.max(mx, ms); }
+      }
+      return { avg: tot / (n - 21), max: mx };
+    },
+    // count magenta (uncovered) pixels for a camera + shake
+    gaps: function (id, cam, sh) {
+      select(id);
+      var c = U.canvas(W, H), g = c.getContext('2d');
+      render(g, cam, { lane: false, shake: sh });
+      var d = g.getImageData(0, 0, W, H).data, n = 0;
+      for (var i = 0; i < d.length; i += 4) if (d[i] === 255 && d[i + 1] === 0 && d[i + 2] === 255) n++;
+      return n;
+    }
+  };
+  select(params.get('stage') && ids.indexOf(params.get('stage')) >= 0 ? params.get('stage') : ids[0]);
+  if (params.get('cam')) { camX = +params.get('cam'); $('pan').checked = false; }
+  if (!params.get('shots')) requestAnimationFrame(loop);
+  window.STV.ready = true;
+})();
+</script>
+</body>
+</html>

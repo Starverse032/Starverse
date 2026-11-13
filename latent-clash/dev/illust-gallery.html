@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>LATENT CLASH — ILLUST gallery</title>
+<style>
+  body { margin: 0; background: #0b0a14; color: #f4efe6; font: 13px/1.4 system-ui, sans-serif; }
+  header { position: sticky; top: 0; z-index: 5; background: #15132aee; padding: 8px 14px; border-bottom: 1px solid #3b3670; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  header b { color: #ffd166; letter-spacing: 1px; }
+  button { background: #231f45; color: #f4efe6; border: 1px solid #3b3670; padding: 4px 10px; cursor: pointer; font: inherit; }
+  button.on { background: #ffd166; color: #15132a; border-color: #ffd166; }
+  section { padding: 10px 14px 18px; border-bottom: 1px solid #231f45; }
+  h2 { font-size: 14px; margin: 4px 0 10px; color: #9b96b8; font-weight: 600; letter-spacing: 1px; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+  .tile { display: inline-flex; flex-direction: column; gap: 3px; }
+  .tile .lab { font-size: 11px; color: #9b96b8; }
+  .bgs { display: flex; }
+  .bgs > div { padding: 6px; display: flex; align-items: center; justify-content: center; }
+  canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+  #stat { color: #5ee6a8; }
+</style>
+</head>
+<body>
+<header>
+  <b>ILLUST GALLERY</b>
+  <span>palette <button data-pal="0" class="on">0</button><button data-pal="1">1</button></span>
+  <span>zoom <button data-z="1">×1</button><button data-z="2">×2</button><button data-z="4" class="on">×4</button></span>
+  <span>bg <button data-bg="all" class="on">dark+mid+light</button><button data-bg="dark">dark</button><button data-bg="mid">mid</button><button data-bg="light">light</button></span>
+  <span id="stat"></span>
+</header>
+<section><h2>TITLE KEY ART (animated, ×2, logo + PRESS START overlaid as in the title scene)</h2><div class="row" id="title"></div></section>
+<section><h2>PORTRAITS</h2><div id="portraits"></div></section>
+<section><h2>LOGO</h2><div class="row" id="logo"></div></section>
+<section><h2>BANNERS (over a sample gameplay backdrop, ×2)</h2><div class="row" id="bannersOver"></div></section>
+<section><h2>BANNERS</h2><div class="row" id="banners"></div></section>
+<section><h2>ICONS</h2><div class="row" id="icons"></div></section>
+
+<script src="../src/shared/loader.js" data-root="../src/" data-modules="illust"></script>
+<script>
+(function () {
+  'use strict';
+  var I = LC.illust, K = I.kit;
+  var BG = { dark: '#0b0a14', mid: '#5a5878', light: '#ece6d8' };
+  var state = { pal: 0, z: 4, bg: 'all' };
+  var SHOTS = /shots=1/.test(location.search);
+
+  function scaled(src, z) {
+    var c = document.createElement('canvas'); c.width = src.width * z; c.height = src.height * z;
+    var x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(src, 0, 0, c.width, c.height); return c;
+  }
+  function tile(label, src, zooms) {
+    var t = document.createElement('div'); t.className = 'tile';
+    var l = document.createElement('div'); l.className = 'lab'; l.textContent = label + '  ' + src.width + '×' + src.height; t.appendChild(l);
+    var bgs = document.createElement('div'); bgs.className = 'bgs';
+    var keys = state.bg === 'all' ? ['dark', 'mid', 'light'] : [state.bg];
+    keys.forEach(function (k) {
+      var d = document.createElement('div'); d.style.background = BG[k];
+      (zooms || [1, state.z]).forEach(function (z, i) { var c = scaled(src, z); if (i) c.style.marginLeft = '6px'; d.appendChild(c); });
+      bgs.appendChild(d);
+    });
+    t.appendChild(bgs); return t;
+  }
+  function fillRow(id, items) { var el = document.getElementById(id); el.innerHTML = ''; items.forEach(function (it) { el.appendChild(it); }); }
+
+  // a stand-in "gameplay" backdrop (stage-like colours, two fighter silhouettes) for banner checks
+  function backdrop() {
+    var c = K.canvas(384, 216), x = c.getContext('2d');
+    var bands = ['#2a2350', '#33295c', '#3f3166', '#4d3a6c', '#5d4470', '#6e4f72'];
+    for (var i = 0; i < 6; i++) { x.fillStyle = bands[i]; x.fillRect(0, i * 26, 384, 26); }
+    x.fillStyle = '#a8724f'; x.fillRect(0, 156, 384, 60); x.fillStyle = '#8a5a40'; x.fillRect(0, 186, 384, 30);
+    for (i = 0; i < 12; i++) { x.fillStyle = i % 2 ? '#c48a5c' : '#7a4c38'; x.fillRect(i * 32, 150, 30, 6); }
+    x.fillStyle = '#ffd23f'; x.fillRect(8, 8, 150, 8); x.fillRect(226, 8, 150, 8);
+    x.fillStyle = '#2a1a1c'; x.fillRect(110, 116, 18, 70); x.fillRect(256, 120, 18, 66);
+    return c;
+  }
+
+  var titleCv, titleCtx, t0 = 0;
+  function build() {
+    var pal = state.pal;
+    var P = document.getElementById('portraits'); P.innerHTML = '';
+    LC.CHARS.forEach(function (ch) {
+      var row = document.createElement('div'); row.className = 'row'; row.style.marginBottom = '10px';
+      ['bust', 'bustWin', 'bustLose', 'cutin', 'face'].forEach(function (k) { row.appendChild(tile(ch + ' ' + k + ' p' + pal, I.portrait(ch, k, pal))); });
+      P.appendChild(row);
+    });
+    fillRow('logo', [tile('logo', I.logo())]);
+    fillRow('banners', I.names().banners.map(function (b) { return tile(b, I.banner(b), [1, Math.min(state.z, 2)]); }));
+    var bd = backdrop();
+    fillRow('bannersOver', ['round1', 'fight', 'ko', 'perfect', 'youWin', 'doubleKo', 'counter', 'ready'].map(function (b) {
+      var c = K.canvas(384, 216), x = c.getContext('2d'); x.drawImage(bd, 0, 0);
+      var bn = I.banner(b);
+      var by = b === 'counter' ? 40 : 80 - (bn.height >> 1);
+      x.drawImage(bn, b === 'counter' ? 16 : (192 - (bn.width >> 1)), by);
+      var t = document.createElement('div'); t.className = 'tile'; t.appendChild(scaled(c, 2)); return t;
+    }));
+    fillRow('icons', I.names().icons.map(function (n) { return tile(n, I.icon(n), [1, Math.max(state.z, 4)]); }));
+  }
+  function titleFrame(t) {
+    I.drawTitle(titleCtx, t);
+    var lg = I.logo(); titleCtx.drawImage(lg, (384 - lg.width) >> 1, 10);
+    if (LC.font && LC.font.draw && (t >> 5) % 2 === 0) LC.font.draw(titleCtx, 'PRESS START', 192, 192, { size: 12, color: '#fff', align: 'center', outline: '#05040a' });
+  }
+  function loop() { t0++; titleFrame(t0); if (!SHOTS) requestAnimationFrame(loop); }
+
+  window.GAL = {
+    ready: false,
+    sheet: function (list, z, bg) {
+      var pad = 8, w = pad, h = 0;
+      list.forEach(function (c) { w += c.width * z + pad; h = Math.max(h, c.height * z); });
+      var s = K.canvas(w, h + pad * 2), x = s.getContext('2d');
+      x.fillStyle = bg; x.fillRect(0, 0, s.width, s.height);
+      var cx = pad; list.forEach(function (c) { x.drawImage(c, cx, pad, c.width * z, c.height * z); cx += c.width * z + pad; });
+      return s.toDataURL('image/png');
+    },
+    raw: function (c, z) { return scaled(c, z).toDataURL('image/png'); },
+    titleShot: function (t, z) { titleFrame(t); return scaled(titleCv, z).toDataURL('image/png'); },
+    titleBench: function () {
+      var n = 240, a = performance.now();
+      for (var i = 0; i < n; i++) I.drawTitle(titleCtx, i);
+      return (performance.now() - a) / n;
+    },
+    full: function () { state.z = 2; build(); }
+  };
+
+  I.init().then(function () {
+    document.getElementById('stat').textContent = 'init ' + (I.initMs || 0).toFixed(0) + ' ms';
+    titleCv = K.canvas(384, 216); titleCtx = titleCv.getContext('2d');
+    var holder = document.getElementById('title'); var disp = scaled(titleCv, 1); disp.style.width = '768px'; disp.style.height = '432px';
+    holder.appendChild(titleCv); titleCv.style.width = '768px'; titleCv.style.height = '432px';
+    build(); loop();
+    document.querySelectorAll('header button').forEach(function (b) {
+      b.onclick = function () {
+        var k = b.dataset.pal !== undefined ? 'pal' : b.dataset.z !== undefined ? 'z' : 'bg';
+        state[k] = k === 'bg' ? b.dataset.bg : +(b.dataset[k]);
+        b.parentNode.querySelectorAll('button').forEach(function (o) { o.classList.toggle('on', o === b); });
+        build();
+      };
+    });
+    window.GAL.ready = true;
+  }).catch(function (e) { console.error('[illust] gallery', e); });
+})();
+</script>
+</body>
+</html>
