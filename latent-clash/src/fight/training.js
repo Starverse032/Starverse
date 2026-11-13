@@ -97,9 +97,9 @@
   var MIRROR = { 1: 3, 3: 1, 4: 6, 6: 4, 7: 9, 9: 7, 2: 2, 5: 5, 8: 8 };
   var ARROW = { 1: '↙', 2: '↓', 3: '↘', 4: '←', 5: '·', 6: '→', 7: '↖', 8: '↑', 9: '↗' };
   function inputs(ctx, m) {
-    var f = m.f[0], lg = f.inp.log, y = 64;
-    rect(ctx, 2, y - 2, 52, 12 * 11 + 2, 'rgba(11,10,20,0.55)');
-    for (var i = lg.length - 1, row = 0; i >= 0 && row < 11; i--, row++) {
+    var f = m.f[0], lg = f.inp.log, y = 104;
+    rect(ctx, 2, y - 2, 52, 12 * 7 + 2, 'rgba(11,10,20,0.55)');
+    for (var i = lg.length - 1, row = 0; i >= 0 && row < 7; i--, row++) {
       var e = lg[i], d = f.facing > 0 ? e.d : MIRROR[e.d];
       var ic = F.icon('dir.' + d), x = 4, yy = y + row * 12;
       if (ic) ctx.drawImage(ic, x, yy - 1); else F.text(ctx, ARROW[d], x + 1, yy, { size: 8, color: U.text });
@@ -114,7 +114,7 @@
     }
   }
   function data(ctx, m) {
-    var td = m.tdata, x = LC.W - 92, y = 64;
+    var td = m.tdata, x = LC.W - 92, y = 108;
     rect(ctx, x, y - 2, 90, 54, 'rgba(11,10,20,0.6)');
     var advTxt = td.adv == null ? '--' : (td.adv > 0 ? '+' + td.adv : String(td.adv));
     var rows = [['伤害', String(td.last || 0)], ['连段伤害', String(td.combo || 0)], ['连段数', String(td.comboHits || 0)], ['帧数差', advTxt]];
