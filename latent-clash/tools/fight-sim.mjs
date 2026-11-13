@@ -32,6 +32,12 @@ function pageRunner() {
     const viol = [];
     const usage = [{}, {}];
     m.aiHook = function (f, mv) { usage[f.side][mv.id] = (usage[f.side][mv.id] || 0) + 1; };
+    const dmgBy = [{}, {}], oc = m.onContact;
+    m.onContact = function (att, vic, what, dmg, h, kind, counter) {
+      if (what === 'hit') { const k = kind === 'throw' ? 'throw' : (h && h.fx && /sparkHit|waveHit/.test(h.fx)) ? 'proj' : (att.mv ? att.mv.id : kind); dmgBy[att.side][k] = (dmgBy[att.side][k] || 0) + dmg; }
+      if (counter) dmgBy[att.side]._counters = (dmgBy[att.side]._counters || 0) + 1;
+      return oc.apply(this, arguments);
+    };
     let lastHp = [m.f[0].hp, m.f[1].hp], round = m.round, stateT = 0, lastState = m.state;
     const roundLen = []; let fightT = 0;
     const stuck = [{ k: '', t: 0 }, { k: '', t: 0 }];
@@ -66,7 +72,7 @@ function pageRunner() {
     if (!m.finished) bad('did not finish in ' + t);
     if (fightT) roundLen.push(fightT);
     const snap = JSON.stringify(m.snapshot());
-    return { t, finished: m.finished, result: m.result, viol, usage, roundLen, snap, errs: FS.errors.slice(0, 5) };
+    return { t, finished: m.finished, result: m.result, viol, usage, dmgBy, roundLen, snap, errs: FS.errors.slice(0, 5) };
   };
 }
 
@@ -109,7 +115,7 @@ async function main() {
 
   // ---- report
   let violations = 0, unfinished = 0;
-  const table = {}, usage = { claude: {}, deepseek: {} }, lens = [];
+  const table = {}, usage = { claude: {}, deepseek: {} }, dmg = { claude: {}, deepseek: {} }, lens = [];
   let ticks = 0;
   results.forEach((r, i) => {
     const j = jobs[i];
@@ -129,6 +135,7 @@ async function main() {
     lens.push(...r.roundLen);
     const chars = j.swap ? ['deepseek', 'claude'] : ['claude', 'deepseek'];
     for (let s = 0; s < 2; s++) for (const k in r.usage[s]) usage[chars[s]][k] = (usage[chars[s]][k] || 0) + r.usage[s][k];
+    for (let s = 0; s < 2; s++) for (const k in r.dmgBy[s]) dmg[chars[s]][k] = (dmg[chars[s]][k] || 0) + r.dmgBy[s][k];
   });
   console.log('\nBALANCE (Claude vs DeepSeek, both side assignments)');
   console.log('pair   matches  Claude win%  draws  avg round (s)  time-ups/round');
@@ -141,6 +148,11 @@ async function main() {
     const tot = Object.values(usage[c]).reduce((a, b) => a + b, 0);
     const top = Object.entries(usage[c]).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + (100 * v / tot).toFixed(1) + '%');
     console.log('\nmove usage ' + c + ': ' + top.join(', '));
+  }
+  for (const c in dmg) {
+    const tot = Object.entries(dmg[c]).filter(e => e[0][0] !== '_').reduce((a, b) => a + b[1], 0);
+    console.log('damage by source ' + c + ' (total ' + tot + ', counters ' + (dmg[c]._counters || 0) + '): ' +
+      Object.entries(dmg[c]).filter(e => e[0][0] !== '_').sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k, v]) => k + ' ' + (100 * v / tot).toFixed(1) + '%').join(', '));
   }
   // determinism
   let detOk = true;
