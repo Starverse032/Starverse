@@ -289,10 +289,11 @@
       var lvx = h.lvx != null ? h.lvx : (reset ? 1.4 : 1.8);
       var lvy = h.lvy != null ? h.lvy : (reset ? -3.2 : -4.2);
       if (!h.kd && !wasAir) lvy = -3.4;
-      vic.vx = lvx * dir; vic.vy = lvy;
-      vic.grav = 0.36 + 0.025 * Math.min(vic.juggle, 10);
-      if (kind === 'super') { vic.grav = 0.3; if (wasAir) vic.juggle = Math.min(vic.juggle, 3); }
-      if (h.holdY != null) { var hh = GY - vic.y; vic.vy = hh > h.holdY + 10 ? 0.6 : (hh < h.holdY - 10 ? -3.2 : -1.6); }
+      var K = T.LAUNCH_K || 1;   // V2: taller arcs for taller bodies, same airtime
+      vic.vx = lvx * dir * K; vic.vy = lvy * K;
+      vic.grav = (0.36 + 0.025 * Math.min(vic.juggle, 10)) * K;
+      if (kind === 'super') { vic.grav = 0.3 * K; if (wasAir) vic.juggle = Math.min(vic.juggle, 3); }
+      if (h.holdY != null) { var hh = GY - vic.y; vic.vy = (hh > h.holdY + 10 ? 0.6 : (hh < h.holdY - 10 ? -3.2 : -1.6)) * K; }
       if (vic.y >= GY) vic.y = GY - 1;
     } else {
       vic.setActionRaw('hitstun');
@@ -302,7 +303,11 @@
       pushback(att, vic, pd, dir, !proj);
     }
     if (vic.hp <= 0) { vic.juggle = 99; }
-    if (h.pull && !proj) { var tx = att.x + att.facing * h.pull; vic.x += F.clamp(tx - vic.x, -10, 10); }
+    if (h.pull && !proj) {   // the whale carries its victim forward (target grows with the whale's t)
+      var pl = h.pull + (h.pullGrow && F.whaleT ? h.pullGrow * Math.max(0, F.whaleT(att) - 8) : 0);
+      var pd2 = att.x + att.facing * pl - vic.x;
+      if (Math.abs(pd2) > 1) setPush(vic, Math.min(Math.abs(pd2), 30), F.sign(pd2));
+    }
 
     var st = (T.HITSTOP[lv] != null ? T.HITSTOP[lv] : 9) + (counter ? 4 : 0);
     vic.stop = Math.max(vic.stop, st);
@@ -318,6 +323,7 @@
     var fxIdx = h.fxIndex != null ? h.fxIndex : (mv && mv.step != null ? mv.step : 0);
     F.fx(fxName, ctx.x, ctx.y, { facing: dir, power: lv === 'L' ? 0.3 : lv === 'M' ? 0.55 : 0.9, palette: att.pal, 'char': att.ch, index: fxIdx });
     m.lastHitPos = { x: ctx.x, y: ctx.y };
+    if ((counter || lv === 'H' || h.impact || (h.kd && kind !== 'normal')) && m.impactAt) m.impactAt(ctx.x, ctx.y, counter, att);
     F.sfx(h.sfx || (counter ? 'hit.counter' : 'hit.' + LVNAME[lv]), { pan: F.pan(ctx.x, m.camX) });
     if (lv === 'H' || lv === 'S' || (lv === 'M' && counter)) F.voice(vic.ch, 'hurt');
     var shake = lv === 'H' ? 3 : lv === 'S' ? 3 : lv === 'X' ? 2 : lv === 'M' ? 1 : 0;
@@ -336,12 +342,15 @@
 
   // ------------------------------------------------------------------ counter stance
   F.catchStrike = function (m, cl, att) {
-    var gx = cl.x + cl.facing * 18;
-    F.fx('claude.guardCatch', gx, cl.y - 40, { facing: cl.facing, palette: cl.pal, power: 1 });
+    var gx = cl.x + cl.facing * 40;
+    F.fx('claude.guardCatch', cl.x, cl.y, { facing: cl.facing, palette: cl.pal, power: 1 });   // fx V2: at the ORIGIN
     F.sfx('counter.catch', { pan: F.pan(gx, m.camX) });
     if (LC.LORE && LC.LORE.guardrailLine) m.say(cl.side, LC.LORE.guardrailLine, 80);
     abortMove(att);
     att.setActionRaw('caught'); att.caughtT = 34; att.vx = 0; att.vy = 0; att.pushN = 0;
+    // V2: the barrier reaches far in front of her: yank the caught attacker into palm range
+    var pt = (cl.mv && cl.mv.pullTo) || 0;
+    att.pullTo = pt && Math.abs(att.x - cl.x) > pt ? cl.x + F.sign(att.x - cl.x || cl.facing) * pt : null;
     att.stop = 10; att.flash = 1; att.flashColor = '#ffd9a0';
     var s = cl.str;
     cl.startMove('guardrailHit', s);
@@ -375,9 +384,9 @@
       f.setActionRaw('blockstun'); f.stun = 16; f.stunMax = 16; f.guardLow = false; f.thrower = null; f.victim = null; f.air = false; f.y = GY;
     });
     var dir = F.sign(b.x - a.x) || a.facing;
-    setPush(b, 26, dir); setPush(a, 26, -dir);
+    setPush(b, 34, dir); setPush(a, 34, -dir);
     var mx = (a.x + b.x) / 2;
-    F.fx('throw.tech', mx, GY - 44, { facing: a.facing });
+    F.fx('throw.tech', mx, GY - 66, { facing: a.facing });
     F.sfx('throw.tech', { pan: F.pan(mx, m.camX) });
     m.addShake(1, 6);
     if (m.onContact) m.onContact(a, b, 'tech', 0, null, 'throw');
@@ -417,15 +426,17 @@
     att.stats.damage += dmg; att.stats.throws++; att.stats.hits++;
     att.combo = 1; att.comboDmg = dmg; att.comboShow = 1; att.comboShowDmg = dmg; att.comboT = 0;
     if (vic.hp <= 0) m.lastKill = { side: att.side, kind: 'throw' };
-    if (att.throwBack) { vic.x = att.x - att.facing * 22; }
+    if (att.throwBack) { vic.x = att.x - att.facing * 30; }
     vic.thrower = null; att.victim = null;
     vic.setActionRaw('launch'); vic.knock = 'knock'; vic.juggle = 99; vic.air = true;
-    vic.vx = 2.2 * dir; vic.vy = -3.8; vic.grav = 0.4;
+    var K = T.LAUNCH_K || 1;
+    vic.vx = 2.2 * dir * K; vic.vy = -3.8 * K; vic.grav = 0.4 * K;
     if (vic.y >= GY) vic.y = GY - 2;
     vic.flash = 1; vic.flashColor = '#ffffff';
     vic.stop = 6; att.stop = 6;
     att.addMeter(T.METER_HIT.T); vic.addMeter(4);
-    F.fx('throw.slam', vic.x, GY - 20, { facing: dir, power: 1, palette: att.pal });
+    F.fx('throw.slam', vic.x, GY - 30, { facing: dir, power: 1, palette: att.pal });
+    if (m.impactAt) m.impactAt(vic.x, GY - 40, false, att);
     F.sfx('throw.slam', { pan: F.pan(vic.x, m.camX) });
     F.voice(vic.ch, 'hurt');
     m.addShake(3, 10);
@@ -438,10 +449,12 @@
   F.spawnProj = function (m, f) {
     var P = f.mv.proj, s = f.str;
     var a = f.puppet && !f.puppetFallback ? f.anchor(P.spawn) : { x: P.spawnFb[0], y: P.spawnFb[1] };
-    var ax = F.clamp(a.x, 8, 52), ay = F.clamp(a.y, -76, 0);
+    var ax = F.clamp(a.x, 8, 60), ay = F.clamp(a.y, -110, 0);
     var x = f.x + ax * f.facing, y = P.ground ? GY : f.y + ay;
     var p = {
       id: ++projId, owner: f, inst: f.moveInst, spec: P, str: s, kind: P.kind, sprite: P.sprite,
+      box: F.v(P.box, s), power: F.num(F.v(P.power, s), 1),
+      cruise: P.cruiseY != null && !P.ground ? f.y + P.cruiseY : null,
       x: x, y: y, vx: F.v(P.vx, s) * f.facing, vy: F.v(P.vy, s) || 0, t: 0, dist: 0,
       range: F.v(P.range, s) || 99999, facing: f.facing, stop: 0, dead: false,
       hit: {
@@ -451,7 +464,7 @@
     };
     m.projs.push(p);
     f.proj++;
-    if (P.castFx) F.fx(P.castFx, x, y, { facing: f.facing, palette: f.pal, power: s === 'H' ? 1 : s === 'L' ? 0.4 : 0.7 });
+    if (P.castFx) F.fx(P.castFx, x, y, { facing: f.facing, palette: f.pal, power: p.power });
     if (P.castSfx) F.sfx(P.castSfx, { pan: F.pan(x, m.camX) });
   };
 
@@ -459,11 +472,12 @@
     if (p.dead) return;
     p.dead = true;
     p.owner.proj = Math.max(0, p.owner.proj - 1);
-    if (fx) F.fx(p.spec.hitFx || 'hit.special', p.x, p.y - (p.spec.ground ? 10 : 0), { facing: F.sign(p.vx) || 1, palette: p.owner.pal, power: 0.5 });
+    if (fx) F.fx(p.spec.hitFx || 'hit.special', p.x, p.y - (p.spec.ground ? 18 : 0), { facing: F.sign(p.vx) || 1, palette: p.owner.pal, power: 0.5 });
   }
   F.killProj = killProj;
 
-  function projBox(p) { return F.worldBox(p.spec.box, p.x, p.y, F.sign(p.vx) || p.facing); }
+  function projBox(p) { return F.worldBox(p.box || p.spec.box, p.x, p.y, F.sign(p.vx) || p.facing); }
+  F.projBox = projBox;
 
   F.updateProjs = function (m) {
     var ps = m.projs, i, j;
@@ -472,6 +486,7 @@
       if (p.dead) continue;
       if (p.stop > 0) { p.stop--; continue; }
       p.x += p.vx; p.y += p.vy; p.t++; p.dist += Math.abs(p.vx);
+      if (p.cruise != null && p.y !== p.cruise) p.y += F.clamp(p.cruise - p.y, -1.5, 1.5);
       if (p.spec.diag && p.y >= GY - 5) { p.y = GY - 5; killProj(m, p, true); continue; }
       if (p.dist > p.range) { killProj(m, p, true); continue; }
       if (p.x < m.camX - 40 || p.x > m.camX + LC.W + 40 || p.x < -40 || p.x > LC.STAGE_W + 40) { killProj(m, p, false); continue; }
@@ -505,7 +520,7 @@
       var bar = F.barrierBox(vic);
       if (bar && F.overlap(qb, bar)) {
         killProj(m, q, false);
-        F.fx('claude.guardCatch', q.x, q.y, { facing: vic.facing, palette: vic.pal, power: 0.6 });
+        F.fx('claude.guardCatch', vic.x, vic.y, { facing: vic.facing, palette: vic.pal, power: 0.6 });
         F.sfx('counter.catch', { pan: F.pan(q.x, m.camX), vol: 0.7 });
         vic.addMeter(5);
         if (m.onContact) m.onContact(q.owner, vic, 'absorb', 0, null, 'special');
@@ -515,7 +530,7 @@
       var hurts = F.hurtBoxes(vic, tmpH), touch = false;
       for (j = 0; j < hurts.length; j++) if (F.overlap(qb, hurts[j])) { touch = true; break; }
       if (!touch) continue;
-      var hx = q.x + F.sign(q.vx) * 4, hy = q.spec.ground ? q.y - 12 : q.y;
+      var hx = q.x + F.sign(q.vx) * 6, hy = q.spec.ground ? q.y - 18 : q.y;
       F.applyHit(m, q.owner, vic, q.hit, { proj: q, x: hx, y: hy });
       killProj(m, q, false);
     }
@@ -531,11 +546,12 @@
       F.fx('deepseek.bubbles', f.x, GY - 6, { facing: f.facing, palette: f.pal });
     } else if (id === 'travel') {
       var s = f.str, toward = F.sign(o.x - f.x) || f.facing, dest;
+      var DD = f.mv.dist || { near: 44, far: 124, behind: 40 };
       if (s === 'L') dest = f.x;
-      else if (s === 'M') dest = f.x + toward * F.clamp(Math.abs(o.x - f.x) - 34, 0, 96);
+      else if (s === 'M') dest = f.x + toward * F.clamp(Math.abs(o.x - f.x) - DD.near, 0, DD.far);
       else {
-        dest = o.x + toward * 36;
-        if (dest < T.WALL + 4 || dest > LC.STAGE_W - T.WALL - 4) dest = o.x - toward * 36;
+        dest = o.x + toward * DD.behind;
+        if (dest < T.WALL + 4 || dest > LC.STAGE_W - T.WALL - 4) dest = o.x - toward * DD.behind;
       }
       dest = F.clamp(dest, T.WALL, LC.STAGE_W - T.WALL);
       dest = F.clamp(dest, o.x - T.MAXSEP + 8, o.x + T.MAXSEP - 8);
@@ -545,7 +561,7 @@
       var d = F.sign(o.x - f.x);
       if (d) f.facing = d;
       f.trail = 14;
-      F.fx('deepseek.poolOut', f.x, GY, { facing: f.facing, palette: f.pal, power: 1 });
+      F.fx('deepseek.geyser', f.x, GY, { facing: f.facing, palette: f.pal, power: 1 });   // fx V2 (poolOut = alias)
       F.sfx('deepseek.emerge', { pan: F.pan(f.x, m.camX) });
     }
   };

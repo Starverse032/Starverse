@@ -1,7 +1,18 @@
 # AUDIO — `LC.audio` (Web Audio synth: SFX, chiptune music, voice chirps)
 
-Everything is synthesized at runtime — no audio files. Dev pages: `dev/audio-test.html` (listen,
-from `file://` or http) and `dev/audio-render.html` (headless harness for the measurement tool).
+## Progress / next steps
+- 2026-11-14: verified end to end. `node tools/audio-smoke.mjs` (realtime, headless Chromium) = ALL OK;
+  `node tools/audio-render.mjs all` = 0 clips, 0 console warnings, 0 theory errors, seams identical.
+- Fixed this pass: track fade-out stopped scheduling notes after the 300 ms look-ahead (long `fade`
+  went silent early); tracks replaced in the same frame were kept for 3 s each (30 rapid `music()`
+  calls = 34 live graphs) — now dropped at once, stopped tracks freed 0.1 s after their fade;
+  music bus −2.5 dB (`K.MUSIC_TRIM`) so music sits under SFX at equal sliders; `ui.start`/`ui.lock`
+  trimmed −2 dB to stay under `hit.light`.
+- Next (optional): see "Known weaknesses".
+
+Everything is synthesized at runtime — no audio files. Dev pages: `dev/audio-test.html` (button per
+SFX / voice / track, volume/pan/pitch sliders, scope, combat sim) and `dev/audio-render.html`
+(headless harness for the tools).
 
 ## Files (load order = `manifest.js`)
 | file | what |
@@ -12,7 +23,7 @@ from `file://` or http) and `dev/audio-render.html` (headless harness for the me
 | `instruments.js` | music instruments `lead`, `bass`, `pad`, `bell` (2-op FM), `riser`, `drums`; drum kit rendered once to buffers |
 | `seq.js` | track compiler + validator, `TrackInst` look-ahead scheduler, score printer / theory checks |
 | `sfx-fight.js`, `sfx-system.js`, `sfx-chars.js` | the SFX definitions |
-| `mix.js` | per-SFX gain trims from the measurement pass |
+| `mix.js` | per-SFX gain trim table from the measurement pass (not a duplicate of `mixer.js`; must load after all sfx-*.js) |
 | `voice.js` | formant voice chirps |
 | `tracks-stages.js`, `tracks-menu.js` | the 10 music tracks |
 | `engine.js` | public API (§5.7) + lifecycle |
@@ -21,7 +32,7 @@ from `file://` or http) and `dev/audio-render.html` (headless harness for the me
 ## Graph
 ```
 sfx voices ─► sfxBus(vol) ─────────────────────────────────────────────┐
-track channels ─► trackFade ─► musicIn ─► duck ─► pauseLP ─► pauseGain ─► musicVol ─► master ─► compressor(-7 dB, 12:1) ─► soft clip ─► out
+track channels ─► trackFade ─► musicIn(×0.75) ─► duck ─► pauseLP ─► pauseGain ─► musicVol ─► master ─► compressor(-7 dB, 12:1) ─► soft clip ─► out
 channel sends ─► (per track) echo (ping-pong, tempo-synced) / verbFade ─► verbIn ─► convolver(1.25 s IR) ─► musicIn
 ```
 Volumes use a squared taper (`gain = v²`); defaults come from `LC.settings.master/music/sfx`.
@@ -39,7 +50,9 @@ Volumes use a squared taper (`gain = v²`); defaults come from `LC.settings.mast
   (`guard`, default 30 ms: twelve identical hits in one frame play once), global cap 24 voices
   (lowest `prio` stolen first), small random pitch `jitter` on frequent sounds. Voices: one chirp
   per character at a time.
-- Music: 40 ms timer, 300 ms look-ahead, sample-accurate absolute times; notes later than 20 ms are
+- Music: a fading-out track keeps scheduling until its fade ends, then is freed (0.1 s later; finished
+  one-shots after 3 s of ring-out); a track replaced in the same frame is dropped at once, so rapid
+  switching never stacks. 40 ms timer, 300 ms look-ahead, sample-accurate absolute times; notes later than 20 ms are
   dropped after a stall instead of piling up. Loops wrap by event index (no seam).
 
 ## Public API (§5.7) + additions
@@ -127,8 +140,31 @@ bass root on downbeats/chord changes, and m2/M7 clashes between melody and count
 ### Adding things
 - SFX: `K.defSfx('name', { dur, poly, guard, jitter, wet, stereo, desc, when, build(r, out, t, p, rnd) { S.osc(...); S.noise(...); } })`
   in an sfx-*.js file; start every envelope at 0 with ≥ 0.3 ms attack; then run
-  `node tools/audio-render.mjs sfx name` and add a trim to `mix.js`.
+  `node tools/audio-render.mjs sfx name`, add a trim to `mix.js` toward its category's LUFS-M
+  (table below), add the name to the list in `tools/audio-smoke.mjs` if it is contract-required.
 - Track: `K.defTrack` in a tracks-*.js file, then `theory name --score`, `music name`, `seam name`.
+
+## Loudness (unity sliders, offline, peak dBFS / LUFS-M; 0 clips everywhere)
+| group | sounds (peak / LUFS-M) |
+|-------|------------------------|
+| hits | light -1.1/-18.9 · medium -0.5/-16.9 · heavy -0.5/-13.7 · special -0.5/-14.3 · counter -0.5/-13.8 |
+| block / whiff | block.light -0.6/-22.7 · block.heavy -1.3/-19.7 · whiff L/M/H -6.9/-23.0, -4.3/-21.5, -4.3/-19.8 |
+| movement | jump -5.2/-26.4 · land -3.3/-24.2 · dash -4.2/-24.4 · down -2.5/-15.9 |
+| throws | grab -1.6/-22.4 · slam -1.1/-9.7 · tech -1.1/-19.6 |
+| big | ko -0.5/-8.1 · super.flash -0.5/-10.3 · super.charge -9.0/-16.1 · claude.beam -1.1/-7.8 · deepseek.whale -0.9/-7.2 |
+| system | meter.full -9.8/-17.0 · counter.catch -2.2/-16.8 · timer.tick -1.9/-23.6 · ann.* -0.5…-4.0 / -11.1…-12.0 |
+| UI | move -7.5/-26.1 · confirm -10.5/-21.1 · cancel -12.2/-21.0 · start -12.4/-20.0 · error -9.8/-21.1 · pause -9.9/-21.0 · lock -5.3/-20.1 · text.blip -5.7/-28.2 |
+| characters | specials -1.0…-7.7 / -16.0…-19.6 (chain/haiku hits ≈ -19) |
+| voices | peak -7…-13, LUFS-M -16 (super) … -22 (light) |
+| music (20 s, after trim) | loops -14.6…-15.7 LUFS-I (peak ≤ -1.7); stings vs -13.2, victory -12.5 |
+Game defaults (master .8, music .6, sfx .9): combat mix -17.1 LUFS-I, music alone -28.2 → music ≈ 11 LU under.
+
+## Music summary
+title D maj 120 (36 s, loop 32 s) · select F maj 126 (loop 30.5 s) · vs D min 120 (4 s one-shot) ·
+stage.library D maj/lydian 138 (62.6 s, loop 55.7 s) · stage.abyss E min/dorian 166 (63.6 s, loop 57.8 s) ·
+stage.latent C min 150 (57.6 s, loop 51.2 s) · stage.training C maj 86 swing (loop 44.7 s) ·
+victory C maj 150 (4.8 s one-shot) · continue A harm. min 120 (loop 16 s) · ending G maj 92 (47 s, loop 41.7 s).
+Seam renders: seam 1 and seam 2 envelopes match (−35…−80 dB diff), no dip at the loop point.
 
 ## Measurement tool
 `node tools/audio-render.mjs sfx|voice|music|seam|theory|combat|all [names] [--wav] [--game] [--seconds N] [--score]`
@@ -139,8 +175,20 @@ Seam check: renders intro + 2 loop passes, compares 10 ms RMS envelopes around s
 Note: Chromium's oscillator start phase depends on the sub-quantum start offset when `frequency`
 is automated, so static pitches use `.value` and note starts are rounded to whole samples.
 
+## Realtime smoke test
+`node tools/audio-smoke.mjs`: manifest order, every contract name registered, silent no-ops before
+unlock (and music request remembered), unlock in a real click, every SFX / voice / track played,
+volume clamp, same-track no-op, restart, 30 rapid switches, long fade, `music(null)`, duck/pause,
+hidden-tab suspend/resume, unknown names warn exactly once, no-Web-Audio page silent. Exit code 1 on failure.
+
 ## Deviations / known issues
 - No contract deviations. Additions listed above.
 - SFX reverb is baked into the cached buffers; while the cache is still rendering (first ~1 s after
   unlock) sounds play live and dry.
 - Voices are formant blips — cute, but obviously synthetic.
+- `stage.latent` is 51 s per loop pass, `continue` 16 s (it is a countdown screen, not a stage).
+- `throw.slam` (-9.7 LUFS-M) is louder than `hit.heavy`; intended as a floor impact but can dominate.
+- Voice unknown-name warnings only fire once audio is unlocked (calls before unlock are silent no-ops).
+- Hidden tab suspends the context, so music resumes where it paused rather than "in real time".
+- Default music slider (0.6 from `LC.settings`) puts menu music at about -28 LUFS; if menus feel quiet,
+  raise the default to ~0.7 in settings rather than removing `K.MUSIC_TRIM`.
