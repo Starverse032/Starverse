@@ -342,6 +342,7 @@
     return { rootB: rootB, rootF: rootF, rf: rf, rb: rb, hem: hem, roots: roots, wB: fr(sk.waist, L, -5.6, 4.5), wF: fr(sk.waist, L, 5.4, 4.5) };
   }
 
+  C._skirtGeo = function (sk, sec) { return skirtGeo(sk, sec); };
   function drawSkirt(p, sk, sec, ds) {
     var G = skirtGeo(sk, sec), hem = G.hem, i;
     // frill under-layer below the hem
