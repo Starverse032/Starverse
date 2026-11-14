@@ -346,13 +346,15 @@
     var cuff = P.spoly([67, 108, 74, 104, 82, 106, 86, 112, 82, 116, 74, 117, 68, 115]);
     P.part(cuff, S.c0, S.cl); P.recol(cuff.band(3, -1), [S.c0], S.c2);
     P.px(71, 115, S.cl); P.px(76, 116, S.cl); P.px(81, 115, S.cl);
-    var hand = P.spoly([72, 106, 73, 99, 78, 95, 83, 96, 85, 101, 82, 107, 76, 109]);
-    P.part(hand, S.s1, S.sl); P.recol(hand.band(3, -1), [S.s1], S.s2);
-    [[[78, 97, 82, 91, 85, 87], 3], [[80, 99, 85, 94, 88.5, 91], 3], [[82, 102, 87, 98, 90, 96], 2.8], [[83, 105, 87, 103, 89.5, 101.5], 2.5]].forEach(function (f) {
-      var m = P.sr(f[0], f[1], f[1] * 0.75);
-      P.part(m, S.s1, S.sl); P.recol(m.band(0, -1), [S.s1], S.s2);
+    var hand = P.spoly([69, 106, 70, 98, 74, 92, 80, 91, 82, 99, 79, 106, 74, 110]);
+    P.part(hand, S.s1, S.sl); P.recol(hand.band(3, -1), [S.s1], S.s2); P.recol(hand.band(-1, 1), [S.s1], S.s0);
+    // fingers laid over the cover's left edge (back of the fingers toward us)
+    [[[77, 92.5, 82, 91.5, 87, 92.5], 3.4, 2.6], [[78, 96, 83, 95.5, 88, 96.5], 3.4, 2.6], [[78, 99.5, 83, 99.5, 87.5, 100.5], 3.2, 2.4],
+      [[77, 103, 81, 103.5, 84.5, 104.5], 2.8, 2.2]].forEach(function (f) {
+      var m = P.sr(f[0], f[1], f[2]);
+      P.part(m, S.s1, S.sl); P.recol(m.band(0, -1), [S.s1], S.s2); P.recol(m.band(0, 1), [S.s1], S.s0);
     });
-    P.px(84, 88, S.s0); P.px(87, 92, S.s0);
+    P.px(87, 92, S.bl); P.px(88, 96, S.bl); P.px(87, 100, S.bl);
   }
 
   // ---------------------------------------------------------------- face icon 24x24 (hand-typed)
