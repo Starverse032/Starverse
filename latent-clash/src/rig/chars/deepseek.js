@@ -11,7 +11,7 @@
  *   tl (1 = tail locked exactly to the pose curve, use on tail strikes), tsw (sway scale),
  *   flip (1 = this drawing faces left: whole sprite mirrored about x = 0; author the
  *   pose as if facing right — used for spins), weapon ('hF'|'hB'|'fF'|'fB'|'kF'|'kB'|'tail'),
- *   z: { tail, armF, armB, legF, legB, hair }.
+ *   z: { tail, armF, armB, legF, legB, hair }, drape: { F: 0..1, B: 0..1 } (force the hem to drape over a leg).
  */
 (function () {
   'use strict';
@@ -77,7 +77,8 @@
   // how far a leg is lifted (0 = hanging under the skirt, 1 = thigh raised): the hem then drapes from the thigh
   function raised(d, s) {
     var h = s === 'F' ? d.hipF : d.hipB, k = s === 'F' ? d.knF : d.knB;
-    var r = (h[1] + 19 - k[1]) / 10;
+    var r = (h[1] + 19 - k[1]) / 10, f = d.ds && d.ds.drape;
+    if (f && f[s] != null && f[s] > r) r = f[s];
     return r < 0 ? 0 : (r > 1 ? 1 : r);
   }
   function limF(ch, i, sk) {
@@ -159,6 +160,7 @@
 
   C.post = function (sk) {
     sk.headAng = Math.round(sk.headAng / 5) * 5;
+    sk.headAng = ((sk.headAng + 180) % 360 + 360) % 360 - 180;
     sk.flip = !!(sk.ds && sk.ds.flip);
     if (sk.flip) {
       var o = { flip: false, ds: sk.ds, lean: sk.lean, chestAng: sk.chestAng, headAng: sk.headAng, handAngF: sk.handAngF, handAngB: sk.handAngB,

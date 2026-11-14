@@ -129,8 +129,8 @@
   var WV1 = P(S, ATK, { hip: [-4, -46], lean: -6, bend: -8, hF: [12, -70], hB: [-4, -68], handF: 'open', handB: 'open', tail: 125, arch: 4, tsw: 0, skirt: 0.2, muz: [40, 0],
     eyes: 'focus', mouth: 'teeth' });
   // flipped: authored facing right with the tail slammed down behind = in front on screen
-  var WVX = P(S, HIT, { flip: 1, hip: [-6, -38], lean: 26, bend: 8, fF: [8, 0], fB: [-14, 0], faB: 30, hF: [16, -50], hB: [8, -46], handF: 'flat', handB: 'flat',
-    tail: 46, arch: -4, pen: -10, tl: 1, tsw: 0, skirt: 0.45, z: { tail: 6 }, weapon: 'tail', muz: [44, 0], eyes: 'focus', mouth: 'shout' });
+  var WVX = P(S, HIT, { flip: 1, hip: [-6, -34], lean: 26, bend: 8, fF: [8, 0], fB: [-14, 0], faB: 30, hF: [16, -50], hB: [8, -46], handF: 'flat', handB: 'flat',
+    tail: 42, arch: -8, pen: -10, tl: 1, tsw: 0, skirt: 0.45, z: { tail: 6 }, weapon: 'tail', muz: [40, 0], eyes: 'focus', mouth: 'shout' });
   def('wave', {
     segs: sar(15, 3, 26), step: 2,
     keys: [['startup', P(S, ATK, { muz: [40, 0] })], ['startup+5', WV0, 'out'], ['startup+11', WV1, 'snap'],
@@ -201,7 +201,7 @@
       ['recovery', P(DO, { root: [0, -3], mouth: 'grin' }), 'out'], ['recovery+12', P(S, { hip: [0, -38], lean: 16, skirt: 0.3 })], ['recovery+21', S]]
   });
   // diveKick: both feet first, down-forward; skirt and tail streaming behind
-  var DK = P(JF, HIT, { hip: [-8, -40], lean: 38, bend: 6, fF: [12, 0], fB: [8, 2], faF: 40, faB: 45, knF: -1, knB: -1, hF: [-12, -62], hB: [-22, -58],
+  var DK = P(JF, HIT, { hip: [-8, -42], lean: 34, bend: 6, fF: [22, -6], fB: [17, -3], drape: { F: 1, B: 1 }, faF: 40, faB: 45, knF: -1, knB: -1, hF: [-12, -62], hB: [-22, -58],
     handF: 'open', handB: 'open', weapon: 'fF', skirt: -0.2, tail: -50, arch: 6, tsw: 0.4 });
   def('diveKick', {
     segs: [['startup', 8], ['active', 10, true], ['land', 12]], step: 2,
