@@ -59,7 +59,7 @@
 
   // ---------------------------------------------------------------- crouching normals (all hit low)
   var c0 = P(C, ATK);
-  var CL1 = P(C, HIT, { hF: [15, -15], pen: 24, pg: 0.5, lean: 26, mouth: 'neutral' });
+  var CL1 = P(C, HIT, { hF: [13, -15], pen: 24, pg: 0.6, lean: 26, mouth: 'neutral' });
   def('2L', {
     segs: [['startup', 5], ['active', 3], ['recovery', 9]], step: 1,
     keys: [
@@ -105,11 +105,11 @@
       ['recovery', P(j0, { hF: [13, -32], pen: 35 })]
     ]
   });
-  var JM1 = P(JF, HIT, { hF: [16, -34], pen: 24, lean: 10 });
+  var JM1 = P(JF, HIT, { hF: [15, -34], pen: 26, pg: 0.6, lean: 10 });
   def('jM', {
     segs: [['startup', 7], ['active', 6], ['recovery', 12, true]], step: 2,
     keys: [
-      ['startup', j0], ['startup+4', P(j0, { hF: [6, -46], pen: -55, lean: -6 }), 'out'], ['startup+6', P(j0, { hF: [6, -46], pen: -58, lean: -7 }), 'snap'],
+      ['startup', j0], ['startup+4', P(j0, { hF: [6, -46], pen: -55, pg: 0.6, lean: -6 }), 'out'], ['startup+6', P(j0, { hF: [6, -46], pen: -58, pg: 0.6, lean: -7 }), 'snap'],
       ['active', P(JM1, { smear: { part: 'pen', from: 'startup+6', n: 5 } }), 'snap'],
       ['active+2', JM1, 'snap'],
       ['recovery', P(j0, { hF: [15, -33], pen: 30 })]
@@ -183,7 +183,7 @@
   });
 
   // ---------------------------------------------------------------- guardrail counter stance + retaliation
-  var GR = P(S, ATK, { hip: [-1, -30], lean: -2, hF: [6, -40], pen: -84, pg: 0.45, hB: [12, -42], handB: 'flat', z: { armB: 6 }, mouth: 'neutral', glow: 1 });
+  var GR = P(S, ATK, { hip: [-1, -28], lean: -3, fF: [11, 0], fB: [-10, 0], hF: [5, -38], pen: -86, pg: 0.45, hB: [21, -41], handB: 'flat', z: { armB: 6 }, eyes: 'closed', mouth: 'neutral', glow: 1 });
   def('guardrail', {
     segs: [['startup', 3], ['hold', 18], ['recovery', 22]], step: 2,
     keys: [

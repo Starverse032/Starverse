@@ -56,14 +56,14 @@
       ['active', P(CL, { smear: { part: 'hF', from: 'startup+2', n: 3 } }), 'snap'], ['active+1', CL, 'snap'],
       ['recovery', P(CL, { hF: [19, -14] }), 'out'], ['recovery+7', C]]
   });
-  var CM = P(C, HIT, { hip: [0, -12], lean: 6, fF: [34, -4], faF: -60, fB: [-8, 0], weapon: 'fF' });
+  var CM = P(C, HIT, { hip: [5, -12], lean: 10, fF: [33, -4], faF: -70, fB: [-6, 0], weapon: 'fF' });
   def('2M', {
     segs: sar(7, 4, 13), step: 2,
     keys: [['startup', c0], ['startup+4', P(c0, { fF: [14, -6], faF: 20 }), 'out'],
       ['active', P(CM, { smear: { part: 'fF', from: 'startup+4', n: 3 } }), 'snap'], ['active+2', CM, 'snap'],
       ['recovery', P(CM, { fF: [20, -3], mouth: 'grin' }), 'out'], ['recovery+12', C]]
   });
-  var CH = P(C, HIT, { hip: [-2, -9], lean: 30, fF: [40, -1], faF: -85, fB: [-8, 0], hF: [8, -10], hB: [2, -6], handF: 'flat', handB: 'flat', weapon: 'fF' });
+  var CH = P(C, HIT, { hip: [14, -8], lean: 42, fF: [41, -1], faF: -88, fB: [6, 0], hF: [20, -6], hB: [14, -4], handF: 'flat', handB: 'flat', weapon: 'fF' });
   def('2H', {
     segs: sar(10, 5, 22), step: 2,
     keys: [['startup', c0], ['startup+6', P(c0, { hip: [0, -10], lean: 26, fF: [10, -3], hF: [8, -12], handF: 'flat' }), 'out'],
@@ -87,7 +87,7 @@
       ['active', P(JM, { smear: { part: 'fF', from: 'startup+3', n: 3 } }), 'snap'], ['active+2', JM, 'snap'],
       ['recovery', P(j0, { fF: [10, -6] })]]
   });
-  var JH = P(JF, HIT, { hip: [0, -32], lean: 20, fF: [22, -2], faF: 20, fB: [-6, -10], hF: [6, -46], hB: [-6, -44], weapon: 'fF' });
+  var JH = P(JF, HIT, { hip: [10, -29], lean: 26, fF: [25, -4], faF: 20, fB: [2, -12], hF: [12, -46], hB: [0, -44], weapon: 'fF' });
   def('jH', {
     segs: [['startup', 9], ['active', 6], ['recovery', 12, true]], step: 2,
     keys: [['startup', j0], ['startup+5', P(j0, { lean: -10, fF: [6, -16], faF: 40, hF: [10, -48], hB: [0, -50] }), 'out'],
@@ -107,14 +107,14 @@
   });
 
   // ---------------------------------------------------------------- breach: rising whale-tail somersault kick
-  var BR = P(JR, HIT, { hip: [0, -30], lean: -40, bend: -10, tilt: -25, fF: [16, -62], faF: -60, knF: -1, fB: [-2, -8], faB: 40,
+  var BR = P(JR, HIT, { hip: [2, -34], lean: -40, bend: -10, tilt: -25, fF: [24, -60], faF: -60, knF: -1, fB: [-2, -8], faB: 40,
     hF: [-8, -30], hB: [-12, -34], handF: 'open', handB: 'open', weapon: 'fF' });
   def('breach', {
     segs: [['startup', 5], ['rise', 12], ['fall', 12, true], ['land', 14]], step: 2,
     keys: [
       ['startup', P(C, ATK)], ['startup+3', P(C, ATK, { hip: [0, -11], lean: 30 })],
       ['rise', P(BR, { smear: { part: 'fF', from: 'startup+3', n: 5 } }), 'snap'], ['rise+2', BR, 'snap'],
-      ['rise+7', P(BR, { lean: -80, tilt: -60, fF: [2, -64], hF: [-14, -40], mouth: 'grin' })],
+      ['rise+7', P(BR, { lean: -70, tilt: -55, fF: [12, -66], hF: [-14, -40], mouth: 'grin' })],
       ['fall', P(JF, ATK, { fF: [6, -8], fB: [-6, -10], faF: 30 })], ['fall+6', P(JF, ATK)],
       ['land', P(S, { hip: [0, -14], lean: 22, hF: [14, -25], hB: [6, -26], eyes: 'focus' })], ['land+7', P(S, ATK)], ['land+13', S]
     ]
