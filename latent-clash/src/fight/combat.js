@@ -16,7 +16,7 @@
     out.length = 0;
     var a = f.action, C = f.C;
     if (f.hidden || a === 'down' || a === 'getup') return out;
-    var set = f.air ? C.hurt.air : (f.isCrouching() ? C.hurt.crouch : C.hurt.stand);
+    var set = f.air ? ((a === 'launch' && C.hurt.launch) || C.hurt.air) : (f.isCrouching() ? C.hurt.crouch : C.hurt.stand);
     for (var i = 0; i < set.length; i++) out.push(F.worldBox(set[i], f.x, f.y, f.facing));
     // limb extension while attacking (whiff punishable pokes)
     if (a === 'attack' && f.mv && f.mv.hits && (f.mv.kind === 'normal' || f.mv.extHurt)) {
@@ -37,7 +37,7 @@
     var a = f.action;
     if (a === 'attack' && f.seg() && f.seg().noPush) return null;
     var P = f.C.push;
-    var b = f.air ? P.air : (f.isCrouching() || a === 'down' ? P.crouch : P.stand);
+    var b = f.air ? P.air : (a === 'down' ? (P.down || P.crouch) : (f.isCrouching() ? P.crouch : P.stand));
     return F.worldBox(b, f.x, f.y, f.facing);
   };
 
@@ -55,6 +55,15 @@
         var fr = wi.frames[t];
         if (!fr || !fr.w) return null;
         return [f.mv.whale.x + fr.x, fr.y, fr.w, fr.h];
+      }
+      return b;
+    }
+    if (h.tidalBox) {   // the tidal wave after the whale's crash, rel. the crash point
+      var ti = F.tidalInfo(), tt = F.tidalT ? F.tidalT(f) : -1;
+      if (ti && ti.frames && tt >= 0) {
+        var tf = ti.frames[tt];
+        if (!tf || !tf.w) return null;
+        return [f.mv.whale.x + F.whaleCrashX() + tf.x, tf.y, tf.w, tf.h];
       }
       return b;
     }
@@ -98,7 +107,18 @@
     }
     return whaleInfo;
   };
-  F.resetWhaleInfo = function () { whaleInfo = undefined; };
+  var tidalInfo;
+  F.tidalInfo = function () {
+    if (tidalInfo === undefined) {
+      tidalInfo = null;
+      if (F.mod('fx', 'spriteInfo')) { try { var ti = LC.fx.spriteInfo('deepseek.tidal'); if (ti && ti.frames && ti.frames.length) tidalInfo = ti; } catch (e) { F.err('fx.spriteInfo tidal', e); } }
+    }
+    return tidalInfo;
+  };
+  // crash event (whale t) and crash x (rel. the whale origin) — read from fx, V2 defaults otherwise
+  F.whaleCrash = function () { var wi = F.whaleInfo(); return wi && wi.events && wi.events.crash != null ? wi.events.crash : 46; };
+  F.whaleCrashX = function () { var wi = F.whaleInfo(); return wi && wi.crashX != null ? wi.crashX : 194; };
+  F.resetWhaleInfo = function () { whaleInfo = undefined; tidalInfo = undefined; };
 
   F.barrierBox = function (f) {
     if (!f.mv || !f.mv.catchSeg || f.action !== 'attack') return null;
@@ -135,11 +155,13 @@
     for (var i = 0; i < hits.length; i++) {
       var e = hits[i], hb = e.box;
       if (!juggleOK(vic, e.h)) continue;
-      var touch = bar && !e.h.noCatch && F.overlap(hb, bar);
-      for (var j = 0; !touch && j < hurts.length; j++) if (F.overlap(hb, hurts[j])) touch = true;
+      var touch = bar && !e.h.noCatch && F.overlap(hb, bar) ? bar : null;
+      for (var j = 0; !touch && j < hurts.length; j++) if (F.overlap(hb, hurts[j])) touch = hurts[j];
       if (!touch) continue;
-      var hx = (Math.max(hb.x, vic.x - 12) + Math.min(hb.x + hb.w, vic.x + 12)) / 2;
-      var hy = Math.max(hb.y, vic.y - 70) + Math.min(hb.h, 14) / 2;
+      // contact point: centre of the overlap, x pulled toward the victim's front edge
+      var ox0 = Math.max(hb.x, touch.x), ox1 = Math.min(hb.x + hb.w, touch.x + touch.w);
+      var oy0 = Math.max(hb.y, touch.y), oy1 = Math.min(hb.y + hb.h, touch.y + touch.h);
+      var hx = (ox0 + ox1) / 2, hy = F.clamp((oy0 + oy1) / 2, vic.y - 100, vic.y - 8);
       events.push({ att: att, vic: vic, h: e.h, key: e.key, x: hx, y: hy, sf: att.sf, mv: att.mv });
       return;   // one hit per attacker per tick
     }
