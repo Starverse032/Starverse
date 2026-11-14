@@ -57,64 +57,72 @@
     ]
   });
 
-  // ---------------------------------------------------------------- crouching normals
+  // ---------------------------------------------------------------- crouching normals (all hit low)
   var c0 = P(C, ATK);
+  var CL1 = P(C, HIT, { hF: [15, -15], pen: 24, pg: 0.5, lean: 26, mouth: 'neutral' });
   def('2L', {
     segs: [['startup', 5], ['active', 3], ['recovery', 9]], step: 1,
     keys: [
-      ['startup', c0], ['startup+2', P(c0, { hF: [9, -18], pen: 18, pg: 0.5 }), 'out'],
-      ['active', P(C, HIT, { hF: [16, -17], pen: 14, pg: 0.5, lean: 26, mouth: 'neutral', smear: { part: 'pen', from: 'startup+2', n: 3 } }), 'snap'],
-      ['active+1', P(C, HIT, { hF: [16, -17], pen: 14, pg: 0.5, lean: 26, mouth: 'neutral' }), 'snap'],
-      ['recovery', P(c0, { hF: [14, -17], pen: 16, pg: 0.5 }), 'out'], ['recovery+8', C]
+      ['startup', c0], ['startup+2', P(c0, { hF: [7, -18], pen: 22, pg: 0.5, lean: 16 }), 'out'], ['startup+4', P(c0, { hF: [6, -18], pen: 22, pg: 0.5, lean: 15 }), 'snap'],
+      ['active', P(CL1, { smear: { part: 'pen', from: 'startup+4', n: 3 } }), 'snap'],
+      ['active+1', CL1, 'snap'],
+      ['recovery', P(CL1, { glow: 0 }), 'snap'], ['recovery+2', P(c0, { hF: [13, -16], pen: 22, pg: 0.5 }), 'out'], ['recovery+8', C]
     ]
   });
+  var CM1 = P(C, HIT, { hF: [19, -16], pen: 16, lean: 30, hip: [3, -15], fF: [15, 0] });
   def('2M', {
     segs: [['startup', 8], ['active', 4], ['recovery', 15]], step: 2,
     keys: [
-      ['startup', c0], ['startup+5', P(c0, { hF: [4, -20], pen: 10, lean: 14 }), 'out'],
-      ['active', P(C, HIT, { hF: [20, -18], pen: 6, lean: 30, hip: [3, -15], fF: [15, 0], smear: { part: 'pen', from: 'startup+5', n: 4 } }), 'snap'],
-      ['active+2', P(C, HIT, { hF: [20, -18], pen: 6, lean: 30, hip: [3, -15], fF: [15, 0] }), 'snap'],
-      ['recovery', P(c0, { hF: [18, -18], pen: 8, hip: [2, -15] }), 'out'], ['recovery+14', C]
+      ['startup', c0], ['startup+4', P(c0, { hF: [2, -19], pen: 12, lean: 12, hip: [-2, -15] }), 'out'], ['startup+6', P(c0, { hF: [1, -19], pen: 12, lean: 10, hip: [-2, -15] }), 'snap'],
+      ['active', P(CM1, { smear: { part: 'pen', from: 'startup+6', n: 3 } }), 'snap'],
+      ['active+2', CM1, 'snap'],
+      ['recovery', P(CM1, { glow: 0 }), 'snap'], ['recovery+3', P(c0, { hF: [17, -16], pen: 16, hip: [2, -15] }), 'out'], ['recovery+14', C]
     ]
   });
-  def('2H', {   // low sweeping slash along the floor (knockdown)
+  // 2H: knockdown sweep — rising wind-up, then a chop that ends flat along the floor in front
+  var CH1 = P(C, HIT, { hip: [3, -11], lean: 36, hF: [18, -9], pen: 6, fF: [17, 0], fB: [-13, 0], faB: 50, hB: [-12, -18], handB: 'open' });
+  def('2H', {
     segs: [['startup', 11], ['active', 5], ['recovery', 24]], step: 2,
     keys: [
-      ['startup', c0], ['startup+6', P(c0, { hF: [-2, -16], pen: 170, lean: 10, hip: [-2, -14] }), 'out'],
-      ['startup+9', P(c0, { hF: [6, -14], pen: 75, lean: 24, hip: [0, -12] })],
-      ['active', P(C, HIT, { hip: [2, -11], lean: 34, hF: [18, -12], pen: 12, fF: [16, 0], fB: [-12, 0], faB: 50, smear: { part: 'pen', from: 'startup+9', n: 4 } }), 'snap'],
-      ['active+2', P(C, HIT, { hip: [2, -11], lean: 34, hF: [18, -12], pen: 12, fF: [16, 0], fB: [-12, 0], faB: 50 }), 'snap'],
-      ['recovery', P(C, ATK, { hip: [2, -12], lean: 30, hF: [18, -12], pen: 18, fF: [16, 0], fB: [-12, 0] }), 'out'],
-      ['recovery+18', C], ['recovery+23', C]
+      ['startup', c0], ['startup+6', P(c0, { hF: [3, -27], pen: -45, lean: 6, hip: [-2, -16], hB: [-10, -24], handB: 'open' }), 'out'],
+      ['startup+9', P(c0, { hF: [2, -28], pen: -50, lean: 4, hip: [-2, -16], hB: [-10, -24], handB: 'open' }), 'snap'],
+      ['active', P(CH1, { smear: { part: 'pen', from: 'startup+9', n: 5 } }), 'snap'],
+      ['active+2', CH1, 'snap'],
+      ['recovery', P(CH1, { glow: 0, mouth: 'neutral' }), 'snap'], ['recovery+8', P(CH1, { glow: 0, mouth: 'neutral', hip: [2, -12] }), 'out'],
+      ['recovery+20', C], ['recovery+23', C]
     ]
   });
 
-  // ---------------------------------------------------------------- jump normals (recovery* loops until landing)
+  // ---------------------------------------------------------------- jump normals (point down-forward; recovery* loops until landing)
   var j0 = P(JF, ATK);
+  var JL1 = P(JF, HIT, { hF: [14, -30], pen: 42, pg: 0.5, mouth: 'neutral' });
   def('jL', {
     segs: [['startup', 5], ['active', 6], ['recovery', 12, true]], step: 1,
     keys: [
-      ['startup', j0], ['startup+2', P(j0, { hF: [8, -38], pen: 20, pg: 0.5 }), 'out'],
-      ['active', P(JF, HIT, { hF: [14, -30], pen: 40, pg: 0.5, mouth: 'neutral', smear: { part: 'pen', from: 'startup+2', n: 3 } }), 'snap'],
-      ['active+2', P(JF, HIT, { hF: [14, -30], pen: 40, pg: 0.5, mouth: 'neutral' }), 'snap'],
-      ['recovery', P(j0, { hF: [13, -33], pen: 30 })]
+      ['startup', j0], ['startup+2', P(j0, { hF: [7, -37], pen: 25, pg: 0.5 }), 'out'], ['startup+4', P(j0, { hF: [6, -38], pen: 24, pg: 0.5 }), 'snap'],
+      ['active', P(JL1, { smear: { part: 'pen', from: 'startup+4', n: 3 } }), 'snap'],
+      ['active+1', JL1, 'snap'],
+      ['recovery', P(j0, { hF: [13, -32], pen: 35 })]
     ]
   });
+  var JM1 = P(JF, HIT, { hF: [16, -34], pen: 24, lean: 10 });
   def('jM', {
     segs: [['startup', 7], ['active', 6], ['recovery', 12, true]], step: 2,
     keys: [
-      ['startup', j0], ['startup+4', P(j0, { hF: [0, -44], pen: 200, lean: -6 }), 'out'],
-      ['active', P(JF, HIT, { hF: [16, -36], pen: 15, lean: 10, smear: { part: 'pen', from: 'startup+4', n: 5 } }), 'snap'],
-      ['active+2', P(JF, HIT, { hF: [16, -36], pen: 15, lean: 10 }), 'snap'],
-      ['recovery', P(j0, { hF: [15, -34], pen: 25 })]
+      ['startup', j0], ['startup+4', P(j0, { hF: [6, -46], pen: -55, lean: -6 }), 'out'], ['startup+6', P(j0, { hF: [6, -46], pen: -58, lean: -7 }), 'snap'],
+      ['active', P(JM1, { smear: { part: 'pen', from: 'startup+6', n: 5 } }), 'snap'],
+      ['active+2', JM1, 'snap'],
+      ['recovery', P(j0, { hF: [15, -33], pen: 30 })]
     ]
   });
+  var JH1 = P(JF, HIT, { hF: [16, -30], pen: 55, lean: 18, bend: 6, fF: [8, -3] });
   def('jH', {   // big overhead chop
     segs: [['startup', 10], ['active', 6], ['recovery', 12, true]], step: 2,
     keys: [
-      ['startup', j0], ['startup+6', P(j0, { hF: [2, -54], pen: -110, lean: -10, bend: -6, fF: [5, -8], faF: 30 }), 'out'],
-      ['active', P(JF, HIT, { hF: [16, -30], pen: 55, lean: 18, bend: 6, fF: [8, -3], smear: { part: 'pen', from: 'startup+6', n: 7 } }), 'snap'],
-      ['active+2', P(JF, HIT, { hF: [16, -30], pen: 55, lean: 18, bend: 6, fF: [8, -3] }), 'snap'],
+      ['startup', j0], ['startup+5', P(j0, { hF: [2, -54], pen: -110, lean: -10, bend: -6, fF: [5, -8], faF: 30 }), 'out'],
+      ['startup+8', P(j0, { hF: [8, -50], pen: -45, lean: -2, fF: [6, -6], faF: 25 }), 'snap'],
+      ['active', P(JH1, { smear: { part: 'pen', from: 'startup+8', n: 5 } }), 'snap'],
+      ['active+2', JH1, 'snap'],
       ['recovery', P(j0, { hF: [15, -30], pen: 50, lean: 12 })]
     ]
   });

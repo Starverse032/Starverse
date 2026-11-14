@@ -1,1 +1,1 @@
-(window.LC_MANIFEST = window.LC_MANIFEST || {}).audio = ['core.js', 'synth.js', 'mixer.js', 'instruments.js', 'seq.js', 'sfx-fight.js', 'sfx-system.js', 'sfx-chars.js', 'voice.js', 'engine.js', 'offline.js'];
+(window.LC_MANIFEST = window.LC_MANIFEST || {}).audio = ['core.js', 'synth.js', 'mixer.js', 'instruments.js', 'seq.js', 'sfx-fight.js', 'sfx-system.js', 'sfx-chars.js', 'voice.js', 'tracks-stages.js', 'engine.js', 'offline.js'];
