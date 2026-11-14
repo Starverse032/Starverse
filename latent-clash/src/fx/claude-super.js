@@ -20,7 +20,7 @@
 
   function bake() {
     [0, 1].forEach(function (pal) {
-      var sc = I.scheme('claude', pal), L = sc.light.u, G = sc.gold.u, P = sc.paper.u, K = sc.ink.u, C = CS[pal];
+      var sc = I.scheme('claude', pal), L = sc.light.u, G = sc.gold.u, P = sc.paper.u, K = sc.book.u, C = CS[pal];
 
       // ---- body tiles: 4 thickness levels x 4 wobble frames ----
       C.body = HS.map(function (h, li) {

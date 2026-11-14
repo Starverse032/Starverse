@@ -70,7 +70,8 @@
   var IX = { B: [1, 2, 3, 4], Be: [5, 6, 7, 8], G: [9, 10, 11], O: 12, blush: 13, white: 14 };
   function lutFor(pal) {
     var P = LC.PAL.deepseek[pal], hr = P.hair, sc = I.scheme('deepseek', pal);
-    var back = pal === 0 ? [hr[0], hr[1], hr[2], hr[3]] : [hr[1], hr[2], hr[3], I.mix(hr[3], P.outline, 0.45)];
+    // pal 0: brighter than the navy-grey `fin` ramp so the giant whale reads on the dark deep-sea backdrop
+    var back = pal === 0 ? [hr[0], P.ui || hr[1], hr[1], hr[2]] : (P.fin ? P.fin.slice() : [hr[1], hr[2], hr[3], I.mix(hr[3], P.outline, 0.45)]);
     var belly = ['#ffffff', '#e8eefc', '#b8c5ea', '#8492c6'];
     var lut = new Uint32Array(16);
     back.forEach(function (c, i) { lut[1 + i] = I.col(c); });
@@ -333,8 +334,7 @@
           b.rect(x, Math.round(yt) - 1, 1, 2 + ((x + f) % 3 === 0 ? 1 : 0), (x + f) % 4 ? F[0] : F[1]);
         }
         // spray wall above the crest
-        var nsp = col ? 10 : 70, mist = new I.Buf(150, 124);
-        if (!col) { mist.ellipse(bx - 18, by - Hc - 6, 30, 14, Wt[1]); mist.breakup(function (x, y) { return 0.32 - Math.max(0, (by - Hc - 6 - y)) * 0.02; }, f, 0); mist.erase(function (x, y) { return b.get(x, y) !== 0; }); b.blit(mist, 0, 0); }
+        var nsp = col ? 10 : 80;
         for (var k = 0; k < nsp; k++) {
           var rr = rng(), px = bx - 50 + rng() * 64, rise = rr * rr * (col ? 14 : 44), py = by - Hc - rise + rng() * 6;
           var c = rise > 26 ? Wt[1] : F[rng() < 0.6 ? 0 : 1];

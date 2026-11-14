@@ -22,7 +22,7 @@
   // CLAUDE — the study
   var polar = null;
   function bakeClaude(pal) {
-    var sc = I.scheme('claude', pal), L = sc.light.css, P = sc.paper.css, K = sc.ink.css, O = sc.outline, C = CB[pal];
+    var sc = I.scheme('claude', pal), L = sc.light.css, P = sc.paper.css, K = sc.book.css, O = sc.outline, C = CB[pal];
     var wall = [mixc(O, '#000000', 0.62), mixc(O, '#000000', 0.42), mixc(O, '#000000', 0.2), I.col(O)];
     var lit = [mixc(O, L[4], 0.3), mixc(O, L[3], 0.42), mixc(L[4], L[3], 0.5), I.col(L[3]), I.col(L[2])];
     var shelf = mixc(O, '#000000', 0.5), shelfHi = mixc(O, L[4], 0.22);

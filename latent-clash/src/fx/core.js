@@ -265,6 +265,7 @@
         gold: ramp(['#ffffff', M[0], M[1], M[2], M[3]]),
         paper: ramp(C.slice()),
         ink: ramp(K.slice()),
+        book: ramp((P.book || K).slice()),
         text: ramp([A[1], A[2], A[3]]),
         // seal: vermilion stamp for the haiku slash (pal 1: deep gold stamp)
         seal: ramp(pi === 0 ? ['#fff3df', '#e8482e', '#a8241c', '#5e1414'] : ['#fffbe6', '#e6a020', '#9c5e10', '#4e2c08'])
