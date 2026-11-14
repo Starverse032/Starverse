@@ -14,6 +14,7 @@
   var EMPTY = {};
   var MAX_VOICES = 24;
 
+  K.MUSIC_TRIM = 0.75;   // -2.5 dB: at equal sliders the music sits under hit SFX (see NOTES loudness table)
   K.taper = function (v) { v = Math.max(0, Math.min(1, +v || 0)); return v * v; };   // slider -> gain
 
   // ---------------------------------------------------------------------------
@@ -90,7 +91,7 @@
     this.sfxBus = c.createGain(); this.sfxBus.gain.value = K.taper(vol.sfx);
     this.sfxBus.connect(this.master);
 
-    this.musicIn = c.createGain();
+    this.musicIn = c.createGain(); this.musicIn.gain.value = K.MUSIC_TRIM;   // music headroom under SFX
     this.duckG = c.createGain();
     this.pauseLP = c.createBiquadFilter(); this.pauseLP.type = 'lowpass'; this.pauseLP.frequency.value = 20000; this.pauseLP.Q.value = 0.5;
     this.pauseG = c.createGain();
