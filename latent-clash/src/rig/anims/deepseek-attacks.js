@@ -49,12 +49,12 @@
 
   // ---------------------------------------------------------------- crouching normals
   var c0 = P(C, ATK);
-  var CL = P(C, HIT, { hF: [24, -22], lean: 28, weapon: 'hF', mouth: 'grin' });
+  var CL = P(C, HIT, { hF: [21, -13], lean: 32, hip: [1, -12], weapon: 'hF', mouth: 'grin' });
   def('2L', {
     segs: sar(4, 3, 8), step: 1,
-    keys: [['startup', c0], ['startup+2', P(c0, { hF: [12, -22] }), 'out'],
+    keys: [['startup', c0], ['startup+2', P(c0, { hF: [10, -20], lean: 18 }), 'out'],
       ['active', P(CL, { smear: { part: 'hF', from: 'startup+2', n: 3 } }), 'snap'], ['active+1', CL, 'snap'],
-      ['recovery', P(CL, { hF: [20, -22] }), 'out'], ['recovery+7', C]]
+      ['recovery', P(CL, { hF: [19, -14] }), 'out'], ['recovery+7', C]]
   });
   var CM = P(C, HIT, { hip: [0, -12], lean: 6, fF: [34, -4], faF: -60, fB: [-8, 0], weapon: 'fF' });
   def('2M', {
@@ -73,14 +73,14 @@
 
   // ---------------------------------------------------------------- jump normals
   var j0 = P(JF, ATK);
-  var JL = P(JF, HIT, { hF: [22, -30], lean: 14, weapon: 'hF', mouth: 'grin' });
+  var JL = P(JF, HIT, { hF: [19, -22], lean: 20, weapon: 'hF', mouth: 'grin' });
   def('jL', {
     segs: [['startup', 4], ['active', 8], ['recovery', 12, true]], step: 1,
     keys: [['startup', j0], ['startup+2', P(j0, { hF: [12, -36] }), 'out'],
       ['active', P(JL, { smear: { part: 'hF', from: 'startup+2', n: 3 } }), 'snap'], ['active+2', JL, 'snap'],
       ['recovery', P(j0, { hF: [16, -34] })]]
   });
-  var JM = P(JF, HIT, { hip: [0, -30], lean: -10, fF: [26, -16], faF: -70, fB: [-4, -6], weapon: 'fF' });
+  var JM = P(JF, HIT, { hip: [0, -30], lean: -12, fF: [23, -6], faF: -35, fB: [-4, -8], weapon: 'fF' });
   def('jM', {
     segs: [['startup', 6], ['active', 6], ['recovery', 12, true]], step: 2,
     keys: [['startup', j0], ['startup+3', P(j0, { fF: [8, -14], faF: 30 }), 'out'],

@@ -122,7 +122,7 @@
       var pools = A.dss && A.dss[o.pal] && A.dss[o.pal].pool;
       // pools: emergence point (open t0-24) and crash point (t 40-59)
       if (pools) {
-        if (t < 26) I.drawAnim(ctx, pools[Math.min(4, t < 4 ? t + 1 : t > 20 ? 4 - (t - 20) : 4)], t % 8, sx + dir * 6, sy, 1);
+        if (t < 26) I.drawAnim(ctx, pools[Math.max(0, Math.min(4, t < 4 ? t + 1 : t > 20 ? 4 - (t - 20) : 4))], t % 8, sx + dir * 6, sy, 1);
         if (t > 40) I.drawAnim(ctx, pools[Math.min(4, t < 46 ? t - 41 : t > 54 ? Math.max(0, 4 - (t - 54)) : 4)], t % 8, sx + dir * 128, sy, 1);
       }
       if (t < 3) {   // the floor bulges before it breaks

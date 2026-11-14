@@ -16,6 +16,8 @@
   Claude hair can no longer flip above its root (getup). intro reviewed OK.
 - Pass 3 step 1 DONE: movement (Claude deeper squat/land squash, dash push-off + glide lift, backdash land squash;
   DeepSeek land bounce). Tool: `node tools/rig-sheet.mjs --multi <char> anim:f,f anim2:f --name x`.
+- Pass 3 step 2 DONE: 2L 2M 2H jL jM jH both chars frame-checked (lows hit low, Claude 2H = chop ending flat on the
+  floor, DS 2H floor sweep, jump attacks down-forward, held impacts, smears only in front).
 - NOW pass 3 (lead's order): 1) crouch*/jump*/land/dash* both → 2) 2L 2M 2H jL jM jH both → 3) remaining specials
   → 4) hitLow hitCrouch thrown throw win lose + Claude super smear + intro bow pen.
 - REMAINING ROUGH (authored, overview-checked only): dashF/dashB, crouchIn/crouch/crouchOut, jumpSquat/jumpRise/
