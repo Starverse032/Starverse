@@ -338,4 +338,5 @@
     face: function () { var P = K.painter(24, 24); P.map(0, 0, FACE, FL); return P; }
   };
   I.drawDeepseekBust = drawBust;
+  I.ART.deepseek.head = { FR: FR, face: FACEPTS, skull: [[53, 38, 25, 26], [47, 43, 21, 23]] };
 })();

@@ -404,8 +404,9 @@
     bustLose: function () { var P = K.painter(112, 128); drawBust(P, { expr: 'lose' }); return P; },
     titleFrame: function (o) { var P = K.painter(112, 128); drawBust(P, o); return P; },
     cutin: function () { return I.cutin ? I.cutin('claude') : K.painter(240, 72); },
-    face: function () { var P = K.painter(24, 24); P.map(0, 0, FACE, FL); P.outer(S.ol, function (s) { return s === S.s1 ? S.sl : s === S.C || s === S.c1 ? S.cl : S.ol; }); return P; }
+    face: function () { var P = K.painter(24, 24); P.map(0, 0, FACE, FL); return P; }
   };
   I.drawClaudeBust = drawBust;
+  I.ART.claude.head = { FR: FR, face: FACEPTS, skull: [[53, 36, 25, 26], [47, 42, 21, 23]] };
   I.H = { tipMap: tipMap, hairClump: hairClump, sparkle: sparkle, starburst: starburst, strands: strands, paintFlower: paintFlower };
 })();
