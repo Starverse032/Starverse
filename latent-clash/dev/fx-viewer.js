@@ -182,6 +182,28 @@
     return { live: live, median: ms[ms.length >> 1], p90: ms[Math.floor(ms.length * 0.9)], max: ms[ms.length - 1] };
   };
 
+  /** Per-frame draw time of the full-screen super compositions (sprites only, ms). */
+  FXV.benchSupers = function () {
+    var gc = document.createElement('canvas'); gc.width = W; gc.height = H;
+    var g = gc.getContext('2d'); g.imageSmoothingEnabled = false;
+    function run(fn, n) { var ms = []; for (var t = 0; t < n; t++) { var t0 = performance.now(); fn(t); ms.push(performance.now() - t0); } ms.sort(function (a, b) { return a - b; }); return { median: +ms[n >> 1].toFixed(3), p90: +ms[Math.floor(n * 0.9)].toFixed(3), max: +ms[n - 1].toFixed(3) }; }
+    var out = {};
+    out.claudeSuper = run(function (t) {
+      FX.drawSprite(g, 'screen.superBackdrop', 0, 0, t + 8, { char: 'claude', facing: 1 });
+      FX.drawSprite(g, 'claude.beam', 110, 120, t, { facing: 1, phase: 'fire', power: 1, length: Math.min(400, t * 40) });
+      FX.drawSprite(g, 'claude.book', 104, 120, t + 12, { facing: 1 });
+    }, 90);
+    out.deepseekSuper = run(function (t) {
+      FX.drawSprite(g, 'screen.superBackdrop', 0, 0, t + 8, { char: 'deepseek', facing: 1 });
+      FX.drawSprite(g, 'deepseek.whale', 100, GY, t % 60, { facing: 1 });
+      if (t >= 46) FX.drawSprite(g, 'deepseek.tidal', 294, GY, t - 46, { facing: 1 });
+    }, 90);
+    out.superFinish = run(function (t) { FX.drawSprite(g, 'screen.superFinish', 0, 0, t + 3, { char: 'claude', cx: 200, cy: 120 }); }, 60);
+    out.koBackdrop = run(function (t) { FX.drawSprite(g, 'screen.koBackdrop', 0, 0, t, { cx: 200, cy: 120 }); }, 60);
+    out.impact = run(function (t) { FX.drawSprite(g, 'screen.impact', 0, 0, t % 8, { cx: 200, cy: 120, phase: 'counter' }); }, 64);
+    return out;
+  };
+
   // ---- boot --------------------------------------------------------------------------
   var t0 = performance.now();
   FX.init().then(function () {

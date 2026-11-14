@@ -354,24 +354,28 @@
   }
 
   function drawHairLock(p, ch, w, amp, seed, mats, strands) {
-    var pts = H.chainPts(ch), wv = wavy(pts, w, amp, seed), sub = wv.sub, n = sub.length;
-    // gradient: base material then lighter toward the ends
-    p.poly(wv.poly, mats[0], SH.hair);
+    var pts = H.chainPts(ch), wv = wavy(pts, w, amp, seed), sub = wv.sub, n = sub.length, i;
+    // gradient: base material then lighter toward the ends (flat fills: cheap)
+    p.poly(wv.poly, mats[0], null);
     var cut1 = Math.floor(n * 0.45), cut2 = Math.floor(n * 0.72);
-    var g1 = H.flat(wv.L.slice(cut1).concat([sub[n - 1]], wv.R.slice(cut1).reverse()));
-    var g2 = H.flat(wv.L.slice(cut2).concat([sub[n - 1]], wv.R.slice(cut2).reverse()));
-    H.recolor(p, g1, mats[0], mats[1], false);
-    H.recolor(p, g2, mats[1], mats[2], false);
-    // strands: darker grooves + a highlight sheen near the top
+    p.poly(H.flat(wv.L.slice(cut1).concat([sub[n - 1]], wv.R.slice(cut1).reverse())), mats[1], null);
+    p.poly(H.flat(wv.L.slice(cut2).concat([sub[n - 1]], wv.R.slice(cut2).reverse())), mats[2], null);
+    // shade band along the back edge (away from the light), strands, sheen
+    var prev = null;
+    for (i = 0; i < n; i++) {
+      var q = R0(lerp(wv.L[i], wv.R[i], 0.12));
+      if (prev) p.darkLine(prev[0], prev[1], q[0], q[1], 1);
+      prev = q;
+    }
     for (var s = 0; s < strands.length; s++) {
-      var off = strands[s], prev = null;
-      for (var i = 1; i < n - 1; i++) {
-        var q = R0(lerp(wv.L[i], wv.R[i], off));
-        if (prev && i > 1) p.darkLine(prev[0], prev[1], q[0], q[1], 1);
-        prev = q;
+      prev = null;
+      for (i = 1; i < n - 1; i++) {
+        var q2 = R0(lerp(wv.L[i], wv.R[i], strands[s]));
+        if (prev && i > 1) p.darkLine(prev[0], prev[1], q2[0], q2[1], 1);
+        prev = q2;
       }
     }
-    var h0 = R0(lerp(wv.L[2], wv.R[2], 0.3)), h1 = R0(lerp(wv.L[4], wv.R[4], 0.35));
+    var h0 = R0(lerp(wv.L[1], wv.R[1], 0.7)), h1 = R0(lerp(wv.L[3], wv.R[3], 0.68));
     p.line(h0[0], h0[1], h1[0], h1[1], col(mats[0], 0), true);
   }
 
@@ -446,7 +450,11 @@
 
   function drawSkirt(p, S) {
     // navy over-skirt
-    p.poly(band(S, 0, 1, 0, 1, 5), M.c2, SH.body);
+    p.poly(band(S, 0, 1, 0, 1, 5), M.c2, null);
+    sLine(p, S, 0.975, 0.04, 1, 0, true, true);        // shade band on the back contour
+    sLine(p, S, 0.95, 0.3, 1, 0, true, true);
+    hLine(p, S, 0.45, 1, 0.985, col(M.c2, 3), true);    // and along the hem
+    sLine(p, S, 0.012, 0.05, 0.9, col(M.c2, 0), true);  // lit front edge
     // light-blue pinstriped under-skirt in the front opening
     p.poly(band(S, sA, sB, 0.1, 1, 4), MU, null);
     for (var k = 1; k <= 4; k++) {

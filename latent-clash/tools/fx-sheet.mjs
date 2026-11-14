@@ -42,7 +42,7 @@ await page.goto(pathToFileURL(resolve(root, 'dev/fx-viewer.html')).href + '?head
 await page.waitForFunction(() => window.FXV && window.FXV.ready, null, { timeout: 20000 });
 
 if (flag('bench')) {
-  const r = await page.evaluate(() => ({ init: window.FXV.initMs, bake: window.LC.fx.stats().bake, bench: [window.FXV.bench(120), window.FXV.bench(120)] }));
+  const r = await page.evaluate(() => ({ init: window.FXV.initMs, bake: window.LC.fx.stats().bake, bench: [window.FXV.bench(120), window.FXV.bench(120)], supers: [window.FXV.benchSupers(), window.FXV.benchSupers()] }));
   console.log(JSON.stringify(r, null, 1));
   await browser.close();
   process.exit(0);
