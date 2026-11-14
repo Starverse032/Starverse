@@ -92,7 +92,7 @@
       },
       chain: {
         kind: 'special', motion: '214', simple: 4, lore: 'chain', anim: 'chain1', step: 0,
-        segs: [['startup', { L: 9, M: 8, H: 7 }, { vx: { L: 4.2, M: 5.7, H: 7.0 } }], ['active', 4, { vx: 1.6 }], ['recovery', 18]],
+        segs: [['startup', { L: 9, M: 8, H: 7 }, { vx: { L: 4.0, M: 5.3, H: 6.5 } }], ['active', 4, { vx: 1.6 }], ['recovery', 18]],
         follow: { to: 'chain2', from: ['active', 0], until: ['recovery', 14] },
         hits: [{ seg: 'active', box: [14, -80, 34, 26], anchor: 'weapon', dmg: { L: 65, M: 70, H: 75 }, lv: 'S',
           stun: [22, 15], push: [8, 10], fx: 'deepseek.chainHit', chip: 0.2 }],
