@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* LATENT CLASH — FIGHT combo verifier: plays each documented bread-and-butter combo with
  * scripted, human-timed inputs in training mode and checks hit count + damage.
- *   node tools/fight-combos.mjs [--real]                                            */
+ *   node tools/fight-combos.mjs [--real] [--spread]                                     */
 import { createRequire } from 'module';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -77,7 +77,13 @@ await page.waitForFunction(() => window.FS && FS.ready);
 await page.evaluate(inPage);
 if (process.argv.includes('--debug')) await page.evaluate(() => { window.CDBG = 1; });
 let fail = 0;
+const spread = process.argv.includes('--spread');   // also report which start distances (dist-16..+16) still work
 for (const ch in COMBOS) for (const c of COMBOS[ch]) {
+  if (spread) {
+    let line = '';
+    for (const d of [-16, -8, 0, 8, 16, 24]) { const r2 = await page.evaluate(([ch, c]) => window.COMBO(ch, c), [ch, Object.assign({}, c, { dist: c.dist + d })]); line += (d >= 0 ? '+' : '') + d + (r2.hits >= c.hits ? ':ok ' : ':' + r2.hits + ' '); }
+    console.log('     spread ' + ch + ' ' + c.name.padEnd(44) + line);
+  }
   const r = await page.evaluate(([ch, c]) => window.COMBO(ch, c), [ch, c]);
   const ok = r.hits >= c.hits;
   if (!ok) fail++;
