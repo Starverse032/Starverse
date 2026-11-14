@@ -7,6 +7,9 @@
  * chains → specials → super, projectile play, character plans, wake-up options, anti-repetition. */
 (function () {
   'use strict';
+  // V2: tall fighters — every distance constant below was tuned for the V1 68-px bodies; D() scales it
+  var DK = 1.3;
+  function D(n) { return n * DK; }
   var LC = window.LC = window.LC || {};
   var F = LC.fight = LC.fight || {};
   var T = F.T;
@@ -45,8 +48,8 @@
     if (o.mv && o.mv.hits && o.mv.hits.length) {
       var h = o.mv.hits[0];
       ob.guard = o.mv.stance === 'air' || o.air ? 'high' : (h.guard || 'mid');
-      ob.reach = h.box ? h.box[0] + h.box[2] : (h.beam ? 400 : 60);
-      if (o.mv.whale) ob.reach = 190;
+      ob.reach = h.box ? h.box[0] + h.box[2] : (h.beam ? 400 : D(60));
+      if (o.mv.whale) ob.reach = 300;
     }
     for (var i = 0; i < m.projs.length; i++) { var p = m.projs[i]; if (p.owner === o) ob.projs.push({ x: p.x, y: p.y, vx: p.vx }); }
     this.obs.push(ob);
@@ -140,11 +143,11 @@
   AI.prototype.threat = function (me, pv, dx) {
     if (!pv) return null;
     var pdx = Math.abs(pv.x - me.x);
-    if (pv.act === 'attack' && (pv.ph === 'startup' || pv.ph === 'active') && pv.kind !== 'throw' && pdx < pv.reach + 34) return 'strike';
-    if (pv.air && pdx < 110 && F.sign(me.x - pv.x) === F.sign(pv.vx || 0)) return 'air';
+    if (pv.act === 'attack' && (pv.ph === 'startup' || pv.ph === 'active') && pv.kind !== 'throw' && pdx < pv.reach + D(34)) return 'strike';
+    if (pv.air && pdx < D(110) && F.sign(me.x - pv.x) === F.sign(pv.vx || 0)) return 'air';
     for (var i = 0; i < pv.projs.length; i++) {
       var p = pv.projs[i];
-      if (F.sign(me.x - p.x) === F.sign(p.vx) && Math.abs(p.x - me.x) < 150) return 'proj:' + Math.abs(p.x - me.x);
+      if (F.sign(me.x - p.x) === F.sign(p.vx) && Math.abs(p.x - me.x) < D(150)) return 'proj:' + Math.abs(p.x - me.x);
     }
     return null;
   };
@@ -160,20 +163,20 @@
     if (th) {
       if (th === 'air') {
         if (this.chance(P.aa * 0.25) || (this.aaRolled !== pv && (this.aaRolled = pv) && this.chance(P.aa))) {
-          var air = dx < 70;
+          var air = dx < D(70);
           if (air && this.chance(0.7)) { this.push(this.special(C === 'claude' ? 'sonnet' : 'breach', this.level >= 4 ? 'H' : 'M'), 'aa'); return this.emit(); }
-          if (dx < 60) { this.push(this.press('H'), 'aa5H'); return this.emit(); }
+          if (dx < D(60)) { this.push(this.press('H'), 'aa5H'); return this.emit(); }
         }
         if (this.chance(P.block)) { this.guardT = 14; this.guardLow = false; return this.holdGuard(me, o, null); }
         return this.hold(me, o, dx);
       }
       if (th.indexOf('proj') === 0) {
         var pd = +th.slice(5);
-        if (C === 'claude' && pd > 40 && this.chance(P.block * 0.25) && me.proj === 0) { this.push(this.special('spark', this.pick(['M', 'H'])), 'clash'); return this.emit(); }
-        if (C === 'claude' && pd < 70 && pd > 24 && this.chance(P.block * 0.2)) { this.push(this.special('guardrail', 'M'), 'absorb'); return this.emit(); }
-        if (C === 'deepseek' && pd > 30 && pd < 120 && dx < 260 && this.chance(P.block * 0.3)) { this.push(this.special('dive', dx < 200 ? 'H' : 'M'), 'diveProj'); return this.emit(); }
-        if (C === 'deepseek' && pd > 50 && me.proj === 0 && this.chance(P.block * 0.15)) { this.push(this.special('wave', 'H'), 'clash'); return this.emit(); }
-        if (pd > 50 && pd < 110 && dx > 110 && this.chance(P.block * 0.35)) { this.push([{ d: 9, n: 3 }], 'jumpProj'); this.jumpAtk = true; return this.emit(); }
+        if (C === 'claude' && pd > D(40) && this.chance(P.block * 0.25) && me.proj === 0) { this.push(this.special('spark', this.pick(['M', 'H'])), 'clash'); return this.emit(); }
+        if (C === 'claude' && pd < D(70) && pd > D(24) && this.chance(P.block * 0.2)) { this.push(this.special('guardrail', 'M'), 'absorb'); return this.emit(); }
+        if (C === 'deepseek' && pd > D(30) && pd < D(120) && dx < D(260) && this.chance(P.block * 0.3)) { this.push(this.special('dive', dx < D(200) ? 'H' : 'M'), 'diveProj'); return this.emit(); }
+        if (C === 'deepseek' && pd > D(50) && me.proj === 0 && this.chance(P.block * 0.15)) { this.push(this.special('wave', 'H'), 'clash'); return this.emit(); }
+        if (pd > D(50) && pd < D(110) && dx > D(110) && this.chance(P.block * 0.35)) { this.push([{ d: 9, n: 3 }], 'jumpProj'); this.jumpAtk = true; return this.emit(); }
         if (this.chance(P.block + 0.1)) { this.guardT = 12; this.guardLow = true; return this.holdGuard(me, o, null); }
       }
       if (th === 'strike' && this.blockRolled !== pv) {
@@ -192,7 +195,7 @@
     }
     // opponent knocked down: approach or set up
     if (o.action === 'down' || o.action === 'getup') {
-      if (dx > 90) { if (C === 'claude' && me.proj === 0 && this.chance(0.04)) { this.push(this.special('spark', 'L'), 'oki'); return this.emit(); } return { right: o.x > me.x, left: o.x < me.x }; }
+      if (dx > D(90)) { if (C === 'claude' && me.proj === 0 && this.chance(0.04)) { this.push(this.special('spark', 'L'), 'oki'); return this.emit(); } return { right: o.x > me.x, left: o.x < me.x }; }
       return this.hold(me, o, dx);
     }
     if (this.m.tick < this.nextThink) return this.hold(me, o, dx);
@@ -204,13 +207,13 @@
 
   // default between decisions: drift toward a preferred range, guard if the opponent looks active
   AI.prototype.hold = function (me, o, dx) {
-    var want = me.ch === 'claude' ? 92 : 60;
-    if (this.m.timer < 1800 && this.behind()) want -= 30;
+    var want = me.ch === 'claude' ? D(92) : D(60);
+    if (this.m.timer < 1800 && this.behind()) want -= D(30);
     var out = {};
     var tow = o.x > me.x ? 'right' : 'left', away = o.x > me.x ? 'left' : 'right';
     this.idleT++;
-    if (dx > want + 16) out[tow] = true;
-    else if (dx < want - 30 && me.x > T.WALL + 30 && me.x < LC.STAGE_W - T.WALL - 30 && (this.m.tick >> 4) % 3 === 0) out[away] = true;
+    if (dx > want + D(16)) out[tow] = true;
+    else if (dx < want - D(30) && me.x > T.WALL + 30 && me.x < LC.STAGE_W - T.WALL - 30 && (this.m.tick >> 4) % 3 === 0) out[away] = true;
     return out;
   };
   AI.prototype.behind = function () {
@@ -231,8 +234,8 @@
     if (dx <= this.reachOf(me, '5L') + 12 && d >= 2) return this.press('L');
     if (dx <= r5M) return this.press(d >= 1 ? 'M' : 'H');
     if (dx <= r5H) return this.press('H');
-    if (C === 'deepseek' && dx < 110) return this.special('chain', dx > 80 ? 'H' : 'M');
-    if (C === 'claude' && dx < 90) return this.special('haiku', 'H');
+    if (C === 'deepseek' && dx < D(110)) return this.special('chain', dx > D(80) ? 'H' : 'M');
+    if (C === 'claude' && dx < D(90)) return this.special('haiku', 'H');
     return null;
   };
 
@@ -251,13 +254,13 @@
     var full = me.meter >= 100;
     // universal
     add('walkF', 0.6 + ag * 0.6, [{ d: 6, n: 10 + this.rng.int(20) }]);
-    add('walkB', dx < 120 ? 0.35 : 0.1, [{ d: 4, n: 8 + this.rng.int(14) }]);
-    add('wait', 0.25 * (1 - ag), [{ d: dx < 80 ? 1 : 4, n: 8 + this.rng.int(12) }]);
-    if (dx > 70) add('dashF', 0.25 + ag * 0.4 * (C === 'deepseek' ? 0.9 : 0.8), [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 1 }]);
-    if (dx < 70 && me.x > T.WALL + 50 && me.x < LC.STAGE_W - T.WALL - 50) add('dashB', 0.15, [{ d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }]);
-    var jr = C === 'claude' ? [70, 130] : [70, 150];
+    add('walkB', dx < D(120) ? 0.35 : 0.1, [{ d: 4, n: 8 + this.rng.int(14) }]);
+    add('wait', 0.25 * (1 - ag), [{ d: dx < D(80) ? 1 : 4, n: 8 + this.rng.int(12) }]);
+    if (dx > D(70)) add('dashF', 0.25 + ag * 0.4 * (C === 'deepseek' ? 0.9 : 0.8), [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 1 }]);
+    if (dx < D(70) && me.x > T.WALL + 60 && me.x < LC.STAGE_W - T.WALL - 60) add('dashB', 0.15, [{ d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }]);
+    var jr = C === 'claude' ? [D(70), D(130)] : [D(70), D(150)];
     if (dx > jr[0] && dx < jr[1]) add('jumpIn', P.jump * 4 * (0.6 + ag), [{ d: 9, n: 3 }]);
-    if (dx < 70) add('jumpN', P.jump, [{ d: 8, n: 3 }]);
+    if (dx < D(70)) add('jumpN', P.jump, [{ d: 8, n: 3 }]);
     // pokes at range
     if (dx <= r('5L')) { add('5L', 0.7, this.press('L')); add('2L', 0.7, this.press('L', 2)); }
     if (dx <= r('5M') && dx > r('5L') - 10) add('5M', 0.8, this.press('M'));
@@ -265,19 +268,19 @@
     if (dx <= r('5H') && dx > r('5M') - 8) add('5H', 0.35, this.press('H'));
     if (dx <= r('2H') && dx > r('2M') - 8) add('2H', 0.3, this.press('H', 3));
     if (dx < me.C.throwRange - 2 && o.action !== 'blockstun') add('throw', 0.55 + ag * 0.3, [{ d: this.chance(0.3) ? 4 : 6, b: 'LM', n: 2 }, { d: 5, n: 1 }]);
-    if (P.mash > 0 && dx < 80) add('mash', P.mash * 2, this.press(this.pick(['L', 'M', 'H', 'S']), this.pick([5, 2, 6])));
-    if (full && dx < (C === 'claude' ? 200 : 120) && this.chance(P.sup * 0.15)) add('superRaw', 0.8, this.special('super', 'H'));
+    if (P.mash > 0 && dx < D(80)) add('mash', P.mash * 2, this.press(this.pick(['L', 'M', 'H', 'S']), this.pick([5, 2, 6])));
+    if (full && dx < (C === 'claude' ? 300 : 200) && this.chance(P.sup * 0.15)) add('superRaw', 0.8, this.special('super', 'H'));
     if (C === 'claude') {
-      if (me.proj === 0 && dx > 120) add('spark', 0.9 + (dx > 200 ? 0.8 : 0), this.special('spark', dx > 220 ? 'L' : this.pick(['M', 'H'])));
-      if (me.proj === 0 && dx > 70 && dx <= 120) add('spark', 0.35, this.special('spark', 'H'));
-      if (dx < 80 && dx > 30) add('haiku', 0.2, this.special('haiku', this.pick(['L', 'M'])));
-      if (dx < 70 && this.level >= 3) add('guardrail', 0.12 + (o.action === 'attack' ? 0.1 : 0), this.special('guardrail', this.pick(['L', 'M'])));
+      if (me.proj === 0 && dx > D(120)) add('spark', 0.9 + (dx > D(200) ? 0.8 : 0), this.special('spark', dx > D(220) ? 'L' : this.pick(['M', 'H'])));
+      if (me.proj === 0 && dx > D(70) && dx <= D(120)) add('spark', 0.35, this.special('spark', 'H'));
+      if (dx < D(80) && dx > D(30)) add('haiku', 0.2, this.special('haiku', this.pick(['L', 'M'])));
+      if (dx < D(70) && this.level >= 3) add('guardrail', 0.12 + (o.action === 'attack' ? 0.1 : 0), this.special('guardrail', this.pick(['L', 'M'])));
     } else {
-      if (me.proj === 0 && dx > 110) add('wave', 0.7 + (dx > 200 ? 0.4 : 0), this.special('wave', dx > 200 ? 'H' : 'M'));
-      if (dx > 50 && dx < 110) add('chain', 0.5 + ag * 0.25, this.special('chain', dx > 90 ? 'H' : 'M'));
-      if (dx > 90 && dx < 260 && this.level >= 2) add('diveM', 0.07 + ag * 0.05, this.special('dive', 'M'));
-      if (dx > 60 && dx < 200 && this.level >= 3) add('diveH', 0.07 + ag * 0.05, this.special('dive', 'H'));
-      if (dx > 90 && dx < 170) add('jumpKick', P.jump * 3, [{ d: 9, n: 3 }]);
+      if (me.proj === 0 && dx > D(110)) add('wave', 0.7 + (dx > D(200) ? 0.4 : 0), this.special('wave', dx > D(200) ? 'H' : 'M'));
+      if (dx > D(50) && dx < D(110)) add('chain', 0.5 + ag * 0.25, this.special('chain', dx > D(90) ? 'H' : 'M'));
+      if (dx > D(90) && dx < D(240) && this.level >= 2) add('diveM', 0.07 + ag * 0.05, this.special('dive', 'M'));
+      if (dx > D(60) && dx < D(200) && this.level >= 3) add('diveH', 0.07 + ag * 0.05, this.special('dive', 'H'));
+      if (dx > D(90) && dx < D(170)) add('jumpKick', P.jump * 3, [{ d: 9, n: 3 }]);
     }
     if (!opts.length) return null;
     var tot = 0, i;
@@ -296,16 +299,16 @@
     var h = me.height();
     if (me.airUsed || me.airSpecial) return {};
     var toward = F.sign(o.x - me.x) === me.facing;
-    if (this.jumpAtk === 'jumpKick' && me.ch === 'deepseek' && me.vy > -2 && h > 30 && dx < 150 && toward) {
-      this.jumpAtk = false; this.push(this.special('diveKick', dx > 100 ? 'H' : dx > 60 ? 'M' : 'L'), 'diveKick'); return this.emit();
+    if (this.jumpAtk === 'jumpKick' && me.ch === 'deepseek' && me.vy > -2 && h > D(30) && dx < D(150) && toward) {
+      this.jumpAtk = false; this.push(this.special('diveKick', dx > D(100) ? 'H' : dx > D(60) ? 'M' : 'L'), 'diveKick'); return this.emit();
     }
-    if (me.ch === 'claude' && this.jumpAtk && me.vy > -1 && h > 30 && dx > 110 && me.proj === 0 && this.chance(0.05)) {
+    if (me.ch === 'claude' && this.jumpAtk && me.vy > -1 && h > D(30) && dx > D(110) && me.proj === 0 && this.chance(0.05)) {
       this.jumpAtk = false; this.push(this.special('airSpark', 'M'), 'airSpark'); return this.emit();
     }
-    if (me.vy > 0 && dx < 46 && h < 44 && h > 8 && toward) {
+    if (me.vy > 0 && dx < D(46) && h < D(44) && h > 10 && toward) {
       this.jumpAtk = false; this.push(this.press(this.level >= 3 ? 'H' : this.pick(['L', 'M', 'H'])), 'jAtk'); return this.emit();
     }
-    if (o.air && Math.abs(o.y - me.y) < 30 && dx < 40) { this.push(this.press(this.pick(['L', 'M'])), 'airToAir'); return this.emit(); }
+    if (o.air && Math.abs(o.y - me.y) < D(30) && dx < D(40)) { this.push(this.press(this.pick(['L', 'M'])), 'airToAir'); return this.emit(); }
     return {};
   };
 
@@ -351,8 +354,8 @@
   AI.prototype.comboSpecial = function (me, dx, full) {
     var C = me.ch;
     if (full && this.P.depth >= 3 && this.chance(this.P.sup * 0.5)) return this.special('super', 'H');
-    if (C === 'claude') return dx < 70 ? this.special('haiku', this.level >= 4 ? 'H' : 'M') : (me.proj === 0 ? this.special('spark', 'H') : null);
-    return dx < 80 ? (this.chance(0.7) ? this.special('chain', 'H') : this.special('breach', 'H')) : (me.proj === 0 ? this.special('wave', 'H') : null);
+    if (C === 'claude') return dx < D(70) ? this.special('haiku', this.level >= 4 ? 'H' : 'M') : (me.proj === 0 ? this.special('spark', 'H') : null);
+    return dx < D(80) ? (this.chance(0.7) ? this.special('chain', 'H') : this.special('breach', 'H')) : (me.proj === 0 ? this.special('wave', 'H') : null);
   };
 
   // ------------------------------------------------------------------ wake-up
@@ -363,7 +366,7 @@
     }
     if (me.af < T.GETUP - 5 || this.wakePlanned) return this.holdGuard(me, o, null);
     this.wakePlanned = true;
-    var close = dx < 70, oAtk = o.action === 'attack';
+    var close = dx < D(70), oAtk = o.action === 'attack';
     var r = this.rng.next();
     if (close && r < 0.08 + this.level * 0.03) { this.push(this.special(me.ch === 'claude' ? 'sonnet' : 'breach', 'H'), 'reversal'); return this.emit(); }
     if (close && r < 0.18 + this.level * 0.03) { this.push([{ d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }], 'wakeBack'); return this.emit(); }
