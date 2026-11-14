@@ -5,10 +5,11 @@
 - [ ] 2 presentation fixes (training panels vs cut-in, tag/combo vs training wall sign, HUD)
 - [ ] 3 full-screen supers / KO backdrop / screen.impact / new special fx
 - [ ] 4 notes
-Status: step 1 in progress. Done: chars/claude.js + chars/deepseek.js retuned (bodies, movement, normals
-from measured weapon anchors, all specials), core.js `F.T` (WALL 22, MAXSEP 320, START_SEP 168,
-CAM_MARGIN 30, PUSH ×1.3, LAUNCH_K 1.25, IMPACT 8). Next: wire these into combat/match/render/ai
-(launch K, cruiseY, strength boxes, pullTo, tidal hit, whale t0=cast, dive dist, clip), then verify.
+Status: step 1 code done + steps 2/3 code largely written (render composition slots A–E, KO backdrop,
+impact, super backdrops, whale/tidal/beam/book timelines, dive clip, rise fx). Sim (stubs + real): 0
+violations, deterministic, 0 console errors; balance real L3 42–47 %, L5 47 % (noisy, n=60–100).
+Combos 8/8 (stubs + real, same damage as V1). Next: box screenshots, presentation review shots,
+HUD tag/combo placement, notes tables.
 Probe tool: `node tools/fight-probe.mjs [--anims=5L,…] [--anchors=weapon,…]` dumps rig anchors + fx spriteInfo.
 
 ## Progress / next steps (V1)
