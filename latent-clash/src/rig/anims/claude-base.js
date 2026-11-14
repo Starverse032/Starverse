@@ -40,8 +40,8 @@
   });
 
   // ---------------------------------------------------------------- crouch (top ≈ 70)
-  var C = POSE.crouch = P(S, { hip: [-2, -25], lean: 30, bend: 8, head: [1, 1], tilt: 5, hF: [19, -47], hB: [-2, -27], book: -80,
-    fF: [13, 0], fB: [-9, 0], faB: 35, knB: -1 });
+  var C = POSE.crouch = P(S, { hip: [-3, -21], lean: 26, bend: 8, head: [1, 1], tilt: 5, hF: [22, -46], hB: [-6, -26], book: -100,
+    fF: [20, 0], fB: [-22, 0], faB: 80, knB: -1 });
   def('crouchIn', { segs: [['go', 4]], step: 1, keys: [[0, bob(S, 0, 8, { lean: 12 })], [3, C]] });
   def('crouch', {
     segs: [['loop', 64, true]], step: 4,
