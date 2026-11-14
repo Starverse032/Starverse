@@ -1,5 +1,23 @@
 # RIG — notes
 
+## V2 infra changes (2026-11-14, Claude animator) — all backward compatible
+- `raster.js`: render buffer is now **320×256, origin (160, 204)** (was 200×184 / 100,156) — room for 104-px
+  fighters, long hair, skirt flare, wide smears, lying poses. Everything reads `I.BW/BH/OX/OY`, nothing else to do.
+- `raster.js` `P.end({ ring: colIndex })`: optional exterior outline colour (e.g. `I.col(M.glow, 3)` for glowing
+  props / smears). Default unchanged (palette outline + inner deep-tone rule).
+- `skel.js`: new pose channels (default 0, ignore them if unused): vector `bk`; scalars `book`, `bko`, `tw`, `hem`.
+  Solved into `sk.bk`, `sk.book`, `sk.bko`, `sk.tw`, `sk.hem`. Claude uses them for the book (pos/angle/open), torso
+  twist and hem flare; free for DeepSeek too (they are NOT in the core signature: add them via `sigExtra`).
+- `core.js`: signature buffer 2048 ints; optional per-character hook `C.sigExtra(sk, s, n) -> n` to add extra integer
+  state that should trigger a re-render.
+- `chars/common.js`: `H.hand(p, at, ang, shape, skin, glove, table)` — optional own stamp table
+  (`{ id, legend, shape: { a0, p0, a45, p45 } }`) for bigger V2 hands; `H.smear2(p, sm, mat, opts)` = shaped smear
+  (tapered crescent, deep trailing → bright leading tones, bright rim + dark inner edge). Old `H.smear` unchanged.
+- `dev/rig-sheet.html` cells are 300×240 with the origin at (150, 200); `dev/rig-viewer.html` view 320×220, ground 196.
+  `tools/rig-sheet.mjs` usage unchanged.
+- Per-character proportions were already per character (`C.body`, `C.height/crouchHeight/width`); nothing in the
+  shared code assumes the old 70-px size any more.
+
 ## Progress / next steps (kept current for restarts)
 
 - DONE: full §5.3 API; both characters render (v1 look); EVERY §3.3 anim is authored for both (no aliases in use;
