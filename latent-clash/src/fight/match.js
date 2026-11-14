@@ -144,6 +144,12 @@
   Match.prototype.say = function (side, text, dur) {
     this.bubbles[side] = { text: String(text), t: 0, dur: dur || 90 };
   };
+  // screen.impact (fx V2) on heavy hits, launchers, knock-down specials, counters, throws
+  Match.prototype.impactAt = function (x, y, counter, att) {
+    if (F.headless) return;
+    var k = att && att.mv ? att.mv.kind : null;
+    this.impact = { t: 0, x: x, y: y, counter: !!counter, ch: att ? att.ch : null, pal: att ? att.pal : 0, special: k === 'special' || k === 'super' };
+  };
   Match.prototype.addShake = function (amp, dur) {
     if (F.settings().shake === false) return;
     this.shakeA = Math.max(this.shakeT > 0 ? this.shakeA : 0, amp);
@@ -273,7 +279,9 @@
       f.pose();
       if (f.stop <= 0) f.tickPuppet();
     }
-    if (!(A.stop > 0 && Bf.stop > 0)) this.fxUpdate();
+    var adv = !(A.stop > 0 && Bf.stop > 0);
+    if (adv) this.fxUpdate();
+    if (this.impact && (adv || this.impact.t < 2)) this.impact.t++;   // tint + dark beat, then hold in hit-stop
     if (this.stage && this.stage.update && !F.headless) { try { this.stage.update(); } catch (e) { F.err('stage.update', e); } }
     this.watchdog();
   };
@@ -429,6 +437,8 @@
         F.voice(f.ch, 'ko');
       }
     }
+    var kp0 = this.lastHitPos || { x: (d0 ? this.f[0] : this.f[1]).x, y: GY - 56 };
+    this.koInfo = { tick: this.tick, x: kp0.x, y: F.clamp(kp0.y, 40, GY - 8), kind: this.lastKill ? this.lastKill.kind : 'normal', winner: this.roundWinner };
     for (i = this.projs.length - 1; i >= 0; i--) F.killProj(this, this.projs[i], true);
     this.projs.length = 0;
     this.slowPending = T.KO_SLOW;
@@ -528,7 +538,7 @@
     this.placeFighters();
     this.timer = this.timerMax;
     this.lastKill = null; this.endKind = null; this.roundWinner = -1; this.perfectRound = false;
-    this.freeze = 0; this.flash = null; this.slow = 0; this.slowPending = 0;
+    this.freeze = 0; this.flash = null; this.slow = 0; this.slowPending = 0; this.koInfo = null; this.impact = null; this.supLast = null;
     this.bubbles = [null, null]; this.callouts.length = 0;
     if (!F.headless && F.mod('fx', 'clear')) { try { LC.fx.clear(); } catch (e) { F.err('fx.clear', e); } }
     this.enter('ready');
@@ -610,7 +620,7 @@
     var m0 = this.f[0].meter, m1 = this.f[1].meter;
     this.placeFighters();
     this.f[0].meter = m0; this.f[1].meter = m1;
-    this.freeze = 0; this.flash = null; this.slow = 0;
+    this.freeze = 0; this.flash = null; this.slow = 0; this.impact = null; this.supLast = null;
     this.tdata.pend = null;
     if (this.training) { this.state = 'fight'; this.canAct = true; this.noHits = false; }
     if (!F.headless && F.mod('fx', 'clear')) { try { LC.fx.clear(); } catch (e) { F.err('fx.clear', e); } }

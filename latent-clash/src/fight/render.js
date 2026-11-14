@@ -250,6 +250,44 @@
     try { this._draw(ctx); } catch (e) { F.err('draw', e); }
   };
 
+  // [A] full-screen backdrop replacing the stage (fx V2): KO burst / super finish while the KO'd body
+  // falls, else the super's own backdrop (with 8f intro / outro over the stage). null = the stage.
+  function backdrop(m) {
+    var K = m.koInfo;
+    if (K && m.state === 'ko' && m.koFlash <= 24 - 5) {
+      var landed = true;
+      for (var i = 0; i < 2; i++) { var d = m.f[i]; if (d.ko && !(d.action === 'down' && d.af >= 6)) landed = false; }
+      if (!landed) {
+        var o = { cx: Math.round(K.x - m.camX), cy: Math.round(K.y) };
+        var W = K.winner >= 0 ? m.f[K.winner] : null;
+        if (W) { o['char'] = W.ch; o.palette = W.pal; }
+        return { name: K.kind === 'super' && W ? 'screen.superFinish' : 'screen.koBackdrop', t: m.tick - K.tick - 5, o: o, under: false };
+      }
+    }
+    for (var j = 0; j < 2; j++) {
+      var f = m.f[j], st = F.superT(f);
+      if (st < 0) continue;
+      var sg = f.seg(), out = f.mv.bgOut != null ? f.mv.bgOut : 12;
+      var so = { 'char': f.ch, palette: f.pal, facing: f.facing };
+      if (sg.id === 'recovery' && f.sf >= out) {
+        if (f.sf - out >= 8) return null;
+        so.phase = 'out';
+        return { name: 'screen.superBackdrop', t: f.sf - out, o: so, under: true };
+      }
+      m.supLast = { tick: m.tick, ch: f.ch, pal: f.pal, facing: f.facing };
+      return { name: 'screen.superBackdrop', t: st, o: so, under: st < 8 };
+    }
+    var L = m.supLast;   // a super that ended early (interrupted / round over): play the outro anyway
+    if (L && m.tick > L.tick && m.tick - L.tick <= 8) return { name: 'screen.superBackdrop', t: m.tick - L.tick - 1, o: { 'char': L.ch, palette: L.pal, facing: L.facing, phase: 'out' }, under: true };
+    return null;
+  }
+
+  function drawStage(ctx, m, camX) {
+    var ok = false;
+    if (m.stage && m.stage.drawBack) { try { m.stage.drawBack(ctx, camX); ok = true; } catch (e) { F.err('stage.drawBack', e); } }
+    if (!ok) drawFallbackStage(ctx, camX);
+  }
+
   F.Match.prototype._draw = function (ctx) {
     var m = this, camX = Math.round(m.camX), A = m.f[0], B = m.f[1];
     ctx.imageSmoothingEnabled = false;
@@ -258,9 +296,11 @@
       var a = m.shakeA * Math.min(1, m.shakeT / 6);
       ctx.translate(Math.round(((m.tick * 7) % 3 - 1) * a), Math.round(((m.tick * 5) % 3 - 1) * a * 0.6));
     }
-    var stageOk = false;
-    if (m.stage && m.stage.drawBack) { try { m.stage.drawBack(ctx, camX); stageOk = true; } catch (e) { F.err('stage.drawBack', e); } }
-    if (!stageOk) drawFallbackStage(ctx, camX);
+    // [A] stage or a full-screen backdrop
+    var bg = backdrop(m);
+    if (!bg || bg.under) drawStage(ctx, m, camX);
+    if (bg && !F.sprite(ctx, bg.name, 0, 0, bg.t, bg.o) && !bg.under) { drawStage(ctx, m, camX); bg = null; }
+    // [B] super flash backdrop / heavy-hit impact
     if (m.flash) {
       var fl = m.flash;
       var cp = wpt(fl.who, 'chest', m);
@@ -268,17 +308,26 @@
         ctx.globalAlpha = 0.6; rect(ctx, -8, -8, LC.W + 16, LC.H + 16, '#05040a'); ctx.globalAlpha = 1;
       }
     }
-    fxDraw(ctx, m, 'back');
+    var im = m.impact;
+    if (im && im.t < T.IMPACT) {
+      var io = { cx: Math.round(im.x - camX), cy: Math.round(im.y) };
+      if (im.counter) io.phase = 'counter'; else if (im.special) { io['char'] = im.ch; io.palette = im.pal; }
+      F.sprite(ctx, 'screen.impact', 0, 0, im.t, io);
+    }
+    // [C] engine back sprites (whale, pools)
     engineSprites(ctx, m, A, 'back'); engineSprites(ctx, m, B, 'back');
+    fxDraw(ctx, m, 'back');
     shadow(ctx, m, A); shadow(ctx, m, B);
     var top = m.f[m.topSide], under = m.f[1 - m.topSide];
     drawPuppet(ctx, m, under); drawPuppet(ctx, m, top);
+    // [D] engine front sprites
     engineSprites(ctx, m, under, 'front'); engineSprites(ctx, m, top, 'front');
     drawProjs(ctx, m);
     fxDraw(ctx, m, 'front');
-    if (m.stage && m.stage.drawFront) { try { m.stage.drawFront(ctx, camX); } catch (e) { F.err('stage.drawFront', e); } }
+    if (!bg && m.stage && m.stage.drawFront) { try { m.stage.drawFront(ctx, camX); } catch (e) { F.err('stage.drawFront', e); } }
     if ((m.forceBoxes || (m.training && m.training.hitboxes)) && F.drawBoxes) F.drawBoxes(ctx, m);
     ctx.restore();
+    // [E] KO white-out -> bubbles -> HUD -> training panels -> cut-in -> banners
     if (m.koFlash > 0) {
       if (!F.sprite(ctx, 'screen.koFlash', 0, 0, 24 - m.koFlash, {})) {
         ctx.globalAlpha = (F.settings().flash === false ? 0.15 : 0.5) * m.koFlash / 24; rect(ctx, 0, 0, LC.W, LC.H, '#ffffff'); ctx.globalAlpha = 1;
@@ -286,9 +335,9 @@
     }
     bubble(ctx, m, 0); bubble(ctx, m, 1);
     if (F.drawHud) F.drawHud(ctx, m);
+    if (m.training && F.drawTraining) F.drawTraining(ctx, m);
     cutin(ctx, m);
     drawBanners(ctx, m);
-    if (m.training && F.drawTraining) F.drawTraining(ctx, m);
     if (m.fade > 0) { ctx.globalAlpha = Math.min(1, m.fade); rect(ctx, 0, 0, LC.W, LC.H, '#05040a'); ctx.globalAlpha = 1; }
   };
 })();
