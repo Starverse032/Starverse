@@ -135,7 +135,7 @@
       [18, P(LA, { hB: [-26, -60], hF: [-8, -76], fF: [12, -10], fB: [-3, -6], lean: -47 })]
     ]
   });
-  var DN = POSE.down = P(S, AIR, { hip: [-3, -7], lean: -90, bend: 0, tilt: -90, head: [0, 0], fF: [44, -2], fB: [41, -1], faF: -80, faB: -85,
+  var DN = POSE.down = P(S, AIR, { hip: [-3, -7], lean: -90, bend: 0, tilt: -90, head: [0, 0], fF: [50, -3], fB: [47, -1], faF: -80, faB: -85,
     knF: -1, knB: -1, hF: [-10, -7], hB: [-38, -3], handF: 'open', book: 180, eyes: 'dizzy', mouth: 'hurt', z: { armB: 1 } });
   def('down', {
     segs: [['impact', 10], ['lie', 30, true]], step: 2,

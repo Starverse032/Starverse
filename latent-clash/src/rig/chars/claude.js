@@ -58,6 +58,7 @@
     { id: 'hair', n: 9, len: 9, rest: [12, 5, 2, 1, 0, 0, 0, 0, 0], stiff: [0.34, 0.26, 0.2, 0.15, 0.12, 0.1, 0.08, 0.07, 0.06], damp: 0.88, grav: 0.24, drag: 0.1,
       limit: function (c, i, sk) {
         // keep the long hair hanging behind the back silhouette (it is drawn behind everything)
+        if (Math.abs(sk.lean) > 40) return;
         var lim = i < 2 ? sk.chest[0] - 2 : (i < 4 ? Math.min(sk.chest[0], sk.pel[0]) - 7 : sk.pel[0] - 9 - Math.max(0, c.y[i] - sk.pel[1]) * 0.12);
         if (c.x[i] > lim) c.x[i] += (lim - c.x[i]) * 0.6;
         if (c.y[i] < c.ay - 3) c.y[i] = c.ay - 3;
