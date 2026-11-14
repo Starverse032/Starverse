@@ -70,12 +70,12 @@
     if (/whale$/.test(n)) return { w: 300, h: 190, ox: 70, oy: 160 };
     if (/whaleSplash/.test(n)) return { w: 240, h: 130, ox: 0, oy: 110 };
     if (/ko\.burst/.test(n)) return { w: 220, h: 180, ox: 0, oy: 90 };
-    if (/beam$/.test(n)) return { w: 300, h: 72, ox: 120, oy: 36 };
+    if (/beam$/.test(n)) return { w: 360, h: 110, ox: 150, oy: 55 };
     if (/super\.charge|meter\.full|claude\.pages|poolOut|guardCatch/.test(n)) return { w: 120, h: 120, ox: 0, oy: 90 };
     if (/hit\.counter|hit\.special|throw/.test(n)) return { w: 104, h: 84, ox: 6, oy: 42 };
     if (/sonnetTrail|breachTrail|diveTrail/.test(n)) return { w: 100, h: 100, ox: 0, oy: 60 };
     if (/^dust\.|ring|pool|waveCast|wave$|bubbles|guardrail/.test(n)) return { w: 104, h: 72, ox: 0, oy: 60 };
-    if (/book/.test(n)) return { w: 64, h: 56, ox: 0, oy: 34 };
+    if (/book/.test(n)) return { w: 96, h: 76, ox: 0, oy: 40 };
     return { w: 84, h: 72, ox: 6, oy: 36 };
   };
   FXV.isScreen = isScreen;

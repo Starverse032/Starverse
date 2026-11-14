@@ -213,8 +213,8 @@
         var nr = li === 0 ? 4 : li === 1 ? 2 : 0, RY = li === 0 ? [-0.62, -0.36, 0.3, 0.57] : [-0.5, 0.42], RS = [7, 11, 9, 13];
         for (var ri = 0; ri < nr; ri++) {
           var st = C.rows[(ri + (li === 0 ? 0 : 4)) % C.rows.length], sp = (t * RS[ri]) % st.w, gy = sy + Math.round(RY[ri] * h) - 3;
-          var a0 = 22, a1 = bodyEnd - 8;
-          if (a1 > a0) ctx.drawImage(st.c, st.w - sp + a0 % st.w, 0, Math.min(a1 - a0, st.c.width - st.w), 7, sx + a0, gy, Math.min(a1 - a0, st.c.width - st.w), 7);
+          var a0 = 22, a1 = bodyEnd - 8, srcx = (st.w - sp + a0) % st.w, ww = Math.min(a1 - a0, st.c.width - srcx);
+          if (ww > 0) ctx.drawImage(st.c, srcx, 0, ww, 7, sx + a0, gy, ww, 7);
         }
         // shock rings racing along
         var SR = C.shock[li];
