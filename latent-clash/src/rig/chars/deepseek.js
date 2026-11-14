@@ -587,7 +587,10 @@
       [z.armF != null ? z.armF : 5, function () { drawArm(p, d, 'F', ds); p.end(); }]
     ];
     steps.sort(function (a, b) { return a[0] - b[0]; });
-    for (var i = 0; i < steps.length; i++) steps[i][1]();
+    var prof = I._dsProf;
+    for (var i = 0; i < steps.length; i++) {
+      if (prof) { var t0 = performance.now(); steps[i][1](); prof[steps[i][0]] = (prof[steps[i][0]] || 0) + performance.now() - t0; } else steps[i][1]();
+    }
     if (sk0.flip) mirrorBuffer(p);
   };
 

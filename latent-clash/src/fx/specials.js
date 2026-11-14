@@ -29,6 +29,25 @@
   function bez(s, u) { var p = s.p, a = (1 - u) * (1 - u), b = 2 * u * (1 - u), c = u * u; return [a * p[0] + b * p[2] + c * p[4], a * p[1] + b * p[3] + c * p[5]]; }
   function brushW(s, u) { return s.w * (u < 0.1 ? 0.55 + u / 0.1 * 0.45 : u < 0.42 ? 1 : 1 - (u - 0.42) / 0.58 * 0.93); }
 
+  var GEO = null;
+  function guardGeo() {
+    if (GEO) return GEO;
+    var GW = 48, GH = 108, mask = new I.Buf(GW, GH), cell = new Int16Array(GW * GH).fill(-1), cen = [];
+    var top = 2, bot = 98, mid = 50;
+    mask.poly([21, top, 38, top + 12, 38, bot - 12, 21, bot, 4, bot - 12, 4, top + 12], 1);
+    var bent = new I.Buf(GW, GH);
+    for (var yy = 0; yy < GH; yy++) { var uu = (yy - mid) / (mid - top), sh = -Math.round(uu * uu * 4); for (var xx = 0; xx < GW; xx++) if (mask.d[yy * GW + xx]) bent.set(xx + sh + 4, yy, 1); }
+    mask = bent;
+    for (var r = -1; r * 9 < GH + 9; r++) for (var q = -1; q < 7; q++) cen.push([q * 10 + (r & 1 ? 5 : 0), r * 9]);
+    for (yy = 0; yy < GH; yy++) for (xx = 0; xx < GW; xx++) if (mask.d[yy * GW + xx]) {
+      var best = 1e9, bi = -1;
+      for (var kk = 0; kk < cen.length; kk++) { var ddx = xx - cen[kk][0], ddy = (yy - cen[kk][1]) * 1.15, dd = ddx * ddx + ddy * ddy; if (dd < best) { best = dd; bi = kk; } }
+      cell[yy * GW + xx] = bi;
+    }
+    GEO = { mask: mask, cell: cell, cen: cen };
+    return GEO;
+  }
+
   function bakeClaude(pal) {
     var sc = I.scheme('claude', pal), L = sc.light.u, S = sc.seal.u, G = sc.gold.u, C = SC[pal];
 
@@ -58,7 +77,7 @@
     C.slash = STROKES.map(function (st, si) {
       var bw = st.box[0], bh = st.box[1], ox = st.box[2], oy = st.box[3], len = 0, pp = bez(st, 0);
       for (var q = 1; q <= 20; q++) { var pq = bez(st, q / 20); len += Math.hypot(pq[0] - pp[0], pq[1] - pp[1]); pp = pq; }
-      var N = Math.ceil(len * 1.6), rng = I.bakeRng(300 + si * 17), gaps = [];
+      var N = Math.ceil(len * 1.25), rng = I.bakeRng(300 + si * 17), gaps = [];
       for (var g = 0; g < 3; g++) gaps.push({ off: -0.62 + g * 0.6 + (rng() - 0.5) * 0.2, from: 0.5 + rng() * 0.25 });
       return I.anim(bw, bh, 12, ox, oy, function (b, f) {
         function body(u0, u1, ws, cOut, cMid, cCore, dry, dst) {
@@ -107,18 +126,7 @@
     });
 
     // GUARDRAIL v2 — 6 appear + 24 loop + 6 end, 48x108; barrier spans x 26..60, y -102..-6 rel. origin
-    var GW = 48, GH = 108, OX = -22, OY = 104, mask = new I.Buf(GW, GH), cell = new Int16Array(GW * GH).fill(-1), cen = [];
-    var top = 2, bot = 98, mid = 50;
-    mask.poly([21, top, 38, top + 12, 38, bot - 12, 21, bot, 4, bot - 12, 4, top + 12], 1);
-    var bent = new I.Buf(GW, GH);
-    for (var yy = 0; yy < GH; yy++) { var uu = (yy - mid) / (mid - top), sh = -Math.round(uu * uu * 4); for (var xx = 0; xx < GW; xx++) if (mask.d[yy * GW + xx]) bent.set(xx + sh + 4, yy, 1); }
-    mask = bent;
-    for (var r = -1; r * 9 < GH + 9; r++) for (var q = -1; q < 7; q++) cen.push([q * 10 + (r & 1 ? 5 : 0), r * 9]);
-    for (yy = 0; yy < GH; yy++) for (xx = 0; xx < GW; xx++) if (mask.d[yy * GW + xx]) {
-      var best = 1e9, bi = -1;
-      for (var kk = 0; kk < cen.length; kk++) { var ddx = xx - cen[kk][0], ddy = (yy - cen[kk][1]) * 1.15, dd = ddx * ddx + ddy * ddy; if (dd < best) { best = dd; bi = kk; } }
-      cell[yy * GW + xx] = bi;
-    }
+    var GW = 48, GH = 108, OX = -22, OY = 104, top = 2, bot = 98, mid = 50, GEOm = guardGeo(), mask = GEOm.mask, cell = GEOm.cell, cen = GEOm.cen;
     function edgeAt(x, y) { var c = cell[y * GW + x]; return (x + 1 < GW && cell[y * GW + x + 1] >= 0 && cell[y * GW + x + 1] !== c) || (y + 1 < GH && cell[(y + 1) * GW + x] >= 0 && cell[(y + 1) * GW + x] !== c); }
     function border(x, y) { return !mask.get(x - 1, y) || !mask.get(x + 1, y) || !mask.get(x, y - 1) || !mask.get(x, y + 1); }
     function panel(b, f, amt) {
