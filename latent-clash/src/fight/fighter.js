@@ -74,7 +74,7 @@
     var hs = this.mv.hits;
     if (!hs || !hs.length) return sg.id === 'startup' ? 'startup' : 'recovery';
     var first = null, last = null, segs = this.res.segs;
-    for (var i = 0; i < segs.length; i++) for (var j = 0; j < hs.length; j++) if (hs[j].seg === segs[i].id) { if (first === null) first = i; last = i; }
+    for (var i = 0; i < segs.length; i++) for (var j = 0; j < hs.length; j++) if (hs[j].seg === segs[i].id && !hs[j].tidalBox) { if (first === null) first = i; last = i; }
     if (first === null) return 'recovery';
     if (this.si < first) return 'startup';
     if (this.si <= last) return 'active';
@@ -245,7 +245,8 @@
       F.fx('claude.haikuSlash', this.x + hp.x * this.facing, this.y + hp.y, { facing: this.facing, palette: this.pal, index: (+sg.id[3]) - 1 });
     }
     if (mv.id === 'dive') F.diveSeg(this.m, this, sg.id);
-    if (sg.id === 'bounce') { this.vy = -3.4; this.vx = -1.6 * this.facing; this.air = true; }
+    if (mv.riseFx && sg.id === 'rise') F.fx(mv.riseFx, this.x, GY, { facing: this.facing, palette: this.pal, power: this.str === 'H' ? 1 : this.str === 'L' ? 0.6 : 0.8 });
+    if (sg.id === 'bounce') { this.vy = -3.8; this.vx = -1.8 * this.facing; this.air = true; }
   };
 
   Fighter.prototype.endMove = function () {
@@ -304,10 +305,19 @@
     if (sg.vyc != null) this.vy = sg.vyc;
     if (mv.flashAt === this.mf) this.m.superFlash(this);
     if (mv.trail && (sg.id === 'rise' || sg.id === 'fall' || (sg.id === 'active' && mv.air)) && (this.ch !== 'claude' || (this.sf & 1) === 0)) {
-      var wp = this.anchor('weapon');
+      var wp = this.anchor(mv.trailAnchor || 'weapon');
       F.fx(mv.trail, this.x + wp.x * this.facing, this.y + wp.y, { facing: this.facing, palette: this.pal });
     }
-    if (mv.whale && F.whaleT && F.whaleT(this) === 50) F.fx('deepseek.whaleSplash', this.x + this.facing * (mv.whale.x + 128), T.GY, { facing: this.facing, palette: this.pal, power: 1 });
+    if (mv.whale && F.whaleT && F.whaleT(this) === F.whaleCrash()) {
+      var cx = this.x + this.facing * (mv.whale.x + F.whaleCrashX());
+      F.fx('deepseek.whaleSplash', cx, T.GY, { facing: this.facing, palette: this.pal, power: 1 });
+      this.m.addShake(4, 16);
+      this.m.stageEvent('hit', { x: cx, power: 1 });
+    }
+    if (mv.kind === 'super' && this.ch === 'claude' && sg.id === 'cast' && this.sf === 4) {
+      var bp = this.anchor('muzzle');
+      F.fx('claude.pages', this.x + bp.x * this.facing, this.y + bp.y, { facing: this.facing, palette: this.pal, power: 1 });
+    }
     if (mv.kind === 'throw' && sg.id === mv.grabSeg) F.tryGrab(this.m, this, o);
     if (mv.id === 'throwHit') F.throwStep(this.m, this, o);
     if (this.mv && this.mv.kind === 'super') this.trail = Math.max(this.trail, 4);
@@ -325,16 +335,16 @@
   // ------------------------------------------------------------------ states
   Fighter.prototype.threatened = function (o) {
     var dx = Math.abs(o.x - this.x);
-    if (o.action === 'attack' && o.mv && (o.mv.hits || o.mv.proj) && dx < 140) {
+    if (o.action === 'attack' && o.mv && (o.mv.hits || o.mv.proj) && dx < (o.mv.kind === 'super' ? 400 : 180)) {
       var ph = o.phase();
       if (ph === 'startup' || ph === 'active') return true;
     }
     var ps = this.m.projs;
     for (var i = 0; i < ps.length; i++) {
       var p = ps[i];
-      if (p.owner === o && Math.abs(p.x - this.x) < 150 && F.sign(this.x - p.x) === F.sign(p.vx)) return true;
+      if (p.owner === o && Math.abs(p.x - this.x) < 190 && F.sign(this.x - p.x) === F.sign(p.vx)) return true;
     }
-    return o.air && dx < 90 && o.action === 'attack';
+    return o.air && dx < 115 && o.action === 'attack';
   };
 
   Fighter.prototype.neutral = function (o) {
@@ -388,6 +398,10 @@
   };
 
   Fighter.prototype.step = function (o) {
+    if (this.action === 'caught' && this.pullTo != null) {   // yanked by Claude's barrier (also during hit-stop)
+      var pd = this.pullTo - this.x;
+      if (Math.abs(pd) <= 6) { this.x = this.pullTo; this.pullTo = null; } else this.x += F.sign(pd) * 6;
+    } else this.pullTo = null;
     if (this.stop > 0) { this.stop--; return; }
     this.px = this.x;
     this.af++;

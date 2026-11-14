@@ -21,7 +21,7 @@
 
   // ---- Default settings (PLATFORM overwrites from saved data at boot) --------
   LC.settings = {
-    master: 0.8, music: 0.6, sfx: 0.9,
+    master: 0.8, music: 0.7, sfx: 0.9,
     shake: true,          // screen shake
     flash: true,          // false = reduce full-screen flashes (photosensitivity)
     crt: false,           // scanline / CRT filter

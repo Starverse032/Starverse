@@ -7,7 +7,6 @@
   var F = LC.fight = LC.fight || {};
   var T = F.T, GY = T.GY;
 
-  var START_SEP = 140;
 
   function defaults(cfg) {
     cfg = cfg || {};
@@ -94,8 +93,8 @@
 
   Match.prototype.placeFighters = function () {
     var c = LC.STAGE_W / 2;
-    this.f[0].roundReset(c - START_SEP / 2, 1);
-    this.f[1].roundReset(c + START_SEP / 2, -1);
+    this.f[0].roundReset(c - T.START_SEP / 2, 1);
+    this.f[1].roundReset(c + T.START_SEP / 2, -1);
     this.projs.length = 0;
     this.camX = c - LC.W / 2;
     for (var i = 0; i < 2; i++) this.resetPuppet(this.f[i]);
@@ -164,7 +163,6 @@
     this.flash = { who: f, side: f.side, t: 0, dur: T.FLASH };
     var ca = f.anchor('chest');
     F.fx('super.charge', f.x + ca.x * f.facing, f.y + ca.y, { facing: f.facing, palette: f.pal, power: 1, 'char': f.ch });
-    if (f.ch === 'claude') F.fx('claude.pages', f.x + ca.x * f.facing, f.y + ca.y, { facing: f.facing, palette: f.pal, power: 1 });
     F.sfx('super.flash', { pan: F.pan(f.x, this.camX) });
     F.sfx('super.charge', { pan: F.pan(f.x, this.camX), vol: 0.8 });
     F.voice(f.ch, 'super');
@@ -377,7 +375,7 @@
     var tx = F.clamp((A.x + B.x) / 2 - W / 2, 0, maxC);
     var d = tx - this.camX;
     this.camX += Math.abs(d) < 0.3 ? d : d * 0.2;
-    var lo = Math.max(A.x, B.x) - (W - 22), hi = Math.min(A.x, B.x) - 22;
+    var mg = T.CAM_MARGIN, lo = Math.max(A.x, B.x) - (W - mg), hi = Math.min(A.x, B.x) - mg;
     if (lo <= hi) this.camX = F.clamp(this.camX, lo, hi);
     this.camX = F.clamp(this.camX, 0, maxC);
   };
@@ -414,6 +412,7 @@
     this.endKind = d0 && d1 ? 'double' : 'ko';
     this.canAct = false; this.noHits = true;
     this.roundWinner = d0 && d1 ? -1 : (d0 ? 1 : 0);
+    var K = T.LAUNCH_K || 1;
     for (var i = 0; i < 2; i++) {
       var f = this.f[i], dead = i === 0 ? d0 : d1;
       f.stop = Math.max(f.stop, T.KO_STOP);
@@ -422,10 +421,10 @@
         if (f.action === 'thrown') { f.thrower = null; }
         if (f.action !== 'launch' && f.action !== 'down') {
           f.mv = null; f.res = null; f.setActionRaw('launch'); f.knock = 'knock'; f.air = true;
-          f.vx = -f.facing * 2.4; f.vy = -5.2; if (f.y >= GY) f.y = GY - 1;
-        } else if (f.action === 'launch') { f.vy = Math.min(f.vy, -4.6); f.vx = F.sign(f.vx || -f.facing) * Math.max(Math.abs(f.vx), 2.4); }
-        f.grav = 0.32;
-        var kp = this.lastHitPos || { x: f.x, y: f.y - 36 };
+          f.vx = -f.facing * 2.4 * K; f.vy = -5.2 * K; if (f.y >= GY) f.y = GY - 1;
+        } else if (f.action === 'launch') { f.vy = Math.min(f.vy, -4.6 * K); f.vx = F.sign(f.vx || -f.facing) * Math.max(Math.abs(f.vx), 2.4 * K); }
+        f.grav = 0.32 * K;
+        var kp = this.lastHitPos || { x: f.x, y: f.y - 56 };
         F.fx('ko.burst', kp.x, kp.y, { facing: -f.facing, palette: this.f[1 - i].pal, power: 1, 'char': this.f[1 - i].ch });
         F.voice(f.ch, 'ko');
       }
