@@ -345,11 +345,15 @@
       g.linearRampToValueAtTime(0, t + fade);
     });
     this.endT = t + fade;
+    // replaced before it was ever audible (several music() calls in one frame): drop it at once
+    if (t <= this.t0 + 0.01) { this.fade.gain.cancelScheduledValues(0); this.fade.gain.value = 0; this.vfade.gain.cancelScheduledValues(0); this.vfade.gain.value = 0; this.endT = t; }
   };
 
   // Disconnect once silent. Returns true when the instance can be dropped.
   TrackInst.prototype.reap = function (now) {
-    if (!(this.stopping || this.done) || now < this.endT + 3) return false;
+    // stopped: silent once the fade ends (echo/notes sit before the fade gain); finished one-shots
+    // keep 3 s so release tails and echoes ring out
+    if (!(this.stopping || this.done) || now < this.endT + (this.stopping ? 0.1 : 3)) return false;
     try { this.fade.disconnect(); this.vfade.disconnect(); } catch (e) { /* ignore */ }
     return true;
   };
@@ -376,6 +380,7 @@
   K.Mixer.prototype.tickMusic = function (until, now) {
     var tr = this.tracks;
     for (var i = tr.length - 1; i >= 0; i--) {
+      if (tr[i].stopping && tr[i].endT <= now) { if (tr[i].reap(now)) tr.splice(i, 1); continue; }
       tr[i].schedule(until, now);
       if (tr[i].reap(now)) { if (this.cur === tr[i]) this.cur = null; tr.splice(i, 1); }
     }
