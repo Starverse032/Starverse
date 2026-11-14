@@ -1,57 +1,56 @@
-/* LATENT CLASH — ILLUST: DeepSeek 娘 portraits (bust / bustWin / bustLose / cutin / face).
- * Same construction, head size and light (upper right) as Claude's portraits. */
+/* LATENT CLASH — ILLUST: DeepSeek 娘 portraits, V2 design (ZipZipPipe's 鲸鱼女仆).
+ * bust / bustWin / bustLose / face here; cut-in in cutin.js. Same construction, head size and light
+ * (upper right) as Claude's portraits. Three-quarter view facing right. */
 (function () {
   'use strict';
   var LC = window.LC, I = LC.illust, K = I.kit, S = K.S;
   I.ART = I.ART || {};
 
-  var EL = { K: S.lash, k: S.e3, D: S.e3, s: S.e2, B: S.e1, H: S.e0, w: S.ew, W: S.W, P: S.lash, x: S.s2, l: S.sl, y: S.s3, b: S.bl, c: S.blS, m: S.mo, t: S.tg, n: S.sl, r: S.tear, R: S.tear2, a: S.a1, A: S.a0, o: S.ol };
+  var EL = { K: S.lash, k: S.eK, D: S.e3, s: S.e2, B: S.e1, H: S.e0, w: S.ew, W: S.W, P: S.lash, x: S.s2, l: S.sl, y: S.s3,
+    b: S.bl, c: S.blS, m: S.mo, t: S.tg, n: S.sl, r: S.tear, R: S.tear2, a: S.a1, A: S.a0, o: S.ol };
   var EYES = {
-    // bright, round, outer corners flick up
+    // big bright round eyes, outer lashes flick up
     near: [
-      'K...KKKK....',
-      'KK.KKKKKKK..',
-      '.KKKKKKKKKKK',
-      '..KDDDDDDDKw',
-      '..wDDssWWDDw',
-      '..wDsssWWsDw',
-      '..wsssPPssDw',
-      '..wsBBPPBssw',
+      'K..KKKKKK...',
+      '.KKKKKKKKKK.',
+      '..KkDDDDDkKK',
+      '..wDDsWWDDkw',
+      '..wDsPPWWsDw',
+      '..wssPPPssDw',
+      '..wsBPPPBssw',
       '..wBBBBBBBsw',
-      '..wHWBBBBBHw',
-      '...wHHHHHHl.',
-      '....lllll...'
+      '..wBHHBBHHBw',
+      '...wHHWHHHw.',
+      '....llllll..'
     ],
     far: [
-      '....KK.K',
-      '.KKKKKKK',
-      'KKKKKKKK',
-      'wDDDDDDK',
-      'wDssWWDw',
-      'wsssWWDw',
-      'wssPPsDw',
-      'wBBPPBsw',
-      'wBBBBBsw',
-      'wHBBBHHw',
-      '.wHHHHl.',
-      '..lll...'
+      '...KKKK.K',
+      '.KKKKKKKK',
+      'KkDDDDkK.',
+      'wDsWWDDw.',
+      'wsPWWsDw.',
+      'wsPPPsDw.',
+      'wBPPBBsw.',
+      'wBBBBBBw.',
+      'wHHBBHHw.',
+      '.wHWHHw..',
+      '..llll...'
     ],
-    // win: near eye winks (>), far eye open
+    // win: near eye winks (^ arc), far eye open
     nearWink: [
       '............',
       '............',
       '............',
-      '..KK........',
-      '....KKK.....',
-      '.......KKK..',
-      '.........KK.',
-      '.......KKK..',
-      '....KKK.....',
-      '..KK........',
+      '............',
+      '............',
+      '.....KK.....',
+      '...KK..KK...',
+      '..K......KK.',
+      '.K.........K',
       '............',
       '............'
     ],
-    // lose: dizzy spirals ("server busy")
+    // lose: dizzy spirals ("服务器繁忙")
     nearSpin: [
       '............',
       '...KKKKKK...',
@@ -63,22 +62,20 @@
       '.K..KK.K..K.',
       '..K...K..K..',
       '...KKK..K...',
-      '......KK....',
-      '............'
+      '......KK....'
     ],
     farSpin: [
-      '........',
-      '..KKKK..',
-      '.K....K.',
-      'K..KK..K',
-      'K.K..K.K',
-      'K.K.K..K',
-      'K..K..K.',
-      '.K...K..',
-      '..KKK...',
-      '........',
-      '........',
-      '........'
+      '.........',
+      '..KKKK...',
+      '.K....K..',
+      'K..KK..K.',
+      'K.K..K.K.',
+      'K.K.K..K.',
+      'K..K..K..',
+      '.K...K...',
+      '..KKK....',
+      '.........',
+      '.........'
     ]
   };
   var MOUTHS = {
@@ -104,7 +101,7 @@
     ]
   };
 
-  // whale-fluke shaped pigtail end at (x,y), pointing along angle `ang` (radians), size k
+  // whale-fluke shape at (x,y), pointing along angle `ang` (radians), size k
   function fluke(P, x, y, ang, k) {
     var T = [0, -2.2, -3, -4, -6, -7.5, -10, -9.5, -8.6, -5.5, -7.8, -1.6, -5.6, 0, -7.8, 1.6, -8.6, 5.5, -10, 9.5, -6, 7.5, -3, 4, 0, 2.2];
     var ca = Math.cos(ang), sa = Math.sin(ang), pts = [];
@@ -116,17 +113,12 @@
   }
   I.fluke = fluke;
 
-  function pigtail(P, pts, ang, k, sw) {
-    var H = I.H;
-    var st = H.hairClump(P, [pts, 11, 8, 11, 0, [0.1, 0.6]], S.h1);
-    var n = pts.length, ex = pts[n - 2], ey = pts[n - 1];
-    var f = fluke(P, ex, ey, ang, k);
-    P.part(f, S.h1, S.hl);
-    P.recol(f.band(2, -1), [S.h1], S.h2);
-    // cyan tips on the lobes' ends
-    var c = Math.cos(ang), s = Math.sin(ang);
-    H.tipMap(P, f, function (x, y) { var d = (x - ex) * c + (y - ey) * s; return d - 5 * k; });
-    return st.or(f);
+  // paint a region in the fin ramp (navy-grey), pale inner face on `inner`
+  function paintFin(P, m, inner) {
+    P.part(m, S.x1, S.xl);
+    P.recol(m.band(-1, 2), [S.x1], S.x0);
+    P.recol(m.band(2, -2), [S.x1], S.x2);
+    if (inner) { P.recol(inner.and(m), [S.x1, S.x2, S.x0], S.x0); P.recol(inner.and(m).band(0, -1), [S.x0], S.c2); }
   }
 
   // ---------------------------------------------------------------- bust
@@ -134,188 +126,200 @@
     var expr = o.expr || 'n', sw = o.sway || 0, H = I.H;
     var lose = expr === 'lose', win = expr === 'win';
 
-    // ---- pigtails (behind the head): near one up-left, far one up-right
-    pigtail(P, [31, 25, 24, 20, 18 + sw, 16], Math.PI + 0.62 + sw * 0.06, 1.2, sw);
-    pigtail(P, [71, 19, 79, 13, 86 + sw, 10], -0.42 - sw * 0.06, 1.1, sw);
+    // ---- back hair: voluminous wavy curtain (deep blue), light-blue inner layer near the neck
+    var back = P.spoly([54, 13, 38, 16, 27, 26, 21, 40, 18, 52, 13, 62, 12, 74, 8, 84, 7 + sw, 96, 3 + sw, 106, 4 + sw, 118, 1 + sw * 2, 132,
+      108 + sw * 2, 132, 106 + sw, 118, 107 + sw, 106, 103, 96, 102, 84, 98, 72, 96, 60, 91, 48, 88, 36, 82, 24, 70, 15]);
+    P.part(back, S.h2, S.hl);
+    P.recol(back.band(4, -1), [S.h2], S.h3);
+    var inner = P.spoly([34, 56, 44, 60, 46, 80, 42, 100, 40, 132, 74, 132, 72, 100, 68, 80, 70, 60, 80, 56, 84, 80, 86, 132, 30, 132, 28, 80]);
+    P.fill(inner.and(back), S.t1);
+    P.recol(inner.and(back).band(-2, 1), [S.t1], S.t0);
+    P.recol(inner.and(back).band(3, 0), [S.t1], S.tS);
+    // wavy clumps in the curtain
+    [[[24, 46, 16, 62, 14, 78, 9 + sw, 92, 10 + sw, 108, 6 + sw * 2, 132], 9, 6, 10, 0.12, [0.1, 0.7]],
+      [[30, 56, 24, 72, 23, 88, 19 + sw, 102, 20 + sw, 116, 17 + sw * 2, 132], 8, 5, 9, 0.14],
+      [[86, 40, 93, 56, 94, 72, 99 + sw, 86, 98 + sw, 102, 102 + sw * 2, 132], 9, 6, 10, 0.12, [0.1, 0.7]]
+    ].forEach(function (c) { H.hairClump(P, c, S.h2); });
 
-    // ---- back of the bob (behind face)
-    var bob = P.spoly([52, 11, 34, 14, 22, 25, 17, 40, 17, 56, 21, 68, 28, 75, 38, 77, 46, 72, 70, 70, 79, 72, 85, 62, 86, 46, 82, 30, 72, 16]);
-    P.part(bob, S.h2, S.hl);
-    P.recol(bob.band(4, -2), [S.h2], S.h3);
-    H.tipMap(P, bob, function (x, y) { return (y - 70) * 0.8; });
-
-    // ---- R1 peeking over her near shoulder
-    drawR1(P, 14, 76, lose);
-
-    // ---- hood (whale back, lowered) + neck
-    var neck = P.poly([48, 62, 61, 62, 61, 90, 48, 90]);
+    // ---- body: navy dress with puffed shoulders, white blouse front, frilled apron straps
+    var neck = P.poly([50, 62, 62, 62, 63, 84, 50, 84]);
     P.part(neck, S.s1, S.sl);
-    var hood = P.spoly([24, 92, 26, 82, 34, 76, 46, 77, 54, 84, 64, 77, 76, 76, 86, 80, 92, 90]);
-    P.part(hood, S.d1, S.dl);
-    P.recol(hood.band(-2, 3), [S.d1], S.d0);
-    P.recol(hood.band(3, -1), [S.d1], S.d2);
-    // whale eye dots on the hood
-    P.px(31, 82, S.W); P.px(32, 82, S.ol); P.px(32, 83, S.ol); P.px(31, 83, S.ol);
-    P.px(81, 81, S.W); P.px(82, 81, S.ol); P.px(82, 82, S.ol); P.px(81, 82, S.ol);
-    // ---- oversized white hoodie
-    var body = P.spoly([46, 84, 34, 86, 22, 92, 13, 102, 8, 116, 6, 134, 106, 134, 104, 116, 99, 102, 90, 92, 76, 86, 62, 84]);
-    P.part(body, S.c1, S.cl);
-    P.recol(body.band(5, -2), [S.c1], S.c2);
-    P.recol(body.band(-2, 3), [S.c1], S.c0);
-    var collar = P.spoly([44, 84, 54, 92, 64, 84, 60, 82, 54, 87, 48, 82]);
-    P.part(collar, S.c2, S.cl);
-    P.line([30, 98, 26, 114, 25, 130], S.c2, true);
-    P.line([40, 108, 39, 130], S.c2, true);
-    // drawstrings with metal aglets
-    P.line([50, 90, 49, 100, 50, 110], S.d2, true); P.line([58, 90, 59, 99, 58, 108], S.d2, true);
-    P.px(50, 111, S.m1); P.px(50, 112, S.m2); P.px(58, 109, S.m1); P.px(58, 110, S.m2);
+    var bod = P.spoly([40, 84, 72, 84, 80, 96, 84, 128, 30, 128, 34, 96]);
+    P.part(bod, S.d1, S.dl); P.recol(bod.band(5, 0), [S.d1], S.d2); P.recol(bod.band(-2, 2), [S.d1], S.d0);
+    [[4, 132, 10, 104, 18, 92, 30, 87, 40, 92, 40, 132], [100, 132, 104, 112, 100, 96, 90, 89, 78, 90, 74, 132]].forEach(function (pp, i) {
+      var arm = P.spoly(pp);
+      P.part(arm, S.d1, S.dl); P.recol(arm.band(4, -1), [S.d1], S.d2); P.recol(arm.band(-2, 2), [S.d1], S.d0);
+    });
+    // puffed shoulders
+    var puffN = P.spoly([12, 104, 14, 94, 22, 87, 32, 85, 42, 88, 44, 96, 38, 104, 26, 108]);
+    var puffF = P.spoly([72, 90, 80, 86, 90, 87, 98, 93, 100, 102, 92, 106, 80, 104, 74, 98]);
+    [puffN, puffF].forEach(function (pf) {
+      P.part(pf, S.d1, S.dl);
+      P.recol(pf.band(4, -2), [S.d1], S.d2);
+      P.recol(pf.band(-2, 3), [S.d1], S.d0);
+      P.recol(pf.band(-1, 1), [S.d0], S.c3);
+    });
+    P.line([24, 92, 22, 100, 24, 106], S.d2, true, true); P.line([32, 89, 31, 98, 32, 105], S.d2, true, true);
+    P.line([86, 89, 85, 97, 86, 104], S.d2, true, true);
+    // white blouse front, tiny buttons
+    var blouse = P.spoly([49, 84, 64, 84, 66, 100, 67, 128, 46, 128, 47, 100]);
+    P.part(blouse, S.c1, S.cl); P.recol(blouse.band(4, 0), [S.c1], S.c2); P.recol(blouse.band(-1, 0), [S.c1], S.c0);
+    [100, 108, 116, 124].forEach(function (y) { P.px(57, y, S.cl); P.px(58, y, S.c2); });
+    // frilled apron straps along the bodice
+    [[[42, 86, 41, 100, 41, 116, 40, 132], -1], [[71, 86, 72, 100, 73, 116, 74, 132], 1]].forEach(function (s) {
+      var st = P.sr(s[0], 5, 6);
+      P.part(st, S.c0, S.cl); P.recol(st.band(s[1] * 2, 0), [S.c0], S.c2);
+      for (var y = 88; y < 128; y += 4) { var xx = Math.round(s[0][0] + (y - 86) * (s[0][6] - s[0][0]) / 46) + s[1] * 3; P.px(xx, y, S.cl); P.px(xx, y + 1, S.c2); }
+    });
+    // gold buttons on the bodice (two rows)
+    [[45, 112], [45, 122], [69, 112], [69, 122]].forEach(function (b) {
+      P.part(P.ell(b[0], b[1], 1.8, 1.8), S.m1, S.ml); P.px(b[0], b[1] - 1, S.m0);
+    });
+    // collar + dark ribbon bow with a blue gem
+    var col = P.spoly([47, 82, 56, 88, 65, 82, 67, 86, 58, 92, 54, 92, 45, 86]);
+    P.part(col, S.c0, S.cl); P.recol(col.band(2, -1), [S.c0], S.c2);
+    var bowL = P.poly([56, 90, 46, 85, 45, 94]), bowR = P.poly([57, 90, 67, 85, 68, 94]);
+    var bt = P.poly([55, 91, 50, 104, 53, 103, 56, 93]).or(P.poly([58, 91, 63, 104, 60, 103, 57, 93]));
+    P.part(bt.or(bowL).or(bowR), S.d2, S.dl);
+    P.recol(bowL.or(bowR).band(-1, 1), [S.d2], S.d1); P.recol(bt.band(-1, 0), [S.d2], S.d1);
+    P.line([48, 88, 53, 90], S.d3); P.line([65, 88, 60, 90], S.d3);
+    var gem = P.ell(56.5, 90.5, 2.6, 2.6);
+    P.part(gem, S.a1, S.a3); P.px(56, 89, S.W); P.px(57, 90, S.a0); P.px(57, 91, S.a2);
+
+    // ---- far fin (behind the head)
+    var finF = P.spoly([74, 30, 84, 32, 92, 38, 98, 47, 99, 54, 95, 54, 89, 48, 80, 42, 74, 40]);
+    paintFin(P, finF, P.spoly([78, 40, 88, 46, 95, 54, 98, 52, 92, 42, 84, 37]));
 
     // ---- head
-    var skull = P.ell(52, 38, 27, 26.5).or(P.ell(46, 42, 22, 24));
+    var skull = P.ell(53, 38, 25, 26).or(P.ell(47, 43, 21, 23));
     P.part(skull, S.h1, S.hl);
-    H.hairClump(P, [[73, 32, 78, 46, 78, 58, 76, 68], 10, 2, 10, 0.3], S.h1);
-    var face = P.spoly([34, 30, 32, 40, 33, 50, 36, 57, 41, 63, 48, 68, 55, 72, 61, 74.5, 65, 73.5, 70, 69, 74, 63, 77, 57, 78, 52, 76.5, 47, 77.5, 41, 76.5, 32, 64, 27, 46, 27]);
+    var face = P.spoly([35, 29, 32, 39, 33, 49, 36, 57, 41, 63, 47, 68, 54, 72, 59, 74, 63, 73.5, 68, 69.5, 72, 63, 75.5, 57, 77.5, 50, 77, 44, 77.5, 37, 76, 30, 64, 26, 46, 26]);
     P.part(face, S.s1, S.sl);
-    P.recol(neck.and(face.shift(-1, 4)).sub(face), [S.s1], S.s2);
-    P.recol(face.band(3, 0).and(P.rect(0, 42, 40, 30)), [S.s1], S.s2);
+    P.recol(neck.and(face.shift(-1, 5)).sub(face), [S.s1], S.s2);
+    P.recol(face.band(4, 0).and(P.rect(0, 32, 44, 40)), [S.s1], S.s2);
 
     // ---- face features
-    P.map(41, 43, lose ? EYES.nearSpin : win ? EYES.nearWink : EYES.near, EL);
+    P.map(40, 43, lose ? EYES.nearSpin : win ? EYES.nearWink : EYES.near, EL);
     P.map(62, 43, lose ? EYES.farSpin : EYES.far, EL);
-    if (expr === 'cut') { P.line([42, 37, 46, 38, 51, 40], S.hl); P.line([62, 40, 66, 38, 69, 38], S.hl); }
-    else if (lose) { P.line([42, 37, 46, 38, 50, 39], S.hl); P.line([63, 39, 66, 38, 69, 37], S.hl); }
-    else { P.line([43, 38, 46, 37, 50, 38], S.hl); P.line([63, 38, 67, 37, 69, 38], S.hl); }
-    P.px(68, 58, S.s2); P.px(68, 59, S.sl);
+    P.px(71, 57, S.s2); P.px(71, 58, S.sl);
     if (lose) P.map(58, 64, MOUTHS.wavy, EL);
-    else P.map(win ? 57 : 58, 63, win ? MOUTHS.big : MOUTHS.grin, EL);
-    [[43, 57], [45, 57], [47, 57], [49, 57], [44, 58], [46, 58], [48, 58], [64, 57], [66, 57], [68, 57], [65, 58], [67, 58]].forEach(function (p) {
+    else P.map(win ? 56 : 57, 63, win ? MOUTHS.big : MOUTHS.grin, EL);
+    [[41, 56], [43, 56], [45, 56], [47, 56], [42, 57], [44, 57], [46, 57], [65, 56], [67, 56], [69, 56], [66, 57], [68, 57]].forEach(function (p) {
       if (P.get(p[0], p[1]) === S.s1) P.px(p[0], p[1], (p[0] + p[1]) & 1 ? S.bl : S.blS);
     });
 
-    // ---- fringe: choppy bangs, slightly swept right; cast shadow first
+    // ---- fringe: soft wavy bangs; cast shadow first
     var FR = [
-      [[50, 13, 62, 17, 71, 26, 75, 36, 76, 46], 14, 0, 13],
-      [[46, 14, 56, 21, 62, 31, 64, 42], 13, 0, 13],
-      [[42, 15, 48, 24, 53, 33, 54, 42], 12, 0, 13],
-      [[38, 16, 41, 25, 44, 33, 45, 40], 11, 0, 11],
-      [[34, 18, 33, 28, 35, 37, 38, 44], 10, 0, 10]
+      [[50, 14, 62, 18, 71, 26, 76, 36, 78, 46], 14, 0, 13],
+      [[47, 15, 56, 22, 62, 32, 64, 42], 13, 0, 13],
+      [[44, 15, 49, 25, 53, 34, 54, 43], 11, 0, 12],
+      [[40, 16, 42, 25, 45, 33, 46, 41], 10, 0, 10],
+      [[36, 18, 34, 28, 35, 37, 38, 44], 10, 0, 10]
     ];
     var fringe = P.mask();
     FR.forEach(function (c) { fringe = fringe.or(P.sr(c[0], c[1], c[2], c[3])); });
     P.recol(fringe.shift(-1, 2).or(fringe.shift(0, 2)), [S.s1], S.s2);
     FR.forEach(function (c) { H.hairClump(P, c, S.h1); });
-    // near bob side lock, curling in under the cheek, cyan tip
-    H.hairClump(P, [[36, 28, 31, 44, 31, 58, 34, 68, 40, 73], 12, 0, 13, 0.3, [0.1, 0.45]], S.h1);
     P.recol(skull.band(5, -4), [S.h1], S.h2);
-    var ring = P.ell(55, 35, 25, 21).sub(P.ell(56, 38, 25, 21)).and(skull);
+    var ring = P.ell(55, 35, 24, 20).sub(P.ell(56, 38, 24, 20)).and(skull);
+    for (var gx = 0; gx < 112; gx += 6) ring = ring.sub(P.rect(gx, 0, 2, 40));
     P.recol(ring, [S.h1], S.h0);
-    // hair ties (cyan beads) at the pigtail roots
-    P.part(P.ell(30, 23, 3, 3), S.a1, S.al); P.px(31, 22, S.a0);
-    P.part(P.ell(72, 18, 2.6, 2.6), S.a1, S.al); P.px(73, 17, S.a0);
-    // spout ahoge: short stem splitting into two curls with a cyan tip
-    if (lose) P.part(P.sr([52, 15, 51, 9, 47, 6, 43, 7], 5, 2), S.h1, S.hl);
+    // wavy front locks (in front of the shoulders), light-blue ends
+    H.hairClump(P, [[37, 28, 31, 42, 32, 56, 28, 68, 29 + sw, 82, 25 + sw, 96, 26 + sw * 2, 110, 22 + sw * 2, 126], 11, 3, 12, 0.3, [0.1, 0.5]], S.h1);
+    H.hairClump(P, [[39, 32, 37, 46, 39, 58, 36, 68], 5, 0, 6, 0.3], S.h1);
+    H.hairClump(P, [[75, 28, 80, 42, 79, 56, 83, 68, 82 + sw, 82, 86 + sw, 96, 85 + sw * 2, 110, 89 + sw * 2, 124], 10, 3, 11, 0.3, [0.1, 0.5]], S.h1);
+
+    // ---- near fin (lop-ear, drooping outward), pale inner face
+    var finN = P.spoly([34, 30, 24, 32, 15, 39, 9, 49, 7, 58, 11, 58, 17, 51, 26, 45, 34, 43]);
+    paintFin(P, finN, P.spoly([30, 44, 20, 48, 12, 57, 8, 58, 12, 50, 20, 42, 30, 38]));
+    P.line([30, 36, 20, 41, 13, 50], S.x2, true, true);
+
+    // ---- maid headdress: white frilled band across the crown, cyan bow at the far side
+    var band = P.sr([31, 31, 36, 21, 46, 15, 58, 14, 70, 17, 78, 25, 80, 29], 4, 3.5, 5);
+    var fr = P.mask();
+    [[32, 25], [36, 19], [41, 15], [47, 12], [53, 11], [59, 11], [65, 13], [71, 16], [76, 20], [79, 25]].forEach(function (p) { fr = fr.or(P.ell(p[0], p[1], 3, 2.6)); });
+    fr = fr.sub(band);
+    P.part(fr, S.c0, S.cl);
+    P.recol(fr.band(2, -1), [S.c0], S.c2);
+    P.part(band, S.c1, S.cl); P.recol(band.band(0, -1), [S.c1], S.c2);
+    [[38, 20], [47, 15], [56, 14], [65, 15], [73, 20]].forEach(function (p) { P.px(p[0], p[1], S.c2); });
+    var bw = P.poly([80, 26, 88, 21, 89, 28]).or(P.poly([80, 26, 74, 19, 72, 26])), bk = P.ell(80, 26, 2, 2);
+    P.part(bw, S.a1, S.al); P.recol(bw.band(-1, 1), [S.a1], S.a0); P.recol(bw.band(1, -1), [S.a1], S.a2);
+    P.part(bk, S.a2, S.al); P.px(80, 25, S.a0);
+    var btail = P.sr([80, 28, 82, 33, 85, 36], 2, 1.5);
+    P.part(btail, S.a2, S.al);
+
+    // ---- ahoge: long curl
+    if (lose) P.part(P.sr([53, 12, 51, 7, 47, 5, 43, 7, 42, 11], 3, 1), S.h1, S.hl);
     else {
-      var sp = P.sr([53, 15, 54, 9, 55, 6], 5, 4).or(P.sr([55, 7, 52, 3, 48, 2, 45, 4], 4.5, 1.5)).or(P.sr([55, 7, 58, 2, 62, 1, 65, 3], 4.5, 1.5));
-      P.part(sp, S.h1, S.hl);
-      P.recol(sp.band(-1, 1), [S.h1], S.h0);
-      P.px(45, 4, S.t1); P.px(46, 3, S.t0); P.px(64, 2, S.t0); P.px(65, 3, S.t1);
+      var aho = P.sr([53, 12, 51, 6, 53, 2, 58, 1, 61, 4, 59, 8, 56, 7], 3.2, 1.2);
+      P.part(aho, S.h1, S.hl); P.recol(aho.band(-1, 1), [S.h1], S.h0);
     }
 
-    // ---- raised cyan-gloved fist wrapped in a swirl of water
-    drawFist(P, o);
+    // ---- raised hand, waving
+    drawWave(P, o);
 
     P.outer(S.ol);
 
-    if (win) { H.sparkle(P, 26, 46, false); H.sparkle(P, 74, 30, true); H.sparkle(P, 100, 70, false); }
+    if (win) { H.sparkle(P, 24, 44, false); H.sparkle(P, 100, 30, true); H.sparkle(P, 8, 70, false); }
     if (lose) {
       // "server busy" spinner above her head
       [[0, -5], [3.5, -3.5], [5, 0], [3.5, 3.5], [0, 5], [-3.5, 3.5], [-5, 0], [-3.5, -3.5]].forEach(function (d, i) {
-        var x = Math.round(84 + d[0]), y = Math.round(16 + d[1]);
+        var x = Math.round(92 + d[0]), y = Math.round(12 + d[1]);
         P.px(x, y, i < 3 ? S.a0 : i < 6 ? S.a1 : S.a2); if (i < 2) { P.px(x + 1, y, S.a0); }
       });
-      P.map(76, 34, ['.r.', 'rRr', 'rRR', '.R.'], EL);
+      P.map(77, 34, ['.r.', 'rRr', 'rRR', '.R.'], EL);
     }
   }
 
-  function drawR1(P, x, y, sad) {
-    // tail fluke behind, then a round body
-    var tail = I.fluke(P, x - 13, y - 2, Math.PI + 0.9, 0.65).or(P.sr([x - 6, y + 4, x - 11, y, x - 13, y - 2], 5, 3));
-    P.part(tail, S.d1, S.dl); P.recol(tail.band(2, -1), [S.d1], S.d2);
-    var body = P.spoly([x - 10, y + 8, x - 9, y, x - 3, y - 6, x + 6, y - 8, x + 14, y - 4, x + 18, y + 4, x + 16, y + 12, x + 6, y + 15, x - 5, y + 14]);
-    P.part(body, S.d1, S.dl);
-    P.recol(body.band(-2, 2), [S.d1], S.d0);
-    P.recol(body.band(3, -1), [S.d1], S.d2);
-    P.recol(P.ell(x + 7, y + 12, 11, 4.5).and(body), [S.d1, S.d0, S.d2], S.c0);
-    P.px(x + 10, y + 3, S.ol); P.px(x + 10, y + 4, S.ol); P.px(x + 11, y + 3, S.ol); P.px(x + 11, y + 4, S.ol);
-    if (!sad) P.px(x + 11, y + 3, S.W); else { P.px(x + 10, y + 3, S.d2); P.px(x + 11, y + 3, S.d2); }
-    P.px(x + 13, y + 6, S.bl); P.px(x + 14, y + 6, S.bl);
-    P.px(x + 15, y + 8, S.dl); P.px(x + 16, y + 8, S.dl);
-    if (!sad) [[x + 4, y - 9, S.a1], [x + 4, y - 10, S.a0], [x + 3, y - 12, S.a0], [x + 5, y - 12, S.a0], [x + 2, y - 13, S.a1], [x + 6, y - 13, S.a1], [x + 1, y - 13, S.a2], [x + 7, y - 13, S.a2]]
-      .forEach(function (p) { P.px(p[0], p[1], p[2]); });
-  }
-
-  function drawFist(P, o) {
-    var cx = 90, cy = 92;
-    // sleeve (white, blue stripes) coming up from the bottom right
-    var sleeve = P.poly([80, 100, 100, 98, 110, 134, 80, 134]);
-    P.part(sleeve, S.c1, S.cl);
-    P.recol(sleeve.band(4, 0), [S.c1], S.c2);
-    var st1 = P.poly([79, 108, 102, 105, 103, 109, 80, 112]).and(sleeve), st2 = P.poly([80, 115, 104, 112, 105, 115, 81, 118]).and(sleeve);
-    P.recol(st1.or(st2), [S.c1, S.c2], S.d1);
-    // swirl back half
-    var backHalf = P.sr([104, 86, 98, 80, 88, 79, 80, 82, 76, 87], 3, 2, 5);
-    P.part(backHalf, S.a2, S.a3);
-    // fist: cyan fingerless glove, knuckles toward the viewer
-    var fist = P.spoly([80, 92, 81, 85, 86, 81, 94, 81, 99, 84, 100, 92, 98, 99, 90, 101, 83, 99]);
-    P.part(fist, S.a1, S.al);
-    P.recol(fist.band(3, -2), [S.a1], S.a2);
-    P.recol(fist.band(-2, 2), [S.a1], S.a0);
-    // finger tips (skin) along the front + finger lines
-    var tips = P.poly([82, 89, 99, 87, 99, 92, 82, 94]).and(fist);
-    P.recol(tips, [S.a1, S.a2, S.a0], S.s1);
-    P.line([88, 88, 88, 93], S.sl); P.line([93, 87, 93, 92], S.sl);
-    P.line([82, 88, 99, 86], S.al);
-    // thumb across
-    var thumb = P.sr([82, 96, 89, 96, 94, 94], 4, 3);
-    P.part(thumb, S.a1, S.al);
-    // swirl front half + droplets
-    var front = P.sr([76, 87, 77, 95, 85, 101, 96, 100, 104, 94, 106, 86, 103, 80, 99, 79], 3, 1, 6);
-    P.part(front, S.a1, S.a3);
-    P.recol(front.band(0, -1), [S.a1], S.a0);
-    P.recol(front.band(-1, 1).and(P.rect(0, 0, 112, 98)), [S.a1], S.a0);
-    [[72, 84], [106, 82], [104, 100], [76, 102], [100, 76]].forEach(function (d, i) {
-      P.px(d[0], d[1], i % 2 ? S.a0 : S.W); P.px(d[0], d[1] + 1, S.a1);
+  function drawWave(P, o) {
+    // navy sleeve rising from the bottom right, white frilled cuff, open palm
+    var arm = P.sr([100, 134, 99, 116, 97, 100], 13, 10);
+    P.part(arm, S.d1, S.dl); P.recol(arm.band(3, 0), [S.d1], S.d2); P.recol(arm.band(-2, 0), [S.d1], S.d0);
+    var cuff = P.spoly([88, 98, 92, 93, 98, 92, 105, 93, 108, 98, 104, 101, 98, 100, 92, 101]);
+    P.part(cuff, S.c0, S.cl); P.recol(cuff.band(2, -1), [S.c0], S.c2);
+    P.px(92, 100, S.cl); P.px(97, 100, S.cl); P.px(103, 100, S.cl);
+    var palm = P.spoly([91, 92, 90, 84, 93, 79, 100, 78, 104, 82, 104, 90, 101, 94, 95, 95]);
+    P.part(palm, S.s1, S.sl); P.recol(palm.band(3, -1), [S.s1], S.s2);
+    var fingers = [[[93, 80, 92, 74, 91, 69], 3, 2.4], [[96, 79, 96, 72, 96, 67], 3, 2.6], [[99, 79, 100, 73, 101, 68], 3, 2.4], [[102, 81, 104, 77, 106, 73], 2.8, 2.2]];
+    fingers.forEach(function (f) {
+      var m = P.sr(f[0], f[1], f[2]);
+      P.part(m, S.s1, S.sl); P.recol(m.band(1, 0), [S.s1], S.s0);
     });
+    var thumb = P.sr([92, 89, 88, 85, 86, 81], 3.4, 2.6);
+    P.part(thumb, S.s1, S.sl); P.recol(thumb.band(-1, 1), [S.s1], S.s0);
+    P.line([94, 88, 97, 90, 101, 88], S.s2, true);
   }
 
   // ---------------------------------------------------------------- face icon 24x24
   var FACE = [
-    '..hh..............hh....',
-    '.hTTh....hhhhh...hTTh...',
-    '..hHHhhhhHHHHHhhhHHh....',
-    '...hHHHHHHHHHHHHHHHh....',
-    '..hHHHHHHHHHHHHHHHHHh...',
-    '.hHHHHHHHHhHHHHhHHHHh...',
-    '.hHHHHHHHhHHHHhHHHHHHh..',
-    'hHHHHHHhfffHHhffhHHHHh..',
-    'hHHHHHhfffffhffffhHHHh..',
-    'hHHHHhKKKKfffKKKfhHHh...',
-    'hHHHhfKDWDfffKDWKfhHh...',
-    'hHHHhfKsDsfffKsDKfhHh...',
-    'hHHHhfwBBwfffwBBwfhHh...',
-    'hHHHhfffffffffffffhHh...',
-    'hHHHhbbfffffffbbfhHh....',
-    '.hHHhffffmWmmfffhHh.....',
-    '.hTThfffffmmffffhTh.....',
-    '..hhhhhffffffffhhh......',
-    '...hddddhffffhdddh......',
-    '..hdddddhcccchdddddh....',
-    '.hddDddcccccccddDdddh...',
-    '.hdddcccccccccccdddddh..',
-    'hdddcccccccccccccccdddh.',
-    'hddcccccccccccccccccddh.'
+    '...........hh...........',
+    '.......hhhhHhhh.........',
+    '.....hWWWWWWWWWh........',
+    '....hWhHHHHHHHWWWh......',
+    '...hWhHHHHHHHHHHWaa.....',
+    '...hhHHHHHhHHHHhHaAa....',
+    '..hhHHHHHhfHHHhfHHah....',
+    '.xxhHHHhfffHHhffhHHhh...',
+    'xXXxHHhfffffhffffhHHHh..',
+    'xXXxHhKKKKfffKKKfhHHHh..',
+    '.xXhHhKDWDffKDWKfhHHHh..',
+    '..xhHhwsBwfffsBwfhHHTh..',
+    '..hHhfffffffffffhHHTTh..',
+    '..hHhfbfffffffbfhHTTTh..',
+    '..hHHhffffmWmmffhHHTh...',
+    '..hTHhffffmmmfffhHTTh...',
+    '..hTTHhffffffffhTTTh....',
+    '..hTThCChffffhCChTTh....',
+    '..hThdCChCCCChCCdhTh....',
+    '..hhdddCCCaCCCCdddhh....',
+    '..hddddCCCCCCCCddddh....',
+    '.hdddddCCCCCCCCdddddh...',
+    'hdddddCCCCCCCCCCddddhh..',
+    'hdddMdCCCCCCCCCCdMdddh..'
   ];
-  var FL = { h: S.hl, H: S.h1, T: S.t1, f: S.s1, K: S.lash, D: S.e2, W: S.W, s: S.e1, w: S.ew, B: S.e0, b: S.bl, m: S.mo, c: S.c1, d: S.d1 };
+  var FL = { h: S.hl, H: S.h1, T: S.t1, f: S.s1, K: S.lash, D: S.e3, W: S.c0, s: S.e2, w: S.ew, B: S.e1, b: S.bl, m: S.mo,
+    C: S.c1, d: S.d1, a: S.a1, A: S.a0, x: S.x1, X: S.x0, M: S.m1 };
 
   I.ART.deepseek = {
     bust: function () { var P = K.painter(112, 128); drawBust(P, {}); return P; },
