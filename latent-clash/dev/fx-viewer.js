@@ -93,6 +93,7 @@
   function curOpts() {
     if (headless) return FXV.hopts || {};
     var o = { facing: +$('facing').value, power: +$('power').value, palette: +$('pal').value, index: +$('index').value };
+    if ($('phase').value) o.phase = $('phase').value;
     if ($('char').value) o.char = $('char').value;
     return o;
   }
