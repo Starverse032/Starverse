@@ -1,16 +1,67 @@
 # FIGHT — NOTES
 
 ## V2 progress / next steps (CONTRACT-V2 retune — keep truthful)
-- [ ] 1 retune to V2 bodies (boxes, movement, spacing, reach, specials, fx positions) + sim/combos/shots
-- [ ] 2 presentation fixes (training panels vs cut-in, tag/combo vs training wall sign, HUD)
-- [ ] 3 full-screen supers / KO backdrop / screen.impact / new special fx
-- [ ] 4 notes
-Status: step 1 code done + steps 2/3 code largely written (render composition slots A–E, KO backdrop,
-impact, super backdrops, whale/tidal/beam/book timelines, dive clip, rise fx). Sim (stubs + real): 0
-violations, deterministic, 0 console errors; balance real L3 42–47 %, L5 47 % (noisy, n=60–100).
-Combos 8/8 (stubs + real, same damage as V1). Next: box screenshots, presentation review shots,
-HUD tag/combo placement, notes tables.
-Probe tool: `node tools/fight-probe.mjs [--anims=5L,…] [--anchors=weapon,…]` dumps rig anchors + fx spriteInfo.
+- [x] 1 retune to the V2 bodies (boxes, movement, spacing, reach, specials, fx positions); sim, combos, box shots
+- [x] 2 presentation fixes: training panels now under the cut-in; move tag under the name row on an opaque
+  plate (y 31), combo counter on a plate (y 50); HUD checked with 104-px fighters (jump/sonnet heads pass
+  behind the HUD, as allowed by V2.2)
+- [x] 3 full-screen presentation per `src/fx/NOTES.md` "V2 integration" (list below)
+- [x] 4 notes
+Verified (real modules): sim 0 violations, deterministic, 0 console errors (also `--draw`); combos 8/8
+(stubs + real, `--spread` shows each works from −16 px to +8/+16 px of its start distance); box sheets
+(`fight-shots --real --boxes --sheet`) show hurt/hit boxes on the new sprites.
+Balance (real, n = 400 per row, seeds 11 + 12): **L3 ≈ 43 % Claude** (41.8 / 44.5), **L5 ≈ 53 %** (53.1 / 52.5),
+L1 ≈ 63 %. L3 sits just under the 45–55 % band and did not move with any data tweak tried (chain lunge, spark
+recovery, beam speed, whale damage, dive spacing); L3 ablations show Claude's own AI jump-ins / raw haiku
+cost her most. Next: AI work at L3 (Claude neutral plan quality), not move data.
+Next / open: illust init currently throws (`src/illust/claude.js:142 k is not defined`, not ours — portraits /
+icons fall back); `screen.koFlash` + `koBackdrop` with `settings.flash=false` only checked in code, not shots.
+
+### V2 tuning numbers (chars/*.js, `F.T`)
+| | Claude | DeepSeek |
+|---|---|---|
+| push stand / crouch / air / down | 26×66 / 28×50 / 22×64 (−84..−20) / 30×26 | 28×64 / 30×48 / 24×60 (−80..−20) / 30×26 |
+| hurt stand | head −104..−72, body 30×74 | head −98..−68, body 31×70 |
+| hurt crouch / air / launch | body 34×52 + head (2..26, −70..−50) / 28×84 (−102..−18) / 44×64 | 34×48 + head (4..28, −66..−46) / 28×80 / 46×62 |
+| walk F/B · dash F/B | 1.6/1.2 · 76/18f, 64/20f | 2.0/1.5 · 92/16f, 72/18f |
+| jump vy/g/vxF/vxB | 7.92/.36/2.9/2.5 (apex 84, 44f) | 8.57/.39/3.2/2.7 (apex 90, 44f) |
+| normals tip (box x+w) 5L/5M/5H · 2L/2M/2H · jL/jM/jH | 43/62/74 · 44/64/72 · 39/48/61 | 34/52/65 · 36/54/67 · 32/42/50 |
+| throw range | 58 | 56 |
+Normals follow the rig `weapon` anchor (tip = anchor + 2, clamped ±5 / ±12 of the box above); designed boxes
+are centred on the measured anchor, so stubs and rig agree. `F.T`: WALL 22, MAXSEP 320, START_SEP 168,
+CAM_MARGIN 30, PUSH L 9/9 M 13/12 H 18/16 S 20/18, LAUNCH_K 1.25 (launch vx/vy/gravity, holdY speeds, KO
+and throw arcs: 25 % taller, same airtime → juggle timing unchanged), IMPACT 8.
+Specials: spark spawns at `muzzle` (40,−78) and eases to cruise −62 (hits crouchers), box L18/M22/H26,
+vx 3.0/4.2/5.4, recovery 25 (was 28, balance); airSpark 22 box, vx 2.4/3.2/4.0, vy 3.3/2.6/2.0; sonnet rise
+54/70/83 px (vy0 8.3/10.7/12.7, 14f), box (0..46, −136..−4); haiku boxes tip 62/60/74 up to −110, lunge ×1.3,
+hit3 block −3/−4/−7; guardrail catch box (8..62, −106..0) + attacker yanked to 64 px (6 px/f, `pullTo`);
+guardrailHit (4..84, −106..0); beam y −116 h 68, x0 44, grow 56/f to 420, drawn 16 px ahead of the muzzle
+(`fwd`) so the book does not hide her face. Wave box 34×34, vx 3.4/3.8/4.2, range 140/230/∞; breach rise
+×1.2, box (2..50, −122..−6); chain lunge 4.2/5.7/7.0, boxes tip 48/42/40; dive M surfaces 44 px in front
+(≤124 travel), H 46 px behind, exit box (−22..36, −116..0); diveKick vx 3.8/5.0/6.2, vy 7.0/5.8/4.8 (angle
+62/49/38°); whale: 7 hits (6 × 36 holding + final 90 at whale t 44), victim carried forward (`pull` 110 +
+3/frame of whale t, `setPush`), boxes from `spriteInfo('deepseek.whale').frames[t]`, t = frames since cast f0;
+tidal: one hit (60, blockable, grounded opponents only, `jug: 99`) from `spriteInfo('deepseek.tidal')` rel. the
+crash point (whale x + `crashX`), recovery f0–30 (tidal t 6–36). Fallback boxes used when fx lacks frames.
+Contact point = centre of the hit box ∩ touched hurt box. AI distance constants ×1.3 (`D()` in ai.js),
+reach margins +15.
+
+### FX V2 wiring (render.js composition slots, see fx NOTES)
+Wired: [A] `screen.superBackdrop` from cast f0 (stage under it for t < 8), outro `phase:'out'` at
+recovery f12 (Claude) / f26 (DeepSeek) (`mv.bgOut`), also when a super is interrupted; `screen.koBackdrop`
+or (super KO) `screen.superFinish` from koFlash t 5 until the KO'd body has landed; stage.drawFront skipped
+while any backdrop shows. [B] `screen.superBg` in the flash; `screen.impact` 8f on H hits, counters,
+launchers / knock-down specials (`impact: true`), throws — t advances 2 frames then holds in hit-stop
+(counter → `phase:'counter'`, specials tinted with `char`). [C] `deepseek.whale` (back layer, t 0–59).
+[D] projectiles (spark `power` .3/.6/1), guardrail, `claude.beam` charge/fire/fade → `claude.book`, `deepseek.tidal`
+at the crash point. `deepseek.whaleSplash` at whale t = `events.crash` at x + `crashX` (+ shake). `claude.pages` at
+cast f4. [E] koFlash → bubbles → HUD → training panels → cut-in → banners. Specials: `claude.sonnetPillar` /
+`deepseek.breachCrescent` at the origin on the first rise frame (`riseFx`), breachTrail at `tail`,
+`deepseek.geyser` on emerge, `claude.guardCatch` at the origin. Dive: puppet clipped at the ground line
+(`clipFloor`). Not done: KO flash/backdrop length not tuned against the slow-mo (body usually lands
+≈ 40–60 frames after the KO).
+Tools: `fight-shots --sheet[=2] [--cols] [--tag]` contact sheets; `v2-*` scenarios (super timelines, super KO,
+impact, KO); `fight-combos --spread`; `fight-probe` (rig anchors / fx spriteInfo dump).
 
 ## Progress / next steps (V1)
 
@@ -88,11 +139,11 @@ designed boxes. The whale hitbox comes from `LC.fx.spriteInfo('deepseek.whale').
 - `result.score` (for P1): damage×10 + maxCombo×300 + rounds×3000 + time bonus + supers×1000
   + 5000 win (+10000 perfect).
 
-## Bread-and-butter combos (verified by tools/fight-combos.mjs, stubs and real rig)
-Claude: `jH > 5L > 5M > 5H > 214H` (7 hits, 383) · `2L > 2M > 2H` (185, knockdown) ·
-`5M > 5H > 236H` (246) · `jH > 5M > 5H > 214H > SUPER` (14 hits, 515).
-DeepSeek: `jH > 5L > 5M > 5H > 214H > S > S` (rekka, 407) · `2L > 2M > 5H > 236H` (close, 254) ·
-`5L > 5M > 623H` (222) · `jH > 5L > 5H > 214H > S > S > SUPER` (13 hits, 548).
+## Bread-and-butter combos (verified by tools/fight-combos.mjs, stubs and real rig, V2)
+Claude: `jH > 5L > 5M > 5H > 214H` (7 hits, 383, start 130 px) · `2L > 2M > 2H` (185, knockdown, 50) ·
+`5M > 5H > 236H` (246, 62) · `jH > 5M > 5H > 214H > SUPER` (14 hits, 515, 130).
+DeepSeek: `jH > 5L > 5M > 5H > 214H > S > S` (rekka, 407, 140) · `2L > 2M > 5H > 236H` (close, 254, 34) ·
+`5L > 5M > 623H` (222, 40) · `jH > 5L > 5H > 214H > S > S > SUPER` (13 hits, 536, 140).
 
 ## CPU AI (ai.js)
 Same input interface as a human (held buttons; motions typed out frame by frame). Perception is
@@ -106,8 +157,8 @@ guardrail reads, haiku punishes. DeepSeek: rekka pressure (stops on block at hig
 dive mix-ups through projectiles, dive kicks, jump-ins. Wake-up: block / reversal DP / back-dash
 / throw. `F.AI_OFF = { 'claude.spark': 1 }` disables plans (sim ablations).
 
-## Balance (fight-sim, n = 100 matches per pairing, both side assignments)
-stubs: 1v1 66 % · 3v3 41 % · 4v4 48 % · 5v5 48 % Claude wins; real rig (n=60): 3v3 47 % · 5v5 50 %.
+## Balance (fight-sim, real modules, V2 — see V2 progress above)
+L1 ≈ 63 %, L3 ≈ 43 %, L5 ≈ 53 % Claude wins (n = 400 per row). Stubs (n=40): 3v3 47–60 %, 5v5 40 %.
 Rounds average 19–28 s, no time-ups between CPUs.
 
 ## Contract deviations / additions
@@ -119,14 +170,13 @@ Rounds average 19–28 s, no time-ups between CPUs.
 - Double KO / draw rounds award both players; possible `winner: -1`.
 
 ## Depends on other modules
-- RIG reach vs design (weapon anchor tip at active, px): DeepSeek 2M 30 (design 40), 2H 26 (46),
-  jH 21 (30); Claude 2L 39 (32), jM 48 (34). Currently clamped to ±5 px of design; either the rig
-  poses or these boxes should be reconciled. Rising specials' `weapon` anchor sits inside the body
-  — not used for hitboxes.
-- FX: `claude.beam` drawn at the `muzzle` anchor (clamped to the beam hitbox); whale hit boxes from
-  `spriteInfo`. AUDIO voices/music calls are guarded (silent until present).
+- RIG (V2): every normal's measured `weapon` tip matches the V2.2 reach table within 1 px; boxes are centred on
+  the measured anchors (re-measure with `node tools/fight-probe.mjs --anims=5L,… --anchors=weapon`). Rising
+  specials' `weapon` anchor is not used for hitboxes. DeepSeek's `tail` anchor drives breachTrail.
+- FX: `claude.beam` + `claude.book` drawn at the `muzzle` anchor + 16 px (clamped to the beam hitbox); whale and
+  tidal hit boxes, `events.crash`, `crashX` from `spriteInfo` (fallback boxes otherwise). AUDIO voices/music calls are guarded (silent until present).
 
 ## Known issues
-- L1 vs L1 is Claude-favoured (66 %); mashing AIs benefit from her reach.
-- The training stage's own signage sits where the move-name tag / combo counter go (stage art).
+- L1 vs L1 is Claude-favoured (≈63 %); mashing AIs benefit from her reach. L3 ≈ 43 % (DeepSeek-leaning).
+- Training stage signage scrolls under the move tag / combo counter; both now sit on opaque plates.
 - Speech-bubble wrap width tuned for the 10 px font only.
