@@ -254,7 +254,7 @@
   // ---------------------------------------------------------------------------
   function TrackInst(mx, song, t0, fadeIn) {
     var ctx = mx.ctx;
-    this.mx = mx; this.ctx = ctx; this.r = mx.r; this.song = song; this.name = song.name;
+    this.mx = mx; this.ctx = ctx; this.r = mx.r; this.song = song; this.name = song.name; this.sr = ctx.sampleRate;
     this.t0 = t0; this.idx = 0; this.offset = 0; this.done = false; this.stopping = false; this.endT = Infinity;
     this.fade = ctx.createGain(); this.vfade = ctx.createGain();
     this.fade.connect(mx.musicIn); this.vfade.connect(mx.verbIn);
@@ -322,6 +322,7 @@
     var fn = K.INS[ch.def.ins];
     if (!fn) { K.warnOnce('ins:' + ch.def.ins, 'unknown instrument ' + ch.def.ins); return; }
     var dur = e.len * this.song.stepDur * (ch.def.gate == null ? 0.92 : ch.def.gate);
+    t = Math.round(t * this.sr) / this.sr;          // whole-sample starts: every loop pass renders identically
     try { fn(this, ch, t, e, dur); } catch (err) { K.warnOnce('play:' + this.name, 'note failed in ' + this.name + ': ' + err.message); }
   };
 
