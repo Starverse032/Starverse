@@ -21,12 +21,10 @@
 - Pass 3 step 3 DONE: sonnet/airSpark/guardrail(+Hit) Claude; wave (knee-raise → stomp, muzzle at toe), breach, diveIn/Out,
   diveKick DeepSeek. Reach re-tuned to the engine's design list (DS 2M 40, 2H 46, jH 30; Claude 2L 31, jM 33); sonnet/breach
   weapon = nib / kicking toe throughout rise.
-- NOW pass 3 (lead's order): 1) crouch*/jump*/land/dash* both → 2) 2L 2M 2H jL jM jH both → 3) remaining specials
-  → 4) hitLow hitCrouch thrown throw win lose + Claude super smear + intro bow pen.
-- REMAINING ROUGH (authored, overview-checked only): dashF/dashB, crouchIn/crouch/crouchOut, jumpSquat/jumpRise/
-  jumpFall/land, hitLow, hitCrouch, throw (whiff), thrown, win, lose, crouching + jump normals (structure updated
-  earlier but not individually reviewed), airSpark, sonnet, guardrail/guardrailHit, wave, breach fall/land,
-  diveIn/diveOut, diveKick.
+- Pass 3 step 4 DONE: hitLow/hitCrouch (pen no longer through the floor), thrown, throw whiff reviewed; Claude win = twirl →
+  caps the pen → holds it to her chest smiling; DeepSeek win = crouch → jump fist-pump; loses reviewed; Claude super plant
+  smear shortened; intro bow holds the pen down at her side.
+- ALL anims for both characters have now had at least one frame-level review pass. Known remaining weaknesses: see report.
 - Perf (Chromium): draw worst case (re-render every frame) 0.41–0.46 ms Claude / 0.25–0.29 ms DeepSeek; cached frames
   are one drawImage. init 1–1.6 ms (head expressions are composed/rotated lazily). setPose+anchor ≈ 3–4 µs, no canvas.
 
@@ -83,8 +81,7 @@ in3 out3 back snap(hold). Missing poses before a segment's first key are interpo
 
 ## Animation status
 
-All §3.3 names exist for both characters and every one is authored (no aliases in use).
-- Polished (reviewed at ×3–×8, corrected): idle, walkF, walkB, hitHigh, down, getup, guardStand, guardCrouch, launch,
-  intro, throwHit, 5L, 5M, 5H (reach verified), Claude spark / haiku / super, DeepSeek breach (rise) / super;
-  all faces, both palettes, costume details.
-- Rough v1: see REMAINING ROUGH above.
+All §3.3 names exist for both characters; every one is authored (no aliases in use) and has been reviewed frame-by-frame
+in contact sheets at least once (passes 1–3). Reach of normals (weapon anchor, px): Claude 5L 31 5M 46 5H 54 2L 31 2M 51
+2H 51 jL 30 jM 33 jH 35; DeepSeek 5L 23 5M 37 5H 44 2L 24 2M 40 2H 46 jL 18 jM 23 jH 30.
+Batch review sheets: `node tools/rig-sheet.mjs --multi <char> anim:f,f,... --name x` (anchors + bounds drawn).
