@@ -1,6 +1,16 @@
 # ILLUST — notes
 
-## Progress (truthful, current)
+## V2 progress / next steps (ZipZipPipe redesign — truthful, current)
+- core.js: new slots `x0..x3,xl` (Claude `book` / DeepSeek `fin`), `u0..u3,ul` (DeepSeek `under`), `eK`.
+- claude.js: REDRAWN bust/bustWin/bustLose (orange straight hair, sunburst flower + black bow + cream
+  tassel, high collar, cravat + brooch, jabot, gold-edged capelet with emblem, red-brown book in hand).
+  Face icon map redrawn (first pass). Helpers: `I.sunflower`, `I.paintFlower`, `I.H.strands`.
+- deepseek.js: REDRAWN bust first pass (wavy hair, fins, headdress, maid dress, waving hand). Face map
+  redrawn (first pass).
+- NOT yet: refinement round vs reference; cut-ins still crop the bust at 2× (title.js `I.cutin`);
+  `emblem.claude` still the old spark; title composition not checked with the new busts.
+
+## Progress (V1, historical)
 - Done: every API of contract §5.5 — portraits (face/bust/bustWin/bustLose/cutin × both chars × 2 palettes),
   logo, all 17 banners, all 27 icons, animated title key art. Zero console errors; init ≈ 240–280 ms;
   `drawTitle` ≈ 0.1 ms/frame.
