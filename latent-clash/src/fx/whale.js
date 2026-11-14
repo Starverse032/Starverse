@@ -300,7 +300,7 @@
         var f = f2 * 2, Hc = crestH(f), bx = 120, by = 120, rng = I.bakeRng(500 + f), col = f >= 38;
         var curl = col ? Math.max(0, 1 - (f - 38) / 6) : 1;
         // body: long back slope, crest, overhanging lip curling forward
-        var pts = [bx - 118, by - 12, bx - 84, by - Hc * 0.32, bx - 56, by - Hc * 0.72, bx - 36, by - Hc * 0.95, bx - 22, by - Hc,
+        var pts = [bx - 118, by - 9, bx - 84, by - Hc * 0.32, bx - 56, by - Hc * 0.72, bx - 36, by - Hc * 0.95, bx - 22, by - Hc,
           bx - 8, by - Hc * (0.98 - 0.04 * curl), bx + 6 * curl, by - Hc * (0.9 - 0.06 * curl), bx + 13 * curl, by - Hc * (0.74 - 0.04 * curl),
           bx + 5 * curl, by - Hc * 0.68, bx - 5, by - Hc * 0.72, bx - 11, by - Hc * 0.58, bx - 8, by - Hc * 0.36, bx - 3, by - Hc * 0.14, bx + 2, by, bx - 118, by];
         b.poly(pts, Wt[2]);
