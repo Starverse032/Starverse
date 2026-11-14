@@ -139,7 +139,7 @@
     P.fill(f.core, S.a3);
     if (r > 5) {
       P.fill(K.inner(f.core), S.a2);
-      if (r > 11) P.fill(P.ell(cx, cy, r * 0.22, r * 0.22 * k), S.a3);
+      if (r > 11) P.fill(P.ell(cx, cy, r * 0.22, r * 0.22 * (sq || 1)), S.a3);
       P.px(Math.round(cx + 1), Math.round(cy - 1), S.a0); P.px(Math.round(cx), Math.round(cy), S.a1);
     }
     else P.px(Math.round(cx), Math.round(cy - 0.5), S.a0);
