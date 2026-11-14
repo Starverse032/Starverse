@@ -197,18 +197,15 @@
 
   // ---------------------------------------------------------------- intro / win / lose
   // intro: reading the open book, snaps it shut, lowers it and settles into stance
-  var RD = P(S, { hip: [0, -54], lean: 0, fF: [5, 0], fB: [-5, 0], hF: [11, -66], hB: [6, -64], handF: 'grip', handB: 'grip', book: 'both',
-    tilt: 20, eyes: 'half', mouth: 'neutral', z: { armB: 6 } });
-  RD.book = undefined;
-  var RDb = P(RD, { book: -100, bko: 1, z: { armB: 6, book: 5.5 } });
-  RDb.book = -100; RDb.bookMode = null;
+  var RD = P(S, { hip: [0, -54], lean: 0, fF: [5, 0], fB: [-5, 0], hF: [12, -66], hB: [4, -65], handF: 'grip', handB: 'grip', bm: 'both',
+    book: -90, bko: 1, tilt: 20, eyes: 'half', mouth: 'neutral', z: { armB: 4.7 } });
   def('intro', {
     segs: [['act', 100]], step: 3,
     keys: [
-      [0, P(RDb, { bkMode: 1 })],
-      [30, P(RDb, { tilt: 15 })],
-      [42, P(RDb, { bko: 1, tilt: 10, eyes: 'open' }), 'snap'],
-      [45, P(RDb, { bko: 0, hF: [9, -66], tilt: 5, eyes: 'open' }), 'out'],
+      [0, RD],
+      [30, P(RD, { tilt: 15 })],
+      [42, P(RD, { tilt: 10, eyes: 'open' }), 'snap'],
+      [45, P(RD, { bko: 0, hF: [10, -66], hB: [6, -65], tilt: 5, eyes: 'open' }), 'out'],
       [54, P(S, { hip: [0, -54], fF: [5, 0], fB: [-5, 0], hF: [10, -62], handF: 'relax', hB: [-4, -52], eyes: 'closed', mouth: 'neutral', tilt: 10 }), 'inout'],
       [66, P(S, { hip: [0, -54], fF: [5, 0], fB: [-5, 0], hF: [10, -62], handF: 'relax', hB: [-4, -52], eyes: 'open', mouth: 'neutral', tilt: 0 })],
       [80, P(S, { eyes: 'focus' }), 'out'],

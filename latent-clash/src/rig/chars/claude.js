@@ -1,7 +1,7 @@
 /* LATENT CLASH — RIG: Claude 娘 V2 body (104 px, ~6.5 heads), Victorian layered
  * dress, book 「宪章」, quill of light, secondary chains and renderer.
  *
- * Extra pose fields (see NOTES.md): book ('B' back hand | 'F' front hand | 'both' |
+ * Extra pose fields (see NOTES.md): bm ('B' back hand | 'F' front hand | 'both' |
  * 'float' (at bk) | 'none'), channels book (spine angle, deg; -90 = upright),
  * bko (0..1 open), bk (float centre); quill (true → quill of light in the front hand,
  * angle = pen, grip = pg); weapon ('quill' | 'hF' | 'hB' | 'fF' | 'fB' | 'book');
@@ -104,7 +104,7 @@
     return [Math.round(h[0] + d[0]), Math.round(h[1] + d[1])];
   }
   C.bookGeo = function (sk) {
-    var ds = sk.ds || {}, m = ds.book || 'B';
+    var ds = sk.ds || {}, m = ds.bm || 'B';
     if (m === 'none') return null;
     var th = sk.book * Math.PI / 180, U = [Math.cos(th), Math.sin(th)], V = [-Math.sin(th), Math.cos(th)], c;
     if (m === 'float') c = sk.bk;
@@ -166,7 +166,7 @@
   C.boundsExtra = function (sk) {
     var o = [];
     if (sk.ds && sk.ds.quill) o.push(sk.qt);
-    if (sk.ds && sk.ds.book !== 'none') o.push(sk.bc);
+    if (sk.ds && sk.ds.bm !== 'none') o.push(sk.bc);
     return o;
   };
   C.partPoints = function (sk, part) {
@@ -500,7 +500,7 @@
     var head = C.headSet;
     var eyes = ds.eyes || 'open';
     if (D.blink && (eyes === 'open' || eyes === 'focus' || eyes === 'sad' || eyes === 'wide')) eyes = (D.blink > 5 || D.blink < 3) ? 'half' : 'closed';
-    var bm = ds.book || 'B';
+    var bm = ds.bm || 'B';
     var steps = [
       [-10, function () { drawBackHair(p, sk, sec); p.end(); }],
       [-1.6, function () { drawArm(p, sk, 'B', ds); p.end(); }],
