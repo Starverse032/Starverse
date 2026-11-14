@@ -12,7 +12,7 @@
   // progression; B = DeepSeek's pentatonic run (B minor) building back to D. Loop A B = 32 s.
   // ===================================================================================
   K.defTrack('title', {
-    bpm: 120, scale: 'D major', loop: 'A', order: ['I', 'A', 'B'],
+    bpm: 120, vol: 0.58, scale: 'D major', loop: 'A', order: ['I', 'A', 'B'],
     ch: {
       lead: { ins: 'lead', w: 's25', uni: 7, vol: 0.27, echo: 0.18, verb: 0.2, vib: [5.5, 15, 0.22], env: [0.006, 0.3, 0.72, 0.1], lp: 5000, melody: true },
       brass: BRASS,
@@ -57,7 +57,7 @@
   // chord stabs. A/B, 16 bars ≈ 30 s loop.
   // ===================================================================================
   K.defTrack('select', {
-    bpm: 126, scale: 'F major +E', loop: 'A', order: ['A', 'B'],
+    bpm: 126, vol: 0.65, scale: 'F major +E', loop: 'A', order: ['A', 'B'],
     ch: {
       lead: { ins: 'lead', w: 's25', vol: 0.26, echo: 0.15, verb: 0.12, vib: [6, 12, 0.2], env: [0.004, 0.15, 0.6, 0.06], lp: 5200, melody: true },
       keys: { ins: 'lead', w: 's50', env: [0.002, 0.08, 0.3, 0.05], gate: 0.6, vol: 0.075, pan: 0.25, lp: 3000, verb: 0.15 },
@@ -92,7 +92,7 @@
   // vs — 4 s dramatic sting (one-shot). D minor: DAN … DA-DAN | Bb → A (dominant) with crash.
   // ===================================================================================
   K.defTrack('vs', {
-    bpm: 120, scale: 'D minor +C#', loop: false, order: ['S'],
+    bpm: 120, vol: 0.68, scale: 'D minor +C#', loop: false, order: ['S'],
     ch: {
       brass: { ins: 'lead', w: 'sawtooth', uni: 10, vol: 0.17, env: [0.006, 0.4, 0.5, 0.25], lp: 3000, verb: 0.3, gate: 1 },
       lead: { ins: 'lead', w: 's25', vol: 0.2, env: [0.005, 0.3, 0.7, 0.3], lp: 4500, verb: 0.3, vib: [6, 20, 0.15], melody: true },
@@ -115,7 +115,7 @@
   // victory — ≈5 s fanfare jingle (one-shot). C major, 150 BPM, 3 bars + ring-out.
   // ===================================================================================
   K.defTrack('victory', {
-    bpm: 150, scale: 'C major', loop: false, order: ['V'],
+    bpm: 150, vol: 0.71, scale: 'C major', loop: false, order: ['V'],
     ch: {
       lead: { ins: 'lead', w: 's25', uni: 7, vol: 0.27, env: [0.004, 0.25, 0.7, 0.25], lp: 5200, verb: 0.25, echo: 0.15, vib: [6, 16, 0.2], melody: true },
       brass: BRASS,
@@ -140,11 +140,11 @@
   // FM e-piano comping, bell melody (A) and soft pulse (B). 16 bars ≈ 45 s loop.
   // ===================================================================================
   K.defTrack('stage.training', {
-    bpm: 86, swing: 0.28, scale: 'C major', loop: 'A', order: ['A', 'B'],
+    bpm: 86, vol: 0.58, swing: 0.28, scale: 'C major', loop: 'A', order: ['A', 'B'],
     ch: {
       bell: { ins: 'bell', ratio: 3.5, idx: 1.1, dec: 1.0, vol: 0.22, echo: 0.25, verb: 0.3, melody: true },
       lead: { ins: 'lead', w: 's12', vol: 0.2, echo: 0.2, verb: 0.2, vib: [5, 12, 0.25], env: [0.02, 0.3, 0.6, 0.15], lp: 3200, melody: true },
-      keys: { ins: 'bell', ratio: 1, idx: 1.3, isus: 0.25, dec: 1.4, hold: true, vol: 0.12, pan: -0.25, verb: 0.25 },
+      keys: { ins: 'bell', ratio: 1, idx: 1.3, isus: 0.25, dec: 1.4, hold: true, vol: 0.12, pan: -0.25, verb: 0.25, hp: 90 },
       pad: { ins: 'pad', vol: 0.05, a: 0.5, r: 0.8, lp: 1100, verb: 0.3, gate: 1 },
       bass: { ins: 'bass', w: 'triangle', vol: 0.6, env: [0.006, 0.4, 0.8, 0.06], gate: 0.85, lo: 36, bassline: true },
       drums: { ins: 'drums', vol: 0.5, lv: { h: 0.32, w: 0.7, z: 0.45 } }
@@ -172,7 +172,7 @@
   // every beat. 8 bars = 16 s loop.
   // ===================================================================================
   K.defTrack('continue', {
-    bpm: 120, scale: 'A minor +G#', loop: 'A', order: ['A'],
+    bpm: 120, vol: 0.86, scale: 'A minor +G#', loop: 'A', order: ['A'],
     ch: {
       lead: { ins: 'lead', w: 's25', vol: 0.23, echo: 0.25, verb: 0.25, vib: [5, 18, 0.25], env: [0.01, 0.4, 0.7, 0.2], lp: 4000, melody: true },
       arp: { ins: 'lead', w: 's12', env: [0.002, 0.06, 0.25, 0.04], gate: 0.5, vol: 0.08, pan: 0.3, echo: 0.3, lp: 3500 },
@@ -196,7 +196,7 @@
   // Loop A B ≈ 42 s.
   // ===================================================================================
   K.defTrack('ending', {
-    bpm: 92, scale: 'G major +Eb', loop: 'A', order: ['I', 'A', 'B'],
+    bpm: 92, vol: 0.55, scale: 'G major +Eb', loop: 'A', order: ['I', 'A', 'B'],
     ch: {
       bell: { ins: 'bell', ratio: 3.5, idx: 1.2, dec: 1.3, vol: 0.24, echo: 0.25, verb: 0.35, melody: true },
       lead: { ins: 'lead', w: 's12', vol: 0.2, echo: 0.22, verb: 0.3, vib: [5, 14, 0.25], env: [0.02, 0.3, 0.7, 0.2], lp: 3600, melody: true },
