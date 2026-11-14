@@ -97,8 +97,9 @@
     var TXT = ['BE HELPFUL * BE HONEST * DO NO HARM * ', 'IN THE BEGINNING WAS THE WORD * ', 'ONCE UPON A TIME IN LATENT SPACE * ', 'THINK STEP BY STEP * ',
       'TO BE OR NOT TO BE * ', 'ONE MILLION TOKENS OF CONTEXT * ', 'SHALL I COMPARE THEE TO A SUMMER DAY * '];
     C.rows = TXT.map(function (tx, ri) {
-      var near = ri < 4, s = tx + tx, wpx = tx.length * 4;
-      var rb = new I.Buf(wpx * 2, 9);
+      var near = ri < 4, wpx = tx.length * 4, n = Math.ceil((W + 16) / wpx) + 1, s = '';
+      for (var q = 0; q < n; q++) s += tx;
+      var rb = new I.Buf(wpx * n, 9);
       I.text35(rb, s, 0, 2, I.col(near ? L[2] : I.mix(L[3], O, 0.25)));
       rb.outline(near ? mixc(L[4], O, 0.35) : mixc(L[4], O, 0.6));
       return { c: I.toCanvas(rb), w: wpx };
@@ -248,7 +249,7 @@
       bb.poly([22, ty - 2, 4, ty - 16 - beat, 0, ty - 15 - beat, 8, ty, 0, ty + 13 - beat, 4, ty + 14 - beat, 22, ty + 3], sil);
       bb.poly([96, 44, 82, 56, 90, 56, 104, 46], sil);
     });
-    D.cols = { snow: [mixc(Wt[3], B[2], 0.3), I.col(Wt[3]), I.col(Wt[2])].map(function (u) { return '#' + ('000000' + ((u & 0xff) << 16 | (u >> 8 & 0xff) << 8 | (u >> 16 & 0xff)).toString(16)).slice(-6); }), bub: [Wt[1], Wt[2], Wt[3], Wt[0]], streak: [I.mix(Wt[3], B[2], 0.3), Wt[3]] };
+    D.cols = { snow: [I.mix(Wt[3], B[2], 0.45), Wt[3], Wt[2]], bub: [Wt[1], Wt[2], Wt[3], Wt[0]], streak: [I.mix(Wt[3], B[2], 0.3), Wt[3]] };
   }
 
   function drawDeep(ctx, sx, sy, t, o) {

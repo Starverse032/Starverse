@@ -1,1 +1,1 @@
-(window.LC_MANIFEST = window.LC_MANIFEST || {}).fx = ['pix.js', 'core.js', 'glyphs.js', 'generic.js', 'generic2.js', 'claude.js', 'claude-sprites.js', 'deepseek.js', 'deepseek-sprites.js', 'whale.js', 'screen.js'];
+(window.LC_MANIFEST = window.LC_MANIFEST || {}).fx = ['pix.js', 'core.js', 'glyphs.js', 'generic.js', 'generic2.js', 'claude.js', 'claude-sprites.js', 'deepseek.js', 'deepseek-sprites.js', 'whale.js', 'screen.js', 'backdrop.js'];
