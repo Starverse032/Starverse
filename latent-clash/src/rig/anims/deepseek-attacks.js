@@ -56,14 +56,14 @@
       ['active', P(CL, { smear: { part: 'hF', from: 'startup+2', n: 3 } }), 'snap'], ['active+1', CL, 'snap'],
       ['recovery', P(CL, { hF: [19, -14] }), 'out'], ['recovery+7', C]]
   });
-  var CM = P(C, HIT, { hip: [5, -12], lean: 10, fF: [33, -4], faF: -70, fB: [-6, 0], weapon: 'fF' });
+  var CM = P(C, HIT, { hip: [9, -12], lean: 14, fF: [36, -3], faF: -20, fB: [-4, 0], weapon: 'fF' });
   def('2M', {
     segs: sar(7, 4, 13), step: 2,
     keys: [['startup', c0], ['startup+4', P(c0, { fF: [14, -6], faF: 20 }), 'out'],
       ['active', P(CM, { smear: { part: 'fF', from: 'startup+4', n: 3 } }), 'snap'], ['active+2', CM, 'snap'],
       ['recovery', P(CM, { fF: [20, -3], mouth: 'grin' }), 'out'], ['recovery+12', C]]
   });
-  var CH = P(C, HIT, { hip: [14, -8], lean: 42, fF: [41, -1], faF: -88, fB: [6, 0], hF: [20, -6], hB: [14, -4], handF: 'flat', handB: 'flat', weapon: 'fF' });
+  var CH = P(C, HIT, { hip: [14, -8], lean: 42, fF: [41, -1], faF: -12, fB: [6, 0], hF: [20, -6], hB: [14, -4], handF: 'flat', handB: 'flat', weapon: 'fF' });
   def('2H', {
     segs: sar(10, 5, 22), step: 2,
     keys: [['startup', c0], ['startup+6', P(c0, { hip: [0, -10], lean: 26, fF: [10, -3], hF: [8, -12], handF: 'flat' }), 'out'],
