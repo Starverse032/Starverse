@@ -306,7 +306,7 @@
       pts.push([kn, 4.2], [lerp(kn, an, 0.5), 3.4], [an, 3], [lerp(hp, kn, 0.6), 4.4], [toe(sk, S), 1.5], [fr(sk['ft' + S], sk['fa' + S], -3, -3), 1.5]);
     }
     var kneeF = Lf * 0.55, kneeB = Lb * 0.55;
-    for (k = 0; k < (kL > 0.6 ? 0 : pts.length); k++) {     // lying: the dress simply lies over the legs
+    for (k = 0; k < (kL > 0.85 ? 0 : pts.length); k++) {     // lying: the dress simply lies over the legs
       var P = pts[k][0], cl = pts[k][1];
       var dx = P[0] - rootF[0], dy = P[1] - rootF[1], d = Math.sqrt(dx * dx + dy * dy);
       if (d < Lf - 1 && d > 1) {

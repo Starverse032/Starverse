@@ -151,7 +151,7 @@
     segs: [['rise', 24]], step: 2,
     keys: [
       [0, P(DN, { eyes: 'shut' })],
-      [6, P(S, { hip: [-8, -12], lean: -55, bend: 10, tilt: -20, fF: [30, 0], fB: [26, -1], faF: -20, faB: -30, knF: -1, knB: -1,
+      [6, P(S, { hip: [-8, -12], lean: -42, bend: 14, tilt: -20, fF: [28, 0], fB: [24, -1], faF: -20, faB: -30, knF: -1, knB: -1,
         hF: [4, -16], handF: 'flat', hB: [-22, -4], book: 180, eyes: 'shut', mouth: 'hurt' }), 'out'],
       [12, P(C, { hip: [-3, -20], lean: 34, tilt: 10, hF: [20, -36], handF: 'flat', eyes: 'focus' })],
       [18, P(S, { hip: [0, -45], lean: 12, hF: [17, -62], eyes: 'focus', skirt: 1 }), 'out'],
