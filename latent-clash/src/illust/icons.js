@@ -110,12 +110,8 @@
   function emblem(ch, size) {
     var P = K.painter(size, size), S = K.S, s = size / 16;
     if (ch === 'claude') {
-      var SB = [1, 0.56, 0.88, 0.5, 1, 0.64, 0.8, 0.54];
-      var st = I.starburst(P, 8 * s, 8 * s, 7.6 * s, -0.2, SB);
-      P.part(st, S.a1, S.al);
-      P.recol(st.band(-1, 1), [S.a1], S.a0);
-      P.recol(st.band(1, -1), [S.a1], S.a2);
-      P.fill(I.starburst(P, 8 * s, 8 * s, 2.6 * s, -0.2, SB), S.W);
+      // V2: the sunburst flower from her hair ornament (ring of petals around a round core)
+      I.paintFlower(P, 8 * s - 0.5, 8 * s - 0.5, 7.4 * s, size >= 32 ? 14 : 10, -0.15);
       P.outer(S.ol);
       return P.canvas(K.slotColors('claude', 0));
     }
