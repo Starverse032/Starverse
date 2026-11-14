@@ -27,9 +27,9 @@
     // composed stance: upright, lead palm low and open, book raised in the rear hand
     rest: {
       root: [0, 0], hip: [0, -53], lean: 2, bend: 0, head: [0, 0], tilt: 0,
-      hF: [13, -56], hB: [-6, -66], fF: [9, 0], fB: [-7, 0], faF: 0, faB: 0,
+      hF: [15, -60], hB: [-7, -51], fF: [9, 0], fB: [-7, 0], faF: 0, faB: 0,
       pen: -60, sq: 0, shr: 0, haF: 0, haB: 0, pg: 0.15, skirt: 0, tail: 0, arch: 0,
-      book: -96, bko: 0, bk: [0, -60], tw: 0, hem: 0,
+      book: -100, bko: 0, bk: [0, -60], tw: 0, hem: 0,
       eyes: 'open', mouth: 'neutral', handF: 'relax', handB: 'grip',
       elF: 1, elB: 1, knF: -1, knB: -1, book_: 0, glow: 0, blush: 0
     },
@@ -85,7 +85,7 @@
     sec.attach('skirtB', sb[0], sb[1], 90);
     var sa = fr(sk.waist, sk.lean, 3.5, 4.5);
     sec.attach('sash', sa[0], sa[1], 90 + sk.lean * 0.4);
-    var bt = fr(sk.pel, sk.lean, -3, -1);
+    var bt = fr(sk.pel, sk.lean * 0.35, -3, 5);
     sec.attach('bowT', bt[0], bt[1], 90);
   };
 
@@ -381,7 +381,7 @@
   function drawSash(p, sk, sec) {
     var pts = H.chainPts(sec.sash), n = pts.length;
     var w = [];
-    for (var i = 0; i < n; i++) w.push(1.8 + i * 0.25);
+    for (var i = 0; i < n; i++) w.push(1.4 + i * 0.25);
     var last = pts[n - 1], prev = pts[n - 2], d = nrm(prev, last);
     var tip = [last[0] + d[0] * 2.5, last[1] + d[1] * 2.5];
     p.poly(H.ribbon(pts, w, tip), M.acc, SH.limbL, 1);
@@ -393,7 +393,7 @@
   }
 
   function drawHipBow(p, sk, sec) {
-    var c = fr(sk.pel, sk.lean * 0.35, -1, -3);
+    var c = fr(sk.pel, sk.lean * 0.35, -3, 4);
     p.poly(H.flat([[c[0] - 1, c[1]], [c[0] - 5, c[1] - 2.5], [c[0] - 5, c[1] + 2], [c[0] - 1, c[1] + 1]]), M.c2, SH.limb, 1);
     p.poly(H.flat([[c[0] + 1, c[1]], [c[0] + 4, c[1] - 2.5], [c[0] + 4.5, c[1] + 2], [c[0] + 1, c[1] + 1]]), M.c2, SH.limb, 1);
     var bt = H.chainPts(sec.bowT);
@@ -501,8 +501,8 @@
     var bm = ds.book || 'B';
     var steps = [
       [-10, function () { drawBackHair(p, sk, sec); p.end(); }],
-      [-6, function () { drawArm(p, sk, 'B', ds); p.end(); }],
-      [-5.5, function () { if (bm === 'B') { drawBook(p, sk, ds); p.end(); var h = H.handImg; void h; } }],
+      [-1.6, function () { drawArm(p, sk, 'B', ds); p.end(); }],
+      [-1.5, function () { if (bm === 'B') { drawBook(p, sk, ds); p.end(); } }],
       [-4, function () { drawLeg(p, sk, 'B', D.lock.B); p.end(); }],
       [-3, function () { drawLeg(p, sk, 'F', D.lock.F); p.end(); }],
       [-2, function () { drawSkirt(p, sk, sec, ds); p.end(); drawHipBow(p, sk, sec); p.end(); }],
