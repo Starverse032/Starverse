@@ -94,3 +94,20 @@ Add the file to `manifest.js`. Check it with `node tools/fx-sheet.mjs family.nam
 - The beam glyph text is decorative at ×1.
 - Possible next steps: pre-warm the canvas uploads, run a light-stage contrast pass for pale effects,
   and add whale pose variants.
+
+## V2 progress / next steps (truthful, updated as work lands)
+Done (rendered + reviewed in strips):
+- `screen.superBackdrop` (new file `backdrop.js`): claude study (rotating sunburst, script rows, huge pages,
+  motes) + deepseek deep sea (shafts, far whale, marine snow, bubble streams, caustics); intro wipe 8f,
+  `phase:'out'` 8f; both palettes and facings.
+- `screen.js` rewritten: `superBg`, `speedLines`, `koFlash` upgraded; new `superFinish`, `koBackdrop`, `impact`.
+- `claude.beam` v2 + `claude.book` v2 (new file `claude-super.js`, overrides the v1 defs in claude-sprites.js).
+- `deepseek.whale` v2 (spine-warped flexing 300 px whale, hang + slam, R1 lettering sprite) and
+  `deepseek.tidal` (whale.js rewritten). crash is computed (≈ t 46), crashX ≈ 194.
+- Infra: every baked canvas is registered (`I.canvases`) and pre-warmed at the end of `init()`;
+  `I.anim(..., fd, noMirror)`; fx-sheet `--x=` flag; 3x5 font A/H fixed.
+Next (in order): adapt to the latest `LC.PAL` (claude `book`, deepseek `fin`/`under`/gold `metal`);
+tidal spray polish; step 2 specials at the new scale (sonnetPillar, haikuSlash v2, guardrail v2,
+spark v2, wave v2, breachCrescent, geyser, chainHit/diveTrail v2); step 3 hits; viewer; perf; remove
+dead v1 beam/book bake from claude-sprites.js; write the "V2 integration" section below.
+Perf so far: init ≈ 740 ms headless (whale 156, backdrop 154, screen 72).
