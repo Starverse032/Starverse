@@ -152,7 +152,7 @@
   });
 
   // ---------------------------------------------------------------- spark: the book floats open beside her, open-palm cast
-  var FL = { bm: 'float', bk: [-15, -84], book: -90, bko: 1, glow: 1 };
+  var FL = { bm: 'float', bk: [-18, -80], book: -90, bko: 1, glow: 1, z: { book: -9 } };
   var SP0 = P(S, ATK, FL, { hF: [6, -72], handF: 'open', lean: -6, bend: -3, hip: [-2, -53], fB: [-9, 0], hB: [-10, -66], handB: 'open' });
   var SP2 = P(S, HIT, FL, { hF: [36, -75], handF: 'palm', lean: 14, bend: 3, hip: [4, -52], fF: [14, 0], hB: [-14, -64], handB: 'open', mouth: 'neutral' });
   def('spark', {
@@ -163,26 +163,26 @@
       ['active', P(SP2, { smear: { part: 'hF', from: 'startup+11', n: 3 } }), 'snap'],
       ['active+1', SP2, 'snap'],
       ['recovery', P(SP2, { glow: 0 }), 'snap'], ['recovery+10', P(SP2, { glow: 0, hip: [3, -52], hF: [33, -73], bk: [-14, -82] }), 'out'],
-      ['recovery+18', P(S, ATK, { bm: 'float', bk: [-11, -64], book: -100, bko: 0, hB: [-9, -58] })],
+      ['recovery+18', P(S, ATK, { bm: 'float', bk: [-12, -62], book: -100, bko: 0, hB: [-9, -58], z: { book: -9 } })],
       ['recovery+22', P(S, ATK)], ['recovery+27', S]
     ]
   });
   def('airSpark', {
     segs: [['startup', 10], ['active', 3], ['recovery', 12, true]], step: 2,
     keys: [
-      ['startup', P(JF, ATK)], ['startup+4', P(JF, ATK, FL, { bk: [-14, -96], hF: [6, -82], handF: 'open', lean: -8, hB: [-12, -74], handB: 'open' }), 'out'],
-      ['startup+8', P(JF, ATK, FL, { bk: [-16, -98], hF: [4, -84], handF: 'open', lean: -10, hB: [-12, -76], handB: 'open' }), 'snap'],
-      ['active', P(JF, HIT, FL, { bk: [-16, -98], hF: [31, -58], handF: 'palm', lean: 16, bend: 4, hB: [-14, -74], handB: 'open', mouth: 'neutral',
+      ['startup', P(JF, ATK)], ['startup+4', P(JF, ATK, FL, { bk: [-18, -92], hF: [6, -82], handF: 'open', lean: -8, hB: [-12, -74], handB: 'open' }), 'out'],
+      ['startup+8', P(JF, ATK, FL, { bk: [-19, -94], hF: [4, -84], handF: 'open', lean: -10, hB: [-12, -76], handB: 'open' }), 'snap'],
+      ['active', P(JF, HIT, FL, { bk: [-19, -94], hF: [31, -58], handF: 'palm', lean: 16, bend: 4, hB: [-14, -74], handB: 'open', mouth: 'neutral',
         smear: { part: 'hF', from: 'startup+8', n: 3 } }), 'snap'],
-      ['active+1', P(JF, HIT, FL, { bk: [-16, -98], hF: [31, -58], handF: 'palm', lean: 16, bend: 4, hB: [-14, -74], handB: 'open', mouth: 'neutral' }), 'snap'],
-      ['recovery', P(JF, ATK, { bm: 'float', bk: [-14, -86], book: -100, bko: 0.2, hF: [26, -62], handF: 'open', hB: [-12, -70] })],
+      ['active+1', P(JF, HIT, FL, { bk: [-19, -94], hF: [31, -58], handF: 'palm', lean: 16, bend: 4, hB: [-14, -74], handB: 'open', mouth: 'neutral' }), 'snap'],
+      ['recovery', P(JF, ATK, { bm: 'float', bk: [-16, -84], book: -100, bko: 0.2, hF: [26, -62], handF: 'open', hB: [-12, -70], z: { book: -9 } })],
       ['recovery+8', P(JF, ATK)]
     ]
   });
 
   // ---------------------------------------------------------------- sonnet: rising quill uppercut (anti-air)
   var SN1 = P(S, HIT, QON, { air: true, hip: [3, -58], lean: -6, bend: -4, tilt: -10, hF: [16, -106], pen: -78, pg: 0.15, hB: [-12, -64],
-    fF: [8, -14], fB: [-4, 0], faF: 30, faB: 50, mouth: 'shout', skirt: 4 });
+    fF: [8, -10], fB: [-4, 0], faF: 30, faB: 50, mouth: 'shout', skirt: 1 });
   def('sonnet', {
     segs: [['startup', 5], ['rise', 14], ['fall', 12, true], ['land', 12]], step: 2,
     keys: [
@@ -237,18 +237,24 @@
   });
 
   // ---------------------------------------------------------------- super: opens the book wide in both hands (muzzle = book centre)
-  var SU0 = P(S, ATK, { bm: 'both', hip: [0, -54], lean: -4, hF: [12, -86], hB: [8, -88], handF: 'grip', handB: 'grip', book: -90, bko: 0,
-    z: { armB: 4.7 }, glow: 1, eyes: 'closed', mouth: 'neutral', muzAt: 'book', tilt: -5 });
-  var SU1 = P(S, HIT, { bm: 'both', hip: [-2, -52], lean: 6, fF: [13, 0], fB: [-12, 0], hF: [24, -74], hB: [16, -76], handF: 'grip', handB: 'grip',
-    book: -90, bko: 1, z: { armB: 4.7 }, mouth: 'shout', muzAt: 'book', skirt: 2 });
+  // freeze frame (last startup frame): the closed charter raised overhead in both hands
+  var SU0 = P(S, ATK, { bm: 'both', hip: [0, -54], lean: -6, bend: -4, fF: [11, 0], fB: [-10, 0], hF: [9, -106], hB: [4, -108], handF: 'grip', handB: 'grip',
+    book: -90, bko: 0, z: { armB: 4.7 }, glow: 1, eyes: 'closed', mouth: 'neutral', muzAt: 'book', tilt: -10, bsc: 1.2 });
+  // active: wide stance, the book thrust forward and opened wide (pages to the foe), body braced
+  var SU1 = P(S, HIT, { bm: 'both', hip: [-3, -50], lean: -4, bend: 4, fF: [17, 0], fB: [-15, 0], faB: 10, hF: [30, -80], hB: [22, -82], handF: 'grip', handB: 'grip',
+    book: -90, bko: 1, z: { armB: 4.7 }, mouth: 'shout', muzAt: 'book', skirt: 3, bsc: 1.5 });
   def('super', {
     segs: [['startup', 6], ['cast', 10], ['active', 40], ['recovery', 30]], step: 2,
     keys: [
-      ['startup', P(S, ATK, { muzAt: 'book' })], ['startup+3', P(SU0, { hF: [10, -74], hB: [4, -76], eyes: 'focus' }), 'out'], ['startup+5', SU0, 'snap'],
-      ['cast', SU0], ['cast+4', P(SU0, { hF: [16, -82], hB: [10, -84], eyes: 'focus', bko: 0.3 }), 'out'],
-      ['cast+7', P(SU1, { hF: [22, -76], hB: [14, -78], bko: 0.8 }), 'snap'],
+      ['startup', P(S, ATK, { muzAt: 'book' })],
+      ['startup+2', P(SU0, { hF: [12, -78], hB: [6, -80], tilt: 0, eyes: 'focus', bsc: 1 }), 'out'],
+      ['startup+5', SU0, 'snap'],
+      ['cast', SU0], ['cast+3', P(SU0, { hF: [10, -108], hB: [5, -110], eyes: 'focus', bko: 0.2 }), 'out'],
+      ['cast+6', P(SU1, { hF: [26, -88], hB: [18, -90], bko: 0.7, bsc: 1.35, smear: { part: 'hF', from: 'cast+3', n: 3 } }), 'snap'],
+      ['cast+8', P(SU1, { hF: [29, -82], hB: [21, -84] }), 'snap'],
       ['active', SU1, 'snap'], ['active+20', bob(SU1, 0, 1)], ['active+38', SU1],
-      ['recovery', P(SU1, { glow: 0, mouth: 'neutral' }), 'snap'], ['recovery+8', P(SU1, { glow: 0, mouth: 'neutral', bko: 0, hF: [16, -70], hB: [10, -70] }), 'out'],
+      ['recovery', P(SU1, { glow: 0, mouth: 'neutral' }), 'snap'],
+      ['recovery+8', P(SU1, { glow: 0, mouth: 'neutral', bko: 0, bsc: 1, hF: [16, -70], hB: [10, -70], hip: [-1, -52], skirt: 1 }), 'out'],
       ['recovery+20', P(S, ATK, { z: { armB: 6 }, hB: [4, -60] })], ['recovery+29', S]
     ]
   });

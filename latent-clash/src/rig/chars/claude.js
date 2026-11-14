@@ -58,9 +58,9 @@
     { id: 'hair', n: 9, len: 9, rest: [12, 5, 2, 1, 0, 0, 0, 0, 0], stiff: [0.34, 0.26, 0.2, 0.15, 0.12, 0.1, 0.08, 0.07, 0.06], damp: 0.88, grav: 0.24, drag: 0.1,
       limit: function (c, i, sk) {
         // keep the long hair hanging behind the back silhouette (it is drawn behind everything)
-        if (Math.abs(sk.lean) > 40) return;
+        if (Math.abs(sk.lean) > 40 || i < 3) return;
         var lim = i < 2 ? sk.chest[0] - 2 : (i < 4 ? Math.min(sk.chest[0], sk.pel[0]) - 7 : sk.pel[0] - 9 - Math.max(0, c.y[i] - sk.pel[1]) * 0.12);
-        if (c.x[i] > lim) c.x[i] += (lim - c.x[i]) * 0.6;
+        if (c.x[i] > lim) c.x[i] += (lim - c.x[i]) * 0.35;
         if (c.y[i] < c.ay - 3) c.y[i] = c.ay - 3;
       } },
     { id: 'lockN', n: 4, len: [5, 6, 6, 6], rest: [-2, 2, 4, 2], stiff: 0.3, damp: 0.82, grav: 0.22, drag: 0.18 },
@@ -115,7 +115,8 @@
       var g = handTip(sk, m === 'F' ? 'F' : 'B', 2);
       c = [g[0] - V[0] * BKW, g[1] - V[1] * BKW];
     }
-    return { c: c, U: U, V: V, o: m === 'float' || m === 'both' ? sk.bko : sk.bko };
+    var sc = ds.bsc || 1;
+    return { c: c, U: U, V: V, o: sk.bko, h: BKH * sc, w: BKW * sc };
   };
   C.quillGeo = function (sk) {
     var g = handTip(sk, 'F', 2), u = rot(1, 0, sk.pen), pg = sk.pg || 0;
@@ -144,7 +145,7 @@
     var b = C.bookGeo(sk); if (!b) return sk.haB;
     var best = null;
     [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(function (k) {
-      var q = [b.c[0] + b.U[0] * BKH * k[0] + b.V[0] * BKW * k[1], b.c[1] + b.U[1] * BKH * k[0] + b.V[1] * BKW * k[1]];
+      var q = [b.c[0] + b.U[0] * b.h * k[0] + b.V[0] * b.w * k[1], b.c[1] + b.U[1] * b.h * k[0] + b.V[1] * b.w * k[1]];
       if (!best || q[0] > best[0]) best = q;
     });
     return R2(best);
@@ -238,7 +239,7 @@
   // ------------------------------------------------------------ book 「宪章」 (leather, gold corners)
   function drawBook(p, sk, ds) {
     var b = C.bookGeo(sk); if (!b) return;
-    var c = b.c, U = b.U, V = b.V, o = Math.max(0, Math.min(1, b.o || 0));
+    var c = b.c, U = b.U, V = b.V, o = Math.max(0, Math.min(1, b.o || 0)), BKH = b.h, BKW = b.w;
     function q(u, v) { return [c[0] + U[0] * u + V[0] * v, c[1] + U[1] * u + V[1] * v]; }
     if (o < 0.15) {
       // closed: page block shows along the top edge + fore edge (3/4), cover over it
@@ -263,7 +264,7 @@
       p.poly(H.flat([q(-BKH - 0.5, -wv - 1), q(BKH + 0.5, -wv - 1), q(BKH + 0.5, wv + 1), q(-BKH - 0.5, wv + 1)]), M.ink, null, 2);
       p.poly(H.flat([q(-BKH, -wv), q(BKH, -wv + 0.5), q(BKH, -0.5), q(-BKH, -0.5)]), M.white, null, 0);
       p.poly(H.flat([q(-BKH, 0.5), q(BKH, 0.5), q(BKH, wv - 0.5), q(-BKH, wv)]), M.white, null, 1);
-      for (var r = -BKH + 2; r < BKH - 1; r += 2) {
+      for (var r = -BKH + 2; r < BKH - 1; r += (BKH > 8 ? 2.5 : 2)) {
         ln(p, q(r, -wv + 2), q(r, -1.8), col(M.acc, ds.glow ? 1 : 2), true);
         ln(p, q(r, 1.8), q(r, wv - 2), col(M.acc, ds.glow ? 1 : 2), true);
       }
