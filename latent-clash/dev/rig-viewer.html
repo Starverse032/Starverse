@@ -33,7 +33,7 @@ body{margin:0;background:#16151d;color:#ddd;font:12px/1.4 monospace;display:flex
 (function () {
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
-  var VW = 200, VH = 140, GY = 118;
+  var VW = 320, VH = 220, GY = 196;   // V2: 104-px fighters
   var view = $('view'), vctx = view.getContext('2d'); view.width = VW; view.height = VH;
   var vs = $('vs'), sctx = vs.getContext('2d'); vs.width = 384; vs.height = 216; vs.style.width = '768px';
   vctx.imageSmoothingEnabled = false; sctx.imageSmoothingEnabled = false;
@@ -97,7 +97,7 @@ body{margin:0;background:#16151d;color:#ddd;font:12px/1.4 monospace;display:flex
     if (dir && keys.shift) { mv.state = 'dash'; mv.t = 0; mv.dir = dir; mv.anim = dir === env.facing ? 'dashF' : 'dashB'; return [mv.anim, 0]; }
     if (dir) {
       var fwd = dir === env.facing; env.vx = dir * (fwd ? walk[0] : walk[1]); env.x += env.vx;
-      if (env.x > 80) env.x = -80; if (env.x < -80) env.x = 80;
+      if (env.x > 120) env.x = -120; if (env.x < -120) env.x = 120;
       return [fwd ? 'walkF' : 'walkB', mv.t];
     }
     return ['idle', mv.t];

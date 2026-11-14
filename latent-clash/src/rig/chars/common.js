@@ -140,11 +140,11 @@
   };
   HANDS.grip = HANDS.fist;
   var handCache = {};
-  function handImg(shape, dir, skin, glove) {
-    var key = shape + dir + '|' + skin + '|' + glove;
+  function handImg(shape, dir, skin, glove, table) {
+    var key = (table ? table.id + ':' : '') + shape + dir + '|' + skin + '|' + glove;
     if (handCache[key]) return handCache[key];
-    var hs = HANDS[shape] || HANDS.fist;
-    var lg = { 'G': col(glove, 1), 'g': col(glove, 2), 'k': col(skin, 1), 'q': col(skin, 2), 'Q': col(skin, 3), 'K': col(skin, 0) };
+    var hs = table ? (table[shape] || table.fist) : (HANDS[shape] || HANDS.fist);
+    var lg = (table && table.legend) || { 'G': col(glove, 1), 'g': col(glove, 2), 'k': col(skin, 1), 'q': col(skin, 2), 'Q': col(skin, 3), 'K': col(skin, 0) };
     var b0 = I.parseArt(hs.a0, lg, hs.p0[0], hs.p0[1]), b45 = I.parseArt(hs.a45, lg, hs.p45[0], hs.p45[1]);
     var img, flip = false;
     switch (dir) {
@@ -160,10 +160,39 @@
     return (handCache[key] = { img: img, flip: flip });
   }
   // hand at the wrist point `at`, forearm direction ang (deg). shape: fist|grip|open|flat|relax|point
-  H.hand = function (p, at, ang, shape, skin, glove) {
+  // V2: optional `table` = { id, legend, <shape>: { a0, p0, a45, p45 } } (own, bigger stamps)
+  H.hand = function (p, at, ang, shape, skin, glove, table) {
     var dir = ((Math.round(ang / 45) % 8) + 8) % 8;
-    var h = handImg(shape || 'fist', dir, skin, glove == null ? skin : glove);
+    var h = handImg(shape || 'fist', dir, skin, glove == null ? skin : glove, table);
     p.blit(h.img, Math.round(at[0]), Math.round(at[1]), h.flip);
+  };
+  H.handImg = handImg;
+
+  // ------------------------------------------------------------- smear V2
+  // Shaped smear: tapered crescent swept by the part's tip, thin at the oldest
+  // end and full at the newest; tones run deep (trailing) → base → highlight,
+  // with a 1-px bright leading rim and a darker inner edge. sm as below.
+  // opts: { inner: 0..1 fraction of the part covered at the newest end (0.55),
+  //         innerOld: same at the oldest end (0.92), rim: colour index for the rim }
+  H.smear2 = function (p, sm, mat, opts) {
+    if (!sm) return;
+    opts = opts || {};
+    var pts = sm.pts, n = pts.length / 4, i, inN = opts.inner == null ? 0.55 : opts.inner, inO = opts.innerOld == null ? 0.92 : opts.innerOld;
+    if (n < 2) return;
+    var T = [], Mi = [];
+    for (i = 0; i < n; i++) {
+      var u = n > 1 ? i / (n - 1) : 1, b = [pts[i * 4], pts[i * 4 + 1]], t = [pts[i * 4 + 2], pts[i * 4 + 3]];
+      T.push(t); Mi.push(H.lerp(b, t, inO + (inN - inO) * u));
+    }
+    for (i = 0; i < n - 1; i++) {
+      var u2 = (i + 0.5) / (n - 1), tone = u2 > 0.66 ? 0 : (u2 > 0.33 ? 1 : 2);
+      p.poly(H.flat([Mi[i], T[i], T[i + 1], Mi[i + 1]]), mat, null, tone);
+    }
+    for (i = 0; i < n - 1; i++) {
+      var u3 = (i + 1) / (n - 1);
+      p.line(Math.round(T[i][0]), Math.round(T[i][1]), Math.round(T[i + 1][0]), Math.round(T[i + 1][1]), opts.rim || col(mat, u3 > 0.5 ? 0 : 1));
+      if (u3 > 0.34) p.line(Math.round(Mi[i][0]), Math.round(Mi[i][1]), Math.round(Mi[i + 1][0]), Math.round(Mi[i + 1][1]), col(mat, 3), true);
+    }
   };
 
   // ------------------------------------------------------------- smear
