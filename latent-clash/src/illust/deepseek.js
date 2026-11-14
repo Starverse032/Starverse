@@ -323,25 +323,25 @@
 
   // ---------------------------------------------------------------- face icon 24x24
   var FACE = [
-    '...........hh...........',
-    '.......hhhhHhhh.........',
-    '.....hWWWWWWWWWh........',
-    '....hWhHHHHHHHWWWh......',
-    '...hWhHHHHHHHHHHWaa.....',
-    '...hhHHHHHhHHHHhHaAa....',
-    '..hhHHHHHhfHHHhfHHah....',
-    '.xxhHHHhfffHHhffhHHhh...',
-    'xXXxHHhfffffhffffhHHHh..',
-    'xXXxHhKKKKfffKKKfhHHHh..',
-    '.xXhHhKDWDffKDWKfhHHHh..',
-    '..xhHhwsBwfffsBwfhHHTh..',
-    '..hHhfffffffffffhHHTTh..',
-    '..hHhfbfffffffbfhHTTTh..',
-    '..hHHhffffmWmmffhHHTh...',
-    '..hTHhffffmmmfffhHTTh...',
-    '..hTTHhffffffffhTTTh....',
+    '..........hh............',
+    '.........h..h...........',
+    '......hWWWWWWWh.........',
+    '....hWWcWWcWWcWWh.aa....',
+    '...hHHHHHHHHHHHHWhaAa...',
+    '..hHHHHHHHHHHHHHHHha....',
+    '.xxhHHHHHHhHHHHhHHHhxx..',
+    'xXXxHHHHHhfHHHhffHHxXXx.',
+    'xXXXxHHhfffHHhffffxXXXx.',
+    '.xXXxHhKKKKfffKKKfxXXx..',
+    '..xXxhKDWDffKDWKfhxXx...',
+    '..hxxfwsBwfffsBwfhxxh...',
+    '..hHhfffffffffffffhHh...',
+    '..hHhfbbfffffffbbfhHh...',
+    '..hHHhffffflmmlffhHHh...',
+    '..hTHhffffffmWmffhTHh...',
+    '..hTTHhffffffffhhTTTh...',
     '..hTThCChffffhCChTTh....',
-    '..hThdCChCCCChCCdhTh....',
+    '..hThdCChCCCChCCdhTTh...',
     '..hhdddCCCaCCCCdddhh....',
     '..hddddCCCCCCCCddddh....',
     '.hdddddCCCCCCCCdddddh...',
@@ -349,7 +349,7 @@
     'hdddMdCCCCCCCCCCdMdddh..'
   ];
   var FL = { h: S.hl, H: S.h1, T: S.t1, f: S.s1, K: S.lash, D: S.e3, W: S.c0, s: S.e2, w: S.ew, B: S.e1, b: S.bl, m: S.mo,
-    C: S.c1, d: S.d1, a: S.a1, A: S.a0, x: S.x1, X: S.x0, M: S.m1 };
+    C: S.c1, d: S.d1, a: S.a1, A: S.a0, x: S.x1, X: S.xP, M: S.m1, l: S.sl };
 
   I.ART.deepseek = {
     bust: function () { var P = K.painter(112, 128); drawBust(P, {}); return P; },
