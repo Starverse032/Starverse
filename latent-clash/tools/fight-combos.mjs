@@ -14,16 +14,16 @@ const real = process.argv.includes('--real');
 // '214H' etc. motion special · 'S' rekka follow-up · 'SUPER' (H+S) · 'wN' wait N frames
 export const COMBOS = {
   claude: [
-    { name: 'jH > 5L > 5M > 5H > 214H (haiku)', dist: 104, steps: ['j9', 'jH', '5L', '5M', '5H', '214H'], hits: 7 },
-    { name: '2L > 2M > 2H (sweep)', dist: 40, steps: ['2L', '2M', '2H'], hits: 3 },
-    { name: '5M > 5H > 236H (spark)', dist: 50, steps: ['5M', '5H', '236H'], hits: 3 },
-    { name: 'jH > 5M > 5H > 214H > SUPER', dist: 104, steps: ['j9', 'jH', '5M', '5H', '214H', 'SUPER'], hits: 13, meter: true }
+    { name: 'jH > 5L > 5M > 5H > 214H (haiku)', dist: 130, steps: ['j9', 'jH', '5L', '5M', '5H', '214H'], hits: 7 },
+    { name: '2L > 2M > 2H (sweep)', dist: 50, steps: ['2L', '2M', '2H'], hits: 3 },
+    { name: '5M > 5H > 236H (spark)', dist: 62, steps: ['5M', '5H', '236H'], hits: 3 },
+    { name: 'jH > 5M > 5H > 214H > SUPER', dist: 130, steps: ['j9', 'jH', '5M', '5H', '214H', 'SUPER'], hits: 13, meter: true }
   ],
   deepseek: [
-    { name: 'jH > 5L > 5M > 5H > 214H > S > S (rekka)', dist: 112, steps: ['j9', 'jH', '5L', '5M', '5H', '214H', 'S', 'S'], hits: 7 },
-    { name: '2L > 2M > 5H > 236H (wave)', dist: 26, steps: ['2L', '2M', '5H', '236H'], hits: 4 },
-    { name: '5L > 5M > 623H (breach)', dist: 30, steps: ['5L', '5M', '623H'], hits: 3 },
-    { name: 'jH > 5L > 5H > 214H > S > S > SUPER', dist: 112, steps: ['j9', 'jH', '5L', '5H', '214H', 'S', 'S', 'SUPER'], hits: 11, meter: true }
+    { name: 'jH > 5L > 5M > 5H > 214H > S > S (rekka)', dist: 140, steps: ['j9', 'jH', '5L', '5M', '5H', '214H', 'S', 'S'], hits: 7 },
+    { name: '2L > 2M > 5H > 236H (wave)', dist: 34, steps: ['2L', '2M', '5H', '236H'], hits: 4 },
+    { name: '5L > 5M > 623H (breach)', dist: 40, steps: ['5L', '5M', '623H'], hits: 3 },
+    { name: 'jH > 5L > 5H > 214H > S > S > SUPER', dist: 140, steps: ['j9', 'jH', '5L', '5H', '214H', 'S', 'S', 'SUPER'], hits: 11, meter: true }
   ]
 };
 
@@ -49,7 +49,7 @@ function inPage() {
         const st = c.steps[si];
         const ready = (!waitHit || (A.connected === 'hit' && A.moveInst !== acted) || (acted === -2 && !A.air)) && !(A.air && /^[25]/.test(st));
         if (st === 'j9') { queue([{ d: 9 }, { d: 9 }, { d: 9 }]); si++; }
-        else if (st === 'jH') { if (A.air && A.vy > 0 && (LC.GROUND_Y - A.y) < 58) { queue([{ b: 'H' }, { b: 'H' }]); si++; waitHit = true; acted = -2; } }
+        else if (st === 'jH') { if (A.air && A.vy > 0 && (LC.GROUND_Y - A.y) < (c.jh || 76)) { queue([{ b: 'H' }, { b: 'H' }]); si++; waitHit = true; acted = -2; } }
         else if (ready) {
           acted = A.moveInst;
           if (st === 'SUPER') queue([{ b: 'HS' }, { b: 'HS' }]);
