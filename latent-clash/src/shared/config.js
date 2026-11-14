@@ -39,60 +39,66 @@
   // Index 0 = default colours, index 1 = alternate (used for mirror matches).
   LC.PAL = {
     claude: [
-      { // 0 — "Daylight": long orange hair, cream long dress, black details
+      { // 0 — "Daylight": vivid orange hair, cream Victorian dress with black + orange panels
         id: 'daylight',
-        outline: '#2a1a1c',
-        skin:    ['#ffeadb', '#f7cdb2', '#dc9f86', '#b9715f'],
+        outline: '#2a1714',
+        skin:    ['#fff0e4', '#f9d9c4', '#e0a890', '#b9745f'],
         blush:   '#ff9d8a',
-        hair:    ['#ffc79a', '#ee8a5f', '#c25e42', '#8a3b30'],
-        hairTip: ['#ffd9a8', '#ffb070'],
-        eye:     ['#fff4d6', '#f0a03a', '#b3601f', '#5a2b14'],
-        cloth1:  ['#fffaf0', '#f1e7d3', '#cfbd9f', '#9d8a73'],   // cream: the long dress
-        cloth2:  ['#4a4756', '#2f2d38', '#1f1e26', '#121116'],   // black: collar, cuffs, sash trim, shoes, book cover
-        accent:  ['#ffd9a0', '#ff9e6b', '#d97757', '#a34d36'],   // orange: ribbon, hem band, logo flower, magic
-        metal:   ['#fff3b8', '#edbd4f', '#b07e2a', '#7a5218'],   // gold: book clasp, buttons, light-quill
-        ui:      '#d97757', uiLight: '#ffb58a', uiDark: '#7e3830'
+        hair:    ['#ffb46a', '#f47c2c', '#c9541a', '#8a3210'],
+        hairTip: ['#ffd9a8', '#ffa24a'],
+        eye:     ['#fff4d6', '#e8a04a', '#a8642a', '#5a2b14'],
+        cloth1:  ['#fffdf6', '#f4ecdf', '#d6c8b4', '#a6957f'],   // cream-white: blouse, capelet, skirt, boots
+        cloth2:  ['#4a4444', '#2c2728', '#1c1819', '#0f0c0d'],   // black: cravat, corset belt, skirt panels, bows
+        accent:  ['#ffd08a', '#ff8a3c', '#e5621f', '#a23c10'],   // vivid orange: sash panels, flowers, lining, magic
+        metal:   ['#fff3b8', '#edbd4f', '#b07e2a', '#7a5218'],   // gold: trim, chain, tassels, book corners, light-quill
+        book:    ['#b0563a', '#7a3324', '#55211a', '#32120f'],   // leather cover of the book
+        ui:      '#e5621f', uiLight: '#ffb46a', uiDark: '#8a3210'
       },
-      { // 1 — "Dark mode": ivory hair, charcoal dress, terracotta details
+      { // 1 — "Dark mode": ivory hair, charcoal dress with cream + amber panels
         id: 'darkmode',
         outline: '#1d1416',
-        skin:    ['#ffeadb', '#f7cdb2', '#dc9f86', '#b9715f'],
+        skin:    ['#fff0e4', '#f9d9c4', '#e0a890', '#b9745f'],
         blush:   '#ff9d8a',
         hair:    ['#ffffff', '#efe6d6', '#c9b9a2', '#8f806e'],
         hairTip: ['#ffb07a', '#ff8a57'],
-        eye:     ['#fff4d6', '#f0a03a', '#b3601f', '#5a2b14'],
+        eye:     ['#fff4d6', '#e8a04a', '#a8642a', '#5a2b14'],
         cloth1:  ['#6a6578', '#474352', '#2c2a34', '#1a191f'],
-        cloth2:  ['#f09a76', '#d97757', '#a84f3a', '#6e3126'],
+        cloth2:  ['#fffdf6', '#efe6d6', '#c9b9a2', '#8f806e'],
         accent:  ['#fff0b0', '#ffc94a', '#e39a1e', '#a3640f'],
         metal:   ['#ffffff', '#d9d4e0', '#9a94a8', '#5e596b'],
+        book:    ['#5f7f8f', '#3a5563', '#263b46', '#16242c'],
         ui:      '#efe6d6', uiLight: '#ffffff', uiDark: '#474352'
       }
     ],
     deepseek: [
-      { // 0 — "Surface": gradient blue hair, navy-and-white maid dress
+      { // 0 — "Surface": deep-blue hair, navy maid dress, white apron
         id: 'surface',
-        outline: '#131a3c',
-        skin:    ['#fff0e6', '#f8d6c4', '#dba595', '#b87a72'],
+        outline: '#0f1430',
+        skin:    ['#fff3ea', '#fbdccb', '#e2ab9b', '#b87a72'],
         blush:   '#ff9fb0',
-        hair:    ['#a9c0ff', '#4d6bfe', '#3346c9', '#222c85'],
-        hairTip: ['#c9f7ff', '#6fe0ff'],
-        eye:     ['#e6fbff', '#58d4ff', '#1f8fe0', '#123a8a'],
-        cloth1:  ['#ffffff', '#e8eefc', '#b8c5ea', '#8492c6'],   // white: apron, headdress, collar, cuffs, stockings
-        cloth2:  ['#4a5bb8', '#2f3d8f', '#1f2866', '#141a44'],   // navy: the maid dress (whale tail/fins use the hair ramp)
-        accent:  ['#d4faff', '#74e4ff', '#2bb8f0', '#1a7fc0'],   // cyan: water, glow, ribbon
-        metal:   ['#ffffff', '#c9d4f0', '#8a97c2', '#56608c'],   // silver: zipper, eyelets
+        hair:    ['#6f8fe8', '#2f4bb5', '#1f2f80', '#141c52'],
+        hairTip: ['#9fd8ff', '#4fa0f0'],
+        eye:     ['#e6fbff', '#58c4ff', '#2a7fe0', '#123a8a'],
+        cloth1:  ['#ffffff', '#eaf0fc', '#bcc8ea', '#8794c6'],   // white: apron, headdress, cuffs, frills, tights
+        cloth2:  ['#3d4a8f', '#252e63', '#181e45', '#0e122c'],   // navy: the maid dress, shoes
+        under:   ['#8fb0f0', '#5f86d8', '#4468b8', '#2f4a8c'],   // lighter blue pinstriped under-skirt
+        fin:     ['#56608f', '#343c66', '#222848', '#14182e'],   // whale tail and head fins (navy-grey)
+        accent:  ['#d4faff', '#74d4ff', '#2ba0f0', '#1a6fc0'],   // cyan-blue: hair bow, gem, water, glow
+        metal:   ['#fff0b0', '#e0b860', '#a07a30', '#6a4c18'],   // gold: buttons, embroidery, small bows
         ui:      '#4d6bfe', uiLight: '#a9c0ff', uiDark: '#222c85'
       },
-      { // 1 — "Abyss": pale aqua hair, cyan dress with navy apron, coral-pink glow
+      { // 1 — "Abyss": pale aqua hair, teal-cyan dress with navy apron, coral-pink glow
         id: 'abyss',
         outline: '#0c1030',
-        skin:    ['#fff0e6', '#f8d6c4', '#dba595', '#b87a72'],
+        skin:    ['#fff3ea', '#fbdccb', '#e2ab9b', '#b87a72'],
         blush:   '#ff9fb0',
         hair:    ['#e9fbff', '#9fe6f5', '#56b6d6', '#2c7a9c'],
         hairTip: ['#ffffff', '#d9fbff'],
         eye:     ['#ffe6f2', '#ff8fc0', '#e0508f', '#8a2a5c'],
         cloth1:  ['#4a5aa8', '#2c3777', '#1c2352', '#111638'],
         cloth2:  ['#b8f6ff', '#5cdcf5', '#27a6d0', '#17709a'],
+        under:   ['#ffffff', '#d9f4fb', '#a6d6e6', '#6fa6bc'],
+        fin:     ['#9fe6f5', '#56b6d6', '#2c7a9c', '#184a62'],
         accent:  ['#ffe0ea', '#ff9fc0', '#f0609a', '#b03a70'],
         metal:   ['#ffffff', '#c9d4f0', '#8a97c2', '#56608c'],
         ui:      '#5cdcf5', uiLight: '#b8f6ff', uiDark: '#1c2352'
