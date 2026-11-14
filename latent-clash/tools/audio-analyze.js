@@ -217,6 +217,14 @@
     for (var c = 0; c < ch.length; c++) for (var i = 0; i < L; i++) { var x = ch[c][A + i] || 0, y = ch[c][B + i] || 0; ds += (x - y) * (x - y); ss += x * x; }
     return { diffDb: 10 * Math.log10((ds + 1e-20) / (ss + 1e-20)), rmsDb: 10 * Math.log10(ss / (L * ch.length) + 1e-20) };
   };
+  // Envelope comparison (10 ms RMS windows): what an audible seam would show (gaps, jumps, timing),
+  // insensitive to oscillator start phase.
+  LCA.compareEnv = function (buf, a0, b0, len) {
+    var sr = buf.sampleRate, ch = chans(buf), w = Math.floor(sr * 0.01), n = Math.floor(len / 0.01), ds = 0, ss = 0;
+    function rms(s) { var sum = 0; for (var c = 0; c < ch.length; c++) for (var i = s; i < s + w; i++) { var v = ch[c][i] || 0; sum += v * v; } return Math.sqrt(sum / (w * ch.length)); }
+    for (var k = 0; k < n; k++) { var x = rms(Math.floor(a0 * sr) + k * w), y = rms(Math.floor(b0 * sr) + k * w); ds += (x - y) * (x - y); ss += x * x; }
+    return { diffDb: 10 * Math.log10((ds + 1e-20) / (ss + 1e-20)) };
+  };
   // RMS in consecutive windows around a time (gap / spike detector).
   LCA.windows = function (buf, t, span, win) {
     var sr = buf.sampleRate, ch = chans(buf), w = Math.floor(win * sr), out = [];

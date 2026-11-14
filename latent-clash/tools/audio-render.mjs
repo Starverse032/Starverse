@@ -82,7 +82,7 @@ async function run(job) {
       const sd = info.song.stepDur, seam1 = info.t0 + info.song.total * sd, seam2 = seam1 + info.song.loopDur;
       res.seam = {
         seam1, seam2, loopDur: info.song.loopDur,
-        cmp: LCA.compare(buffer, seam1 - 1.5, seam2 - 1.5, 3),
+        cmp: LCA.compare(buffer, seam1 - 1.5, seam2 - 1.5, 3), env: LCA.compareEnv(buffer, seam1 - 1.5, seam2 - 1.5, 3),
         win1: LCA.windows(buffer, seam1, 0.25, 0.05), win2: LCA.windows(buffer, seam2, 0.25, 0.05)
       };
       marks = [seam1, seam2];
@@ -142,7 +142,7 @@ async function doSeam(list) {
     if (r.seam) {
       const s = r.seam;
       const jump = (w) => Math.max(...w.slice(1).map((v, i) => Math.abs(v - w[i])));
-      console.log(`   loop ${s.loopDur.toFixed(2)} s; seam diff ${f1(s.cmp.diffDb)} dB re signal (${f1(s.cmp.rmsDb)} dB rms); max 50ms-window jump at seam1 ${f1(jump(s.win1))} dB, seam2 ${f1(jump(s.win2))} dB`);
+      console.log(`   loop ${s.loopDur.toFixed(2)} s; seam envelope diff ${f1(s.env.diffDb)} dB, waveform diff ${f1(s.cmp.diffDb)} dB re signal (${f1(s.cmp.rmsDb)} dB rms); max 50ms-window jump at seam1 ${f1(jump(s.win1))} dB, seam2 ${f1(jump(s.win2))} dB`);
       console.log('   windows@seam1: ' + s.win1.join(' '));
     }
   }

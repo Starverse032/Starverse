@@ -36,8 +36,8 @@
       if (e.slide && ch.lastF) {
         o.frequency.setValueAtTime(ch.lastF, t);
         o.frequency.exponentialRampToValueAtTime(f, t + (d.glide || 0.06));
-      } else o.frequency.setValueAtTime(f, t);
-      if (i) o.detune.setValueAtTime(d.uni, t);
+      } else o.frequency.value = f;
+      if (i) o.detune.value = d.uni;
       if (d.vib && dur > d.vib[2] + 0.06) {
         var l = ctx.createOscillator(), lg = ctx.createGain();
         l.frequency.value = d.vib[0];
@@ -65,7 +65,7 @@
       o.frequency.setValueAtTime(ch.lastF, t); o.frequency.exponentialRampToValueAtTime(f, t + (d.glide || 0.05));
     } else if (d.punch) {
       o.frequency.setValueAtTime(f * Math.pow(2, d.punch / 12), t); o.frequency.exponentialRampToValueAtTime(f, t + 0.025);
-    } else o.frequency.setValueAtTime(f, t);
+    } else o.frequency.value = f;
     var g = ctx.createGain();
     g.gain.setValueAtTime(0, t);
     g.gain.linearRampToValueAtTime(pk, t + a);
@@ -97,8 +97,8 @@
     for (var i = 0; i < 2; i++) {
       var o = ctx.createOscillator();
       setWave(ti, o, d.w || 'sawtooth');
-      o.frequency.setValueAtTime(f, t);
-      o.detune.setValueAtTime(i ? det : -det, t);
+      o.frequency.value = f;
+      o.detune.value = i ? det : -det;
       o.connect(g); o.start(t); o.stop(end);
     }
   };
@@ -109,8 +109,8 @@
     var ratio = d.ratio || 3.5, idx = d.idx == null ? 2.2 : d.idx, dec = d.dec || 0.9;
     var off = t + dur, end = d.hold ? Math.min(t + dec * 2.4, off + 0.25) : t + dec * 2.4;
     var c = ctx.createOscillator(), m = ctx.createOscillator(), mg = ctx.createGain(), g = ctx.createGain();
-    c.frequency.setValueAtTime(f, t);
-    m.frequency.setValueAtTime(f * ratio, t);
+    c.frequency.value = f;
+    m.frequency.value = f * ratio;
     mg.gain.setValueAtTime(idx * f * ratio, t);
     mg.gain.setTargetAtTime(idx * f * ratio * (d.isus == null ? 0.12 : d.isus), t, d.idec || 0.12);
     g.gain.setValueAtTime(0, t);
