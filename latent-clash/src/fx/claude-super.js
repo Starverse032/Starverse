@@ -109,8 +109,8 @@
       // ---- BOOK v2: 6 opening frames + 12 fanning loop frames, 84x66, origin (42,36) ----
       var BW = 84, BH = 66, bx = 42, by = 36;
       function halo(b, f, k) {
-        var hb = new I.Buf(BW, BH); hb.ellipse(bx, by - 2, 40 * k, 30 * k, L[4]); hb.breakup(0.16, f, 0); b.blit(hb, 0, 0);
-        hb = new I.Buf(BW, BH); hb.ellipse(bx, by - 2, 33 * k, 23 * k, L[3]); hb.breakup(0.3, f, 1); b.blit(hb, 0, 0);
+        var hb = new I.Buf(BW, BH); hb.ellipse(bx, by - 9, 40 * k, 26 * k, L[3]); hb.breakup(0.12, f, 0); b.blit(hb, 0, 0);
+        hb = new I.Buf(BW, BH); hb.ellipse(bx, by - 10, 30 * k, 19 * k, L[2]); hb.breakup(0.22, f, 1); b.blit(hb, 0, 0);
       }
       function closedBook(b, f, open) {
         // front cover seen face-on, opening = cover swinging toward the viewer (narrows)
@@ -247,7 +247,7 @@
           ctx.fillRect(sx + fx, sy + fy, k % 2 ? 1 : 3, 1);
         }
         if (li < 2) I.drawAnim(ctx, C.muzzle, (t >> 1) % 6, sx, sy, 1);
-        else { ctx.fillStyle = L[0]; ctx.fillRect(sx - 3, sy - h - 2, 6, h * 2 + 4); }
+        else I.drawAnim(ctx, C.orb, li === 2 ? 6 + (t & 1) : 3 + (t & 1), sx, sy, 1);
       });
     }
   });
