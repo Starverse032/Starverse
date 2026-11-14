@@ -46,7 +46,7 @@
   // ------------------------------------------------------------ chains
   C.chains = [
     { id: 'hair', n: 5, len: [8, 8, 8, 7, 7], rest: [14, 9, 6, 3, 1], stiff: [0.3, 0.2, 0.14, 0.1, 0.08], damp: 0.86, grav: 0.22, drag: 0.1,
-      limit: function (c, i, sk) { var lim = sk.chest[0] + 1; if (c.x[i] > lim) c.x[i] = lim; } },
+      limit: function (c, i, sk) { var lim = sk.chest[0] + 1; if (c.x[i] > lim) c.x[i] = lim; if (c.y[i] < c.ay - 2) c.y[i] = c.ay - 2; } },
     { id: 'lockN', n: 2, len: [4, 3], rest: [2, -6], stiff: 0.32, damp: 0.8, grav: 0.2, drag: 0.2 },
     { id: 'lockF', n: 1, len: [3], rest: [-4], stiff: 0.35, damp: 0.8, grav: 0.2, drag: 0.2 },
     { id: 'ahoge', n: 2, len: [3, 3], rest: [-25, 45], stiff: 0.45, damp: 0.75, grav: 0.05, drag: 0.15 },

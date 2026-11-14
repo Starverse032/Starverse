@@ -165,15 +165,17 @@
       ['land', P(S, { hip: [0, -14], lean: 22, hF: [14, -25], hB: [6, -26], eyes: 'focus' })], ['land+7', P(S, ATK)], ['land+11', S]]
   });
 
-  // ---------------------------------------------------------------- super: calls the whale (double palm heave)
-  var SU0 = P(C, ATK, { hip: [0, -12], lean: 30, hF: [14, -6], hB: [10, -6], handF: 'flat', handB: 'flat', eyes: 'closed', mouth: 'shout' });
-  var SU1 = P(S, HIT, { hip: [2, -26], lean: -14, bend: -6, tilt: -15, hF: [18, -58], hB: [10, -60], handF: 'open', handB: 'open', fF: [12, 0], fB: [-11, 0] });
+  // ---------------------------------------------------------------- super: crouch-gather, snap-point upward, held
+  var SU0 = P(C, ATK, { hip: [0, -12], lean: 30, hF: [14, -8], hB: [9, -8], handF: 'flat', handB: 'flat', eyes: 'closed', mouth: 'shout' });
+  var SU1 = P(S, HIT, { hip: [1, -26], lean: -10, bend: -6, tilt: -15, hF: [16, -62], handF: 'point', hB: [-6, -36], handB: 'fist',
+    fF: [12, 0], fB: [-11, 0], mouth: 'grin', weapon: 'hF' });
   def('super', {
     segs: [['startup', 6], ['cast', 8], ['active', 44], ['recovery', 34]], step: 2,
     keys: [['startup', P(S, ATK)], ['startup+5', SU0, 'out'],
-      ['cast', SU0], ['cast+5', P(SU0, { hip: [0, -11] })],
+      ['cast', SU0], ['cast+5', P(SU0, { hip: [0, -11] }), 'snap'],
       ['active', P(SU1, { smear: { part: 'hF', from: 'cast+5', n: 4 } }), 'snap'], ['active+3', SU1, 'snap'],
       ['active+22', bob(SU1, 0, 1)], ['active+42', SU1],
-      ['recovery', P(SU1, { mouth: 'grin' }), 'out'], ['recovery+24', P(S, ATK)], ['recovery+33', S]]
+      ['recovery', P(SU1, { mouth: 'smile' }), 'snap'], ['recovery+10', P(SU1, { mouth: 'smile', hF: [14, -50] }), 'out'],
+      ['recovery+26', P(S, ATK)], ['recovery+33', S]]
   });
 })();

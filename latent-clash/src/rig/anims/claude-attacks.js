@@ -119,14 +119,13 @@
     ]
   });
 
-  // ---------------------------------------------------------------- spark: writes a star in the air, thrusts it out
-  var SP0 = P(S, ATK, { hF: [6, -44], pen: -60, pg: 0.4, lean: -4, hB: [-8, -40], handB: 'open', glow: 1 });
-  var SP1 = P(S, ATK, { hF: [10, -40], pen: 40, pg: 0.4, lean: 0, glow: 1 });
-  var SP2 = P(S, HIT, { hF: [18, -40], pen: -4, pg: 0.35, lean: 14, hip: [3, -29], fF: [13, 0], hB: [-14, -42], handB: 'open', mouth: 'open' });
+  // ---------------------------------------------------------------- spark: draw back → thrust-point cast (muzzle = nib)
+  var SP0 = P(S, ATK, { hF: [-2, -38], pen: -8, pg: 0.4, lean: -8, bend: -3, hip: [-2, -30], fB: [-10, 0], hB: [-12, -36], handB: 'open', glow: 1 });
+  var SP2 = P(S, HIT, { hF: [17, -41], pen: -4, pg: 0.35, lean: 14, bend: 3, hip: [3, -29], fF: [13, 0], hB: [-15, -43], handB: 'open', mouth: 'open' });
   def('spark', {
     segs: [['startup', 13], ['active', 3], ['recovery', 28]], step: 2,
     keys: [
-      ['startup', P(S, ATK)], ['startup+4', SP0, 'out'], ['startup+8', SP1], ['startup+11', P(SP1, { hF: [6, -42], pen: -20 })],
+      ['startup', P(S, ATK)], ['startup+6', SP0, 'out'], ['startup+11', P(SP0, { hF: [-4, -38], lean: -10 }), 'snap'],
       ['active', P(SP2, { smear: { part: 'pen', from: 'startup+11', n: 3 } }), 'snap'],
       ['active+1', SP2, 'snap'],
       ['recovery', P(SP2, { glow: 0, mouth: 'neutral' }), 'snap'], ['recovery+10', P(SP2, { glow: 0, mouth: 'neutral', hip: [2, -29] }), 'out'],
@@ -195,17 +194,20 @@
     ]
   });
 
-  // ---------------------------------------------------------------- super: opens the tome, pen raised, beam
-  var SU0 = P(S, ATK, { hip: [0, -28], lean: 4, hF: [8, -58], pen: -88, pg: 0.4, hB: [10, -40], handB: 'open', z: { armB: 6 }, glow: 1, mouth: 'shout' });
-  var SU1 = P(S, HIT, { hip: [-2, -29], lean: 2, hF: [18, -44], pen: -6, pg: 0.35, hB: [12, -36], handB: 'open', z: { armB: 6 }, fF: [12, 0], fB: [-12, 0], mouth: 'shout' });
+  // ---------------------------------------------------------------- super: plants the pen, casts from the open tome
+  // (FX draws the book in front of the back hand and the beam); pose held through `active`
+  var SU0 = P(S, ATK, { hip: [0, -30], lean: -4, hF: [8, -52], pen: -86, pg: 0.4, hB: [-8, -38], handB: 'open', glow: 1, eyes: 'closed', mouth: 'neutral' });
+  var SU1 = P(S, HIT, { hip: [-1, -29], lean: 4, fF: [11, 0], fB: [-11, 0], hF: [6, -24], pen: 72, pg: 0.15,
+    hB: [17, -42], handB: 'flat', z: { armB: 6 }, mouth: 'shout', blush: 0 });
   def('super', {
     segs: [['startup', 6], ['cast', 10], ['active', 40], ['recovery', 30]], step: 2,
     keys: [
-      ['startup', P(S, ATK)], ['startup+5', P(SU0, { eyes: 'closed' }), 'out'],
-      ['cast', SU0], ['cast+6', P(SU0, { hF: [10, -60] })],
-      ['active', P(SU1, { smear: { part: 'pen', from: 'cast+6', n: 5 } }), 'snap'], ['active+3', SU1, 'snap'],
-      ['active+20', bob(SU1, -1, 1)], ['active+38', SU1],
-      ['recovery', P(SU1, { glow: 0, mouth: 'neutral' }), 'out'], ['recovery+20', P(S, ATK)], ['recovery+29', S]
+      ['startup', P(S, ATK)], ['startup+5', SU0, 'out'],
+      ['cast', SU0], ['cast+4', P(SU0, { hF: [8, -54], eyes: 'focus' })],
+      ['cast+7', P(SU1, { hF: [7, -26], pen: 76, smear: { part: 'pen', from: 'cast+4', n: 4 } }), 'snap'],
+      ['active', SU1, 'snap'], ['active+20', bob(SU1, 0, 1, { hB: [17, -41] })], ['active+38', SU1],
+      ['recovery', P(SU1, { glow: 0, mouth: 'neutral' }), 'snap'], ['recovery+8', P(SU1, { glow: 0, mouth: 'neutral', hB: [10, -36] }), 'out'],
+      ['recovery+22', P(S, ATK)], ['recovery+29', S]
     ]
   });
 })();

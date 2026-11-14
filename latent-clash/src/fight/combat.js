@@ -49,6 +49,15 @@
       return [bm.x0, bm.y, len, bm.h];
     }
     var b = h.box;
+    if (h.whaleBox) {
+      var wi = F.whaleInfo(), t = F.whaleT ? F.whaleT(f) : -1;
+      if (wi && wi.frames && t >= 0) {
+        var fr = wi.frames[t];
+        if (!fr || !fr.w) return null;
+        return [f.mv.whale.x + fr.x, fr.y, fr.w, fr.h];
+      }
+      return b;
+    }
     if (h.anchor && f.puppet && !f.puppetFallback) {
       var a = f.anchor(h.anchor);
       var tipD = b[0] + b[2], cyD = b[1] + b[3] / 2;
@@ -73,10 +82,21 @@
       if (h.every) key = h.group + ':' + Math.floor((f.sf - (h.fr ? h.fr[0] : 0)) / h.every);
       if (f.hitGroups[key]) continue;
       var lb = F.hitLocal(f, h);
+      if (!lb) continue;
       out.push({ h: h, key: key, box: F.worldBox(lb, f.x, f.y, f.facing) });
     }
     return out;
   };
+
+  var whaleInfo;
+  F.whaleInfo = function () {
+    if (whaleInfo === undefined) {
+      whaleInfo = null;
+      if (F.mod('fx', 'spriteInfo')) { try { var wi = LC.fx.spriteInfo('deepseek.whale'); if (wi && wi.frames && wi.frames.length) whaleInfo = wi; } catch (e) { F.err('fx.spriteInfo whale', e); } }
+    }
+    return whaleInfo;
+  };
+  F.resetWhaleInfo = function () { whaleInfo = undefined; };
 
   F.barrierBox = function (f) {
     if (!f.mv || !f.mv.catchSeg || f.action !== 'attack') return null;
@@ -196,7 +216,7 @@
       vic.addMeter(2);
       if (!proj && !att.connected) att.connected = 'block';
       var heavy = lv === 'H' || lv === 'S' || lv === 'X';
-      F.fx(heavy ? 'block.heavy' : 'block.light', ctx.x, ctx.y, { facing: -dir, power: heavy ? 0.8 : 0.4, palette: vic.pal });
+      F.fx(heavy ? 'block.heavy' : 'block.light', ctx.x, ctx.y, { facing: dir, 'char': att.ch, power: heavy ? 0.8 : 0.4, palette: vic.pal });
       F.sfx(heavy ? 'block.heavy' : 'block.light', { pan: F.pan(ctx.x, m.camX) });
       if (m.onContact) m.onContact(att, vic, 'block', 0, h, kind);
       return 'block';
@@ -267,13 +287,13 @@
     vic.addMeter(Math.max(1, dmg / 22));
     if (!proj) att.connected = 'hit';
     else if (proj.inst === att.moveInst && att.action === 'attack') att.connected = 'hit';
-    vic.flash = 1; vic.flashColor = counter ? '#ffd166' : '#ffffff';
+    vic.flash = 0.8; vic.flashColor = counter ? '#ffd166' : '#ffffff';
 
     // presentation
-    var fxName = h.fx || ('hit.' + LVNAME[lv]);
-    F.fx(fxName, ctx.x, ctx.y, { facing: dir, power: lv === 'L' ? 0.3 : lv === 'M' ? 0.55 : 0.9, palette: att.pal, index: h.fxIndex || 0 });
-    if (fxName !== 'hit.' + LVNAME[lv] && !proj) F.fx('hit.' + LVNAME[lv], ctx.x, ctx.y, { facing: dir, power: 0.6, palette: att.pal });
-    if (counter) F.fx('hit.counter', ctx.x, ctx.y, { facing: dir, power: 1, palette: att.pal });
+    var fxName = counter ? 'hit.counter' : (h.fx || ('hit.' + LVNAME[lv]));
+    var fxIdx = h.fxIndex != null ? h.fxIndex : (mv && mv.step != null ? mv.step : 0);
+    F.fx(fxName, ctx.x, ctx.y, { facing: dir, power: lv === 'L' ? 0.3 : lv === 'M' ? 0.55 : 0.9, palette: att.pal, 'char': att.ch, index: fxIdx });
+    m.lastHitPos = { x: ctx.x, y: ctx.y };
     F.sfx(h.sfx || (counter ? 'hit.counter' : 'hit.' + LVNAME[lv]), { pan: F.pan(ctx.x, m.camX) });
     if (lv === 'H' || lv === 'S' || (lv === 'M' && counter)) F.voice(vic.ch, 'hurt');
     var shake = lv === 'H' ? 3 : lv === 'S' ? 3 : lv === 'X' ? 2 : lv === 'M' ? 1 : 0;

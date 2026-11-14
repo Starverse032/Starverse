@@ -94,7 +94,8 @@
     var was = this.meter;
     this.meter = F.clamp(this.meter + n, 0, 100);
     if (was < 100 && this.meter >= 100) {
-      F.fx('meter.full', this.x, this.y - 40, { facing: this.facing, palette: this.pal });
+      var ca = this.anchor('center');
+      F.fx('meter.full', this.x + ca.x * this.facing, this.y + ca.y, { facing: this.facing, palette: this.pal, 'char': this.ch });
       F.sfx('meter.full', { pan: F.pan(this.x, this.m.camX), vol: 0.8 });
     }
   };
@@ -239,7 +240,10 @@
     if (sg.vyc != null) this.vy = sg.vyc;
     var mv = this.mv;
     if (mv.proj && sg.id === mv.proj.seg) F.spawnProj(this.m, this);
-    if (sg.id === 'rise' && mv.trail) F.fx(mv.trail, this.x, this.y, { facing: this.facing, palette: this.pal });
+    if (mv.id === 'haiku' && /^hit\d$/.test(sg.id)) {
+      var hp = this.anchor('hip');
+      F.fx('claude.haikuSlash', this.x + hp.x * this.facing, this.y + hp.y, { facing: this.facing, palette: this.pal, index: (+sg.id[3]) - 1 });
+    }
     if (mv.id === 'dive') F.diveSeg(this.m, this, sg.id);
     if (sg.id === 'bounce') { this.vy = -3.4; this.vx = -1.6 * this.facing; this.air = true; }
   };
@@ -299,8 +303,11 @@
     else if (!this.air) this.vx = 0;
     if (sg.vyc != null) this.vy = sg.vyc;
     if (mv.flashAt === this.mf) this.m.superFlash(this);
-    if (mv.trail && (sg.id === 'rise' || (sg.id === 'active' && mv.air)) && (this.sf & 1) === 0)
-      F.fx(mv.trail, this.x, this.y - 30, { facing: this.facing, palette: this.pal });
+    if (mv.trail && (sg.id === 'rise' || sg.id === 'fall' || (sg.id === 'active' && mv.air)) && (this.ch !== 'claude' || (this.sf & 1) === 0)) {
+      var wp = this.anchor('weapon');
+      F.fx(mv.trail, this.x + wp.x * this.facing, this.y + wp.y, { facing: this.facing, palette: this.pal });
+    }
+    if (mv.whale && F.whaleT && F.whaleT(this) === 50) F.fx('deepseek.whaleSplash', this.x + this.facing * (mv.whale.x + 128), T.GY, { facing: this.facing, palette: this.pal, power: 1 });
     if (mv.kind === 'throw' && sg.id === mv.grabSeg) F.tryGrab(this.m, this, o);
     if (mv.id === 'throwHit') F.throwStep(this.m, this, o);
     if (this.mv && this.mv.kind === 'super') this.trail = Math.max(this.trail, 4);
@@ -387,7 +394,6 @@
     if (this.invAll > 0) this.invAll--;
     if (this.invThrow > 0) this.invThrow--;
     if (this.throwProt > 0) this.throwProt--;
-    if (this.flash > 0) this.flash = Math.max(0, this.flash - 0.2);
     if (this.tagT > 0) this.tagT--;
     if (this.trail > 0) this.trail--;
     if (this.crouchT < 99) this.crouchT++;
@@ -466,6 +472,7 @@
       this.vy += g;
     }
     if (this.pushN > 0) {
+      if (!this.air && (this.pushN % 6) === 0 && Math.abs(this.pushV) > 0.8) F.fx('dust.skid', this.x, T.GY, { facing: F.sign(this.pushV) });
       this.x += this.pushV;
       this.pushV -= this.pushDec; this.pushN--;
       if (this.pushN <= 0) { this.pushV = 0; this.pushSrc = null; }

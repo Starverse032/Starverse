@@ -162,7 +162,9 @@
   Match.prototype.superFlash = function (f) {
     this.freeze = T.FLASH;
     this.flash = { who: f, side: f.side, t: 0, dur: T.FLASH };
-    F.fx('super.charge', f.x, f.y - 40, { facing: f.facing, palette: f.pal, power: 1 });
+    var ca = f.anchor('chest');
+    F.fx('super.charge', f.x + ca.x * f.facing, f.y + ca.y, { facing: f.facing, palette: f.pal, power: 1, 'char': f.ch });
+    if (f.ch === 'claude') F.fx('claude.pages', f.x + ca.x * f.facing, f.y + ca.y, { facing: f.facing, palette: f.pal, power: 1 });
     F.sfx('super.flash', { pan: F.pan(f.x, this.camX) });
     F.sfx('super.charge', { pan: F.pan(f.x, this.camX), vol: 0.8 });
     F.voice(f.ch, 'super');
@@ -300,6 +302,7 @@
       if (f.comboShow && f.combo === 0) { f.comboT++; if (f.comboT > 70) { f.comboShow = 0; f.comboT = 0; } }
     }
     if (this.fade > 0 && this.fadeDir < 0) this.fade = Math.max(0, this.fade - 0.08);
+    for (i = 0; i < 2; i++) if (this.f[i].flash > 0) this.f[i].flash = Math.max(0, this.f[i].flash - (this.f[i].stop > 0 ? 0.08 : 0.16));
   };
 
   Match.prototype.resolvePositions = function () {
@@ -422,7 +425,8 @@
           f.vx = -f.facing * 2.4; f.vy = -5.2; if (f.y >= GY) f.y = GY - 1;
         } else if (f.action === 'launch') { f.vy = Math.min(f.vy, -4.6); f.vx = F.sign(f.vx || -f.facing) * Math.max(Math.abs(f.vx), 2.4); }
         f.grav = 0.32;
-        F.fx('ko.burst', f.x, f.y - 36, { facing: f.facing, palette: f.pal, power: 1 });
+        var kp = this.lastHitPos || { x: f.x, y: f.y - 36 };
+        F.fx('ko.burst', kp.x, kp.y, { facing: -f.facing, palette: this.f[1 - i].pal, power: 1, 'char': this.f[1 - i].ch });
         F.voice(f.ch, 'ko');
       }
     }
@@ -486,8 +490,8 @@
       }
     } else if (s === 'matchEnd') {
       var bq = this.bubbles[this.result ? this.result.winner : 0];
-      if (st === 70 && this.winQuote) this.say(this.winQuote[0], this.winQuote[1], 160);
-      if ((anyPress && st > 50) || st > 520) this.finish();
+      if (st === 104 && this.winQuote) this.say(this.winQuote[0], this.winQuote[1], 200);
+      if ((anyPress && st > 50) || st > 560) this.finish();
     }
   };
 
@@ -542,7 +546,7 @@
       var hs = (this.f[0].control === 'human' && !this.ai[0]) ? 0 : 1;
       name = w === hs ? 'youWin' : 'youLose'; text = w === hs ? 'YOU WIN' : 'YOU LOSE';
     } else { name = w === 0 ? 'p1Win' : 'p2Win'; text = w === 0 ? '1P WIN' : '2P WIN'; }
-    this.banner(name, text, 999);
+    this.banner(name, text, 110);
     F.music('victory', { fade: 0.3, restart: true });
     F.sfx('ann.win');
     this.winQuote = null;

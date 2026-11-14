@@ -109,10 +109,10 @@
           ['hit3', 4, { vx: { L: 1.4, M: 1.8, H: 2.2 } }], ['recovery', 20]
         ],
         hits: [
-          { seg: 'hit1', box: [6, -62, 36, 36], dmg: { L: 40, M: 50, H: 50 }, lv: 'S', stun: [20, 14], push: [3, 4], fx: 'claude.haikuSlash', fxIndex: 0, chip: 0.2 },
-          { seg: 'hit2', box: [6, -58, 38, 38], dmg: { L: 56, M: 70, H: 70 }, lv: 'S', stun: [20, 14], push: [3, 4], fx: 'claude.haikuSlash', fxIndex: 1, chip: 0.2 },
+          { seg: 'hit1', box: [6, -62, 36, 36], dmg: { L: 40, M: 50, H: 50 }, lv: 'S', stun: [20, 14], push: [3, 4], fx: 'hit.special', chip: 0.2 },
+          { seg: 'hit2', box: [6, -58, 38, 38], dmg: { L: 56, M: 70, H: 70 }, lv: 'S', stun: [20, 14], push: [3, 4], fx: 'hit.special', chip: 0.2 },
           { seg: 'hit3', box: [6, -60, 40, 42], dmg: { L: 40, M: 50, H: 50 }, lv: 'S', kd: 'launch', lvx: 2.6, lvy: -4.6,
-            adv: [0, { L: -4, M: -6, H: -9 }], push: [6, 10], fx: 'claude.haikuSlash', fxIndex: 2, chip: 0.2 }
+            adv: [0, { L: -4, M: -6, H: -9 }], push: [6, 10], fx: 'hit.special', chip: 0.2 }
         ],
         sfx: 'claude.haiku'
       },

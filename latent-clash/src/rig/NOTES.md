@@ -8,6 +8,10 @@
 - Polish done: identity pass (faces, hair, palettes), walks, hitHigh, down/getup, guards, launch, Claude 5H, DS breach/5M.
 - Polish pass 2 step 1 DONE (costume: skirt light/tights dark A-line + swing, capelet layer + shadow, tie/cuffs/boot trim,
   DS hood/stripes/pocket, stamp hands).
+- Step 2 DONE: normals — held wind-up + snap strike + held impact; reach measured at the weapon tip: Claude 5L/5M/5H
+  31/46/54, DeepSeek 23/37/44 (guide 30/46/54, 24/38/44). Fist/foot `weapon` = knuckles/toe tip.
+- Step 3 DONE (first pass): spark = draw-back → thrust cast; Claude super plants the pen + casting palm held through
+  active; DeepSeek super = crouch-gather → snap-point upward held; haiku three distinct strikes; chain1-3 distinct.
 - NOW (polish pass 2, lead's order): 1) costume readability (Claude skirt/tights split, capelet layer, terracotta
   accents, no jacket specks; DeepSeek visible whale hood, sleeve stripes, pocket; hand stamps) → 2) normals both chars
   (anticipation, held impact, smears on M/H, weapon at tip, reach 30/46/54 & 24/38/44) → 3) specials + supers

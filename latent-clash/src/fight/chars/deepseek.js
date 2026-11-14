@@ -143,7 +143,7 @@
         flashAt: 5,
         whale: { seg: 'active', x: 52 },
         hits: [{
-          seg: 'active', fr: [4, 40], every: 6, box: [24, -116, 176, 116], dmg: 40, lv: 'X', stun: [16, 12], chip: 0.25,
+          seg: 'active', fr: [4, 40], every: 6, whaleBox: true, box: [24, -116, 176, 116], dmg: 40, lv: 'X', stun: [16, 12], chip: 0.25,
           push: [0, 2], noCatch: true, juggleAny: true, lvx: 0, lvy: -3.0, holdY: 56, air: 'knock', pull: 100, fx: 'deepseek.whaleSplash',
           final: { from: 40, dmg: 90, kd: 'launch', lvx: 2.4, lvy: -8.6, lv: 'H', fx: 'hit.heavy' }
         }],
