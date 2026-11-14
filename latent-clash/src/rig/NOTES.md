@@ -12,11 +12,13 @@
   31/46/54, DeepSeek 23/37/44 (guide 30/46/54, 24/38/44). Fist/foot `weapon` = knuckles/toe tip.
 - Step 3 DONE (first pass): spark = draw-back → thrust cast; Claude super plants the pen + casting palm held through
   active; DeepSeek super = crouch-gather → snap-point upward held; haiku three distinct strikes; chain1-3 distinct.
-- NOW (polish pass 2, lead's order): 1) costume readability (Claude skirt/tights split, capelet layer, terracotta
-  accents, no jacket specks; DeepSeek visible whale hood, sleeve stripes, pocket; hand stamps) → 2) normals both chars
-  (anticipation, held impact, smears on M/H, weapon at tip, reach 30/46/54 & 24/38/44) → 3) specials + supers
-  → 4) dash/crouch/jump/land, hitLow/hitCrouch, throws, intro/win/lose, getup hair flip.
-- Perf (Chromium): draw worst case (re-render every frame) 0.39–0.46 ms Claude / 0.24–0.29 ms DeepSeek; cached frames
+- Step 4 partial: throwHit reworked for both (grab → pull/heave → palm shove / overhead slam, `grab` anchor follows);
+  Claude hair can no longer flip above its root (getup). intro reviewed OK.
+- REMAINING ROUGH (authored, overview-checked only): dashF/dashB, crouchIn/crouch/crouchOut, jumpSquat/jumpRise/
+  jumpFall/land, hitLow, hitCrouch, throw (whiff), thrown, win, lose, crouching + jump normals (structure updated
+  earlier but not individually reviewed), airSpark, sonnet, guardrail/guardrailHit, wave, breach fall/land,
+  diveIn/diveOut, diveKick.
+- Perf (Chromium): draw worst case (re-render every frame) 0.41–0.46 ms Claude / 0.25–0.29 ms DeepSeek; cached frames
   are one drawImage. init 1–1.6 ms (head expressions are composed/rotated lazily). setPose+anchor ≈ 3–4 µs, no canvas.
 
 ## How it works (design summary)
@@ -72,10 +74,8 @@ in3 out3 back snap(hold). Missing poses before a segment's first key are interpo
 
 ## Animation status
 
-All §3.3 names exist for both characters and every one is AUTHORED (no aliases in use).
-- Reviewed + corrected at ×3–×6 (v1.1): idle, walkF, walkB, hitHigh, down, getup (both chars where applicable),
-  Claude 5H, DeepSeek breach, faces (all expressions), palettes 0/1.
-- Rough v1 (authored, checked only in the one-pose-per-anim overview): crouchIn/crouch/crouchOut, jumpSquat,
-  jumpRise, jumpFall, land, dashF, dashB, guardStand, guardCrouch, hitLow, hitCrouch, launch, thrown, throw,
-  throwHit, intro, win, lose, 5L 5M 2L 2M 2H jL jM jH, Claude spark airSpark sonnet haiku guardrail guardrailHit super,
-  DeepSeek 5H wave chain1-3 diveIn diveOut diveKick super.
+All §3.3 names exist for both characters and every one is authored (no aliases in use).
+- Polished (reviewed at ×3–×8, corrected): idle, walkF, walkB, hitHigh, down, getup, guardStand, guardCrouch, launch,
+  intro, throwHit, 5L, 5M, 5H (reach verified), Claude spark / haiku / super, DeepSeek breach (rise) / super;
+  all faces, both palettes, costume details.
+- Rough v1: see REMAINING ROUGH above.

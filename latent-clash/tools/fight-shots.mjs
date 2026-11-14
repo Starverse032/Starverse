@@ -37,11 +37,11 @@ for (const [c, o] of [['claude', 'deepseek'], ['deepseek', 'claude']]) {
 add('claude-spark', T('claude', 'deepseek'), [...mot('236', 'H'), ...W(30)]);
 add('claude-sonnet', T('claude', 'deepseek'), [...near, ...mot('623', 'H'), ...W(10)]);
 add('claude-haiku', T('claude', 'deepseek'), [...near, ...mot('214', 'M'), ...W(20)]);
-add('claude-guardrail', T('claude', 'deepseek'), [...mot('22', 'M'), ...W(8)]);
+add('claude-guardrail', T('claude', 'deepseek'), [...mot('252', 'M'), ...W(8)]);
 add('deepseek-wave', T('deepseek', 'claude'), [...mot('236', 'H'), ...W(34)]);
 add('deepseek-breach', T('deepseek', 'claude'), [...near, ...mot('623', 'H'), ...W(10)]);
 add('deepseek-chain', T('deepseek', 'claude'), [...near, ...mot('214', 'M'), ...W(14), st(2, 5, 'M'), st(12, 5), st(2, 5, 'M'), st(12, 5)]);
-add('deepseek-dive', T('deepseek', 'claude'), [...mot('22', 'H'), ...W(30)]);
+add('deepseek-dive', T('deepseek', 'claude'), [...mot('252', 'H'), ...W(30)]);
 add('deepseek-divekick', T('deepseek', 'claude'), [st(3, 9), st(18, 5), ...mot('236', 'M'), ...W(6)]);
 add('claude-combo', T('claude', 'deepseek'), [st(12, 6), st(3, 9), st(22, 5), st(2, 5, 'H'), st(14, 5), st(2, 5, 'L'), st(8, 5), st(2, 5, 'M'), st(12, 5), st(2, 5, 'H'), st(12, 5), ...mot('214', 'H'), ...W(30)]);
 add('deepseek-combo', T('deepseek', 'claude'), [st(10, 6), st(3, 9), st(22, 5), st(2, 5, 'H'), st(12, 5), st(2, 5, 'L'), st(7, 5), st(2, 5, 'M'), st(10, 5), st(2, 5, 'H'), st(10, 5), ...mot('214', 'H'), st(14, 5), st(2, 5, 'M'), st(12, 5), st(2, 5, 'M'), st(14, 5)]);
