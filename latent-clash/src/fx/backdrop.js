@@ -161,7 +161,7 @@
     for (i = 0; i < 5; i++) {
       var big = i < 2, set = C.pages[big ? 0 : 1], q1 = I.hash(i * 13 + 1), q2 = I.hash(i * 29 + 5);
       var vx = big ? 0.32 : 0.62, vy = big ? 0.14 : 0.3, span = W + 220;
-      x = ((q1 * span + i * 150 + t * vx) % span) - 110; y = (((q2 * 300 - t * vy) % (H + 120)) + (H + 120)) % (H + 120) - 70;
+      x = ((q1 * span + i * 230 + t * vx) % span) - 110; y = (((q2 * 300 + i * 90 - t * vy) % (H + 120)) + (H + 120)) % (H + 120) - 70;
       var tilt = set[Math.max(0, Math.min(4, Math.round(2 + 2.2 * Math.sin(t * 0.03 + i * 1.7))))];
       ctx.drawImage(tilt.c, sx + Math.round(x) - tilt.px, sy + Math.round(y) - tilt.py);
     }
@@ -235,19 +235,21 @@
       }
       return { c: I.toCanvas(sb), x: sp[0] - 2 - w0 / 2 };
     });
-    // distant whale silhouette: 4 tail-beat frames
-    var sil = mixc(B[3], '#000000', 0.3), silHi = mixc(B[3], Gl[3], 0.25);
-    D.far = I.anim(170, 60, 4, 85, 30, function (bb, ff) {
-      var beat = [0, 3, 0, -3][ff];
-      for (var xx = 18; xx < 166; xx++) {
-        var u = (xx - 18) / 148, hh = u < 0.6 ? 3 + 15 * Math.pow(u / 0.6, 0.7) : 18 * Math.sqrt(Math.max(0, 1 - Math.pow((u - 0.6) / 0.41, 2)));
-        var yc = 30 + beat * (1 - u) * (1 - u);
-        bb.rect(xx, Math.round(yc - hh), 1, Math.round(hh * 1.8), sil);
-        if (u > 0.2 && u < 0.85 && xx % 3 === 0) bb.set(xx, Math.round(yc - hh + 4), silHi);
+    // distant whale silhouette (~210 px): 4 tail-beat frames, faint rim + glow line + eye
+    var sil = mixc(B[3], '#000000', 0.35), silRim = mixc(B[2], Gl[3], 0.18), silHi = mixc(B[3], Gl[2], 0.35), eye = mixc(Gl[1], B[2], 0.2);
+    D.far = I.anim(224, 84, 4, 112, 42, function (bb, ff) {
+      var beat = [0, 4, 0, -4][ff], yc0 = 40;
+      for (var xx = 26; xx < 218; xx++) {
+        var u = (xx - 26) / 192, hh = u < 0.6 ? 4 + 20 * Math.pow(u / 0.6, 0.7) : 24 * Math.sqrt(Math.max(0, 1 - Math.pow((u - 0.6) / 0.41, 2)));
+        var yc = yc0 + beat * (1 - u) * (1 - u);
+        bb.rect(xx, Math.round(yc - hh), 1, Math.round(hh * 1.75), sil);
       }
-      var ty = 30 + beat;
-      bb.poly([22, ty - 2, 4, ty - 16 - beat, 0, ty - 15 - beat, 8, ty, 0, ty + 13 - beat, 4, ty + 14 - beat, 22, ty + 3], sil);
-      bb.poly([96, 44, 82, 56, 90, 56, 104, 46], sil);
+      var ty = yc0 + beat;
+      bb.poly([30, ty - 3, 6, ty - 21 - beat, 0, ty - 20 - beat, 10, ty, 0, ty + 17 - beat, 6, ty + 18 - beat, 30, ty + 4], sil);
+      bb.poly([124, 58, 104, 76, 114, 76, 136, 60], sil);
+      bb.outline(silRim);
+      for (xx = 50; xx < 196; xx++) { var u2 = (xx - 26) / 192, h2 = u2 < 0.6 ? 4 + 20 * Math.pow(u2 / 0.6, 0.7) : 24 * Math.sqrt(Math.max(0, 1 - Math.pow((u2 - 0.6) / 0.41, 2))); if ((xx >> 1) % 3) bb.set(xx, Math.round(yc0 - h2 + 6 + beat * (1 - u2) * (1 - u2)), silHi); }
+      bb.rect(198, yc0 + 2, 2, 2, eye);
     });
     D.cols = { snow: [I.mix(Wt[3], B[2], 0.45), Wt[3], Wt[2]], bub: [Wt[1], Wt[2], Wt[3], Wt[0]], streak: [I.mix(Wt[3], B[2], 0.3), Wt[3]] };
   }
@@ -256,8 +258,8 @@
     var D = DB[o.pal], i, x, y;
     ctx.drawImage(D.base, sx - 8, sy - 8);
     // far whale glides away from her, very slowly
-    var span = W + 260, wx = ((t * 0.45 + 60) % span) - 130;
-    I.drawAnim(ctx, D.far, Math.floor(t / 10) % 4, sx + Math.round(wx), sy + 70 + Math.round(Math.sin(t * 0.02) * 4), 1);
+    var span = W + 300, wx = ((t * 0.5 + 170) % span) - 150;
+    I.drawAnim(ctx, D.far, Math.floor(t / 10) % 4, sx + Math.round(wx), sy + 64 + Math.round(Math.sin(t * 0.02) * 4), 1);
     // shafts sway
     for (i = 0; i < D.shafts.length; i++) {
       var S = D.shafts[i];
@@ -266,7 +268,7 @@
     ctx.drawImage(D.caustic[Math.floor(t / 5) & 3], sx - 8, sy + GY + 2);
     // marine snow: three depths racing upward (the camera sinks)
     var C3 = D.cols.snow;
-    for (i = 0; i < 60; i++) {
+    for (i = 0; i < 90; i++) {
       var depth = i % 3, h1 = I.hash(i * 11 + 5), h2 = I.hash(i * 23 + 9), sp = [1.2, 2.4, 4.2][depth];
       x = (h1 * (W + 16)) - 8 + Math.sin(t * 0.04 + i) * (depth + 1);
       y = ((h2 * (H + 30) - t * sp) % (H + 30) + (H + 30)) % (H + 30) - 15;
@@ -292,6 +294,17 @@
       if (size === 2) { ctx.fillRect(X - 1, Y - 2, 3, 1); ctx.fillRect(X - 1, Y + 2, 3, 1); ctx.fillRect(X - 2, Y - 1, 1, 3); ctx.fillRect(X + 2, Y - 1, 1, 3); ctx.fillStyle = B4[3]; ctx.fillRect(X - 1, Y - 1, 1, 1); }
       else if (size === 1) { ctx.fillRect(X - 1, Y, 1, 1); ctx.fillRect(X + 1, Y, 1, 1); ctx.fillRect(X, Y - 1, 1, 1); ctx.fillRect(X, Y + 1, 1, 1); }
       else { ctx.fillStyle = B4[0]; ctx.fillRect(X, Y, 1, 1); }
+    }
+    // big near bubbles hugging the screen edges (fast)
+    for (i = 0; i < 10; i++) {
+      var n1 = I.hash(i * 19 + 4), lf = 50 + Math.floor(n1 * 30), ag = (t + Math.floor(I.hash(i * 3 + 8) * lf)) % lf;
+      var bx = (i & 1 ? W - 14 - n1 * 40 : 10 + n1 * 40) + Math.sin(ag * 0.2 + i) * 3, by = GY + 10 - ag * (4.5 + n1 * 2);
+      if (by < -10) continue;
+      var R = 3 + (i % 3), X2 = sx + Math.round(bx), Y2 = sy + Math.round(by);
+      ctx.fillStyle = B4[1];
+      ctx.fillRect(X2 - R + 1, Y2 - R, R * 2 - 1, 1); ctx.fillRect(X2 - R + 1, Y2 + R, R * 2 - 1, 1);
+      ctx.fillRect(X2 - R, Y2 - R + 1, 1, R * 2 - 1); ctx.fillRect(X2 + R, Y2 - R + 1, 1, R * 2 - 1);
+      ctx.fillStyle = B4[3]; ctx.fillRect(X2 - R + 2, Y2 - R + 2, 2, 1); ctx.fillRect(X2 - R + 2, Y2 - R + 3, 1, 1);
     }
   }
 
