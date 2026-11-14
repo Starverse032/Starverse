@@ -101,7 +101,7 @@
 
   // ---------------------------------------------------------------- launch / down / getup
   var LA = P(S, { hip: [0, -46], lean: -50, bend: -12, tilt: -40, fF: [12, -14], fB: [4, -6], faF: 40, faB: 30,
-    hF: [-8, -74], hB: [-22, -62], handF: 'open', handB: 'open', eyes: 'shut', mouth: 'open', skirt: 0.7, tail: -30, arch: 8 });
+    hF: [-8, -74], hB: [-22, -62], handF: 'open', handB: 'open', eyes: 'shut', mouth: 'open', skirt: 0.15, tail: -30, arch: 8 });
   def('launch', {
     segs: [['loop', 24, true]], step: 3,
     keys: [[0, LA],

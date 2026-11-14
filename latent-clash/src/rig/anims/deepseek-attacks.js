@@ -14,85 +14,101 @@
   var HIT = { eyes: 'focus', mouth: 'shout' };
   var sar = function (s, a, r) { return [['startup', s], ['active', a], ['recovery', r]]; };
 
-  // ---------------------------------------------------------------- 5L: snappy lead jab (reach 24)
-  var L1 = P(S, HIT, { hF: [21, -38], lean: 14, hip: [2, -22], weapon: 'hF', mouth: 'grin' });
+  // ================================================================ NORMALS (V2)
+  // 5L: snappy water-wrapped lead palm (reach 32)
+  var L0 = P(S, ATK, { hip: [-2, -46], lean: 0, bend: -4, hF: [11, -63], hB: [5, -56], handF: 'flat' });
+  var L1 = P(S, HIT, { hip: [2, -46], lean: 12, bend: 2, hF: [27, -67], hB: [3, -58], handF: 'flat', handB: 'fist', fB: [-12, 0], weapon: 'hF', mouth: 'grin' });
   def('5L', {
     segs: sar(4, 3, 7), step: 1,
-    keys: [
-      ['startup', P(S, ATK)], ['startup+2', P(S, ATK, { hF: [11, -36], lean: 6 }), 'out'],
+    keys: [['startup', P(S, ATK)], ['startup+2', L0, 'out'],
       ['active', P(L1, { smear: { part: 'hF', from: 'startup+2', n: 3 } }), 'snap'], ['active+1', L1, 'snap'],
-      ['recovery', P(L1, { hF: [20, -37] }), 'out'], ['recovery+6', S]
-    ]
+      ['recovery', P(L1, { hF: [25, -66] }), 'out'], ['recovery+4', P(S, ATK, { hF: [19, -59] })], ['recovery+6', S]]
   });
-  // ---------------------------------------------------------------- 5M: front snap kick (reach 38)
-  var M1 = P(S, HIT, { hip: [11, -26], lean: -16, bend: -4, fF: [37, -24], faF: -75, knF: -1, fB: [-4, 0], hF: [12, -42], hB: [4, -38], weapon: 'fF' });
+  // 5M: front snap kick, the hem lifted over the thigh (reach 50)
+  var M0 = P(S, ATK, { hip: [-2, -47], lean: -8, bend: -4, fF: [14, -22], faF: 40, knF: -1, fB: [-9, 0], hF: [16, -66], hB: [-2, -62], skirt: 0.2 });
+  var M1 = P(S, HIT, { hip: [-1, -46], lean: -20, bend: -6, fF: [40, -46], faF: 4, knF: -1, fB: [-10, 0], faB: 10,
+    hF: [10, -70], hB: [-12, -62], handF: 'fist', handB: 'open', skirt: 0.3, tail: 20, weapon: 'fF' });
   def('5M', {
     segs: sar(7, 4, 12), step: 2,
-    keys: [
-      ['startup', P(S, ATK)], ['startup+4', P(S, ATK, { hip: [1, -24], lean: -4, fF: [12, -14], faF: 30, fB: [-7, 0], hF: [12, -40] }), 'out'],
-      ['active', P(M1, { smear: { part: 'fF', from: 'startup+4', n: 3 } }), 'snap'], ['active+2', M1, 'snap'],
-      ['recovery', P(M1, { fF: [16, -14], faF: 20, mouth: 'grin' }), 'out'], ['recovery+8', P(S, ATK)], ['recovery+11', S]
-    ]
+    keys: [['startup', P(S, ATK)], ['startup+4', M0, 'out'],
+      ['active', P(M1, { smear: { part: 'fF', from: 'startup+4', n: 4 } }), 'snap'], ['active+2', M1, 'snap'],
+      ['recovery', P(M1, { fF: [30, -36], faF: 20, mouth: 'grin' }), 'out'], ['recovery+6', P(M0, { fF: [14, -12] })], ['recovery+11', S]]
   });
-  // ---------------------------------------------------------------- 5H: lunging hook-straight with water (reach 44)
-  var H1 = P(S, HIT, { hip: [17, -18], lean: 38, bend: 6, fF: [29, 0], fB: [-6, 0], faB: 50, hB: [48, -37], hF: [12, -34], z: { armB: 6 }, weapon: 'hB' });
+  // 5H: spin and lash — pivots, turns her back, the tail whips round flat at hip height (reach 62)
+  var H0 = P(S, ATK, { hip: [-3, -43], lean: 10, bend: 6, fF: [12, 0], fB: [-11, 0], hF: [16, -60], hB: [8, -62], handF: 'fist', tail: -40, arch: 30, tsw: 0.2 });
+  var H1 = P(S, ATK, { hip: [-6, -42], lean: -4, bend: -10, fF: [6, 0], fB: [-16, 0], faB: 20, hF: [4, -64], hB: [-12, -60], handF: 'fist',
+    tail: 60, arch: 12, tsw: 0, skirt: 0.4, z: { tail: 6 } });
+  // drawn mirrored (flip): authored facing right, tail sweeping out behind = forward on screen
+  var HX = P(S, HIT, { flip: 1, hip: [-9, -43], lean: 22, bend: 6, fF: [6, 0], fB: [-13, 0], faB: 30, hF: [18, -62], hB: [6, -58], handF: 'open', handB: 'fist',
+    tail: 60, arch: -1, pen: 0, tl: 1, tsw: 0, skirt: 0.55, z: { tail: 6 }, weapon: 'tail', eyes: 'focus', mouth: 'teeth' });
   def('5H', {
     segs: sar(10, 5, 19), step: 2,
-    keys: [
-      ['startup', P(S, ATK)], ['startup+4', P(S, ATK, { hip: [-3, -20], lean: -6, hB: [-6, -38], hF: [14, -40], z: { armB: 6 } }), 'out'],
-      ['startup+8', P(S, ATK, { hip: [-3, -19], lean: -8, hB: [-8, -37], hF: [14, -41], z: { armB: 6 } })],
-      ['active', P(H1, { smear: { part: 'hB', from: 'startup+8', n: 4 } }), 'snap'], ['active+2', H1, 'snap'],
-      ['recovery', P(H1, { mouth: 'grin' }), 'snap'], ['recovery+5', P(H1, { mouth: 'grin', hB: [34, -40] }), 'out'],
-      ['recovery+14', P(S, ATK)], ['recovery+18', S]
-    ]
+    keys: [['startup', P(S, ATK)], ['startup+3', H0, 'out'], ['startup+7', P(H0, { hip: [-4, -42], lean: 14, tail: -46, arch: 32 }), 'snap'],
+      ['startup+8', P(H1, { flip: 1, smear: { part: 'tail', from: 'startup+7', n: 3 } }), 'snap'],
+      ['active', P(HX, { smear: { part: 'tail', from: 'startup+8', n: 4 } }), 'snap'], ['active+2', HX, 'snap'],
+      ['recovery', P(HX, { tail: 40, arch: -10, tl: 0, mouth: 'grin' }), 'snap'],
+      ['recovery+5', P(S, ATK, { hip: [-3, -43], lean: 8, tail: 20, arch: 4, skirt: 0.3 }), 'snap'],
+      ['recovery+12', P(S, ATK, { tail: 5, arch: 16 }), 'inout'], ['recovery+18', S]]
   });
 
   // ---------------------------------------------------------------- crouching normals
   var c0 = P(C, ATK);
-  var CL = P(C, HIT, { hF: [21, -13], lean: 32, hip: [1, -12], weapon: 'hF', mouth: 'grin' });
+  // 2L: low palm jab (reach 34)
+  var CL = P(C, HIT, { hip: [3, -19], lean: 34, hF: [29, -34], hB: [16, -38], handF: 'flat', weapon: 'hF', mouth: 'grin' });
   def('2L', {
     segs: sar(4, 3, 8), step: 1,
-    keys: [['startup', c0], ['startup+2', P(c0, { hF: [10, -20], lean: 18 }), 'out'],
+    keys: [['startup', c0], ['startup+2', P(c0, { hF: [17, -40], lean: 24 }), 'out'],
       ['active', P(CL, { smear: { part: 'hF', from: 'startup+2', n: 3 } }), 'snap'], ['active+1', CL, 'snap'],
-      ['recovery', P(CL, { hF: [19, -14] }), 'out'], ['recovery+7', C]]
+      ['recovery', P(CL, { hF: [27, -35] }), 'out'], ['recovery+7', C]]
   });
-  var CM = P(C, HIT, { hip: [9, -12], lean: 14, fF: [36, -3], faF: -20, fB: [-4, 0], weapon: 'fF' });
+  // 2M: low poke kick along the floor, skirt hem pushed out (reach 52)
+  var CM = P(C, HIT, { hip: [2, -18], lean: 18, bend: 4, fF: [44, -4], faF: 2, fB: [-8, 0], hF: [22, -42], hB: [12, -36], handF: 'open', weapon: 'fF', skirt: 0.2 });
   def('2M', {
     segs: sar(7, 4, 13), step: 2,
-    keys: [['startup', c0], ['startup+4', P(c0, { fF: [14, -6], faF: 20 }), 'out'],
+    keys: [['startup', c0], ['startup+4', P(c0, { fF: [18, -8], faF: 20, lean: 22 }), 'out'],
       ['active', P(CM, { smear: { part: 'fF', from: 'startup+4', n: 3 } }), 'snap'], ['active+2', CM, 'snap'],
-      ['recovery', P(CM, { fF: [20, -3], mouth: 'grin' }), 'out'], ['recovery+12', C]]
+      ['recovery', P(CM, { fF: [32, -3], mouth: 'grin' }), 'out'], ['recovery+12', C]]
   });
-  var CH = P(C, HIT, { hip: [14, -8], lean: 42, fF: [41, -1], faF: -12, fB: [6, 0], hF: [20, -6], hB: [14, -4], handF: 'flat', handB: 'flat', weapon: 'fF' });
+  // 2H: crouching spin — the tail sweeps flat along the floor (reach 66)
+  var CH0 = P(C, ATK, { hip: [-2, -18], lean: 34, hF: [26, -36], hB: [18, -32], tail: -20, arch: 30, tsw: 0.2 });
+  var CHX = P(C, HIT, { flip: 1, hip: [-13, -17], lean: 36, bend: 4, fF: [8, 0], fB: [-14, 0], faB: 30, hF: [18, -22], hB: [12, -18], handF: 'flat', handB: 'flat',
+    tail: 77, arch: -1, tl: 1, tsw: 0, skirt: 0.5, z: { tail: 6 }, weapon: 'tail', eyes: 'focus', mouth: 'teeth' });
   def('2H', {
     segs: sar(10, 5, 22), step: 2,
-    keys: [['startup', c0], ['startup+6', P(c0, { hip: [0, -10], lean: 26, fF: [10, -3], hF: [8, -12], handF: 'flat' }), 'out'],
-      ['active', P(CH, { smear: { part: 'fF', from: 'startup+6', n: 5 } }), 'snap'], ['active+2', CH, 'snap'],
-      ['recovery', P(CH, { mouth: 'grin' }), 'snap'], ['recovery+10', P(CH, { fF: [22, 0], faF: 0, mouth: 'grin' }), 'out'], ['recovery+21', C]]
+    keys: [['startup', c0], ['startup+4', CH0, 'out'], ['startup+7', P(CH0, { hip: [0, -17], lean: 38, tail: -30 }), 'snap'],
+      ['startup+8', P(CHX, { tail: 30, arch: 10, tl: 0, smear: { part: 'tail', from: 'startup+7', n: 3 } }), 'snap'],
+      ['active', P(CHX, { smear: { part: 'tail', from: 'startup+8', n: 4 } }), 'snap'], ['active+2', CHX, 'snap'],
+      ['recovery', P(CHX, { tail: 90, arch: -6, tl: 0, mouth: 'grin' }), 'snap'],
+      ['recovery+7', P(C, ATK, { tail: 20, arch: 6, skirt: 0.2 }), 'snap'], ['recovery+21', C]]
   });
 
   // ---------------------------------------------------------------- jump normals
-  var j0 = P(JF, ATK);
-  var JL = P(JF, HIT, { hF: [19, -22], lean: 20, weapon: 'hF', mouth: 'grin' });
+  var j0 = P(JF, ATK, { skirt: 0.4 });
+  // jL: downward palm (reach 30)
+  var JL = P(JF, HIT, { hip: [2, -47], lean: 16, hF: [24, -58], hB: [0, -62], handF: 'flat', weapon: 'hF', mouth: 'grin', skirt: 0.45 });
   def('jL', {
     segs: [['startup', 4], ['active', 8], ['recovery', 12, true]], step: 1,
-    keys: [['startup', j0], ['startup+2', P(j0, { hF: [12, -36] }), 'out'],
+    keys: [['startup', j0], ['startup+2', P(j0, { hF: [14, -68] }), 'out'],
       ['active', P(JL, { smear: { part: 'hF', from: 'startup+2', n: 3 } }), 'snap'], ['active+2', JL, 'snap'],
-      ['recovery', P(j0, { hF: [16, -34] })]]
+      ['recovery', P(j0, { hF: [19, -64] })]]
   });
-  var JM = P(JF, HIT, { hip: [0, -30], lean: -12, fF: [23, -6], faF: -35, fB: [-4, -8], weapon: 'fF' });
+  // jM: flying knee under the lifted hem (reach 40 at the knee)
+  var JM = P(JF, HIT, { hip: [8, -48], lean: -6, bend: -6, fF: [22, -30], faF: 50, knF: -1, fB: [-4, -12], faB: 40,
+    hF: [14, -72], hB: [-10, -64], handF: 'fist', weapon: 'kF', skirt: 0.5, tail: -10 });
   def('jM', {
     segs: [['startup', 6], ['active', 6], ['recovery', 12, true]], step: 2,
-    keys: [['startup', j0], ['startup+3', P(j0, { fF: [8, -14], faF: 30 }), 'out'],
-      ['active', P(JM, { smear: { part: 'fF', from: 'startup+3', n: 3 } }), 'snap'], ['active+2', JM, 'snap'],
-      ['recovery', P(j0, { fF: [10, -6] })]]
+    keys: [['startup', j0], ['startup+3', P(j0, { fF: [10, -20], faF: 40 }), 'out'],
+      ['active', P(JM, { smear: { part: 'kF', from: 'startup+3', n: 3 } }), 'snap'], ['active+2', JM, 'snap'],
+      ['recovery', P(j0, { fF: [12, -12] })]]
   });
-  var JH = P(JF, HIT, { hip: [10, -29], lean: 26, fF: [25, -4], faF: 20, fB: [2, -12], hF: [12, -46], hB: [0, -44], weapon: 'fF' });
+  // jH: heavy down-forward stomp kick, skirt blown up (reach 48)
+  var JH = P(JF, HIT, { hip: [6, -48], lean: 14, bend: 4, fF: [38, -18], faF: 28, knF: -1, fB: [-6, -14], faB: 50,
+    hF: [4, -76], hB: [-14, -66], handF: 'open', handB: 'open', weapon: 'fF', skirt: 0.7, tail: -20 });
   def('jH', {
     segs: [['startup', 9], ['active', 6], ['recovery', 12, true]], step: 2,
-    keys: [['startup', j0], ['startup+5', P(j0, { lean: -10, fF: [6, -16], faF: 40, hF: [10, -48], hB: [0, -50] }), 'out'],
+    keys: [['startup', j0], ['startup+5', P(j0, { lean: -12, fF: [12, -26], faF: 50, hF: [12, -80], hB: [-6, -78], skirt: 0.6 }), 'out'],
       ['active', P(JH, { smear: { part: 'fF', from: 'startup+5', n: 4 } }), 'snap'], ['active+2', JH, 'snap'],
-      ['recovery', P(j0, { fF: [12, -4] })]]
+      ['recovery', P(j0, { fF: [16, -10] })]]
   });
 
   // ---------------------------------------------------------------- wave: knee-raise → stomp; wave spawns at the leading toe (muzzle)
