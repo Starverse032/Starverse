@@ -216,36 +216,38 @@
     P.line([80, 90, 84, 100, 86, 110], S.c2, true, true);
     paintFlower(P, 26, 103, 5.2, 10, 0.2, 0.85);
     // high collar with frilled edge
-    var collar = P.spoly([48, 72, 56, 74, 64, 72, 66, 80, 64, 86, 56, 88, 48, 86, 46, 79]);
+    // shadow cast by the capelet hem onto the sleeves / blouse
+    P.recol(capeN.or(capeF).shift(1, 3).sub(capeN).sub(capeF), [S.c1, S.c0], S.c2);
+    // high collar with a small frill on top
+    var collar = P.spoly([49, 75, 57, 77, 64, 75, 65, 82, 63, 87, 56, 89, 49, 87, 47, 81]);
     P.part(collar, S.c1, S.cl);
     P.recol(collar.band(3, 0), [S.c1], S.c2);
     P.recol(collar.band(-1, 2), [S.c1], S.c0);
-    for (var fx = 47; fx <= 65; fx += 3) { P.px(fx, 73 + (fx > 56 ? (fx - 56) / 6 | 0 : 0), S.W); P.px(fx + 1, 72 + (fx > 56 ? (fx - 56) / 6 | 0 : 0), S.cl); }
-    // jabot: cascading cream ruffles
-    var jab = P.mask();
-    [[56, 90, 6], [55, 97, 7], [56, 104, 8], [55, 111, 8.5], [56, 118, 9]].forEach(function (r, i) {
-      var t = P.spoly([r[0] - r[2], r[1] - 2, r[0] + r[2] * 0.8, r[1] - 3, r[0] + r[2], r[1] + 4, r[0] + r[2] * 0.4, r[1] + 6, r[0] - r[2] * 0.2, r[1] + 5, r[0] - r[2] * 0.8, r[1] + 6, r[0] - r[2] - 1, r[1] + 3]);
+    for (var fx = 48; fx <= 64; fx += 2) { var fy = 75 + ((fx - 56) * (fx - 56) / 40 | 0); P.px(fx, fy - 1, (fx & 2) ? S.W : S.c0); P.px(fx + 1, fy - 1, S.cl); }
+    // jabot: three tiers of cream ruffles with wavy hems and fold lines
+    [[57, 92, 5, 7], [57, 99, 7, 8], [57, 107, 9, 9], [58, 116, 10, 10]].forEach(function (r) {
+      var x = r[0], y = r[1], w = r[2], h = r[3], pts = [x - w * 0.6, y, x + w * 0.6, y];
+      for (var k = 0; k <= 6; k++) { var px = x + w - k * (2 * w) / 6; pts.push(px, y + h - (k & 1 ? 2 : 0)); }
+      var t = P.poly(pts);
       P.part(t, S.c0, S.cl);
-      P.recol(t.band(3, -1), [S.c0], S.c2);
-      P.recol(t.band(1, -2), [S.c0], S.c1);
-      P.px(Math.round(r[0] - r[2] * 0.4), r[1] + 4, S.c2); P.px(Math.round(r[0] + r[2] * 0.3), r[1] + 3, S.c2);
-      jab = jab.or(t);
+      P.recol(t.band(3, 0), [S.c0], S.c2);
+      P.recol(t.band(0, -2), [S.c0], S.c1);
+      for (var k2 = 1; k2 < 6; k2 += 2) P.line([x + w - k2 * (2 * w) / 6, y + h - 4, x + w - k2 * (2 * w) / 6, y + h - 2], S.c2, false, true);
     });
-    // black cravat: knot + drape falling to her right, sunburst brooch
-    var drape = P.spoly([56, 86, 62, 85, 70, 92, 74, 102, 72, 110, 67, 104, 63, 96, 58, 92]);
-    P.part(drape, S.d1, S.dl);
-    P.recol(drape.band(-1, 1), [S.d1], S.d0);
-    P.recol(drape.band(3, -1), [S.d1], S.d2);
-    var drape2 = P.spoly([52, 88, 56, 90, 54, 100, 50, 106, 48, 98]);
-    P.part(drape2, S.d1, S.dl); P.recol(drape2.band(2, 0), [S.d1], S.d2);
-    var knot = P.spoly([51, 84, 57, 82, 63, 84, 62, 90, 56, 92, 51, 90]);
-    P.part(knot, S.d1, S.dl); P.recol(knot.band(-1, 1), [S.d1], S.d0);
-    paintFlower(P, 57, 87, 3.6, 8, 0.4);
+    // black cravat: knot + two flared tails, sunburst brooch
+    var tl = P.spoly([55, 87, 51, 94, 47, 103, 50, 104, 54, 98, 57, 90]), tr = P.spoly([58, 87, 63, 94, 68, 101, 65, 103, 60, 97, 57, 90]);
+    [tl, tr].forEach(function (t, i) {
+      P.part(t, S.d1, S.dl);
+      P.recol(t.band(i ? 2 : -1, 0), [S.d1], i ? S.d2 : S.d0);
+    });
+    var knot = P.spoly([52, 84, 57, 83, 62, 84, 61, 89, 57, 91, 53, 89]);
+    P.part(knot, S.d1, S.dl); P.recol(knot.band(-1, 1), [S.d1], S.d0); P.recol(knot.band(2, -1), [S.d1], S.d2);
+    paintFlower(P, 57, 87, 3.8, 8, 0.4);
 
     // ---- head
     var skull = P.ell(53, 36, 25, 26).or(P.ell(47, 42, 21, 23));
     P.part(skull, S.h1, S.hl);
-    var face = P.spoly([36, 27, 33, 37, 33, 47, 35, 55, 40, 62, 47, 67, 54, 71, 59, 73.5, 63, 73, 68, 68, 72, 62, 76, 55, 77.5, 49, 77, 43, 77.5, 36, 76, 29, 64, 25, 46, 25]);
+    var face = P.spoly([36, 27, 33, 37, 33, 47, 35, 55, 40, 62, 46, 67, 52, 72, 57, 75, 61, 75.5, 64.5, 73.5, 69, 68, 73, 62, 76, 55, 77.5, 49, 77, 43, 77.5, 36, 76, 29, 64, 25, 46, 25]);
     P.part(face, S.s1, S.sl);
     P.recol(neck.and(face.shift(-1, 5)).sub(face), [S.s1], S.s2);
     P.recol(face.band(4, 0).and(P.rect(0, 30, 44, 40)), [S.s1], S.s2);
