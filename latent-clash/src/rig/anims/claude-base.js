@@ -151,10 +151,10 @@
     segs: [['rise', 24]], step: 2,
     keys: [
       [0, P(DN, { eyes: 'shut' })],
-      [5, P(S, { hip: [-6, -12], lean: -25, tilt: -10, fF: [18, 0], fB: [12, -1], knF: -1, knB: -1, hF: [8, -18], hB: [-18, -4], handB: 'grip',
-        book: 180, eyes: 'shut', mouth: 'hurt' }), 'out'],
-      [11, P(S, { hip: [-3, -22], lean: 28, fF: [13, 0], fB: [-9, -1], faB: 60, hF: [18, -24], hB: [-3, -24], book: -60, eyes: 'focus', mouth: 'neutral' })],
-      [17, P(S, { hip: [0, -46], lean: 10, eyes: 'focus' }), 'out'],
+      [6, P(S, { hip: [-8, -12], lean: -55, bend: 10, tilt: -20, fF: [30, 0], fB: [26, -1], faF: -20, faB: -30, knF: -1, knB: -1,
+        hF: [4, -16], handF: 'flat', hB: [-22, -4], book: 180, eyes: 'shut', mouth: 'hurt' }), 'out'],
+      [12, P(C, { hip: [-3, -20], lean: 34, tilt: 10, hF: [20, -36], handF: 'flat', eyes: 'focus' })],
+      [18, P(S, { hip: [0, -45], lean: 12, hF: [17, -62], eyes: 'focus', skirt: 1 }), 'out'],
       [23, S]
     ]
   });
