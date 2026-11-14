@@ -1,17 +1,31 @@
 # ILLUST — notes
 
 ## V2 progress / next steps (ZipZipPipe redesign — truthful, current)
-- core.js: new slots `x0..x3,xl` (Claude `book` / DeepSeek `fin`), `u0..u3,ul` (DeepSeek `under`), `eK`
-  (dark iris rim), `xP` (pale fin inner face).
-- claude.js: REDRAWN bust/bustWin (closed-eye smile)/bustLose (heavy lids, sweat, empty battery gauge).
-  Orange straight hair, sunburst flower + black bow + cream tassel, high collar, cravat + brooch, jabot,
-  gold-edged capelet + emblem, red-brown book held up. Helpers `I.sunflower`, `I.paintFlower`, `I.H.strands`.
-- deepseek.js: REDRAWN bust/bustWin (wink, thumbs-up, rice bowl)/bustLose (spiral eyes, spinner, hand down).
-  Wavy hair with light inner layer, lop-ear fins, headdress + cyan bow, curled ahoge, maid dress, waving hand.
-- cutin.js (NEW, loaded after title.js): native-resolution cut-ins — head geometry exported by the char
-  files (`I.ART[c].head`) drawn at ×2.8 through the painter transform + vector eyes `I.bigEye`.
-- Face icons: redrawn maps (first pass).
-- NEXT: refinement pass on busts; title composition check; `emblem.claude` → sunburst flower.
+DONE (all render with zero console errors; init ≈ 340–390 ms, up from ≈ 260; title 0.1 ms/frame):
+- core.js: new slots `x0..x3,xl` (Claude `book` / DeepSeek `fin`), `u0..u3,ul` (DeepSeek `under`, not
+  used yet), `eK` (dark iris rim), `xP` (pale fin inner face = fin[0] mixed with white).
+- claude.js: bust / bustWin (closed-eye smile, sparkles) / bustLose (heavy lids, eye bags, sweat, stray
+  strands, empty battery gauge). Orange straight hair curtain out of frame, parted fringe + strand between
+  the eyes, level brows drawn through the fringe, sunburst flower + black bow + cream tassel (near side),
+  high frilled collar, black cravat + sunburst brooch, 4-tier jabot, gold-edged capelet + emblem, red-brown
+  book with gold corners held up by her far hand. Face icon redrawn.
+- deepseek.js: bust / bustWin (wink, big grin, thumbs-up, floating rice bowl) / bustLose (spiral eyes,
+  wavy mouth, "server busy" spinner, hand lowered). Wavy hair with light-blue inner layer, lop-ear fins
+  (outlined, pale inner face), frilled headdress + cyan bow, open curled ahoge, navy dress with puffed
+  shoulders, white blouse + dark bow + blue gem, frilled apron straps, gold buttons, waving hand. Face redrawn.
+- cutin.js (NEW, after title.js in the manifest; the old crop-the-bust cut-in was removed from title.js):
+  native 1× close-ups — each char file exports `I.ART[c].head` ({FR, face, skull}); the cut-in redraws
+  that geometry at ×2.8 via the painter transform, with vector eyes `I.bigEye(P, {x,y,w,h}, near, {lid,
+  fierce})`, angled brows, motif (Claude sunburst rays / DeepSeek water rings), speed lines, slanted cut.
+- icons.js: `emblem.claude(.lg)` is now the sunburst flower; whale emblem unchanged (fits: navy whale +
+  spout, like her apron emblem). logo.js: top-left accent is now the sunburst flower.
+- title.js: composition checked with the new busts — no change needed (DeepSeek mirrored waves toward
+  the core; nothing intrudes into the logo area).
+WEAK / NEXT (if there is budget):
+- Claude's near face-framing lock and DeepSeek's wavy locks are still a bit "ribbon-like"; hair could use
+  more clump breakup and fewer dark separation lines. DeepSeek's crown lacks fluffy volume.
+- No whale tail in DeepSeek's bust (optional per brief). `u*` (under-skirt) slots unused in portraits.
+- Faces 24×24 are serviceable hand maps, not polished.
 
 ## Progress (V1, historical)
 - Done: every API of contract §5.5 — portraits (face/bust/bustWin/bustLose/cutin × both chars × 2 palettes),
@@ -46,13 +60,13 @@
   starburst (top-left) and blue whale fluke (top-right) accents.
 - `icons.js` — hand-typed maps with explicit colour legends; arrows are one straight + one diagonal
   map rotated/flipped; emblems are vector (palette-0 colours).
-- `title.js` — `I.cutin(char)` and `I.TITLE` (pre-rendered layers in `init`).
+- `title.js` — `I.TITLE` (pre-rendered layers in `init`). `cutin.js` — `I.cutin(char)`, `I.bigEye`.
 
 ## Assets, sizes, anchors
 | asset | size | notes |
 |---|---|---|
 | `portrait(c,'bust'/'bustWin'/'bustLose',p)` | 112×128 | facing right, transparent; head centre ≈ (54, 44); bottom edge is a crop (no outline) |
-| `portrait(c,'cutin',p)` | 240×72 | **opaque band** (deep accent colour + speed lines streaming left, light top/bottom rule); face sits in x ≈ 60–228, the left ~60 px is free for the move name. Uniform 2× chunky pixels (allowed for super cut-ins, §2.3). Mirror it yourself for P2 if wanted. |
+| `portrait(c,'cutin',p)` | 240×72 | **opaque band** (deep accent colour, character motif, speed lines streaming left, light top/bottom rule); native 1× pixels (V2); face sits right of a slanted cut at x ≈ 62–80, the left ~62 px is free for the move name. Mirror it yourself for P2 if wanted. |
 | `portrait(c,'face',p)` | 24×24 | head-and-shoulders, transparent bg |
 | `logo()` | 240×90 | transparent |
 | `banner(...)` | ≤ 64 tall, 180–284 wide: `fight` 262×64, `ko` 196×64, `round1` 214×57, `finalRound` 260×36, `doubleKo` 279×50, `youLose` 284×50, `vs` 124×64, `counter` 89×18 | transparent, include shadow; centre them |
@@ -70,8 +84,6 @@
 - Unknown names never throw: `console.error('[illust] …')` once and a blank canvas of a sensible size.
 
 ## Deviations
-- Cut-in is an opaque band at 2× chunky pixels (re-cropped bust eyes with determined brows), not a
-  separately drawn native-resolution close-up.
 - Title figures are the two busts (DeepSeek mirrored), with 3 pre-rendered hair-sway frames each.
 
 ## Tools
