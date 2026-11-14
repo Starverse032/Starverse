@@ -252,7 +252,7 @@
     var face = P.spoly([36, 27, 33, 37, 33, 47, 35, 55, 40, 62, 46, 67, 52, 72, 57, 75, 61, 75.5, 64.5, 73.5, 69, 68, 73, 62, 76, 55, 77.5, 49, 77, 43, 77.5, 36, 76, 29, 64, 25, 46, 25]);
     P.part(face, S.s1, S.sl);
     P.recol(neck.and(face.shift(-1, 5)).sub(face), [S.s1], S.s2);
-    P.recol(face.band(4, 0).and(P.rect(0, 30, 44, 40)), [S.s1], S.s2);
+    P.recol(face.band(2, 0).and(P.rect(0, 30, 44, 40)), [S.s1], S.s2);
     P.recol(face.band(2, -2).and(P.rect(36, 60, 30, 20)), [S.s1, S.s2], S.s2);
 
     // ---- face features

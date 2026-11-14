@@ -34,7 +34,7 @@
     'm0', 'm1', 'm2', 'm3', 'W', 'hl', 'sl', 'cl', 'dl', 'al', 'ml', 'lash', 'mo', 'tg', 'tear',
     'tear2', 'ew', 'tl', 'blS', 'sp', 'K', 'gl0', 'gl1', 'sk1',
     // V2: x* = extra ramp (Claude `book`, DeepSeek `fin`), u* = DeepSeek `under` (Claude: cloth1)
-    'x0', 'x1', 'x2', 'x3', 'xl', 'u0', 'u1', 'u2', 'u3', 'ul', 'eK'];
+    'x0', 'x1', 'x2', 'x3', 'xl', 'u0', 'u1', 'u2', 'u3', 'ul', 'eK', 'xP'];
   var S = K.S = {};
   SLOT_NAMES.forEach(function (n, i) { S[n] = i + 1; });
   K.NSLOT = SLOT_NAMES.length + 1;
@@ -72,6 +72,7 @@
     for (var j = 0; j < 4; j++) { c['x' + j] = xr[j]; c['u' + j] = ur[j]; }
     c.xl = mix(xr[3], ol, 0.5); c.ul = mix(ur[3], ol, 0.5);
     c.eK = mix(p.eye[3], ol, 0.5);     // dark iris rim / upper iris
+    c.xP = mix(xr[0], '#ffffff', 0.32); // pale inner face of DeepSeek's fins
     var out = [[0, 0, 0, 0]];
     SLOT_NAMES.forEach(function (n) { var v = rgb(c[n] || '#ff00ff'); out.push([v[0], v[1], v[2], 255]); });
     return out;

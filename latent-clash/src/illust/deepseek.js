@@ -118,7 +118,7 @@
     P.part(m, S.x1, S.xl);
     P.recol(m.band(-1, 2), [S.x1], S.x0);
     P.recol(m.band(2, -2), [S.x1], S.x2);
-    if (inner) { P.recol(inner.and(m), [S.x1, S.x2, S.x0], S.x0); P.recol(inner.and(m).band(0, -1), [S.x0], S.c2); }
+    if (inner) { var im = inner.and(m); P.recol(im, [S.x1, S.x2, S.x0], S.xP); P.recol(im.band(2, -1), [S.xP], S.x0); }
   }
 
   // ---------------------------------------------------------------- bust
@@ -187,8 +187,8 @@
     P.part(gem, S.a1, S.a3); P.px(56, 89, S.W); P.px(57, 90, S.a0); P.px(57, 91, S.a2);
 
     // ---- far fin (behind the head)
-    var finF = P.spoly([74, 29, 83, 31, 90, 37, 95, 46, 97, 56, 96, 64, 93, 62, 90, 54, 86, 47, 79, 42, 74, 40]);
-    paintFin(P, finF, P.spoly([78, 41, 86, 46, 90, 54, 93, 63, 97, 62, 94, 50, 88, 40]));
+    var finF = P.spoly([74, 28, 83, 32, 90, 39, 95, 48, 97, 57, 94, 60, 89, 54, 82, 48, 74, 44]);
+    paintFin(P, finF, P.spoly([74, 44, 82, 48, 89, 54, 94, 60, 96, 55, 90, 47, 82, 40, 74, 36]));
 
     // ---- head
     var skull = P.ell(53, 38, 25, 26).or(P.ell(47, 43, 21, 23));
@@ -196,7 +196,7 @@
     var face = P.spoly([35, 29, 32, 39, 33, 49, 36, 57, 41, 63, 47, 68, 54, 72, 59, 74, 63, 73.5, 68, 69.5, 72, 63, 75.5, 57, 77.5, 50, 77, 44, 77.5, 37, 76, 30, 64, 26, 46, 26]);
     P.part(face, S.s1, S.sl);
     P.recol(neck.and(face.shift(-1, 5)).sub(face), [S.s1], S.s2);
-    P.recol(face.band(4, 0).and(P.rect(0, 32, 44, 40)), [S.s1], S.s2);
+    P.recol(face.band(2, 0).and(P.rect(0, 32, 44, 40)), [S.s1], S.s2);
 
     // ---- face features
     P.map(40, 43, lose ? EYES.nearSpin : win ? EYES.nearWink : EYES.near, EL);
@@ -225,14 +225,16 @@
     for (var gx = 0; gx < 112; gx += 6) ring = ring.sub(P.rect(gx, 0, 2, 40));
     P.recol(ring, [S.h1], S.h0);
     // wavy front locks (in front of the shoulders), light-blue ends
-    H.hairClump(P, [[37, 28, 31, 42, 32, 56, 28, 68, 29 + sw, 82, 25 + sw, 96, 26 + sw * 2, 110, 22 + sw * 2, 126], 11, 3, 12, 0.3, [0.1, 0.5]], S.h1);
+    H.hairClump(P, [[32, 40, 23, 54, 23, 68, 18 + sw, 82, 19 + sw, 96, 14 + sw * 2, 112], 11, 3, 12, 0.3, [0.1, 0.5]], S.h1);
+    H.hairClump(P, [[81, 40, 89, 54, 89, 68, 94 + sw, 82, 93 + sw, 96, 98 + sw * 2, 110], 9, 3, 10, 0.3], S.h1);
+    H.hairClump(P, [[37, 28, 31, 42, 32, 56, 28, 68, 29 + sw, 82, 25 + sw, 96, 26 + sw * 2, 110, 22 + sw * 2, 126], 13, 3, 13, 0.3, [0.1, 0.5]], S.h1);
     H.hairClump(P, [[39, 32, 37, 46, 39, 58, 36, 68], 5, 0, 6, 0.3], S.h1);
     H.hairClump(P, [[75, 28, 80, 42, 79, 56, 83, 68, 82 + sw, 82, 86 + sw, 96, 85 + sw * 2, 110, 89 + sw * 2, 124], 10, 3, 11, 0.3, [0.1, 0.5]], S.h1);
 
     // ---- near fin (lop-ear, drooping outward), pale inner face
-    var finN = P.spoly([35, 29, 26, 31, 19, 37, 15, 46, 13, 56, 14, 66, 18, 65, 21, 57, 26, 50, 34, 45]);
-    paintFin(P, finN, P.spoly([34, 45, 26, 50, 21, 57, 18, 65, 15, 66, 18, 54, 24, 46, 32, 41]));
-    P.line([31, 35, 23, 40, 18, 50, 16, 60], S.x2, true, true);
+    var finN = P.spoly([36, 28, 27, 33, 20, 41, 15, 50, 13, 58, 16, 62, 22, 57, 29, 52, 36, 48]);
+    paintFin(P, finN, P.spoly([36, 48, 29, 52, 22, 57, 16, 62, 15, 57, 21, 49, 29, 43, 36, 40]));
+    P.line([33, 34, 25, 41, 19, 50], S.x2, true, true);
 
     // ---- maid headdress: white frilled band across the crown, cyan bow at the far side
     var band = P.sr([31, 31, 36, 21, 46, 15, 58, 14, 70, 17, 78, 25, 80, 29], 4, 3.5, 5);
