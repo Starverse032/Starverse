@@ -77,23 +77,25 @@ for (const t of MUSIC) {
 console.log('API');
 const api = await ev(async () => {
   const A = LC.audio, mx = A._st.mx, r = {};
+  const liveN = () => mx.tracks.filter(t => !t.stopping && !t.done).length;
   const sleep = ms => new Promise(res => setTimeout(res, ms));
   A.setVolume('sfx', 0.3); r.vol = A.getVolume('sfx'); A.setVolume('sfx', 2); r.clamp = A.getVolume('sfx'); A.setVolume('sfx', 0.9);
-  A.music('stage.abyss', { fade: 0 }); A.music('stage.abyss'); r.same = mx.tracks.length;
+  A.music('stage.abyss', { fade: 0 }); A.music('stage.abyss'); r.same = liveN();
   A.music('stage.abyss', { restart: true, fade: 0.1 }); r.restart = A.currentTrack();
   for (let i = 0; i < 30; i++) A.music(['title', 'select', 'stage.latent'][i % 3], { fade: 0.4 });
-  await sleep(100); r.rapid = mx.tracks.length;
+  await sleep(100); r.rapid = mx.tracks.length; r.rapidLive = liveN();
   await sleep(900); r.settled = mx.tracks.length;
   A.duck(0.6, 0.5); A.setPaused(true); await sleep(200); A.setPaused(false);
-  A.music(null, { fade: 0.2 }); await sleep(600); r.stopped = mx.tracks.length; r.cur = A.currentTrack();
+  A.music('title', { fade: 2 }); await sleep(1200); r.fading = A._st.mx.tracks.filter(t => t.stopping).length; A.music(null, { fade: 0.2 }); r.stopLive = liveN(); await sleep(700); r.stopped = mx.tracks.length; r.cur = A.currentTrack();
   A.music('stage.library', { fade: 0 }); await sleep(300);
   return r;
 });
 check(api.vol === 0.3 && api.clamp === 1, 'setVolume/getVolume + clamp');
 check(api.same === 1, 'same track again is a no-op (' + api.same + ' instance)');
 check(api.restart === 'stage.abyss', 'restart: true');
-check(api.rapid <= 4 && api.settled === 1, 'rapid switching does not stack (' + api.rapid + ' during fades, ' + api.settled + ' after)');
-check(api.stopped === 0 && api.cur === null, 'music(null) stops');
+check(api.rapid <= 3 && api.rapidLive === 1 && api.settled === 1, 'rapid switching does not stack (' + api.rapid + ' instances during fades, ' + api.settled + ' after)');
+check(api.fading === 1, 'long fade keeps the old track scheduled through the fade');
+check(api.stopLive === 0 && api.stopped === 0 && api.cur === null, 'music(null) stops and frees the instances');
 
 console.log('hidden tab');
 const hid = await ev(async () => {
@@ -105,10 +107,10 @@ const hid = await ev(async () => {
   Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
   document.dispatchEvent(new Event('visibilitychange'));
   await sleep(1500);
-  return { s1, s2: ctx.state, p0, p1: A.position(), n: A._st.mx.tracks.length };
+  return { s1, s2: ctx.state, p0, p1: A.position(), n: A._st.mx.tracks.filter(t => !t.stopping).length };
 });
 check(hid.s1 === 'suspended' && hid.s2 === 'running', 'suspends while hidden, resumes after (' + hid.s1 + ' -> ' + hid.s2 + ')');
-check(hid.p1 && hid.n === 1, 'scheduler continues after hidden (pos ' + JSON.stringify(hid.p0) + ' -> ' + JSON.stringify(hid.p1) + ')');
+check(hid.p1 && hid.p1.seconds > hid.p0.seconds + 1 && hid.n === 1, 'scheduler continues after hidden (pos ' + JSON.stringify(hid.p0) + ' -> ' + JSON.stringify(hid.p1) + ')');
 
 console.log('unknown names warn once, do not throw');
 const nlog = logs.length;
