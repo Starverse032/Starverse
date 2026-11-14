@@ -60,6 +60,7 @@ cast f4. [E] koFlash → bubbles → HUD → training panels → cut-in → bann
 `deepseek.geyser` on emerge, `claude.guardCatch` at the origin. Dive: puppet clipped at the ground line
 (`clipFloor`). Not done: KO flash/backdrop length not tuned against the slow-mo (body usually lands
 ≈ 40–60 frames after the KO).
+`dev/fight-stubs.js` stub rig updated to the V2 heights / anchors.
 Tools: `fight-shots --sheet[=2] [--cols] [--tag]` contact sheets; `v2-*` scenarios (super timelines, super KO,
 impact, KO); `fight-combos --spread`; `fight-probe` (rig anchors / fx spriteInfo dump).
 
@@ -158,7 +159,7 @@ dive mix-ups through projectiles, dive kicks, jump-ins. Wake-up: block / reversa
 / throw. `F.AI_OFF = { 'claude.spark': 1 }` disables plans (sim ablations).
 
 ## Balance (fight-sim, real modules, V2 — see V2 progress above)
-L1 ≈ 63 %, L3 ≈ 43 %, L5 ≈ 53 % Claude wins (n = 400 per row). Stubs (n=40): 3v3 47–60 %, 5v5 40 %.
+L1 ≈ 63 %, L3 ≈ 43 %, L5 ≈ 53 % Claude wins (n = 400 per row). Stubs (V2 stub rig, n = 80): 3v3 51 %, 5v5 54 %.
 Rounds average 19–28 s, no time-ups between CPUs.
 
 ## Contract deviations / additions
