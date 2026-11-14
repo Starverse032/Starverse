@@ -13,7 +13,7 @@
   var L_GROOVE = 'x.....x.x.......|x.....x.x...x...';
   var L_FILL_K = 'x.......x.......';
   K.defTrack('stage.library', {
-    bpm: 138, vol: 1, scale: 'D major +G#', loop: 'A',
+    bpm: 138, vol: 0.65, scale: 'D major +G#', loop: 'A',
     order: ['I', 'A', 'A2', 'B', 'C'],
     ch: {
       lead: { ins: 'lead', w: 's25', vol: 0.3, echo: 0.16, verb: 0.14, vib: [5.5, 14, 0.2], env: [0.005, 0.25, 0.7, 0.08], lp: 5200, melody: true },
@@ -87,7 +87,7 @@
   // ===================================================================================
   var AB_K = 'x.....x.x.....x.', AB_S = '....x.......x...', AB_H = 'x.xgx.xgx.xgx.xg';
   K.defTrack('stage.abyss', {
-    bpm: 166, vol: 1, scale: 'E minor +C# +D#', loop: 'A', echo: 60 / 166 * 0.75,
+    bpm: 166, vol: 0.65, scale: 'E minor +C# +D#', loop: 'A', echo: 60 / 166 * 0.75,
     order: ['I', 'A', 'A2', 'B', 'B2', 'C'],
     ch: {
       lead: { ins: 'lead', w: 's25', vol: 0.29, echo: 0.14, verb: 0.12, vib: [6, 16, 0.16], env: [0.004, 0.18, 0.65, 0.06], lp: 5600, melody: true },
@@ -175,7 +175,7 @@
   var LT_OST = 'R:2 8:1 R:1 R:2 R#:2^ R:2 8:1 R:1 5:2 Rb:2^';
   var LT_K = 'x.x...x.x.x...x.', LT_S = '....x.......x...', LT_H = 'xxxxxxxxxxxxxxxx';
   K.defTrack('stage.latent', {
-    bpm: 150, vol: 1, scale: 'C minor +B +Db +A', loop: 'A',
+    bpm: 150, vol: 0.65, scale: 'C minor +B +Db +A', loop: 'A',
     order: ['I', 'A', 'B', 'C', 'B'],
     ch: {
       lead: { ins: 'lead', w: 's25', uni: 8, vol: 0.27, echo: 0.14, verb: 0.15, vib: [5.8, 16, 0.18], env: [0.004, 0.22, 0.7, 0.07], lp: 5000, melody: true },
