@@ -22,7 +22,7 @@
 
   // ---------------------------------------------------------------- 5L: spine jab with the book (rear hand)
   var L0 = P(S, ATK, { hip: [-1, -53], lean: -2, hB: [-4, -70], book: -10, z: { armB: 6 }, hF: [12, -72], handF: 'fist' });
-  var L1 = P(S, ATK, { hip: [3, -52], lean: 12, bend: 3, fF: [12, 0], hB: [27, -75], book: 88, z: { armB: 6 }, hF: [8, -70], handF: 'fist', weapon: 'book', glow: 1 });
+  var L1 = P(S, ATK, { hip: [3, -52], lean: 12, bend: 3, fF: [12, 0], hB: [29, -75], book: 88, z: { armB: 6 }, hF: [8, -70], handF: 'fist', weapon: 'book', glow: 1 });
   def('5L', {
     segs: [['startup', 5], ['active', 3], ['recovery', 8]], step: 1,
     keys: [
@@ -36,7 +36,7 @@
 
   // ---------------------------------------------------------------- 5M: long sweeping side kick (skirt flares)
   var M0 = P(S, ATK, { hip: [-2, -54], lean: -8, fF: [14, -32], faF: 40, knF: -1, hF: [12, -76], hB: [-9, -54], skirt: 2 });
-  var M1 = P(S, ATK, { hip: [3, -56], lean: -20, bend: 6, fF: [54, -60], faF: -4, fB: [-6, 0], hF: [-4, -82], handF: 'open', hB: [-15, -60],
+  var M1 = P(S, ATK, { hip: [3, -56], lean: -20, bend: 6, fF: [52, -60], faF: -4, fB: [-6, 0], hF: [-4, -82], handF: 'open', hB: [-15, -60],
     skirt: 4, weapon: 'fF', glow: 1, tilt: -5 });
   def('5M', {
     segs: [['startup', 8], ['active', 4], ['recovery', 14]], step: 2,
@@ -51,7 +51,7 @@
 
   // ---------------------------------------------------------------- 5H: quill of light — drawn from the book, big diagonal slash
   var H0 = P(S, ATK, QON, { hip: [-2, -53], lean: -10, bend: -4, hF: [2, -88], pen: -150, pg: 0.15, fF: [12, 0], hB: [-8, -52], tilt: -5 });
-  var H1 = P(S, HIT, QON, { hip: [7, -50], lean: 22, bend: 4, fF: [25, 0], fB: [-14, 0], faB: 20, hF: [43, -66], pen: 12, pg: 0.15,
+  var H1 = P(S, HIT, QON, { hip: [7, -50], lean: 22, bend: 4, fF: [25, 0], fB: [-14, 0], faB: 20, hF: [45, -66], pen: 12, pg: 0.15,
     hB: [-16, -58], skirt: 3 });
   def('5H', {
     segs: [['startup', 12], ['active', 5], ['recovery', 22]], step: 2,
@@ -82,7 +82,7 @@
     ]
   });
   // 2M: long low sliding kick
-  var CM1 = P(C, ATK, { hip: [6, -18], lean: 8, bend: 4, fF: [53, -1], faF: 0, fB: [-24, 0], faB: 80, hF: [24, -46], hB: [-12, -24],
+  var CM1 = P(C, ATK, { hip: [6, -18], lean: 8, bend: 4, fF: [54, -1], faF: 0, fB: [-24, 0], faB: 80, hF: [24, -46], hB: [-12, -24],
     weapon: 'fF', glow: 1, skirt: 3 });
   def('2M', {
     segs: [['startup', 8], ['active', 4], ['recovery', 15]], step: 2,
@@ -95,7 +95,7 @@
   });
   // 2H: low quill sweep along the floor (knockdown)
   var CH0 = P(c0, QON, { hF: [6, -64], pen: -135, pg: 0.15, lean: 12, hip: [-4, -22] });
-  var CH1 = P(C, HIT, QON, { hip: [8, -18], lean: 42, bend: 6, fF: [27, 0], fB: [-20, 0], faB: 75, hF: [45, -18], pen: 12, pg: 0.15, hB: [-12, -30], skirt: 3 });
+  var CH1 = P(C, HIT, QON, { hip: [8, -18], lean: 42, bend: 6, fF: [27, 0], fB: [-20, 0], faB: 75, hF: [43, -18], pen: 12, pg: 0.15, hB: [-12, -30], skirt: 3 });
   def('2H', {
     segs: [['startup', 11], ['active', 5], ['recovery', 24]], step: 2,
     keys: [
@@ -124,7 +124,7 @@
   });
   // jM: two-handed overhead book smash
   var JM0 = P(j0, { bm: 'both', hF: [6, -98], hB: [1, -96], handF: 'grip', handB: 'grip', book: -60, z: { armB: 4.7 }, lean: -12, bend: -4, fF: [6, -12] });
-  var JM1 = P(JF, ATK, { bm: 'both', hF: [39, -64], hB: [35, -66], handF: 'grip', handB: 'grip', book: 20, z: { armB: 4.7 }, lean: 20, bend: 6,
+  var JM1 = P(JF, ATK, { bm: 'both', hF: [40, -64], hB: [36, -66], handF: 'grip', handB: 'grip', book: 20, z: { armB: 4.7 }, lean: 20, bend: 6,
     fF: [10, -6], weapon: 'book', glow: 1, mouth: 'teeth' });
   def('jM', {
     segs: [['startup', 7], ['active', 6], ['recovery', 12, true]], step: 2,

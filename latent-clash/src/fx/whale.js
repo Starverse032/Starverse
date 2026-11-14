@@ -303,6 +303,13 @@
           bx - 8, by - Hc * (0.98 - 0.04 * curl), bx + 6 * curl, by - Hc * (0.9 - 0.06 * curl), bx + 13 * curl, by - Hc * (0.74 - 0.04 * curl),
           bx + 5 * curl, by - Hc * 0.68, bx - 5, by - Hc * 0.72, bx - 11, by - Hc * 0.58, bx - 8, by - Hc * 0.36, bx - 3, by - Hc * 0.14, bx + 2, by, bx - 118, by];
         b.poly(pts, Wt[2]);
+        // height banding (dithered): deep water low, bright toward the crest
+        for (var yy = 0; yy < 124; yy++) for (var xx = 0; xx < 150; xx++) {
+          var ii = yy * 150 + xx; if (!b.d[ii]) continue;
+          var fr = (by - yy) / Hc, bz = I.bayer(xx, yy);
+          if (fr < 0.18 + bz * 0.12) b.d[ii] = Wt[3];
+          else if (fr > 0.62 + bz * 0.14 && xx < bx - 14) b.d[ii] = Wt[1];
+        }
         // shading: back slope light streaks, darker face, hollow of the curl
         b.poly([bx - 22, by - Hc, bx - 8, by - Hc * 0.97, bx - 11, by - Hc * 0.58, bx - 8, by - Hc * 0.36, bx - 3, by - Hc * 0.14, bx + 2, by, bx - 16, by, bx - 26, by - Hc * 0.5], Wt[3]);
         if (curl > 0.2) b.poly([bx + 5 * curl, by - Hc * 0.68, bx - 5, by - Hc * 0.72, bx - 10, by - Hc * 0.6, bx - 2, by - Hc * 0.6], Wt[4]);
@@ -314,18 +321,24 @@
           var fy = by - Hc * (0.3 + fl * 0.18);
           b.line(bx - 9 - fl, fy, bx - 4 + fl, fy + Hc * 0.1, F[1]);
         }
+        for (var fs = 0; fs < 4; fs++) {   // foam streaks trailing down the back
+          var fx0 = bx - 30 - fs * 18 - ((f * 2) % 10), fy0 = by - Hc * (0.86 - fs * 0.17);
+          for (var q = 0; q < 14; q++) b.set(fx0 - q * 2, fy0 + q * (Hc * 0.022) + (q & 1), F[q < 5 ? 0 : 1]);
+        }
         b.outline(Wt[5]);
+        b.erase(function (x, y) { return x < bx - 112; });
         // foam cap along the crest + lip
         for (var x = bx - 40; x < bx + 14 * curl; x++) {
           var u = (x - (bx - 40)) / (40 + 14 * curl), yt = by - Hc * (0.86 + 0.14 * Math.sin(Math.min(1, u * 1.3) * PI * 0.9)) - (u > 0.75 ? -(u - 0.75) * Hc * 0.6 : 0);
           b.rect(x, Math.round(yt) - 1, 1, 2 + ((x + f) % 3 === 0 ? 1 : 0), (x + f) % 4 ? F[0] : F[1]);
         }
         // spray wall above the crest
-        var nsp = col ? 8 : 26;
+        var nsp = col ? 10 : 70, mist = new I.Buf(150, 124);
+        if (!col) { mist.ellipse(bx - 18, by - Hc - 6, 30, 14, Wt[1]); mist.breakup(function (x, y) { return 0.32 - Math.max(0, (by - Hc - 6 - y)) * 0.02; }, f, 0); mist.erase(function (x, y) { return b.get(x, y) !== 0; }); b.blit(mist, 0, 0); }
         for (var k = 0; k < nsp; k++) {
-          var px = bx - 46 + rng() * 64, rise = rng() * (col ? 14 : 34), py = by - Hc - 2 - rise;
-          var c = rise > 24 ? Wt[1] : F[rng() < 0.5 ? 0 : 1];
-          if (I.bayer(Math.round(px), Math.round(py)) < 0.9) b.rect(px, py, rng() < 0.3 ? 2 : 1, rng() < 0.5 ? 2 : 1, c);
+          var rr = rng(), px = bx - 50 + rng() * 64, rise = rr * rr * (col ? 14 : 44), py = by - Hc - rise + rng() * 6;
+          var c = rise > 26 ? Wt[1] : F[rng() < 0.6 ? 0 : 1];
+          b.rect(px, py, rise < 14 && rng() < 0.4 ? 2 : 1, rng() < 0.5 ? 3 : 2, c);
         }
         // foam at the toe
         b.rect(bx - 24, by - 2, 30, 2, F[1]); for (var tq = 0; tq < 8; tq++) b.set(bx - 20 + tq * 3 + (f % 3), by - 3, F[0]);
