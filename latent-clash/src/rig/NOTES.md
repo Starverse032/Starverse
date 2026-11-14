@@ -18,6 +18,9 @@
   DeepSeek land bounce). Tool: `node tools/rig-sheet.mjs --multi <char> anim:f,f anim2:f --name x`.
 - Pass 3 step 2 DONE: 2L 2M 2H jL jM jH both chars frame-checked (lows hit low, Claude 2H = chop ending flat on the
   floor, DS 2H floor sweep, jump attacks down-forward, held impacts, smears only in front).
+- Pass 3 step 3 DONE: sonnet/airSpark/guardrail(+Hit) Claude; wave (knee-raise → stomp, muzzle at toe), breach, diveIn/Out,
+  diveKick DeepSeek. Reach re-tuned to the engine's design list (DS 2M 40, 2H 46, jH 30; Claude 2L 31, jM 33); sonnet/breach
+  weapon = nib / kicking toe throughout rise.
 - NOW pass 3 (lead's order): 1) crouch*/jump*/land/dash* both → 2) 2L 2M 2H jL jM jH both → 3) remaining specials
   → 4) hitLow hitCrouch thrown throw win lose + Claude super smear + intro bow pen.
 - REMAINING ROUGH (authored, overview-checked only): dashF/dashB, crouchIn/crouch/crouchOut, jumpSquat/jumpRise/

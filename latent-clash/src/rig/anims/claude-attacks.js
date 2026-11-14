@@ -212,7 +212,8 @@
     keys: [
       ['startup', P(S, ATK)], ['startup+5', SU0, 'out'],
       ['cast', SU0], ['cast+4', P(SU0, { hF: [8, -54], eyes: 'focus' })],
-      ['cast+7', P(SU1, { hF: [7, -26], pen: 76, smear: { part: 'pen', from: 'cast+4', n: 4 } }), 'snap'],
+      ['cast+6', P(SU1, { hF: [8, -30], pen: 40 }), 'snap'],
+      ['cast+7', P(SU1, { hF: [7, -26], pen: 76, smear: { part: 'pen', from: 'cast+6', n: 2 } }), 'snap'],
       ['active', SU1, 'snap'], ['active+20', bob(SU1, 0, 1, { hB: [17, -41] })], ['active+38', SU1],
       ['recovery', P(SU1, { glow: 0, mouth: 'neutral' }), 'snap'], ['recovery+8', P(SU1, { glow: 0, mouth: 'neutral', hB: [10, -36] }), 'out'],
       ['recovery+22', P(S, ATK)], ['recovery+29', S]

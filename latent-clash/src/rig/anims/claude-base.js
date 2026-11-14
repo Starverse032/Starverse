@@ -198,9 +198,9 @@
     keys: [
       [0, UP],
       [16, P(UP, { eyes: 'open' })],
-      [26, P(UP, { lean: 30, bend: 6, tilt: 15, hB: [2, -28], hF: [10, -36], pen: -60, eyes: 'closed' }), 'inout'],
-      [44, P(UP, { lean: 28, bend: 6, tilt: 15, hB: [2, -28], hF: [10, -36], pen: -60, eyes: 'closed' })],
-      [54, P(UP, { eyes: 'open', mouth: 'smile' }), 'out'],
+      [26, P(UP, { lean: 30, bend: 6, tilt: 15, hB: [4, -38], handB: 'flat', hF: [7, -26], pen: 84, eyes: 'closed' }), 'inout'],
+      [44, P(UP, { lean: 28, bend: 6, tilt: 15, hB: [4, -38], handB: 'flat', hF: [7, -26], pen: 84, eyes: 'closed' })],
+      [54, P(UP, { eyes: 'open', mouth: 'smile', hF: [6, -30], pen: 80 }), 'out'],
       [62, P(S, { hip: [0, -29], hF: [12, -34], pen: -60, eyes: 'open', mouth: 'smile' }), { ease: 'linear', step: 2 }],
       [72, P(S, { hip: [0, -29], hF: [12, -32], pen: 120, eyes: 'focus' }), { ease: 'linear', step: 2 }],
       [80, P(S, { hip: [0, -29], hF: [11, -28], pen: 300, eyes: 'focus' }), 'out'],
@@ -208,17 +208,23 @@
       [99, P(S, { pen: 392 })]
     ]
   });
-  var WN = P(S, { hip: [0, -31], lean: -2, fF: [5, 0], fB: [-5, 0], hF: [4, -40], pen: -80, pg: 0.35, hB: [-2, -44], handB: 'open',
+  // win: twirl, cap the pen (back hand slides the cap onto the nib), hold it to her chest, smile
+  var WN = P(S, { hip: [0, -31], lean: -2, fF: [5, 0], fB: [-5, 0], hF: [4, -40], pen: -82, pg: 0.4, hB: [-1, -44], handB: 'flat',
     eyes: 'happy', mouth: 'smile', blush: 1, tilt: 10, z: { armB: 6 } });
+  var CAP = P(S, { hip: [0, -31], lean: 0, fF: [5, 0], fB: [-5, 0], hF: [2, -38], pen: 0, pg: 0.75, hB: [8, -38], handB: 'open',
+    eyes: 'closed', mouth: 'smile', z: { armB: 6 } });
   def('win', {
-    segs: [['in', 30], ['loop', 60, true]], step: 3,
+    segs: [['in', 30], ['loop', 60, true]], step: 2,
     keys: [
       ['in', P(S, { eyes: 'closed' })],
-      ['in+8', P(S, { hF: [12, -32], pen: 180, eyes: 'closed', mouth: 'smile' }), 'linear'],
-      ['in+16', P(WN, { hF: [8, -36], pen: 300 }), 'out'],
-      ['in+24', P(WN, { pen: 280 })],
-      ['loop', P(WN, { pen: 280 })],
-      ['loop+30', P(WN, { pen: 280, hip: [0, -30], tilt: 5, hB: [-2, -43] })]
+      ['in+6', P(S, { hF: [12, -32], pen: 180, eyes: 'closed', mouth: 'smile' }), 'linear'],
+      ['in+12', P(CAP, { pen: 360 }), 'out'],
+      ['in+16', P(CAP, { pen: 360, hB: [10, -38] }), 'snap'],
+      ['in+18', P(CAP, { pen: 360, hB: [13, -38], handB: 'grip', eyes: 'happy' }), 'snap'],
+      ['in+22', P(CAP, { pen: 360, hB: [13, -38], handB: 'grip', eyes: 'happy' }), 'out'],
+      ['in+28', P(WN, { pen: 278 })],
+      ['loop', P(WN, { pen: 278 })],
+      ['loop+30', P(WN, { pen: 278, hip: [0, -30], tilt: 5, hB: [-1, -43] })]
     ]
   });
   var LS = P(S, { hip: [0, -30], lean: 6, bend: 4, tilt: 25, head: [1, 1], fF: [5, 0], fB: [-5, 0], hF: [7, -27], pen: 80, pg: 0.2, hB: [-4, -28],
