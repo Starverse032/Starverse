@@ -18,7 +18,18 @@
 - Per-character proportions were already per character (`C.body`, `C.height/crouchHeight/width`); nothing in the
   shared code assumes the old 70-px size any more.
 
-## Progress / next steps (kept current for restarts)
+## V2 progress / next steps (Claude) — kept current for restarts
+- V2 body DONE (`chars/claude.js`, `chars/claude-art.js`): 104 px, Victorian layered dress per the reference
+  (capelet, jabot + cravat, corset belt, cream skirt with black gold-bordered side panel + orange-lined drape,
+  orange front sash (chain) with tassel, hip bow with flower, frilled hem, cream heeled boots, black tights),
+  knee-length straight hair (9-link chain kept behind the back), sunburst flower on a black bow + tassel,
+  leather book 「宪章」 (`bm` holding mode), quill of light (`quill: true`), V2 hands table, shaped smears.
+- ALL §3.3 anims are V2-authored (first pass; no V1 data left): `anims/claude-base.js`, `anims/claude-attacks.js`.
+- Reviewed in sheets: idle, walkF, crouch set, jump set, guards, hits, dashes (rough), normals (reach tuned).
+- NEXT: review/polish specials + super (spark float book, sonnet, haiku, guardrail(+Hit)); throws; intro/win/lose;
+  polish down / launch / getup (lying skirt + hair), walkB check, perf numbers, final reach table.
+
+## Progress / next steps (V1, historical)
 
 - DONE: full §5.3 API; both characters render (v1 look); EVERY §3.3 anim is authored for both (no aliases in use;
   `fillPlaceholders()` still guarantees names and logs an error if authored segments differ from the table in
