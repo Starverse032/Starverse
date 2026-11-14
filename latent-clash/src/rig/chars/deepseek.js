@@ -35,14 +35,14 @@
   var C = {
     id: 'deepseek', height: 98, crouchHeight: 66, width: 28,
     body: {
-      spine: 29, waist: 11, neck: 8, upper: 15, fore: 13, thigh: 23, shin: 22, ankle: 3,
+      spine: 30, waist: 11, neck: 7, upper: 15, fore: 13, thigh: 23, shin: 22, ankle: 3,
       shF: [2, 2], shB: [-4, 2], hipF: [3, 1], hipB: [-3, 1]
     },
     // lazy, loose stance: weight on the back leg, lead palm low and open, rear hand at the belly
     rest: {
-      root: [0, 0], hip: [-1, -46], lean: 4, bend: -2, head: [0, 0], tilt: 3,
-      hF: [15, -60], hB: [6, -56], fF: [11, 0], fB: [-10, 0], faF: 0, faB: 0,
-      pen: 0, sq: 0, shr: 0, haF: 0, haB: 0, pg: 0, skirt: 0, tail: 0, arch: 16,
+      root: [0, 0], hip: [-1, -46], lean: 4, bend: -2, head: [0, 0], tilt: 0,
+      hF: [18, -57], hB: [6, -55], fF: [11, 0], fB: [-10, 0], faF: 0, faB: 0,
+      pen: 0, sq: 0, shr: 0, haF: 0, haB: 0, pg: 0, skirt: 0, tail: 0, arch: 20,
       eyes: 'open', mouth: 'smile', handF: 'open', handB: 'relax',
       elF: 1, elB: 1, knF: -1, knB: -1, glow: 0, blush: 0, z: {}
     },
@@ -149,10 +149,10 @@
   };
 
   // ------------------------------------------------------------------ anchors
-  var PV = [14, 17];
+  var PV = [16, 18];
   function headPt(d, x, y) { return R0(fr(d.neck, d.headAng, x - PV[0], y - PV[1])); }
-  C.headCenter = function (sk) { return mir(sk, headPt(sk.d, 16, 11)); };
-  C.headTop = function (sk) { return mir(sk, headPt(sk.d, 13, 3)); };
+  C.headCenter = function (sk) { return mir(sk, headPt(sk.d, 18, 13)); };
+  C.headTop = function (sk) { return mir(sk, headPt(sk.d, 15, 3)); };
   C.footPoint = function (sk, s) {
     var d = sk.d, f = s === 'F' ? d.ftF : d.ftB, a = s === 'F' ? d.faF : d.faB;
     return mir(sk, R0(fr(f, a, 3, -1)));
@@ -228,7 +228,7 @@
       tl._lock = true;
     } else tl._lock = false;
     // hair
-    var hA = headPt(d, 5, 9), hB = headPt(d, 9, 9), lk = headPt(d, 10, 13), ah = headPt(d, 13, 3);
+    var hA = headPt(d, 7, 9), hB = headPt(d, 10, 10), lk = headPt(d, 9, 17), ah = headPt(d, 14, 3);
     sec.attach('hairA', hA[0], hA[1], a * 0.5);
     sec.attach('hairB', hB[0], hB[1], a * 0.5);
     sec.attach('lockN', lk[0], lk[1], a * 0.4);
@@ -238,10 +238,10 @@
     sec.attach('bowA', bw[0], bw[1], 0);
     sec.attach('bowB', bw[0] - 1, bw[1], 0);
     // skirt: rest angles from the flare; legs push the contours (limits)
-    var fl = d.skirt || 0, F0 = fr(d.pel, L, 9, -1.5), B0 = fr(d.pel, L, -10, -1.5);
+    var fl = d.skirt || 0, F0 = fr(d.pel, L, 9.5, -2), B0 = fr(d.pel, L, -10.5, -2);
     var hf = own(by.hemF), hb = own(by.hemB);
-    hf.def.rest[0] = 78 - fl * 40; hf.def.rest[1] = 85 - fl * 32;
-    hb.def.rest[0] = 104 + fl * 40; hb.def.rest[1] = 97 + fl * 32;
+    hf.def.rest[0] = 71 - fl * 40; hf.def.rest[1] = 80 - fl * 32;
+    hb.def.rest[0] = 112 + fl * 40; hb.def.rest[1] = 101 + fl * 32;
     sec.attach('hemF', F0[0], F0[1], 0);
     sec.attach('hemB', B0[0], B0[1], 0);
   };
@@ -527,9 +527,9 @@
     var steps = [
       [z.tail != null ? z.tail : -10, function () { drawTail(p, d, sec, ds); p.end(); }],
       [z.hair != null ? z.hair : -9, function () {
-        drawHairLock(p, sec.hairA, [6.5, 2.5, 2], 1, 0.3, [M.hair, MG, M.tip], [0.35, 0.7]);
+        drawHairLock(p, sec.hairA, [8, 4, 3.5], 1.2, 0.3, [M.hair, MG, M.tip], [0.3, 0.55, 0.8]);
         p.end();
-        drawHairLock(p, sec.hairB, [5, 2, 1.5], 0.8, 1.9, [MG, M.tip, M.tip], [0.5]);
+        drawHairLock(p, sec.hairB, [6, 2.5, 2], 1, 1.9, [M.hair, MG, M.tip], [0.4, 0.75]);
         p.end();
       }],
       [-8, function () {

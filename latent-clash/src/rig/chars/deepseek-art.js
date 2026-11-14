@@ -25,28 +25,29 @@
     '-': 255
   };
 
-  // pivot (neck top, under the jaw) = column 14, row 17. Crown row 3, chin row 18.
+  // pivot (neck top, under the jaw) = column 16, row 18. Crown row 3, chin row 19.
   var HEAD = [
-    //0123456789012345678901234
-    '........W.W.W.W.W........',  // 0
-    '.......WcWcWcWcWcW.......',  // 1
-    '......cCcCcCcCcCcCs.ag...',  // 2
-    '.....cChhhhhhhhhhhsaAag..',  // 3
-    '....cChhhhHHHHHhhhhsag...',  // 4
-    '...cCshhHHHhhhhHHhhhs....',  // 5
-    '...Cshhhhhhhhhhhhhhhhs...',  // 6
-    '..sshhhhhhhhhhhhhhhhhhs..',  // 7
-    '..shhhhhhhhhshhhhhshhhhs.',  // 8
-    '.sshhhhhhhhsmhhhhsmhhhhs.',  // 9
-    '.shhhhhhhhsdkhhdkhhdkhhds',  // 10
-    'zfsshhhhhssqkkkkkkkkkkhhs',  // 11
-    'zPfshhhhhsmqkkkkkkkkkkkhs',  // 12
-    '.zPfshhhhsmqkkkkkkkkkkkhs',  // 13
-    '.zfPfshhhsmqkkkkkkkkkkhms',  // 14
-    '..zfPfshsmsqkkkkkkkkkkhs.',  // 15
-    '..zzfPfsms.qqkkkkkkkkhs..',  // 16
-    '...zzfPf.t..qqkkkkkkq.s..',  // 17
-    '.....zzf.....qqqqqq......'   // 18
+    //0123456789012345678901234567
+    '..........W.W.W.W.W.........',  // 0
+    '........WcWcWcWcWcWcW.......',  // 1
+    '.......cCcCvCcCvCcCvCc.aAa..',  // 2
+    '......cCshhhhhhhhhhhhhsaAAAa',  // 3
+    '.....cCshhhhhHHHHhhhhhhsgaAg',  // 4
+    '....cCshhhhHHHHhhhhHHhhhhs.g',  // 5
+    '....Cshhhhhhhhhhhhhhhhhhhs..',  // 6
+    '...sshhhhhhhhhhhhhhhhhhhhhs.',  // 7
+    '...shhhhhhhhhhhhshhhhhshhhhs',  // 8
+    '..szfhhhhhhhhhhsmhhhhsmhhhhs',  // 9
+    '..zffPhhhhhsdkkhhdkkhhdhhhs.',  // 10
+    '.zfPPfhhhhhsqkkkkkkkkkkkhhs.',  // 11
+    'zfPPPfhhhhsqkkkkkkkkkkkkhhs.',  // 12
+    'zfPPfshhhsmqkkkkkkkkkkkkhhs.',  // 13
+    '.zfPPfshsmmqkkkkkkkkkkkkhs..',  // 14
+    '.zfPf.shmmsqkkkkkkkkkkkkhs..',  // 15
+    '.zfPf..smmsqqkkkkkkkkkks....',  // 16
+    'zfPf....smt.qqkkkkkkkkq.....',  // 17
+    'zff......mt...qqkkkkkq......',  // 18
+    '.zz.............qqqq........'   // 19
   ];
 
   // eye overlay: near eye cols 0-3, far eye cols 7-9 (placed at eyeAt)
@@ -141,13 +142,13 @@
   I.ART.deepseek = {
     legend: LEGEND,
     hands: HANDS,
-    pivot: [14, 17],
+    pivot: [16, 18],
     build: function () {
       var set = {
-        base: I.parseArt(HEAD, LEGEND, 14, 17),
+        base: I.parseArt(HEAD, LEGEND, 16, 18),
         eyes: {}, mouth: {}, cache: {},
-        eyeAt: [12, 11], mouthAt: [17, 15],
-        extras: { blush: { img: I.parseArt(['bb......b'], LEGEND), at: [12, 14] } }
+        eyeAt: [13, 11], mouthAt: [18, 16],
+        extras: { blush: { img: I.parseArt(['bb......b'], LEGEND), at: [13, 15] } }
       };
       Object.keys(EYES).forEach(function (k) { var e = set.eyes[k] = I.parseArt(EYES[k], LEGEND); if (EYE_DY[k]) e.dy = EYE_DY[k]; });
       Object.keys(MOUTHS).forEach(function (k) { set.mouth[k] = I.parseArt(MOUTHS[k], LEGEND); });
