@@ -108,13 +108,13 @@
     segs: [['reel', 18]], step: 2,
     keys: [[0, HH, 'snap'], [3, P(HH, { tilt: -15, lean: -13 }), 'out'], [9, P(S, { lean: -6, tilt: -5, hip: [-2, -29], eyes: 'shut', mouth: 'hurt' })], [16, P(S, { eyes: 'focus' })]]
   });
-  var HL = P(S, { hip: [-3, -27], lean: 28, bend: 8, head: [1, 2], tilt: 15, hF: [8, -30], pen: 80, hB: [2, -34],
+  var HL = P(S, { hip: [-3, -27], lean: 28, bend: 8, head: [1, 2], tilt: 15, hF: [8, -30], pen: 48, hB: [2, -34],
     handB: 'fist', eyes: 'shut', mouth: 'open', fF: [7, 0], fB: [-10, 0] });
   def('hitLow', {
     segs: [['reel', 18]], step: 2,
     keys: [[0, HL, 'snap'], [3, P(HL, { lean: 24 }), 'out'], [9, P(S, { lean: 12, hip: [-2, -28], eyes: 'shut', mouth: 'hurt' })], [16, P(S, { eyes: 'focus' })]]
   });
-  var HC = P(C, { hip: [-3, -15], lean: -4, tilt: -15, hF: [8, -20], pen: 70, hB: [-10, -26], handB: 'open', eyes: 'shut', mouth: 'hurt' });
+  var HC = P(C, { hip: [-3, -15], lean: -4, tilt: -15, hF: [8, -20], pen: 30, hB: [-10, -26], handB: 'open', eyes: 'shut', mouth: 'hurt' });
   def('hitCrouch', {
     segs: [['reel', 18]], step: 2,
     keys: [[0, HC, 'snap'], [3, P(HC, { lean: 0 }), 'out'], [10, P(C, { eyes: 'shut', mouth: 'hurt' })], [16, P(C, { eyes: 'focus' })]]
@@ -227,7 +227,7 @@
       ['loop+30', P(WN, { pen: 278, hip: [0, -30], tilt: 5, hB: [-1, -43] })]
     ]
   });
-  var LS = P(S, { hip: [0, -30], lean: 6, bend: 4, tilt: 25, head: [1, 1], fF: [5, 0], fB: [-5, 0], hF: [7, -27], pen: 80, pg: 0.2, hB: [-4, -28],
+  var LS = P(S, { hip: [0, -30], lean: 6, bend: 4, tilt: 25, head: [1, 1], fF: [5, 0], fB: [-5, 0], hF: [7, -27], pen: 62, pg: 0.2, hB: [-4, -28],
     shr: -1, eyes: 'sad', mouth: 'frown' });
   def('lose', {
     segs: [['in', 30], ['loop', 60, true]], step: 3,
