@@ -146,6 +146,17 @@
   }
   I.sparkle = sparkle;
 
+  // head geometry shared by bust and cut-in (bust pixel coordinates)
+  var FR = [
+    [[46, 11, 60, 14, 71, 22, 77, 33, 79, 45], 14, 0, 13],
+    [[46, 12, 57, 19, 64, 28, 67, 36, 68, 41], 13, 0, 12],
+    [[45, 13, 51, 23, 56, 34, 58, 44, 57, 53], 10, 0, 9],
+    [[45, 13, 47, 23, 50, 32, 51, 40], 8, 0, 8],
+    [[44, 12, 38, 18, 35, 27, 34, 38], 11, 0, 10],
+    [[44, 13, 41, 23, 41, 32, 42, 39], 7, 0, 7]
+  ];
+  var FACEPTS = [36, 27, 33, 37, 33, 47, 35, 55, 40, 62, 46, 67, 52, 72, 57, 75, 61, 75.5, 64.5, 73.5, 69, 68, 73, 62, 76, 55, 77.5, 49, 77, 43, 77.5, 36, 76, 29, 64, 25, 46, 25];
+
   // a hair clump: tapered ribbon with lit/shaded edges, optional mid highlight streak and tip colour
   // c = [points, w0, w1, wm, tipFrac, shine]
   function hairClump(P, c, base) {
@@ -249,7 +260,7 @@
     // ---- head
     var skull = P.ell(53, 36, 25, 26).or(P.ell(47, 42, 21, 23));
     P.part(skull, S.h1, S.hl);
-    var face = P.spoly([36, 27, 33, 37, 33, 47, 35, 55, 40, 62, 46, 67, 52, 72, 57, 75, 61, 75.5, 64.5, 73.5, 69, 68, 73, 62, 76, 55, 77.5, 49, 77, 43, 77.5, 36, 76, 29, 64, 25, 46, 25]);
+    var face = P.spoly(FACEPTS);
     P.part(face, S.s1, S.sl);
     P.recol(neck.and(face.shift(-1, 5)).sub(face), [S.s1], S.s2);
     P.recol(face.band(2, 0).and(P.rect(0, 30, 44, 40)), [S.s1], S.s2);
@@ -267,14 +278,6 @@
     });
 
     // ---- fringe: parted (part at x≈45), long strands; cast shadow first
-    var FR = [
-      [[46, 11, 60, 14, 71, 22, 77, 33, 79, 45], 14, 0, 13],
-      [[46, 12, 57, 19, 64, 28, 67, 36, 68, 41], 13, 0, 12],
-      [[45, 13, 51, 23, 56, 34, 58, 44, 57, 53], 10, 0, 9],
-      [[45, 13, 47, 23, 50, 32, 51, 40], 8, 0, 8],
-      [[44, 12, 38, 18, 35, 27, 34, 38], 11, 0, 10],
-      [[44, 13, 41, 23, 41, 32, 42, 39], 7, 0, 7]
-    ];
     var fringe = P.mask();
     FR.forEach(function (c) { fringe = fringe.or(P.sr(c[0], c[1], c[2], c[3])); });
     P.recol(fringe.shift(-1, 2).or(fringe.shift(0, 2)), [S.s1], S.s2);
