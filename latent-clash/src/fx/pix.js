@@ -322,8 +322,10 @@
     var id = g.createImageData(buf.w, buf.h);
     id.data.set(new Uint8ClampedArray(buf.d.buffer, buf.d.byteOffset, buf.d.byteLength));
     g.putImageData(id, 0, 0);
+    I.canvases.push(c);
     return c;
   }
+  I.canvases = [];          // every baked canvas (pre-warmed at the end of init)
   I.toCanvas = toCanvas;
   I.Buf = Buf;
 

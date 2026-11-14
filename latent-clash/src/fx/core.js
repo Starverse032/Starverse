@@ -144,6 +144,15 @@
       try { bakers[i].fn(); } catch (err) { console.error('[fx] bake failed: ' + bakers[i].label, err); }
       I.bakeTimes.push([bakers[i].label, +(performance.now() - b0).toFixed(1)]);
     }
+    // pre-warm: draw every baked canvas once so the GPU upload happens now, not on first use
+    var w0 = performance.now();
+    try {
+      var sc = document.createElement('canvas'); sc.width = 4; sc.height = 4;
+      var sg = sc.getContext('2d');
+      for (var ci = 0; ci < I.canvases.length; ci++) sg.drawImage(I.canvases[ci], 0, 0);
+      sg.getImageData(0, 0, 1, 1);
+    } catch (err) { console.error('[fx] pre-warm failed', err); }
+    I.bakeTimes.push(['prewarm(' + I.canvases.length + ')', +(performance.now() - w0).toFixed(1)]);
     I.initMs = performance.now() - t0;
     FX.ready = true;
     return Promise.resolve();
