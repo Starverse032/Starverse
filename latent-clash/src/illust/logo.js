@@ -64,12 +64,11 @@
     }, { o1: 1, o2: 1, shadow: [2, 2], extrude: 3, exColor: '#7a1c22' });
     ctx.drawImage(hz, 0, 0);
 
-    // ---- accents behind: orange starburst (top left), blue whale fluke (top right)
-    var SB = [1, 0.58, 0.86, 0.5, 1, 0.62, 0.8, 0.55];
-    var star = I.starburst(P, 12, 12, 13, -0.2, SB), star2 = I.starburst(P, 12, 12, 8, -0.2, SB);
+    // ---- accents behind: orange sunburst flower (top left), blue whale fluke (top right)
+    var sf = I.sunflower(P, 12, 12, 13, 12, -0.15), star = sf.petals.or(sf.core);   // V2: Claude's sunburst flower
     var fl = I.fluke(P, 226, 15, -Math.PI / 2 + 0.3, 1.15).or(P.sr([222, 27, 224, 21, 226, 16], 5, 3));
     // 1 outline dark, 2 orange deep, 3 orange, 4 orange light, 5 white, 6 blue deep, 7 blue, 8 blue light
-    P.fill(star.grow(1).or(fl.grow(1)).grow(1), 9); P.fill(star.grow(1), 1); P.fill(star, 2); P.fill(K.inner(star), 3); P.fill(star2, 4); P.fill(I.starburst(P, 12, 12, 3.5, -0.2, SB), 5);
+    P.fill(star.grow(1).or(fl.grow(1)).grow(1), 9); P.fill(star.grow(1), 1); P.fill(star, 2); P.fill(K.inner(star), 3); P.fill(sf.petals.band(-1, 1).and(K.inner(star)), 4); P.fill(sf.core.grow(1), 1); P.fill(sf.core, 2); P.fill(P.ell(12.5, 11.5, 2.4, 2.4), 3); P.px(13, 10, 5);
     P.fill(fl.grow(1), 1); P.fill(fl, 6); P.fill(K.inner(fl), 7); P.fill(fl.band(-2, 2).and(K.inner(fl)), 8);
     ctx.drawImage(P.canvas(table(['#1a0d1e', '#c2482e', '#ff9e6b', '#ffd9a0', '#fff8e8', '#222c85', '#4d6bfe', '#a9c0ff', '#05040a'])), 0, 0);
 
