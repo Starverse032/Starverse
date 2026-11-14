@@ -55,7 +55,7 @@
 
   // ------------------------------------------------------------ chains
   C.chains = [
-    { id: 'hair', n: 9, len: 9, rest: [12, 5, 2, 1, 0, 0, 0, 0, 0], stiff: [0.34, 0.26, 0.2, 0.15, 0.12, 0.1, 0.08, 0.07, 0.06], damp: 0.88, grav: 0.24, drag: 0.1, cvel: 0.6,
+    { id: 'hair', n: 9, len: 9, rest: [12, 5, 2, 1, 0, 0, 0, 0, 0], stiff: [0.34, 0.26, 0.2, 0.15, 0.12, 0.1, 0.08, 0.07, 0.06], damp: 0.88, grav: 0.24, drag: 0.1, cvel: 0.75,
       limit: function (c, i, sk) {
         // keep the long hair hanging behind the back silhouette (it is drawn behind everything)
         if (Math.abs(sk.lean) > 40 || i < 3) return;
@@ -66,8 +66,8 @@
     { id: 'lockN', n: 4, len: [5, 6, 6, 6], rest: [-2, 2, 4, 2], stiff: 0.3, damp: 0.82, grav: 0.22, drag: 0.18, cvel: 0.5 },
     { id: 'lockF', n: 3, len: [5, 6, 5], rest: [-4, 0, 2], stiff: 0.32, damp: 0.8, grav: 0.22, drag: 0.18, cvel: 0.5 },
     { id: 'cape', n: 1, len: [5], rest: [0], stiff: 0.25, damp: 0.84, grav: 0.18, drag: 0.4 },
-    { id: 'skirtF', n: 1, len: [14], rest: [0], stiff: 0.2, damp: 0.86, grav: 0.2, drag: 0.45 },
-    { id: 'skirtB', n: 1, len: [14], rest: [0], stiff: 0.18, damp: 0.87, grav: 0.2, drag: 0.5 },
+    { id: 'skirtF', n: 1, len: [14], rest: [0], stiff: 0.2, damp: 0.86, grav: 0.2, drag: 0.45, cvel: 0.5 },
+    { id: 'skirtB', n: 1, len: [14], rest: [0], stiff: 0.18, damp: 0.87, grav: 0.2, drag: 0.5, cvel: 0.5 },
     { id: 'sash', n: 3, len: [9, 9, 9], rest: [-6, -2, 0], stiff: [0.3, 0.22, 0.18], damp: 0.84, grav: 0.24, drag: 0.3, cvel: 0.4 },
     { id: 'bowT', n: 2, len: [3, 4], rest: [0, 0], stiff: 0.3, damp: 0.8, grav: 0.22, drag: 0.3 }
   ];
@@ -293,6 +293,8 @@
     var L = sk.lean, pel = sk.pel, la = L * 0.35;
     var rootB = fr(pel, la, -8, -1.5), rootF = fr(pel, la, 7, -2.5);
     var swF = swing(sec.skirtF), swB = swing(sec.skirtB);
+    function cl5(v) { return [Math.max(-5, Math.min(5, v[0])), Math.max(-4, Math.min(4, v[1]))]; }
+    swF = cl5(swF); swB = cl5(swB);
     var fl = (sk.skirt || 0) + Math.max(0, -swF[1] - swB[1]) * 1.4;
     var aF = 80 - fl * 3 - swF[0] * 2.5, aB = 101 + fl * 3 - swB[0] * 2.5, Lf = 49, Lb = 50;
     var pts = [], k, s;
