@@ -102,12 +102,13 @@
     var N = 26, rng = I.bakeRng(ch.length * 31 + pal * 7 + 5), edges = [], acc = 0;
     for (var i = 0; i < N; i++) { var wd = 0.55 + rng() * 0.9; edges.push(wd); acc += wd; }
     var cum = [0]; for (i = 0; i < N; i++) cum.push(cum[i] + edges[i] / acc * TAU);
-    var b = new I.Buf(BW, BH), d = b.d;
+    var LUT = new Uint8Array(2048);
+    for (i = 0, k = 0; i < 2048; i++) { var aa = (i + 0.5) / 2048 * TAU; while (k < N - 1 && cum[k + 1] <= aa) k++; LUT[i] = k; }
+    var b = new I.Buf(BW, BH), d = b.d, k;
     for (var y = 0; y < BH; y++) for (var x = 0; x < BW; x++) {
       var dx = x + 0.5 - BCX, dy = (y + 0.5 - BCY) * 1.15, r = Math.sqrt(dx * dx + dy * dy);
       var a = Math.atan2(dy, dx); if (a < 0) a += TAU;
-      var k = 0; while (k < N - 1 && cum[k + 1] <= a) k++;
-      var odd = k & 1, col;
+      var odd = LUT[Math.min(2047, Math.floor(a / TAU * 2048))] & 1, col;
       if (r < 20) col = core;
       else if (r < 25) col = ring;
       else if (r < 28) col = odd ? nA : ring;
