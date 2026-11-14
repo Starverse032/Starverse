@@ -262,8 +262,9 @@
       P.part(aho, S.h1, S.hl); P.recol(aho.band(-1, 1), [S.h1], S.h0);
     }
 
-    // ---- raised hand, waving
-    drawWave(P, o);
+    // ---- raised hand: waving (thumbs-up when she wins; lowered when the server is busy)
+    if (!lose) drawWave(P, o);
+    if (win) drawRice(P, 14, 14);
 
     P.outer(S.ol);
 
@@ -285,6 +286,16 @@
     var cuff = P.spoly([88, 98, 92, 93, 98, 92, 105, 93, 108, 98, 104, 101, 98, 100, 92, 101]);
     P.part(cuff, S.c0, S.cl); P.recol(cuff.band(2, -1), [S.c0], S.c2);
     P.px(92, 100, S.cl); P.px(97, 100, S.cl); P.px(103, 100, S.cl);
+    if (o.expr === 'win') {
+      // thumbs-up: curled fist, thumb straight up
+      var fist = P.spoly([89, 93, 88, 85, 92, 80, 101, 80, 105, 84, 105, 92, 101, 96, 93, 96]);
+      var th = P.sr([95, 82, 95, 75, 96, 69], 4.4, 3.6);
+      var hd = fist.or(th);
+      P.part(hd, S.s1, S.sl); P.recol(hd.band(2, -1), [S.s1], S.s2); P.recol(hd.band(-1, 1), [S.s1], S.s0);
+      [84, 88, 92].forEach(function (y) { P.line([91, y, 96, y + 0.5, 103, y], S.s2, true); });
+      P.line([92, 82, 99, 82], S.sl);
+      return;
+    }
     var palm = P.spoly([91, 92, 90, 84, 92, 79, 100, 78, 104, 81, 105, 89, 101, 94, 95, 95]);
     var fingers = [[[93, 81, 92.5, 76, 92, 72], 3.6, 3.2], [[96.5, 80, 96.5, 74, 96.5, 70], 3.6, 3.4], [[100, 80, 100.5, 75, 101, 71], 3.6, 3.2], [[103, 82, 104.5, 78, 105.5, 75], 3.2, 2.8]];
     var hand = palm;
@@ -297,6 +308,17 @@
     [[94.5, 72, 94.5, 79], [98.5, 71, 98.5, 79], [102.5, 74, 102, 80]].forEach(function (l) { P.line(l, S.s2); });
     P.line([90, 86, 92, 89], S.s2);
     P.line([94, 88, 97, 90, 101, 88], S.s2, true);
+  }
+
+  // a little bowl of white rice (her favourite) floating beside her when she wins
+  function drawRice(P, x, y) {
+    var rice = P.spoly([x - 7, y + 1, x - 5, y - 4, x, y - 6, x + 5, y - 4, x + 7, y + 1]);
+    P.part(rice, S.c0, S.cl); P.recol(rice.band(2, -1), [S.c0], S.c2);
+    [[-3, -3], [1, -4], [3, -1], [-1, -1], [-5, 0]].forEach(function (d) { P.px(x + d[0], y + d[1], S.W); });
+    var bowl = P.poly([x - 8, y, x + 8, y, x + 6, y + 6, x + 3, y + 8, x - 3, y + 8, x - 6, y + 6]);
+    P.part(bowl, S.d1, S.dl); P.recol(bowl.band(3, -1), [S.d1], S.d2); P.recol(bowl.band(-1, 1), [S.d1], S.d0);
+    P.fill(P.rect(x - 7, y + 2, 14, 1).and(bowl), S.a1);
+    P.line([x + 2, y - 2, x + 11, y - 9], S.m1); P.line([x + 4, y - 1, x + 12, y - 7], S.m2);
   }
 
   // ---------------------------------------------------------------- face icon 24x24

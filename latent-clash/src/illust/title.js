@@ -1,4 +1,4 @@
-/* LATENT CLASH — ILLUST: super cut-ins (I.cutin) and the animated title key art (I.TITLE).
+/* LATENT CLASH — ILLUST: the animated title key art (I.TITLE).
  * Title: both busts facing off (DeepSeek mirrored) over a pre-rendered orange-vs-blue clash. */
 (function () {
   'use strict';

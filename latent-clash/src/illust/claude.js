@@ -328,6 +328,9 @@
     if (win) { sparkle(P, 88, 22, true); sparkle(P, 12, 46, false); }
     if (lose) {
       P.map(77, 30, ['.r.', 'rRr', 'rRR', '.R.'], EL);
+      // "usage limit": an empty battery gauge blinking over her shoulder
+      P.part(P.rect(88, 8, 13, 7), S.K, S.ol); P.fill(P.rect(89, 9, 11, 5), S.ew); P.fill(P.rect(101, 10, 2, 3), S.ol);
+      P.fill(P.rect(90, 10, 2, 3), S.a2);
       // stray strands
       P.line([50, 10, 47, 4, 43, 3], S.h1); P.line([51, 10, 48, 5], S.hl);
     }
