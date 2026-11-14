@@ -79,7 +79,8 @@
     if (/ko\.burst/.test(n)) return { w: 220, h: 180, ox: 0, oy: 90 };
     if (/beam$/.test(n)) return { w: 360, h: 110, ox: 150, oy: 55 };
     if (/super\.charge|meter\.full|claude\.pages|poolOut|guardCatch/.test(n)) return { w: 120, h: 120, ox: 0, oy: 90 };
-    if (/hit\.counter|hit\.special|throw/.test(n)) return { w: 104, h: 84, ox: 6, oy: 42 };
+    if (/^hit\.|^block\./.test(n)) return { w: 124, h: 100, ox: 10, oy: 50 };
+    if (/throw/.test(n)) return { w: 104, h: 84, ox: 6, oy: 42 };
     if (/sonnetTrail|breachTrail|diveTrail/.test(n)) return { w: 100, h: 100, ox: 0, oy: 60 };
     if (/^dust\.|ring|pool|waveCast|wave$|bubbles|guardrail/.test(n)) return { w: 104, h: 72, ox: 0, oy: 60 };
     if (/book/.test(n)) return { w: 96, h: 76, ox: 0, oy: 40 };

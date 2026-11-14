@@ -125,8 +125,8 @@
   }
 
   // wave: turns her back, raises the tail high and slams it flat on the floor in front (muzzle = impact point)
-  var WV0 = P(S, ATK, { hip: [-3, -44], lean: 8, bend: 4, hF: [14, -62], hB: [4, -60], handF: 'fist', tail: 100, arch: 6, tsw: 0.3, muz: [40, 0] });
-  var WV1 = P(S, ATK, { hip: [-4, -46], lean: -6, bend: -8, hF: [12, -70], hB: [-4, -68], handF: 'open', handB: 'open', tail: 125, arch: 4, tsw: 0, skirt: 0.2, muz: [40, 0],
+  var WV0 = P(S, ATK, { hip: [-3, -44], lean: 8, bend: 4, hF: [14, -62], hB: [4, -60], handF: 'fist', tail: 100, arch: 6, tsw: 0.3, muz: [40, 0], z: { tail: -8 } });
+  var WV1 = P(S, ATK, { hip: [-4, -46], lean: -6, bend: -8, hF: [12, -70], hB: [-4, -68], handF: 'open', handB: 'open', tail: 125, arch: 4, tsw: 0, skirt: 0.2, muz: [40, 0], z: { tail: -8 },
     eyes: 'focus', mouth: 'teeth' });
   // flipped: authored facing right with the tail slammed down behind = in front on screen
   var WVX = P(S, HIT, { flip: 1, hip: [-6, -34], lean: 26, bend: 8, fF: [8, 0], fB: [-14, 0], faB: 30, hF: [16, -50], hB: [8, -46], handF: 'flat', handB: 'flat',
