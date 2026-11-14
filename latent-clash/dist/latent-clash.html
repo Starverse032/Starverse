@@ -3532,7 +3532,7 @@
         sides.forEach(function (s, i) {
           if (i === 1 && (!twoSided || (!s.active && !pvp))) return;
           var p = s.puppet();
-          var x = i ? 230 : 154, y = 146;
+          var x = i ? 256 : 128, y = 147;   // beside the tile row: V2 fighters are ~104 px tall
           ui.box(c, x - 14, y, 28, 2, 'rgba(5,4,10,0.6)');
           try { p.draw(c, x, y, { facing: i ? -1 : 1 }); } catch (e) { console.error('[platform] puppet.draw', e); }
         });
