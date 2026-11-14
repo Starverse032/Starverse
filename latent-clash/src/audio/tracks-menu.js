@@ -12,7 +12,7 @@
   // progression; B = DeepSeek's pentatonic run (B minor) building back to D. Loop A B = 32 s.
   // ===================================================================================
   K.defTrack('title', {
-    bpm: 120, vol: 0.58, scale: 'D major', loop: 'A', order: ['I', 'A', 'B'],
+    bpm: 120, vol: 0.52, scale: 'D major', loop: 'A', order: ['I', 'A', 'B'],
     ch: {
       lead: { ins: 'lead', w: 's25', uni: 7, vol: 0.27, echo: 0.18, verb: 0.2, vib: [5.5, 15, 0.22], env: [0.006, 0.3, 0.72, 0.1], lp: 5000, melody: true },
       brass: BRASS,
