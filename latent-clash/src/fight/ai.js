@@ -269,7 +269,7 @@
     if (dx <= r('2H') && dx > r('2M') - 8) add('2H', 0.3, this.press('H', 3));
     if (dx < me.C.throwRange - 2 && o.action !== 'blockstun') add('throw', 0.55 + ag * 0.3, [{ d: this.chance(0.3) ? 4 : 6, b: 'LM', n: 2 }, { d: 5, n: 1 }]);
     if (P.mash > 0 && dx < D(80)) add('mash', P.mash * 2, this.press(this.pick(['L', 'M', 'H', 'S']), this.pick([5, 2, 6])));
-    if (full && dx < (C === 'claude' ? 300 : 200) && this.chance(P.sup * 0.15)) add('superRaw', 0.8, this.special('super', 'H'));
+    if (full && dx < (C === 'claude' ? D(200) : D(120)) && this.chance(P.sup * 0.15)) add('superRaw', 0.8, this.special('super', 'H'));
     if (C === 'claude') {
       if (me.proj === 0 && dx > D(120)) add('spark', 0.9 + (dx > D(200) ? 0.8 : 0), this.special('spark', dx > D(220) ? 'L' : this.pick(['M', 'H'])));
       if (me.proj === 0 && dx > D(70) && dx <= D(120)) add('spark', 0.35, this.special('spark', 'H'));
