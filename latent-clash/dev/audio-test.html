@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LATENT CLASH — audio test bench</title>
+<style>
+  body { background: #0b0a14; color: #f4efe6; font: 13px/1.4 monospace; margin: 12px; }
+  h2 { font-size: 13px; color: #ffd166; margin: 14px 0 4px; }
+  button { background: #231f45; color: #f4efe6; border: 1px solid #3b3670; padding: 3px 7px; margin: 2px; font: 12px monospace; cursor: pointer; }
+  button:hover { background: #3b3670; } button.on { background: #ff9e6b; color: #0b0a14; }
+  #unlock { font-size: 16px; padding: 8px 16px; background: #d97757; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+  label { margin-right: 12px; } input[type=range] { width: 140px; vertical-align: middle; }
+  canvas { background: #05040a; border: 1px solid #3b3670; }
+  #status { color: #9b96b8; } .cat { color: #9b96b8; width: 80px; display: inline-block; }
+</style>
+</head>
+<body>
+<button id="unlock">▶ Unlock audio (click first)</button> <span id="status">locked</span>
+<div class="row" style="margin-top:8px">
+  <label>master <input id="v-master" type="range" min="0" max="1" step="0.01"></label>
+  <label>music <input id="v-music" type="range" min="0" max="1" step="0.01"></label>
+  <label>sfx <input id="v-sfx" type="range" min="0" max="1" step="0.01"></label>
+  <label>pan <input id="pan" type="range" min="-1" max="1" step="0.05" value="0"> <span id="pan-v">0</span></label>
+  <label>pitch <input id="pitch" type="range" min="0.5" max="2" step="0.01" value="1"> <span id="pitch-v">1.00</span></label>
+</div>
+<div class="row">
+  <canvas id="scope" width="480" height="110"></canvas>
+  <canvas id="meter" width="60" height="110"></canvas>
+  <div id="meter-txt" style="width:220px"></div>
+</div>
+<h2>MUSIC <span id="pos" style="color:#9b96b8"></span></h2>
+<div class="row" id="music"></div>
+<div class="row">
+  <button id="stop">■ stop (fade 0.5)</button><button id="cut">■ cut (fade 0)</button>
+  <button id="restart">↻ restart current</button><button id="pause">pause (muffle)</button>
+  <button id="duck">duck 0.6 / 1.2 s</button><button id="combat">⚔ combat simulation</button><button id="mute">mute</button>
+</div>
+<h2>SFX</h2><div id="sfx"></div>
+<h2>VOICES</h2><div id="voice"></div>
+<p style="color:#9b96b8">Measurements: <code>node tools/audio-render.mjs all</code> → .shots/audio/. Notes: src/audio/NOTES.md.</p>
+
+<script src="../src/shared/loader.js" data-root="../src/" data-modules="audio"></script>
+<script>
+(function () {
+  var A = LC.audio, $ = function (id) { return document.getElementById(id); };
+  A.init();
+  var paused = false, muted = false;
+  function opts() { return { pan: +$('pan').value, pitch: +$('pitch').value }; }
+  ['master', 'music', 'sfx'].forEach(function (k) {
+    var el = $('v-' + k); el.value = A.getVolume(k);
+    el.oninput = function () { A.setVolume(k, +el.value); };
+  });
+  $('pan').oninput = function () { $('pan-v').textContent = (+this.value).toFixed(2); };
+  $('pitch').oninput = function () { $('pitch-v').textContent = (+this.value).toFixed(2); };
+  function btn(parent, label, fn, title) { var b = document.createElement('button'); b.textContent = label; b.onclick = fn; if (title) b.title = title; parent.appendChild(b); return b; }
+
+  var L = A.list(), defs = A._dev.sfxDefs(), byCat = {};
+  defs.forEach(function (d) { (byCat[d.cat || 'other'] = byCat[d.cat || 'other'] || []).push(d); });
+  Object.keys(byCat).forEach(function (c) {
+    var row = document.createElement('div'); row.className = 'row';
+    var s = document.createElement('span'); s.className = 'cat'; s.textContent = c; row.appendChild(s);
+    byCat[c].forEach(function (d) { btn(row, d.name, function () { A.sfx(d.name, opts()); }, d.desc + ' — ' + d.when); });
+    $('sfx').appendChild(row);
+  });
+  L.voice.chars.forEach(function (ch) {
+    var row = document.createElement('div'); row.className = 'row';
+    var s = document.createElement('span'); s.className = 'cat'; s.textContent = ch; row.appendChild(s);
+    L.voice.kinds.forEach(function (k) { btn(row, k, function () { A.voice(ch, k, opts()); }); });
+    $('voice').appendChild(row);
+  });
+  var mbtn = {};
+  L.music.forEach(function (n) { mbtn[n] = btn($('music'), n, function () { A.music(n, { fade: 0.5 }); }); });
+  $('stop').onclick = function () { A.music(null, { fade: 0.5 }); };
+  $('cut').onclick = function () { A.music(null, { fade: 0 }); };
+  $('restart').onclick = function () { var c = A.currentTrack(); if (c) A.music(c, { restart: true, fade: 0 }); };
+  $('pause').onclick = function () { paused = !paused; A.setPaused(paused); this.classList.toggle('on', paused); A.sfx('ui.pause'); };
+  $('duck').onclick = function () { A.duck(0.6, 1.2); };
+  $('mute').onclick = function () { muted = !muted; A.setMuted(muted); this.classList.toggle('on', muted); };
+  $('unlock').onclick = function () { A.unlock(); };
+
+  // Combat simulation: a realistic exchange over a stage theme.
+  $('combat').onclick = function () {
+    A.unlock();
+    if (!A.currentTrack() || A.currentTrack().indexOf('stage.') !== 0) A.music('stage.abyss', { fade: 0.3 });
+    var t = 600, rnd = Math.random;
+    function at(ms, f) { setTimeout(f, ms); }
+    for (var i = 0; i < 8; i++) {
+      (function (base) {
+        var pan = (rnd() * 2 - 1) * 0.5, k = rnd(), o = { pan: pan };
+        if (k < 0.45) {
+          ['light', 'medium', 'heavy'].forEach(function (w, j) {
+            at(base + j * 220, function () { A.sfx('whiff.' + w, o); });
+            at(base + j * 220 + 70, function () { A.sfx('hit.' + w, o); });
+          });
+          at(base + 700, function () { A.voice(rnd() < 0.5 ? 'claude' : 'deepseek', 'special'); });
+          at(base + 750, function () { A.sfx(rnd() < 0.5 ? 'claude.haiku' : 'deepseek.chain', o); A.sfx('hit.special', o); });
+        } else if (k < 0.7) {
+          [0, 200, 450].forEach(function (d, j) { at(base + d, function () { A.sfx(j < 2 ? 'block.light' : 'block.heavy', o); }); });
+        } else if (k < 0.85) {
+          at(base, function () { A.sfx('jump', o); });
+          at(base + 350, function () { A.sfx('whiff.heavy', o); });
+          at(base + 420, function () { A.sfx('hit.counter', o); A.sfx('counter.catch'); A.voice('deepseek', 'hurt'); });
+          at(base + 600, function () { A.sfx('land', o); });
+        } else {
+          at(base, function () { A.sfx('dash', o); });
+          at(base + 300, function () { A.sfx('throw.grab', o); });
+          at(base + 800, function () { A.sfx('throw.slam', o); A.sfx('down', o); });
+        }
+      })(t);
+      t += 1300;
+    }
+    at(t, function () { A.sfx('super.flash'); A.duck(0.6, 1.6); A.voice('claude', 'super'); });
+    at(t + 800, function () { A.sfx('claude.beam'); });
+    at(t + 2100, function () { A.sfx('ko'); A.duck(0.7, 2); A.voice('deepseek', 'ko'); });
+    at(t + 3300, function () { A.sfx('ann.ko'); });
+  };
+
+  // Scope + meter
+  var sc = $('scope').getContext('2d'), mc = $('meter').getContext('2d'), an = null, buf = null, peakHold = 0;
+  function draw() {
+    requestAnimationFrame(draw);
+    var st = A.state();
+    $('status').textContent = st + (A.currentTrack() ? '  ♪ ' + A.currentTrack() : '');
+    Object.keys(mbtn).forEach(function (n) { mbtn[n].classList.toggle('on', A.currentTrack() === n); });
+    var p = A.position(); $('pos').textContent = p ? 'section ' + p.section + '  bar ' + p.bar + '  ' + p.seconds.toFixed(1) + ' s' : '';
+    if (!an && A._st.mx) { an = A._st.mx.tap(); buf = new Float32Array(an.fftSize); }
+    sc.fillStyle = '#05040a'; sc.fillRect(0, 0, 480, 110);
+    if (!an) return;
+    an.getFloatTimeDomainData(buf);
+    sc.strokeStyle = '#58d4ff'; sc.beginPath();
+    var pk = 0, sum = 0;
+    for (var i = 0; i < buf.length; i++) {
+      var v = buf[i], x = i / buf.length * 480, y = 55 - v * 52;
+      if (i) sc.lineTo(x, y); else sc.moveTo(x, y);
+      pk = Math.max(pk, Math.abs(v)); sum += v * v;
+    }
+    sc.stroke();
+    var rms = Math.sqrt(sum / buf.length), pdb = 20 * Math.log10(pk + 1e-9), rdb = 20 * Math.log10(rms + 1e-9);
+    peakHold = Math.max(pdb, peakHold - 0.3);
+    mc.fillStyle = '#05040a'; mc.fillRect(0, 0, 60, 110);
+    function h(db) { return Math.max(0, Math.min(110, (db + 60) / 60 * 110)); }
+    mc.fillStyle = '#5ee6a8'; mc.fillRect(5, 110 - h(rdb), 22, h(rdb));
+    mc.fillStyle = pdb > -1 ? '#ff4d6d' : '#ffd23f'; mc.fillRect(33, 110 - h(pdb), 22, h(pdb));
+    mc.fillStyle = '#fff'; mc.fillRect(33, 110 - h(peakHold), 22, 2);
+    $('meter-txt').textContent = 'peak ' + pdb.toFixed(1) + ' dBFS (hold ' + peakHold.toFixed(1) + ')  rms ' + rdb.toFixed(1) + ' dBFS';
+  }
+  draw();
+})();
+</script>
+</body>
+</html>
