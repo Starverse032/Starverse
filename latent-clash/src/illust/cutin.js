@@ -24,7 +24,7 @@
     var cres = P.ell(ix + rx * 0.05, iy + ry * 0.62, rx * 0.72, ry * 0.42).and(iris);
     P.recol(cres, [S.e1, S.e2], S.e0);
     P.fill(iris.edge(), S.eK);
-    P.fill(P.ell(ix, iy - ry * 0.02, rx * (m.fierce ? 0.2 : 0.34), ry * (m.fierce ? 0.5 : 0.4)).and(iris), S.lash);
+    P.fill(P.ell(ix, iy - ry * 0.02, rx * (m.fierce ? 0.27 : 0.34), ry * (m.fierce ? 0.4 : 0.4)).and(iris), S.lash);
     // catch-lights (light from the upper right) + a glint ring
     P.fill(P.ell(ix + rx * 0.36, iy - ry * 0.4, rx * 0.26, ry * 0.2).and(iris), S.W);
     P.fill(P.ell(ix - rx * 0.42, iy + ry * 0.36, rx * 0.12, ry * 0.1).and(iris), S.W);
@@ -66,11 +66,11 @@
       H.strands(Q, [[86, 30, 89, 50, 92, 70], [92, 30, 96, 52, 98, 70], [22, 30, 18, 52, 16, 70]], S.h3);
       Q.part(Q.ell(53, 36, 25, 26).or(Q.ell(47, 42, 21, 23)), S.h1, S.hl);
       face(Q, A);
-      bigEye(Q, { x: 46, y: 47, w: 12, h: 9 }, true, { lid: 0.14 });
-      bigEye(Q, { x: 66, y: 47, w: 8.4, h: 9 }, false, { lid: 0.14 });
-      Q.fill(Q.sr([41, 40.5, 46, 39.6, 51.5, 41], 1.2, 1.4, 1.5), S.hl);           // brows: level, inner ends lowered
-      Q.fill(Q.sr([62.5, 41, 66, 39.4, 69.5, 39.8], 1.3, 0.9, 1.3), S.hl);
-      Q.line([70.6, 54.5, 71.4, 57.2], S.s2); Q.px(Q.tx(71.2), Q.ty(57.6), S.sl);
+      bigEye(Q, { x: 46, y: 47, w: 12, h: 9.4 }, true, { lid: 0.24 });
+      bigEye(Q, { x: 66, y: 47, w: 8.4, h: 9.4 }, false, { lid: 0.24 });
+      Q.fill(Q.sr([41, 39.8, 46, 40, 51.5, 42], 1.1, 1.5, 1.5), S.hl);           // brows: level, inner ends lowered
+      Q.fill(Q.sr([62.5, 42, 66, 40.4, 69.5, 40], 1.4, 0.9, 1.3), S.hl);
+      Q.line([71, 56, 71.4, 57.2], S.s2); Q.px(Q.tx(71.2), Q.ty(57.6), S.sl);
       blush(Q, [[43, 55.5], [45, 55.5], [47, 55.5], [67, 55.5], [69, 55.5]]);
       fringe(Q, A);
       H.hairClump(Q, [[37, 26, 32, 38, 30, 54, 30, 72], 10, 8, 11, 0, [0.12, 0.6]], S.h1);
@@ -83,11 +83,11 @@
       Q.fill(Q.rect(30, 56, 52, 30), S.t1);
       Q.part(Q.ell(53, 38, 25, 26).or(Q.ell(47, 43, 21, 23)), S.h1, S.hl);
       face(Q, A);
-      bigEye(Q, { x: 46, y: 48.5, w: 12, h: 10.4 }, true, { lid: 0.08, fierce: true });
-      bigEye(Q, { x: 66, y: 48.5, w: 8.4, h: 10.4 }, false, { lid: 0.08, fierce: true });
+      bigEye(Q, { x: 46, y: 48.5, w: 12, h: 10.4 }, true, { lid: 0.14, fierce: true });
+      bigEye(Q, { x: 66, y: 48.5, w: 8.4, h: 10.4 }, false, { lid: 0.14, fierce: true });
       Q.fill(Q.sr([40.5, 39.5, 46, 40.6, 51.5, 43], 1.2, 1.5, 1.5), S.hl);          // fierce, angled brows
       Q.fill(Q.sr([62.5, 43, 66, 40.8, 69.5, 40], 1.4, 0.9, 1.3), S.hl);
-      Q.line([70.6, 55.5, 71.4, 58.2], S.s2); Q.px(Q.tx(71.2), Q.ty(58.6), S.sl);
+      Q.line([71, 57, 71.4, 58.2], S.s2); Q.px(Q.tx(71.2), Q.ty(58.6), S.sl);
       blush(Q, [[42, 57], [44, 57], [46, 57], [66, 57], [68, 57]]);
       fringe(Q, A);
       H.hairClump(Q, [[37, 28, 31, 42, 32, 56, 28, 68, 29, 82], 13, 6, 13, 0, [0.1, 0.6]], S.h1);

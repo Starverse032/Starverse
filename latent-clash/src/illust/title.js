@@ -1,36 +1,10 @@
 /* LATENT CLASH — ILLUST: super cut-ins (I.cutin) and the animated title key art (I.TITLE).
- * Cut-in: the bust's eye band re-rendered with determined brows, composed over speed lines at
- * 120x36 and doubled to 240x72 (uniform 2x chunky pixels, allowed for super cut-ins). Opaque band.
  * Title: both busts facing off (DeepSeek mirrored) over a pre-rendered orange-vs-blue clash. */
 (function () {
   'use strict';
   var LC = window.LC, I = LC.illust, K = I.kit, S = K.S;
 
-  // ---------------------------------------------------------------- cut-in
-  I.cutin = function (charId) {
-    var src = K.painter(112, 128);
-    (charId === 'claude' ? I.drawClaudeBust : I.drawDeepseekBust)(src, { expr: 'cut', noPen: true });
-    var P = K.painter(120, 36), r = K.rng(charId === 'claude' ? 17 : 29), x, y;
-    // band: deep accent, speed lines streaming left
-    P.fill(P.rect(0, 0, 120, 36), S.a3);
-    for (var i = 0; i < 26; i++) {
-      y = 1 + Math.floor(r() * 34); var x0 = Math.floor(r() * 60), len = 12 + Math.floor(r() * 50);
-      var sl = i % 5 === 0 ? S.W : i % 2 ? S.a1 : S.a2;
-      for (x = x0; x < Math.min(120, x0 + len); x++) P.px(x, y, sl);
-    }
-    // face crop: bust rows 22..58, cols 12..94 -> placed at x 30, with a slanted left cut
-    var oy = (charId === 'claude' ? 23 : 25);
-    for (y = 0; y < 36; y++) for (x = 0; x < 84; x++) {
-      var sx = 12 + x, sy = oy + y, c = src.get(sx, sy);
-      if (!c || x + (36 - y) * 0.45 < 14) continue;
-      P.px(30 + x, y, c);
-    }
-    // slash borders
-    for (x = 0; x < 120; x++) { P.px(x, 0, S.a0); P.px(x, 35, S.a0); }
-    var B = K.painter(240, 72);
-    for (y = 0; y < 72; y++) for (x = 0; x < 240; x++) B.c[y * 240 + x] = P.c[(y >> 1) * 120 + (x >> 1)];
-    return B;
-  };
+  // (super cut-ins live in cutin.js since V2)
 
   // ---------------------------------------------------------------- title key art
   var TT = I.TITLE = {}, L = null;
