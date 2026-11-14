@@ -280,14 +280,16 @@
     P.part(cuff, S.c0, S.cl); P.recol(cuff.band(2, -1), [S.c0], S.c2);
     P.px(92, 100, S.cl); P.px(97, 100, S.cl); P.px(103, 100, S.cl);
     var palm = P.spoly([91, 92, 90, 84, 92, 79, 100, 78, 104, 81, 105, 89, 101, 94, 95, 95]);
-    P.part(palm, S.s1, S.sl); P.recol(palm.band(3, -1), [S.s1], S.s2);
     var fingers = [[[93, 81, 92.5, 76, 92, 72], 3.6, 3.2], [[96.5, 80, 96.5, 74, 96.5, 70], 3.6, 3.4], [[100, 80, 100.5, 75, 101, 71], 3.6, 3.2], [[103, 82, 104.5, 78, 105.5, 75], 3.2, 2.8]];
-    fingers.forEach(function (f) {
-      var m = P.sr(f[0], f[1], f[2]);
-      P.part(m, S.s1, S.sl); P.recol(m.band(1, 0), [S.s1], S.s0);
-    });
-    var thumb = P.sr([92, 89, 88, 85, 86, 81], 3.4, 2.6);
-    P.part(thumb, S.s1, S.sl); P.recol(thumb.band(-1, 1), [S.s1], S.s0);
+    var hand = palm;
+    fingers.forEach(function (f) { hand = hand.or(P.sr(f[0], f[1], f[2])); });
+    var thumb = P.sr([92, 89, 88, 85, 86, 81], 3.6, 2.8);
+    hand = hand.or(thumb);
+    P.part(hand, S.s1, S.sl);
+    P.recol(hand.band(2, -1), [S.s1], S.s2);
+    P.recol(hand.band(-1, 1), [S.s1], S.s0);
+    [[94.5, 72, 94.5, 79], [98.5, 71, 98.5, 79], [102.5, 74, 102, 80]].forEach(function (l) { P.line(l, S.s2); });
+    P.line([90, 86, 92, 89], S.s2);
     P.line([94, 88, 97, 90, 101, 88], S.s2, true);
   }
 
