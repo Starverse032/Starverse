@@ -20,6 +20,7 @@
     'A': col(M.acc, 0), 'a': col(M.acc, 1), 'c': col(M.acc, 2), 'C': col(M.acc, 3),
     'M': col(M.metal, 0), 'm': col(M.metal, 1),
     'W': col(M.white, 0), 'r': col(M.acc, 3), 'n': col(M.ink, 0),
+    'N': col(M.c2, 1), 'D': col(M.c2, 2), 'u': col(M.c2, 0), 'U': col(M.white, 1), 'Y': col(M.white, 2),
     '-': 255
   };
 
@@ -161,6 +162,16 @@
     put(cx, cy, col(M.metal, 0)); put(cx + 1, cy, col(M.metal, 1)); put(cx, cy + 1, col(M.metal, 1)); put(cx - 1, cy, col(M.acc, 2)); put(cx, cy - 1, col(M.metal, 0));
   }
 
+  // black ribbon bow (behind/below the flower) + cream tassel, painted into the head stamp
+  var BOW = [
+    'uN....uN',
+    'NND..NND',
+    '.NNDDND.',
+    '.DN..ND.',
+    '..D...D.'
+  ];
+  var TASSEL = ['U', 'U', 'Y', 'Y'];
+
   I.ART = I.ART || {};
   I.ART.claude = {
     legend: LEGEND,
@@ -171,6 +182,8 @@
       var W = raw.w + PADL + 1, Hh = raw.h + PADT, d = new Uint8Array(W * Hh);
       for (var y = 0; y < raw.h; y++) for (var x = 0; x < raw.w; x++) d[(y + PADT) * W + x + PADL] = raw.d[y * raw.w + x];
       var base = { w: W, h: Hh, d: d, px: 8 + PADL, py: 16 + PADT };
+      base = I.overlay(base, I.parseArt(BOW, LEGEND), PADL - 1, PADT + 6, null);
+      base = I.overlay(base, I.parseArt(TASSEL, LEGEND), PADL + 1, PADT + 10, null);
       flower(base, PADL + 3, PADT + 6);
       var set = {
         base: base, eyes: {}, mouth: {}, cache: {},
