@@ -67,7 +67,7 @@ for (const j of jobs) {
     frames = DEFAULT_FRAMES.filter((f) => f <= life + 1);
     if (life > 80) frames = frames.concat([100, 130, 160, 200, 260, 330].filter((f) => f <= life + 1));
   }
-  const url = await page.evaluate((o) => window.FXV.strip(o), { name: j.n, frames, bgs, scale, cols: cols || Math.min(frames.length, 10), opts, dummies, cell: cellArg ? { w: cellArg[0], h: cellArg[1], ox: cellArg[2] || 0, oy: cellArg[3] != null ? cellArg[3] : cellArg[1] / 2 } : null });
+  const url = await page.evaluate((o) => window.FXV.strip(o), { name: j.n, x: flag('x') ? +flag('x') : undefined, frames, bgs, scale, cols: cols || Math.min(frames.length, 10), opts, dummies, cell: cellArg ? { w: cellArg[0], h: cellArg[1], ox: cellArg[2] || 0, oy: cellArg[3] != null ? cellArg[3] : cellArg[1] / 2 } : null });
   const file = resolve(outDir, j.n + tag + '.png');
   writeFileSync(file, Buffer.from(url.split(',')[1], 'base64'));
   console.log('wrote', file.replace(root + '/', ''), 'frames', frames.join(','));
