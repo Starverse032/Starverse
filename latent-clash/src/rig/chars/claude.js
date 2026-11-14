@@ -539,7 +539,8 @@
     if (z.legB != null) steps[3][0] = z.legB;
     if (z.pen != null) steps[12][0] = z.pen;
     steps.sort(function (a, b) { return a[0] - b[0]; });
-    for (var i = 0; i < steps.length; i++) steps[i][1]();
+    p.fastTone = true;
+    try { for (var i = 0; i < steps.length; i++) steps[i][1](); } finally { p.fastTone = false; }
   };
 
   C.build = function () { C.headSet = I.ART.claude.build(); HANDS = I.ART.claude.hands; };

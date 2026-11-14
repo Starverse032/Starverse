@@ -208,7 +208,7 @@
     var y0 = clampY(Math.floor(miny) + OY), y1 = clampY(Math.ceil(maxy) + OY + 1);
     var s = this.s, c0 = 2 + mat * 4, hit = false, xs = this._xs || (this._xs = new Float64Array(64));
     var eb = null;
-    if (sh) {   // per-edge bounding boxes (incl. the 15 % end overshoot + band width): exact early-out
+    if (sh && this.fastTone) {   // opt-in (V2): per-edge bounding boxes (incl. the 15 % end overshoot + band width): exact early-out
       eb = this._eb && this._eb.length >= n * 4 ? this._eb : (this._eb = new Float64Array(Math.max(n * 4, 256)));
       var pad = Math.max(sh.d || 0, sh.l || 0) + 0.5;
       for (i = 0; i < n; i++) {
