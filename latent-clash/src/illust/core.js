@@ -32,7 +32,9 @@
   var SLOT_NAMES = ['ol', 's0', 's1', 's2', 's3', 'bl', 'h0', 'h1', 'h2', 'h3', 't0', 't1', 'tS',
     'e0', 'e1', 'e2', 'e3', 'c0', 'c1', 'c2', 'c3', 'd0', 'd1', 'd2', 'd3', 'a0', 'a1', 'a2', 'a3',
     'm0', 'm1', 'm2', 'm3', 'W', 'hl', 'sl', 'cl', 'dl', 'al', 'ml', 'lash', 'mo', 'tg', 'tear',
-    'tear2', 'ew', 'tl', 'blS', 'sp', 'K', 'gl0', 'gl1', 'sk1'];
+    'tear2', 'ew', 'tl', 'blS', 'sp', 'K', 'gl0', 'gl1', 'sk1',
+    // V2: x* = extra ramp (Claude `book`, DeepSeek `fin`), u* = DeepSeek `under` (Claude: cloth1)
+    'x0', 'x1', 'x2', 'x3', 'xl', 'u0', 'u1', 'u2', 'u3', 'ul', 'eK'];
   var S = K.S = {};
   SLOT_NAMES.forEach(function (n, i) { S[n] = i + 1; });
   K.NSLOT = SLOT_NAMES.length + 1;
@@ -66,6 +68,10 @@
     c.K = mix(ol, '#000000', 0.3);
     c.gl0 = mix(p.accent[0], '#ffffff', 0.5); c.gl1 = p.accent[1];
     c.sk1 = mix(p.skin[1], p.skin[2], 0.5);
+    var xr = p.book || p.fin || p.cloth2, ur = p.under || p.cloth1;
+    for (var j = 0; j < 4; j++) { c['x' + j] = xr[j]; c['u' + j] = ur[j]; }
+    c.xl = mix(xr[3], ol, 0.5); c.ul = mix(ur[3], ol, 0.5);
+    c.eK = mix(p.eye[3], ol, 0.5);     // dark iris rim / upper iris
     var out = [[0, 0, 0, 0]];
     SLOT_NAMES.forEach(function (n) { var v = rgb(c[n] || '#ff00ff'); out.push([v[0], v[1], v[2], 255]); });
     return out;

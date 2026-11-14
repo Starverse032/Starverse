@@ -151,7 +151,7 @@ draw `stage.drawBack` first on those frames.
 | name | call |
 |---|---|
 | `claude.sonnetPillar` | spawn at her ORIGIN (floor) on the first rise frame of `sonnet`, facing = hers. Back layer, 26f column (~26×190) + verse lines (≈38f). Keep `claude.sonnetTrail` at `weapon` every 2nd frame |
-| `claude.haikuSlash` | unchanged call (`hip` anchor, `index` 0/1/2 on hit1/2/3). Reach: index 0 ≈ 110 px rising, 1 ≈ 150 px sweep, 2 ≈ 230 px falling slash (from 34 px behind to 192 px ahead of the anchor). Seals are 21×21 stamps |
+| `claude.haikuSlash` | unchanged call (`hip` anchor, `index` 0/1/2 on hit1/2/3). Reach: index 0 ≈ 110 px rising, 1 ≈ 150 px sweep, 2 ≈ 230 px falling slash (from 34 px behind to 192 px ahead of the anchor). Seals are 15 px vermilion stamps |
 | `claude.guardrail` | unchanged call (at the ORIGIN, phase 'end' for the 6f dissolve). bbox is now `{x:26, y:-102, w:36, h:96}` (was 13,-60,26,58) |
 | `claude.guardCatch` | unchanged call (ORIGIN). Matches the new barrier |
 | `claude.spark` | pass `power`: 0.3 = L (~22 px), 0.6 = M (~28 px), 1 = H (~34 px, the default). `angle` works as before. bbox for H `{x:-15,y:-15,w:30,h:30}` |
