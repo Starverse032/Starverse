@@ -1,119 +1,99 @@
-/* LATENT CLASH — ILLUST: Claude 娘 portraits (bust / bustWin / bustLose / cutin / face).
+/* LATENT CLASH — ILLUST: Claude 娘 portraits, V2 design (ZipZipPipe's 橙发优等生).
+ * bust / bustWin / bustLose / face here; cut-in in cutin.js (native close-up).
  * Drawn in palette slots (see core.js) so palette 0/1 recolour exactly.
- * Light: upper-front (upper right, she faces right). */
+ * Three-quarter view facing right. Light: upper-front (upper right). */
 (function () {
   'use strict';
   var LC = window.LC, I = LC.illust, K = I.kit, S = K.S;
   I.ART = I.ART || {};
 
   // ---------------------------------------------------------------- hand-typed face maps
-  var EL = { K: S.lash, k: S.e3, D: S.e3, s: S.e2, B: S.e1, H: S.e0, w: S.ew, W: S.W, P: S.lash, x: S.s2, l: S.sl, y: S.s3, b: S.bl, c: S.blS, m: S.mo, t: S.tg, n: S.sl, r: S.tear, R: S.tear2 };
+  // K lash · k dark iris rim · D/s/B/H iris deep→light · P pupil · W catch-light · w eye white
+  var EL = { K: S.lash, k: S.eK, D: S.e3, s: S.e2, B: S.e1, H: S.e0, w: S.ew, W: S.W, P: S.lash, x: S.s2, l: S.sl, y: S.s3,
+    b: S.bl, c: S.blS, m: S.mo, t: S.tg, n: S.sl, r: S.tear, R: S.tear2, h: S.hl, o: S.ol };
   var EYES = {
-    // near eye (outer corner on the left, gentle droop)
+    // near eye: outer corner left; level, slightly narrow, heavy upper lash
     near: [
-      '.....KKKK...',
-      '...KKKKKKKK.',
+      '...KKKKKKK..',
       '.KKKKKKKKKKK',
-      'KKKDDDDDDDKw',
-      'K.wDDssWWDDw',
-      '..wDsssWWsDw',
-      '..wsssPPssDw',
-      '..wsBBPPBssw',
-      '..wBBBBBBBsw',
-      '..wHWBBBBBHw',
-      '...wHHBBHH.l',
+      'KK.kDDDDDkKw',
+      '..wDDssWWDkw',
+      '..wDsPPWWsDw',
+      '..wssPPPssDw',
+      '..wsBPPPBssw',
+      '..wBBBBBBHBw',
+      '...wHHBBHHw.',
       '....llllll..'
     ],
     far: [
-      '...KKK..',
-      '.KKKKKKK',
-      'KKKKKKKK',
-      'wDDDDDDK',
-      'wDssWWDK',
-      'wsssWWDw',
-      'wssPPsDw',
-      'wBBPPBsw',
-      'wBBBBBsw',
-      'wHBBBHHw',
-      '.wHHHHw.',
-      '..llll..'
+      '..KKKKKK.',
+      'KKKKKKKKK',
+      'wkDDDDkK.',
+      'wDsWWDDK.',
+      'wsPWWsDw.',
+      'wsPPPsDw.',
+      'wBPPBBsw.',
+      'wBBBHBBw.',
+      '.wHHBBw..',
+      '..llll...'
     ],
-    // win: happy closed arcs
-    nearHappy: [
+    // win: serene closed eyes (lid arcs with a lash flick)
+    nearWin: [
       '............',
       '............',
       '............',
       '............',
-      '....KKKKK...',
-      '..KKKyyyKKK.',
-      '.KKy.....yKK',
-      '.K.........K',
       '............',
-      '............',
-      '............',
+      'KK..........',
+      '.KKK.....KK.',
+      '...KKKKKKK..',
+      '.....yyy....',
       '............'
     ],
-    farHappy: [
+    farWin: [
       '.........',
       '.........',
       '.........',
       '.........',
-      '..KKKKK..',
-      '.KKyyyKK.',
-      'KKy...yKK',
-      'K.......K',
       '.........',
       '.........',
-      '.........',
+      '.KK....KK',
+      '..KKKKKK.',
+      '...yyy...',
       '.........'
     ],
-    // lose: tired, half-lidded, teary
-    nearTired: [
+    // lose: exhausted, heavy half lids, glassy, bags under the eyes
+    nearLose: [
       '............',
       '............',
       '............',
-      '..yyyyyy....',
-      '.KKKKKKKKKK.',
-      'KKKDDDDDDKKK',
-      'K.wDsssWWDw.',
-      '..wsssPPsDw.',
-      '..wBBBPPBsw.',
-      '..wHBBBBBHw.',
-      '..rrHHBBHHrR',
-      '...rRllllRr.'
+      '..yyyyyyyy..',
+      '.KKKKKKKKKKK',
+      'KKKkDDDDDkKK',
+      '..wDsPPWsDsw',
+      '..wsBPPBBssw',
+      '..wBBHHBBBHw',
+      '...ylllllly.',
+      '....xxxxx...'
     ],
-    farTired: [
+    farLose: [
       '.........',
       '.........',
       '.........',
-      '...yyyy..',
+      '.yyyyyy..',
       'KKKKKKKKK',
-      'KKDDDDDKK',
-      'wDsWWsDDw',
-      'wsPPssDDw',
-      'wBPPBBssw',
-      'wHBBBBHHw',
-      'rHHBBHHrR',
-      '.RllllRr.'
+      'KkDDDDkK.',
+      'wsPWsDsw.',
+      'wBPPBBsw.',
+      'wBHHBBHw.',
+      '.yllllly.',
+      '..xxxx...'
     ]
   };
   var MOUTHS = {
-    smile: [
-      'n.....n',
-      '.nmmmn.',
-      '.......'
-    ],
-    open: [
-      'n......n',
-      '.nmmmmn.',
-      '..ntttn.',
-      '...nnn..'
-    ],
-    wobble: [
-      '.......',
-      '.nn.nn.',
-      'n..n..n'
-    ]
+    calm: ['nmmmn', '.xxx.'],
+    smile: ['n...n', '.nmn.'],
+    tired: ['.nnn.', 'n.t.n', '.nnn.']
   };
 
   // ---------------------------------------------------------------- helpers
@@ -137,6 +117,27 @@
     return P.poly(pts);
   }
   I.starburst = starburst;
+  // sunburst flower: a ring of n thin petals around a round core. Returns {petals, core}
+  function sunflower(P, cx, cy, r, n, rot, sq) {
+    var pts = [], k = sq || 1;
+    for (var i = 0; i < n * 2; i++) {
+      var a = rot + i * Math.PI / n, rr = i % 2 === 0 ? r * (i % 4 === 0 ? 1 : 0.86) : r * 0.42;
+      pts.push(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr * k);
+    }
+    return { petals: P.poly(pts), core: P.ell(cx, cy, r * 0.36, r * 0.36 * k) };
+  }
+  // paint a sunburst flower in accent slots (lit from the upper right)
+  function paintFlower(P, cx, cy, r, n, rot, sq) {
+    var f = sunflower(P, cx, cy, r, n, rot, sq);
+    P.part(f.petals, S.a1, S.al);
+    P.recol(f.petals.band(-1, 1), [S.a1], S.a0);
+    P.recol(f.petals.band(2, -1), [S.a1], S.a2);
+    P.part(f.core, S.a2, S.a3);
+    P.recol(f.core.band(-1, 1), [S.a2], S.a1);
+    P.px(Math.round(cx), Math.round(cy - 0.5), S.a0);
+    return f.petals.or(f.core);
+  }
+  I.sunflower = sunflower; I.paintFlower = paintFlower;
   function sparkle(P, x, y, big) {   // 4-point twinkle in light slots
     P.px(x, y, S.W);
     P.px(x - 1, y, S.sp); P.px(x + 1, y, S.sp); P.px(x, y - 1, S.sp); P.px(x, y + 1, S.sp);
@@ -144,8 +145,7 @@
   }
   I.sparkle = sparkle;
 
-  // ---------------------------------------------------------------- bust
-  // a hair clump: tapered ribbon with lit/shaded edges, optional mid highlight streak and cream tip
+  // a hair clump: tapered ribbon with lit/shaded edges, optional mid highlight streak and tip colour
   // c = [points, w0, w1, wm, tipFrac, shine]
   function hairClump(P, c, base) {
     var m = P.sr(c[0], c[1], c[2], c[3]);
@@ -161,178 +161,216 @@
     }
     return m;
   }
+  // straight-hair texture: thin dark strand lines inside an existing hair region
+  function strands(P, lines, slot) {
+    lines.forEach(function (l) { P.line(l, slot || S.h2, true, true); });
+  }
+
+  // ---------------------------------------------------------------- bust
   function drawBust(P, o) {
     var expr = o.expr || 'n', sw = o.sway || 0;
     var lose = expr === 'lose', win = expr === 'win';
 
-    // ---- back hair: falls behind her shoulders, lower locks stream left in the wind (cream tips)
+    // ---- back hair: straight curtain behind the shoulders, falling out of frame
     var back = P.mask();
     [
-      [[36, 52, 33, 74, 30, 96, 28 + sw, 118, 27 + sw, 136], 20, 18, 21],
-      [[38, 30, 28, 50, 24, 70, 21 + sw, 92, 18 + sw * 1.5, 114, 17 + sw * 2, 136], 22, 18, 23, 0, [0.3, 0.55]],
-      [[43, 13, 28, 18, 19, 32, 15, 50, 13 + sw * 0.5, 68, 10 + sw, 88, 6 + sw * 1.5, 104, 1 + sw * 2, 116, -3 + sw * 3, 122], 24, 0, 26, 0.2, [0.08, 0.4]],
-      [[70, 26, 82, 42, 87, 62, 87 + sw * 0.5, 84, 90 + sw, 104, 93 + sw, 124], 20, 4, 20, 0, [0.1, 0.4]]
+      [[42, 12, 27, 18, 17, 34, 13, 56, 11, 80, 9 + sw, 104, 7 + sw * 2, 134], 18, 22, 26],
+      [[36, 30, 25, 50, 21, 74, 19 + sw, 100, 17 + sw * 2, 134], 14, 14, 16, 0, [0.2, 0.6]],
+      [[62, 12, 78, 20, 87, 38, 91, 60, 94, 86, 97 + sw, 110, 99 + sw * 2, 134], 18, 20, 24],
+      [[74, 30, 84, 50, 86, 76, 89 + sw, 104, 91 + sw * 2, 134], 12, 12, 14, 0, [0.15, 0.6]]
     ].forEach(function (c) { back = back.or(hairClump(P, c, S.h2)); });
-    P.line([31, 58, 27, 80, 24 + sw, 104, 23 + sw * 2, 130], S.h3, true, true);
+    strands(P, [[20, 40, 15, 70, 13 + sw, 100, 12 + sw * 2, 130], [28, 56, 25, 84, 23 + sw * 2, 130],
+      [86, 44, 90, 74, 93 + sw, 104, 95 + sw * 2, 130]], S.h3);
 
-    // ---- body: neck, capelet, blouse, ribbon
-    var neck = P.poly([49, 60, 61, 60, 61, 86, 49, 86]);
+    // ---- body
+    var neck = P.poly([50, 60, 62, 60, 63, 82, 50, 82]);
     P.part(neck, S.s1, S.sl);
-    var cape = P.spoly([46, 79, 32, 83, 19, 90, 11, 101, 7, 116, 5, 134, 107, 134, 105, 114, 100, 100, 92, 90, 79, 83, 64, 79]);
-    P.part(cape, S.c1, S.cl);
-    P.recol(cape.band(5, -2), [S.c1], S.c2);
-    P.recol(cape.band(-2, 3), [S.c1], S.c0);
-    P.recol(P.spoly([36, 84, 46, 84, 50, 98, 46, 112, 40, 120, 34, 110]).and(cape), [S.c1, S.c0], S.c2);
-    P.recol(P.spoly([62, 84, 74, 84, 80, 96, 74, 110, 66, 112]).and(cape), [S.c1, S.c0], S.c2);
-    P.recol(P.spoly([5, 112, 14, 104, 20, 116, 16, 134, 4, 134]).and(cape), [S.c1, S.c0], S.c2);
-    P.line([24, 96, 19, 112, 17, 128], S.c2, true);
-    P.line([33, 104, 31, 118, 32, 128], S.c2, true);
-    P.line([88, 98, 93, 112, 95, 128], S.c2, true);
-    P.line([23, 97, 18, 112, 16, 128], S.c3, true, true);
-    var blouse = P.poly([47, 81, 62, 81, 57, 106, 53, 106]);
-    P.part(blouse, S.W, S.cl);
-    var lapL = P.spoly([46, 78, 40, 84, 37, 95, 42, 108, 51, 116, 54, 108, 48, 95, 49, 84]);
-    var lapR = P.spoly([63, 78, 70, 82, 74, 92, 69, 106, 58, 116, 56, 108, 63, 95, 61, 84]);
-    P.part(lapL, S.c1, S.cl); P.part(lapR, S.c0, S.cl);
-    P.recol(lapL.band(2, 0), [S.c1], S.c2);
-    P.recol(lapR.band(2, -1), [S.c0], S.c1);
-    P.recol(lapL.or(lapR).shift(-2, 3).sub(lapL).sub(lapR).and(cape), [S.c1, S.c0], S.c2);
-    var tails = P.poly([53, 88, 57, 88, 52, 106, 47, 104]).or(P.poly([54, 88, 58, 88, 64, 104, 59, 106]));
-    P.part(tails, S.a2, S.al);
-    P.recol(tails.band(-1, 0), [S.a2], S.a1);
-    var loops = P.ell(49.5, 86, 5.5, 3.6, 0.3).or(P.ell(61, 86, 5.5, 3.6, -0.3));
-    P.part(loops, S.a1, S.al);
-    P.recol(loops.band(0, -2), [S.a1], S.a2);
-    P.part(P.ell(55.5, 86, 2.7, 2.7), S.m1, S.ml);
-    P.px(55, 85, S.m0); P.px(56, 85, S.W);
+    // blouse torso under the capelet
+    var torso = P.poly([36, 92, 78, 92, 82, 128, 32, 128]);
+    P.part(torso, S.c1, S.cl);
+    P.recol(torso.band(6, 0), [S.c1], S.c2);
+    // puffed sleeves below the capelet
+    var slvN = P.spoly([4, 106, 18, 104, 30, 112, 34, 128, 1, 128]);
+    P.part(slvN, S.c1, S.cl); P.recol(slvN.band(5, -2), [S.c1], S.c2); P.recol(slvN.band(-2, 2), [S.c1], S.c0);
+    P.line([12, 114, 16, 128], S.c2, true); P.line([22, 114, 26, 128], S.c2, true);
+    var slvF = P.spoly([92, 100, 104, 104, 110, 116, 110, 128, 88, 128]);
+    P.part(slvF, S.c1, S.cl); P.recol(slvF.band(4, -1), [S.c1], S.c2); P.recol(slvF.band(-2, 2), [S.c1], S.c0);
+    // capelet (two halves meeting at the collar, open over the jabot), gold edging, sunburst emblem
+    var capeN = P.spoly([50, 78, 38, 81, 25, 87, 14, 95, 7, 104, 4, 112, 14, 116, 28, 117, 40, 114, 45, 106, 49, 96, 53, 86]);
+    var capeF = P.spoly([60, 78, 72, 80, 85, 86, 96, 94, 103, 102, 106, 109, 96, 112, 84, 111, 74, 107, 68, 100, 63, 90]);
+    [capeN, capeF].forEach(function (cp, i) {
+      P.part(cp, S.c1, S.cl);
+      P.recol(cp.band(i ? 3 : 5, -2), [S.c1], S.c2);
+      P.recol(cp.band(-2, 3), [S.c1], S.c0);
+      var hem = cp.sub(cp.shift(0, -3)).sub(cp.shift(-1, 0).sub(cp.shift(1, 0)).shift(0, 0));
+      P.recol(cp.band(0, -2), [S.c1, S.c0, S.c2], S.m1);
+      P.recol(cp.band(0, -1), [S.m1], S.m2);
+    });
+    // fold shadows on the capelet
+    P.line([30, 92, 24, 104, 22, 114], S.c2, true, true);
+    P.line([40, 88, 38, 100, 36, 112], S.c2, true, true);
+    P.line([80, 90, 84, 100, 86, 110], S.c2, true, true);
+    paintFlower(P, 26, 103, 5.2, 10, 0.2, 0.85);
+    // high collar with frilled edge
+    var collar = P.spoly([48, 72, 56, 74, 64, 72, 66, 80, 64, 86, 56, 88, 48, 86, 46, 79]);
+    P.part(collar, S.c1, S.cl);
+    P.recol(collar.band(3, 0), [S.c1], S.c2);
+    P.recol(collar.band(-1, 2), [S.c1], S.c0);
+    for (var fx = 47; fx <= 65; fx += 3) { P.px(fx, 73 + (fx > 56 ? (fx - 56) / 6 | 0 : 0), S.W); P.px(fx + 1, 72 + (fx > 56 ? (fx - 56) / 6 | 0 : 0), S.cl); }
+    // jabot: cascading cream ruffles
+    var jab = P.mask();
+    [[56, 90, 6], [55, 97, 7], [56, 104, 8], [55, 111, 8.5], [56, 118, 9]].forEach(function (r, i) {
+      var t = P.spoly([r[0] - r[2], r[1] - 2, r[0] + r[2] * 0.8, r[1] - 3, r[0] + r[2], r[1] + 4, r[0] + r[2] * 0.4, r[1] + 6, r[0] - r[2] * 0.2, r[1] + 5, r[0] - r[2] * 0.8, r[1] + 6, r[0] - r[2] - 1, r[1] + 3]);
+      P.part(t, S.c0, S.cl);
+      P.recol(t.band(3, -1), [S.c0], S.c2);
+      P.recol(t.band(1, -2), [S.c0], S.c1);
+      P.px(Math.round(r[0] - r[2] * 0.4), r[1] + 4, S.c2); P.px(Math.round(r[0] + r[2] * 0.3), r[1] + 3, S.c2);
+      jab = jab.or(t);
+    });
+    // black cravat: knot + drape falling to her right, sunburst brooch
+    var drape = P.spoly([56, 86, 62, 85, 70, 92, 74, 102, 72, 110, 67, 104, 63, 96, 58, 92]);
+    P.part(drape, S.d1, S.dl);
+    P.recol(drape.band(-1, 1), [S.d1], S.d0);
+    P.recol(drape.band(3, -1), [S.d1], S.d2);
+    var drape2 = P.spoly([52, 88, 56, 90, 54, 100, 50, 106, 48, 98]);
+    P.part(drape2, S.d1, S.dl); P.recol(drape2.band(2, 0), [S.d1], S.d2);
+    var knot = P.spoly([51, 84, 57, 82, 63, 84, 62, 90, 56, 92, 51, 90]);
+    P.part(knot, S.d1, S.dl); P.recol(knot.band(-1, 1), [S.d1], S.d0);
+    paintFlower(P, 57, 87, 3.6, 8, 0.4);
 
     // ---- head
-    var skull = P.ell(52, 36, 27, 26.5).or(P.ell(46, 40, 22, 24));
-    hairClump(P, [[71, 30, 77, 46, 79, 62, 81 + sw * 0.5, 76, 83 + sw, 89], 10, 0, 11, 0.25], S.h1);
+    var skull = P.ell(53, 36, 25, 26).or(P.ell(47, 42, 21, 23));
     P.part(skull, S.h1, S.hl);
-    var face = P.spoly([34, 28, 32, 38, 33, 48, 36, 55, 41, 61, 48, 66, 55, 70.5, 61, 73, 65, 72, 70, 67, 74, 61, 77, 55, 78, 50, 76.5, 45, 77.5, 39, 76.5, 30, 64, 25, 46, 25]);
+    var face = P.spoly([36, 27, 33, 37, 33, 47, 35, 55, 40, 62, 47, 67, 54, 71, 59, 73.5, 63, 73, 68, 68, 72, 62, 76, 55, 77.5, 49, 77, 43, 77.5, 36, 76, 29, 64, 25, 46, 25]);
     P.part(face, S.s1, S.sl);
-    P.recol(neck.and(face.shift(-1, 4)).sub(face), [S.s1], S.s2);
-    P.recol(face.band(3, 0).and(P.rect(0, 40, 40, 30)), [S.s1], S.s2);
-    P.part(P.ell(34, 50, 3, 5), S.s1, S.sl);
+    P.recol(neck.and(face.shift(-1, 5)).sub(face), [S.s1], S.s2);
+    P.recol(face.band(4, 0).and(P.rect(0, 30, 44, 40)), [S.s1], S.s2);
+    P.recol(face.band(2, -2).and(P.rect(36, 60, 30, 20)), [S.s1, S.s2], S.s2);
 
     // ---- face features
-    P.map(41, 41, lose ? EYES.nearTired : win ? EYES.nearHappy : EYES.near, EL);
-    P.map(62, 41, lose ? EYES.farTired : win ? EYES.farHappy : EYES.far, EL);
-    if (expr === 'cut') { P.line([42, 35, 46, 36, 51, 38], S.hl); P.line([62, 38, 66, 36, 69, 36], S.hl); }
-    else if (lose) { P.line([42, 36, 46, 35, 50, 36], S.hl); P.line([63, 36, 66, 35, 68, 36], S.hl); }
-    else { P.line([43, 37, 46, 36, 51, 36], S.hl); P.line([63, 36, 67, 36, 69, 37], S.hl); }
-    P.px(68, 56, S.s2); P.px(68, 57, S.sl);
-    P.map(59, 62, win ? MOUTHS.open : lose ? MOUTHS.wobble : MOUTHS.smile, EL);
-    [[43, 55], [45, 55], [47, 55], [49, 55], [44, 56], [46, 56], [48, 56], [64, 55], [66, 55], [68, 55], [65, 56], [67, 56]].forEach(function (p) {
-      if (P.get(p[0], p[1]) === S.s1) P.px(p[0], p[1], (p[0] + p[1]) & 1 ? S.bl : S.blS);
+    P.map(40, 42, lose ? EYES.nearLose : win ? EYES.nearWin : EYES.near, EL);
+    P.map(62, 42, lose ? EYES.farLose : win ? EYES.farWin : EYES.far, EL);
+    P.px(71, 56, S.s2); P.px(71, 57, S.sl);                     // nose
+    if (win) P.map(59, 63, MOUTHS.smile, EL);
+    else if (lose) P.map(59, 63, MOUTHS.tired, EL);
+    else P.map(59, 63, MOUTHS.calm, EL);
+    [[42, 55], [44, 55], [46, 55], [43, 56], [45, 56], [66, 55], [68, 55], [67, 56]].forEach(function (p) {
+      if (P.get(p[0], p[1]) === S.s1) P.px(p[0], p[1], win || lose ? S.bl : S.blS);
     });
 
-    // ---- fringe (side-swept from a part on her near side), cast shadow first
+    // ---- fringe: parted (part at x≈45), long strands; cast shadow first
     var FR = [
-      [[52, 11, 66, 15, 75, 25, 78, 37, 78, 47], 15, 0, 13],
-      [[47, 11, 58, 18, 65, 28, 68, 37, 67, 42], 14, 0, 14],
-      [[42, 12, 50, 21, 56, 31, 58, 38, 56, 43], 13, 0, 14],
-      [[38, 13, 42, 23, 46, 31, 47, 39], 12, 0, 12],
-      [[34, 15, 33, 25, 35, 35, 38, 43], 11, 0, 11]
+      [[46, 11, 60, 14, 71, 22, 77, 33, 79, 45], 14, 0, 13],
+      [[46, 12, 57, 19, 64, 28, 67, 36, 68, 41], 13, 0, 12],
+      [[45, 13, 51, 23, 56, 34, 58, 44, 57, 53], 10, 0, 9],
+      [[45, 13, 47, 23, 50, 32, 51, 40], 8, 0, 8],
+      [[44, 12, 38, 18, 35, 27, 34, 38], 11, 0, 10],
+      [[44, 13, 41, 23, 41, 32, 42, 39], 7, 0, 7]
     ];
     var fringe = P.mask();
     FR.forEach(function (c) { fringe = fringe.or(P.sr(c[0], c[1], c[2], c[3])); });
     P.recol(fringe.shift(-1, 2).or(fringe.shift(0, 2)), [S.s1], S.s2);
     FR.forEach(function (c) { hairClump(P, c, S.h1); });
-    P.line([58, 16, 64, 26, 66, 34], S.h2, true, true);
-    P.line([46, 16, 50, 26, 52, 33], S.h2, true, true);
-    // near side lock (in front of the ear, over the capelet)
-    var nearLock = hairClump(P, [[36, 27, 30, 42, 29, 58, 31, 74, 27 + sw, 90, 24 + sw * 2, 104, 20 + sw * 2, 110], 11, 0, 12, 0.25, [0.1, 0.4]], S.h1);
-    P.line([32, 40, 31, 58, 32, 76], S.h2, true, true);
+    strands(P, [[54, 16, 62, 26, 66, 36], [50, 18, 54, 28, 56, 38]]);
     // skull shading + broken highlight ring
     P.recol(skull.band(5, -4), [S.h1], S.h2);
-    var ring = P.ell(55, 33, 25, 21).sub(P.ell(56, 36, 25, 21)).and(skull);
+    var ring = P.ell(55, 33, 24, 20).sub(P.ell(56, 36, 24, 20)).and(skull);
+    for (var gx = 0; gx < 112; gx += 7) ring = ring.sub(P.rect(gx, 0, 2, 40));
     P.recol(ring, [S.h1], S.h0);
-    // ahoge
-    var aho = lose ? P.sr([52, 12, 50, 6, 46, 4, 42, 7], 3, 1) : P.sr([52, 12, 53, 5, 58, 1, 64, 2, 66, 6], 3, 1);
-    P.part(aho, S.h1, S.hl);
-    // starburst hair clip on the near side of the head
-    var clip = starburst(P, 31, 23, 8.5, -0.25);
-    P.part(clip, S.a1, S.al);
-    P.recol(clip.band(-1, -1), [S.a1], S.a0);
-    P.px(31, 23, S.W); P.px(32, 23, S.a0); P.px(31, 22, S.a0); P.px(30, 23, S.a0); P.px(31, 24, S.a0);
+    // part line
+    P.line([45, 10, 45, 14], S.h3);
 
-    if (!o.noPen) drawPen(P, o);
+    // ---- face-framing locks (in front of the capelet), long and straight
+    hairClump(P, [[37, 26, 32, 38, 30, 54, 30, 72, 29 + sw, 96, 27 + sw * 2, 132], 10, 6, 11, 0, [0.12, 0.5]], S.h1);
+    hairClump(P, [[39, 30, 36, 44, 35, 58, 36, 70], 4.5, 0, 5], S.h1);
+    hairClump(P, [[75, 26, 79, 40, 80, 56, 81, 74, 83 + sw, 98, 85 + sw * 2, 132], 9, 6, 10, 0, [0.1, 0.45]], S.h1);
+    strands(P, [[32, 46, 31, 70, 30, 100], [80, 50, 82, 80, 84, 110]]);
+
+    // ---- hair ornament: black ribbon bow, cream tassel, sunburst flower (near side)
+    var bow = P.ell(17, 17, 7, 3.6, -0.5).or(P.ell(17, 29, 7, 3.6, 0.45));
+    var tail1 = P.sr([24, 24, 21, 32, 18, 42], 4, 2.4), tail2 = P.sr([25, 25, 26, 34, 24, 44], 3.4, 2);
+    P.part(tail1.or(tail2), S.d1, S.dl); P.recol(tail1.or(tail2).band(2, 0), [S.d1], S.d2);
+    P.part(bow, S.d1, S.dl); P.recol(bow.band(-1, 1), [S.d1], S.d0); P.recol(bow.band(2, -1), [S.d1], S.d2);
+    var tas = P.sr([30, 30, 30, 38, 29.5, 45], 2, 4);
+    P.part(tas, S.c1, S.cl); P.recol(tas.band(2, 0), [S.c1], S.c2);
+    P.part(P.rect(28.5, 29, 3, 3), S.m1, S.ml);
+    paintFlower(P, 27, 23, 8.5, 12, 0.1);
+
+    if (!o.noProp) drawBook(P, o);
 
     P.outer(S.ol);
 
     // ---- expression accents
-    if (win) { sparkle(P, 86, 26, true); sparkle(P, 18, 16, false); sparkle(P, 74, 7, false); }
-    if (lose) P.map(76, 28, ['.r.', 'rRr', 'rRR', '.R.'], EL);
-    if (!o.noPen) sparkle(P, 101, 2, win);
+    if (win) { sparkle(P, 88, 22, true); sparkle(P, 12, 46, false); }
+    if (lose) {
+      P.map(77, 30, ['.r.', 'rRr', 'rRR', '.R.'], EL);
+      // stray strands
+      P.line([50, 10, 47, 4, 43, 3], S.h1); P.line([51, 10, 48, 5], S.hl);
+    }
   }
 
-  function drawPen(P, o) {
-    var bx0 = 89, by0 = 134, bx1 = 100, by1 = 19;
-    var barrel = P.poly([bx0 - 4.5, by0, bx0 + 4.5, by0, bx1 + 4, by1, bx1 - 4, by1]);
-    P.part(barrel, S.d1, S.dl);
-    P.recol(barrel.band(-2, 0), [S.d1], S.d0);
-    P.recol(barrel.band(3, 0), [S.d1], S.d2);
-    [[30, 3], [36, 1]].forEach(function (b) {
-      var t = (b[0] - by1) / (by0 - by1), cx = bx1 + (bx0 - bx1) * t, cy = b[0];
-      var band = P.poly([cx - 5.5, cy, cx + 5.5, cy - 1, cx + 5.5, cy - 1 + b[1], cx - 5.5, cy + b[1]]);
-      P.part(band, S.m1, S.ml); P.recol(band.band(-2, 0), [S.m1], S.m0);
+  function drawBook(P, o) {
+    // red-brown leather book, cover toward the viewer, held up by her far hand
+    var pages = P.poly([100, 72, 105, 70, 103, 109, 99, 112]);
+    P.part(pages, S.c0, S.cl);
+    for (var y = 76; y < 108; y += 3) P.px(102, y, S.c2);
+    var cover = P.poly([76, 69, 101, 72, 99, 112, 74, 109]);
+    P.part(cover, S.x1, S.xl);
+    P.recol(cover.band(-2, 2), [S.x1], S.x0);
+    P.recol(cover.band(3, -1), [S.x1], S.x2);
+    // gold border line + corners
+    P.line([79, 73, 97, 75, 95.5, 108, 77.5, 105.5, 79, 73], S.m2);
+    [[76, 69, 1, 1], [101, 72, -1, 1], [99, 112, -1, -1], [74, 109, 1, -1]].forEach(function (c) {
+      var t = P.poly([c[0], c[1], c[0] + 6 * c[2], c[1] + 0.6 * c[3], c[0] + 0.6 * c[2], c[1] + 6 * c[3]]);
+      P.part(t, S.m1, S.ml); P.px(c[0] + c[2], c[1] + c[3], S.m0);
     });
-    var sec = P.poly([bx1 - 4, by1, bx1 + 4, by1, bx1 + 3.6, by1 - 4, bx1 - 3, by1 - 4]);
-    P.part(sec, S.d2, S.dl);
-    var nib = P.spoly([bx1 - 3, by1 - 4, bx1 - 3, by1 - 9, bx1 + 0.5, by1 - 16, bx1 + 2.5, by1 - 14, bx1 + 3.6, by1 - 9, bx1 + 3.6, by1 - 4]);
-    P.part(nib, S.m1, S.ml);
-    P.recol(nib.band(-2, 0), [S.m1], S.m0);
-    P.line([bx1 + 0.5, by1 - 5, bx1 + 1, by1 - 13], S.m3);
-    P.px(Math.round(bx1 + 0.5), by1 - 7, S.ml);
-    // sleeve + terracotta cuff + fist around the barrel
-    var sleeve = P.poly([82, 116, 97, 118, 90, 134, 70, 134]);
-    P.part(sleeve, S.W, S.cl);
-    P.recol(sleeve.band(3, -1), [S.W], S.c1);
-    var cuff = P.spoly([82, 112, 95, 111, 99, 115, 96, 122, 82, 121, 79, 116]);
-    P.part(cuff, S.a2, S.al);
-    P.recol(cuff.band(-1, 2), [S.a2], S.a1);
-    P.recol(cuff.band(2, -1), [S.a2], S.a3);
-    var fist = P.spoly([83, 104, 85, 99, 90, 97, 96, 98, 99, 102, 99, 108, 97, 113, 90, 114, 85, 112]);
-    P.part(fist, S.s1, S.sl);
-    P.recol(fist.band(3, -2), [S.s1], S.s2);
-    P.line([86, 102, 92, 102.5, 98, 102], S.sl, true);
-    P.line([86, 106, 92, 106.5, 98, 106], S.sl, true);
-    P.line([86, 110, 92, 110.5, 97, 110], S.sl, true);
-    var thumb = P.sr([84, 108, 85, 102, 89, 98, 93, 97], 4.5, 3);
-    P.part(thumb, S.s1, S.sl);
-    P.px(92, 98, S.s0); P.px(97, 101, S.s0);
+    // a small gold sunburst on the cover
+    var em = starburst(P, 88, 88, 5, -0.2);
+    P.part(em, S.m1, S.m2);
+    // sleeve + frilled cuff + slender hand gripping the cover's lower left
+    var slv = P.poly([68, 114, 84, 112, 90, 128, 66, 128]);
+    P.part(slv, S.c1, S.cl); P.recol(slv.band(4, -1), [S.c1], S.c2);
+    var cuff = P.spoly([67, 108, 74, 104, 82, 106, 86, 112, 82, 116, 74, 117, 68, 115]);
+    P.part(cuff, S.c0, S.cl); P.recol(cuff.band(3, -1), [S.c0], S.c2);
+    P.px(71, 115, S.cl); P.px(76, 116, S.cl); P.px(81, 115, S.cl);
+    var hand = P.spoly([72, 106, 73, 99, 78, 95, 83, 96, 85, 101, 82, 107, 76, 109]);
+    P.part(hand, S.s1, S.sl); P.recol(hand.band(3, -1), [S.s1], S.s2);
+    [[[78, 97, 82, 91, 85, 87], 3], [[80, 99, 85, 94, 88.5, 91], 3], [[82, 102, 87, 98, 90, 96], 2.8], [[83, 105, 87, 103, 89.5, 101.5], 2.5]].forEach(function (f) {
+      var m = P.sr(f[0], f[1], f[1] * 0.75);
+      P.part(m, S.s1, S.sl); P.recol(m.band(0, -1), [S.s1], S.s2);
+    });
+    P.px(84, 88, S.s0); P.px(87, 92, S.s0);
   }
 
   // ---------------------------------------------------------------- face icon 24x24 (hand-typed)
   var FACE = [
-    '........hhhhh...........',
-    '.....hhhHHHHhhh.........',
-    '...hhHHHHHHHHHHhh.......',
-    '..hHHHAHHHHHHHHHHh......',
-    '.hHHAaAHHHHHHHHHHHh.....',
-    '.hHHHAHHhHHHHhHHHHHh....',
-    'hHHHHHHhHHHHhHHHHHHh....',
-    'hHHHHHhfffHhffhHHHHHh...',
-    'hHHHHhfffffhffffhHHHh...',
-    'hHHHhKKKKfffKKKfhHHh....',
-    'hHHHhKDWDfffKDWKfhHh....',
-    'hHHhfKsDsfffKsDKfhHh....',
-    'hHHhfwBBwfffwBBwfhh.....',
-    'hHHhfffffffffffffhh.....',
-    'hHHHhbbfffffffbbfh......',
-    '.hHHhfffffmmfffff.......',
-    '.hHHHhfffffffffh........',
-    '..hHHHhhffffffh.........',
-    '..hHHhhcRRRRRch.........',
-    '...hhhccaRaRaRcch.......',
-    '...hhccccRRRccccch......',
-    '....hcccccRcccccccch....',
-    '....cccccccccccccccc....',
-    '...ccccccccccccccccccc..'
+    '.......hhhhhhh..........',
+    '.....hhHHHHHHHhh........',
+    '..AAhHHHHHHHHHHHhh......',
+    '.AaAAHHHHHhHHHHHHHh.....',
+    'AaoaAHHHHhHHHHhHHHHh....',
+    '.AaAAHHHhfHHHhfhHHHh....',
+    '.dAAhHHhfffHhfffhHHHh...',
+    'dddhHHhfffffhffffhHHh...',
+    '.dhHHhffffffhffffhHHh...',
+    '..hHHhKKKKfffKKKfhHHh...',
+    '..hHhfKDWDffKDWKfhHHh...',
+    '..hHhfwsBwfffsBwfhHHh...',
+    '..hHhfffffffffffhHHHh...',
+    '..hHHhfcffffffcfhHHHh...',
+    '..hHHhfffffmmfffhHHHh...',
+    '..hHHHhfffffffffhHHHh...',
+    '..hHHHHhhffffhhhHHHHh...',
+    '..hHHHhCChffhCCChHHHh...',
+    '..hHHhCCCCdAdCCCChHHh...',
+    '.hHHhCCCCCCdCCCCCChHHh..',
+    '.hHHhCCCCCcdcCCCCCChHh..',
+    '.hHhCCCCCCcccCCCCCCChHh.',
+    'hHHhCCMMMCcccCCMMMCChHh.',
+    'hHhCCCCCCCcccCCCCCCCChh.'
   ];
-  var FL = { h: S.hl, H: S.h1, A: S.a1, a: S.W, f: S.s1, K: S.lash, D: S.e2, W: S.W, s: S.e1, w: S.ew, B: S.e0, b: S.bl, m: S.mo, c: S.c1, R: S.a2 };
+  var FL = { h: S.hl, H: S.h1, A: S.a1, a: S.a0, o: S.a3, d: S.d1, f: S.s1, K: S.lash, D: S.e3, W: S.W, s: S.e2, w: S.ew, B: S.e1,
+    c: S.blS, m: S.mo, C: S.c1, M: S.m1 };
 
   I.ART.claude = {
     bust: function () { var P = K.painter(112, 128); drawBust(P, {}); return P; },
@@ -340,8 +378,8 @@
     bustLose: function () { var P = K.painter(112, 128); drawBust(P, { expr: 'lose' }); return P; },
     titleFrame: function (o) { var P = K.painter(112, 128); drawBust(P, o); return P; },
     cutin: function () { return I.cutin ? I.cutin('claude') : K.painter(240, 72); },
-    face: function () { var P = K.painter(24, 24); P.map(0, 0, FACE, FL); return P; }
+    face: function () { var P = K.painter(24, 24); P.map(0, 0, FACE, FL); P.outer(S.ol, function (s) { return s === S.s1 ? S.sl : s === S.C || s === S.c1 ? S.cl : S.ol; }); return P; }
   };
   I.drawClaudeBust = drawBust;
-  I.H = { tipMap: tipMap, hairClump: hairClump, sparkle: sparkle, starburst: starburst };
+  I.H = { tipMap: tipMap, hairClump: hairClump, sparkle: sparkle, starburst: starburst, strands: strands, paintFlower: paintFlower };
 })();
