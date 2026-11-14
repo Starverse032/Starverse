@@ -189,8 +189,8 @@
     D.crescent = I.anim(140, 150, 14, 70, 140, function (b, f) {
       var cx = 70 + 6, cy = 140 - 62, R = 52, a0 = PI * 0.42, sweep = Math.min(1, (f + 1) / 5) * PI * 1.45, head = a0 - sweep, rng = I.bakeRng(900 + f);
       var fade = f < 6 ? 0 : (f - 6) / 8, m = new I.Buf(140, 150);
-      for (var i = 0; i <= 160; i++) {
-        var u = i / 160, a = a0 - sweep * u, w = 3 + 10 * Math.sin(PI * Math.min(1, u * 1.15)) * (1 - fade * 0.6);
+      for (var i = 0; i <= 480; i++) {
+        var u = i / 480, a = a0 - sweep * u, w = 2 + 10 * Math.sin(PI * Math.min(1, u * 1.15)) * (1 - fade * 0.6) * Math.min(1, sweep / (PI * 0.9));
         if (u < fade * 0.9) continue;
         var px = cx + Math.cos(a) * R, py = cy + Math.sin(a) * R * 1.05, nx = Math.cos(a), ny = Math.sin(a);
         for (var s = -w; s <= w; s += 0.5) {

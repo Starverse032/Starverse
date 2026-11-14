@@ -111,87 +111,116 @@
       ['recovery', P(j0, { fF: [16, -10] })]]
   });
 
-  // ---------------------------------------------------------------- wave: knee-raise → stomp; wave spawns at the leading toe (muzzle)
-  var WV0 = P(S, ATK, { hip: [-2, -26], lean: -6, bend: -4, fF: [9, -17], faF: 25, knF: -1, fB: [-8, 0], hF: [10, -48], hB: [-8, -44], handB: 'open', muz: [23, 0] });
-  var WV = P(S, HIT, { hip: [4, -17], lean: 18, bend: 6, fF: [19, 0], faF: 0, fB: [-10, 0], hF: [18, -30], hB: [8, -32], handF: 'fist', handB: 'fist', weapon: 'fF', muz: [23, 0] });
+  // ================================================================ SPECIALS (V2)
+  // rotate a pose about its hip (somersaults): limbs, torso, head, feet and tail turn together
+  function spin(pose, deg) {
+    var o = P(pose), c = o.hip || S.hip, r = deg * Math.PI / 180, cs = Math.cos(r), sn = Math.sin(r);
+    ['hF', 'hB', 'fF', 'fB'].forEach(function (k) {
+      var v = o[k] || S[k], dx = v[0] - c[0], dy = v[1] - c[1];
+      o[k] = [c[0] + dx * cs - dy * sn, c[1] + dx * sn + dy * cs];
+    });
+    o.lean = (o.lean || 0) + deg; o.tilt = (o.tilt || 0) + deg;
+    o.faF = (o.faF || 0) + deg; o.faB = (o.faB || 0) + deg; o.tail = (o.tail == null ? 0 : o.tail) + deg * 0.5;
+    return o;
+  }
+
+  // wave: turns her back, raises the tail high and slams it flat on the floor in front (muzzle = impact point)
+  var WV0 = P(S, ATK, { hip: [-3, -44], lean: 8, bend: 4, hF: [14, -62], hB: [4, -60], handF: 'fist', tail: 100, arch: 6, tsw: 0.3, muz: [40, 0] });
+  var WV1 = P(S, ATK, { hip: [-4, -46], lean: -6, bend: -8, hF: [12, -70], hB: [-4, -68], handF: 'open', handB: 'open', tail: 125, arch: 4, tsw: 0, skirt: 0.2, muz: [40, 0],
+    eyes: 'focus', mouth: 'teeth' });
+  // flipped: authored facing right with the tail slammed down behind = in front on screen
+  var WVX = P(S, HIT, { flip: 1, hip: [-6, -38], lean: 26, bend: 8, fF: [8, 0], fB: [-14, 0], faB: 30, hF: [16, -50], hB: [8, -46], handF: 'flat', handB: 'flat',
+    tail: 46, arch: -4, pen: -10, tl: 1, tsw: 0, skirt: 0.45, z: { tail: 6 }, weapon: 'tail', muz: [44, 0], eyes: 'focus', mouth: 'shout' });
   def('wave', {
     segs: sar(15, 3, 26), step: 2,
-    keys: [['startup', P(S, ATK, { muz: [23, 0] })], ['startup+7', WV0, 'out'], ['startup+12', P(WV0, { fF: [9, -19], hip: [-2, -27] }), 'snap'],
-      ['active', P(WV, { smear: { part: 'fF', from: 'startup+12', n: 3 } }), 'snap'], ['active+2', WV, 'snap'],
-      ['recovery', P(WV, { mouth: 'grin' }), 'snap'], ['recovery+10', P(WV, { mouth: 'grin', hip: [3, -19] }), 'out'],
-      ['recovery+22', P(S, ATK, { muz: [23, 0] })], ['recovery+25', S]]
+    keys: [['startup', P(S, ATK, { muz: [40, 0] })], ['startup+5', WV0, 'out'], ['startup+11', WV1, 'snap'],
+      ['startup+13', P(WVX, { tail: 150, arch: 4, pen: 0, tl: 0, mouth: 'teeth', smear: { part: 'tail', from: 'startup+11', n: 3 } }), 'snap'],
+      ['active', P(WVX, { smear: { part: 'tail', from: 'startup+13', n: 4 } }), 'snap'], ['active+2', WVX, 'snap'],
+      ['recovery', P(WVX, { mouth: 'grin' }), 'snap'], ['recovery+8', P(WVX, { tail: 60, arch: 2, tl: 0, mouth: 'grin', hip: [-5, -40] }), 'snap'],
+      ['recovery+14', P(S, ATK, { hip: [-2, -42], lean: 12, tail: 10, skirt: 0.25, muz: [40, 0] }), 'snap'],
+      ['recovery+25', P(S, { muz: [40, 0] })]]
   });
 
-  // ---------------------------------------------------------------- breach: rising whale-tail somersault kick
-  var BR = P(JR, HIT, { hip: [2, -34], lean: -40, bend: -10, tilt: -25, fF: [24, -60], faF: -60, knF: -1, fB: [-2, -8], faB: 40,
-    hF: [-8, -30], hB: [-12, -34], handF: 'open', handB: 'open', weapon: 'fF' });
+  // breach: rising back somersault — the tail sweeps up through a crescent in front of her
+  var BR0 = P(C, ATK, { hip: [0, -24], lean: 20, hF: [20, -40], hB: [8, -38], tail: 0 });
+  var BRa = P(S, HIT, { hip: [0, -48], lean: 0, bend: -6, fF: [10, -14], fB: [-4, -2], faF: 30, faB: 40, knF: -1, hF: [-4, -80], hB: [-14, -76],
+    handF: 'open', handB: 'open', tail: -10, arch: 4, tl: 1, tsw: 0, skirt: 0.5, z: { tail: 6 }, weapon: 'tail', eyes: 'focus', mouth: 'shout' });
   def('breach', {
     segs: [['startup', 5], ['rise', 12], ['fall', 12, true], ['land', 14]], step: 2,
-    keys: [
-      ['startup', P(C, ATK)], ['startup+3', P(C, ATK, { hip: [0, -11], lean: 30 })],
-      ['rise', P(BR, { smear: { part: 'fF', from: 'startup+3', n: 5 } }), 'snap'], ['rise+2', BR, 'snap'],
-      ['rise+7', P(BR, { lean: -70, tilt: -55, fF: [12, -66], hF: [-14, -40], mouth: 'grin' })],
-      ['fall', P(JF, ATK, { fF: [6, -8], fB: [-6, -10], faF: 30 })], ['fall+6', P(JF, ATK)],
-      ['land', P(S, { hip: [0, -14], lean: 22, hF: [14, -25], hB: [6, -26], eyes: 'focus' })], ['land+7', P(S, ATK)], ['land+13', S]
-    ]
+    keys: [['startup', P(C, ATK)], ['startup+3', BR0, 'snap'],
+      ['rise', P(spin(BRa, -50), { smear: { part: 'tail', from: 'startup+3', n: 4 } }), 'snap'],
+      ['rise+2', spin(BRa, -100), 'out'], ['rise+5', spin(P(BRa, { mouth: 'grin' }), -150)],
+      ['rise+8', spin(P(BRa, { tl: 0, z: {}, mouth: 'grin' }), -210)], ['rise+11', spin(P(JF, ATK, { tl: 0, skirt: 0.8 }), -290)],
+      ['fall', spin(P(JF, ATK, { skirt: 0.7, tail: -20 }), -360)], ['fall+6', spin(P(JF, ATK, { skirt: 0.6, hB: [-12, -63], tail: -20 }), -360)],
+      ['land', P(S, { hip: [0, -36], lean: 18, bend: 4, sq: 1, hF: [21, -46], hB: [9, -44], skirt: 0.35, eyes: 'focus' }), 'snap'],
+      ['land+3', P(S, ATK, { hip: [0, -40], lean: 14, skirt: 0.1 }), 'out'], ['land+13', S]]
   });
 
-  // ---------------------------------------------------------------- chain of thought rekka
-  var C1 = P(S, HIT, { hip: [8, -20], lean: 30, fF: [20, 0], fB: [-8, 0], faB: 30, hF: [32, -38], hB: [6, -36], weapon: 'hF' });
+  // chain of thought rekka: 1 lunging water hook · 2 knee under the hem · 3 rising palm uppercut
+  var C1a = P(S, ATK, { hip: [-3, -45], lean: 2, bend: -6, hB: [-8, -62], hF: [16, -66], handB: 'fist', z: { armB: 6 } });
+  var C1 = P(S, HIT, { hip: [8, -43], lean: 26, bend: 6, fF: [22, 0], fB: [-10, 0], faB: 30, hF: [14, -60], hB: [40, -66], handB: 'fist', handF: 'open',
+    z: { armB: 6 }, weapon: 'hB', tail: -10 });
   def('chain1', {
     segs: sar(9, 4, 18), step: 2,
-    keys: [['startup', P(S, ATK)], ['startup+5', P(S, ATK, { hip: [-2, -20], lean: 4, hF: [6, -38] }), 'out'],
-      ['active', P(C1, { smear: { part: 'hF', from: 'startup+5', n: 4 } }), 'snap'], ['active+2', C1, 'snap'],
-      ['recovery', P(C1, { mouth: 'grin' }), 'out'], ['recovery+14', P(S, ATK)], ['recovery+17', S]]
+    keys: [['startup', P(S, ATK)], ['startup+5', C1a, 'out'],
+      ['active', P(C1, { smear: { part: 'hB', from: 'startup+5', n: 4 } }), 'snap'], ['active+2', C1, 'snap'],
+      ['recovery', P(C1, { mouth: 'grin', hB: [36, -64] }), 'out'], ['recovery+12', P(S, ATK, { hip: [2, -45], lean: 10 })], ['recovery+17', S]]
   });
-  var C2 = P(S, HIT, { hip: [6, -26], lean: -6, fF: [12, -22], faF: 50, knF: -1, fB: [-6, 0], hF: [14, -44], hB: [4, -44], wpn: [16, -30] });
+  var C2 = P(S, HIT, { hip: [8, -47], lean: -6, bend: -4, fF: [24, -32], faF: 60, knF: -1, fB: [-4, 0], hF: [26, -70], hB: [18, -72], handF: 'fist', handB: 'fist',
+    weapon: 'kF', skirt: 0.3, z: { armB: 6 } });
   def('chain2', {
     segs: sar(7, 4, 20), step: 2,
-    keys: [['startup', P(C1, ATK)], ['startup+4', P(S, ATK, { hip: [2, -22], lean: 10, fF: [8, -6], hF: [14, -40], hB: [6, -40] }), 'out'],
-      ['active', P(C2, { smear: { part: 'fF', from: 'startup+4', n: 3 } }), 'snap'], ['active+2', C2, 'snap'],
-      ['recovery', P(C2, { mouth: 'grin' }), 'out'], ['recovery+16', P(S, ATK)], ['recovery+19', S]]
+    keys: [['startup', P(C1, ATK)], ['startup+4', P(S, ATK, { hip: [4, -45], lean: 10, fF: [14, -12], faF: 40, hF: [24, -68], hB: [20, -70], handB: 'fist', z: { armB: 6 } }), 'out'],
+      ['active', P(C2, { smear: { part: 'kF', from: 'startup+4', n: 3 } }), 'snap'], ['active+2', C2, 'snap'],
+      ['recovery', P(C2, { mouth: 'grin' }), 'out'], ['recovery+8', P(S, ATK, { fF: [14, -6], hip: [3, -45] })], ['recovery+19', S]]
   });
-  var C3 = P(S, HIT, { root: [0, -4], hip: [4, -30], lean: -8, tilt: -15, fF: [8, -4], fB: [-6, 0], faF: 40, hF: [16, -64], hB: [0, -40], weapon: 'hF', mouth: 'shout' });
+  var C3 = P(S, HIT, { root: [0, -6], hip: [4, -50], lean: -8, bend: -6, tilt: -15, fF: [9, -2], fB: [-8, 0], faF: 40, faB: 30, hF: [18, -96], hB: [-4, -64],
+    handF: 'flat', handB: 'fist', weapon: 'hF', mouth: 'shout', skirt: 0.45, tail: -30, arch: 26 });
   def('chain3', {
     segs: sar(9, 5, 26), step: 2,
-    keys: [['startup', P(C2, ATK)], ['startup+5', P(C, ATK, { hip: [2, -12], lean: 26, hF: [10, -16] }), 'out'],
+    keys: [['startup', P(C2, ATK)], ['startup+5', P(C, ATK, { hip: [2, -22], lean: 30, hF: [18, -32], hB: [10, -36], handF: 'flat' }), 'out'],
       ['active', P(C3, { smear: { part: 'hF', from: 'startup+5', n: 5 } }), 'snap'], ['active+2', C3, 'snap'],
-      ['recovery', P(C3, { root: [0, -2], mouth: 'grin' }), 'out'], ['recovery+18', P(S, ATK)], ['recovery+25', S]]
+      ['recovery', P(C3, { root: [0, -3], mouth: 'grin' }), 'out'], ['recovery+16', P(S, ATK, { skirt: 0.2 })], ['recovery+25', S]]
   });
 
-  // ---------------------------------------------------------------- deep dive
+  // deep dive: dives head-first into the water (floor) and erupts out of it
   def('diveIn', {
     segs: [['startup', 6], ['sink', 6]], step: 2,
-    keys: [['startup', P(S, ATK)], ['startup+3', P(C, ATK, { hF: [16, -50], hB: [12, -52], handF: 'flat', handB: 'flat', lean: 30 }), 'out'],
-      ['sink', P(C, ATK, { root: [6, 6], lean: 70, hF: [24, -4], hB: [22, -6], handF: 'flat', handB: 'flat', eyes: 'closed' })],
-      ['sink+5', P(C, ATK, { root: [10, 30], lean: 80, hF: [28, 0], hB: [26, -2], handF: 'flat', handB: 'flat', eyes: 'closed' })]]
+    keys: [['startup', P(S, ATK)], ['startup+3', P(S, ATK, { root: [0, -6], hip: [2, -50], lean: -10, hF: [16, -88], hB: [10, -90], handF: 'flat', handB: 'flat', skirt: 0.3, tail: -20 }), 'out'],
+      ['sink', P(S, ATK, { root: [8, 4], hip: [4, -40], lean: 70, bend: 6, fF: [-6, -20], fB: [-12, -26], faF: 60, faB: 70, hF: [40, -32], hB: [38, -34], handF: 'flat', handB: 'flat',
+        eyes: 'closed', skirt: 0.5, tail: 30 })],
+      ['sink+5', P(S, ATK, { root: [14, 36], hip: [4, -40], lean: 85, bend: 6, fF: [-10, -26], fB: [-14, -30], faF: 70, faB: 80, hF: [44, -26], hB: [42, -28], handF: 'flat', handB: 'flat',
+        eyes: 'closed', skirt: 0.6, tail: 40 })]]
   });
-  var DO = P(S, HIT, { root: [0, -6], hip: [2, -30], lean: -6, tilt: -10, hF: [14, -62], hB: [-6, -48], handB: 'open', fF: [4, -2], fB: [-6, 0], faF: 40, weapon: 'hF' });
+  var DO = P(S, HIT, { root: [0, -8], hip: [2, -50], lean: -6, bend: -6, tilt: -10, hF: [20, -92], hB: [-8, -70], handF: 'flat', handB: 'open', fF: [6, -2], fB: [-6, 0],
+    faF: 40, faB: 30, weapon: 'hF', skirt: 0.6, tail: -30, arch: 26 });
   def('diveOut', {
     segs: sar(6, 5, 22), step: 2,
-    keys: [['startup', P(C, ATK, { root: [0, 26], lean: 10, hF: [12, -40], hB: [6, -42] })], ['startup+4', P(C, ATK, { root: [0, 8] }), 'out'],
+    keys: [['startup', P(C, ATK, { root: [0, 30], lean: 10, hF: [14, -70], hB: [8, -72], handF: 'flat' })], ['startup+4', P(C, ATK, { root: [0, 10], hF: [16, -60] }), 'out'],
       ['active', P(DO, { smear: { part: 'hF', from: 'startup+4', n: 4 } }), 'snap'], ['active+2', DO, 'snap'],
-      ['recovery', P(DO, { root: [0, -2], mouth: 'grin' }), 'out'], ['recovery+14', P(S, { hip: [0, -17], lean: 18 })], ['recovery+21', S]]
+      ['recovery', P(DO, { root: [0, -3], mouth: 'grin' }), 'out'], ['recovery+12', P(S, { hip: [0, -38], lean: 16, skirt: 0.3 })], ['recovery+21', S]]
   });
-  var DK = P(JF, HIT, { hip: [-6, -24], lean: 34, fF: [10, 0], faF: 30, fB: [-12, -14], faB: 60, hF: [-4, -38], hB: [-14, -36], handF: 'open', handB: 'open', weapon: 'fF' });
+  // diveKick: both feet first, down-forward; skirt and tail streaming behind
+  var DK = P(JF, HIT, { hip: [-8, -40], lean: 38, bend: 6, fF: [12, 0], fB: [8, 2], faF: 40, faB: 45, knF: -1, knB: -1, hF: [-12, -62], hB: [-22, -58],
+    handF: 'open', handB: 'open', weapon: 'fF', skirt: -0.2, tail: -50, arch: 6, tsw: 0.4 });
   def('diveKick', {
     segs: [['startup', 8], ['active', 10, true], ['land', 12]], step: 2,
-    keys: [['startup', P(JF, ATK)], ['startup+5', P(JR, ATK, { fF: [6, -14], faF: 40, lean: -8 }), 'out'],
-      ['active', DK], ['active+5', P(DK, { fB: [-12, -13] })],
-      ['land', P(S, { hip: [0, -14], lean: 22, hF: [14, -25], hB: [6, -26], eyes: 'focus' })], ['land+7', P(S, ATK)], ['land+11', S]]
+    keys: [['startup', P(JF, ATK)], ['startup+5', P(JR, ATK, { fF: [8, -20], fB: [2, -16], faF: 40, faB: 40, lean: -12 }), 'out'],
+      ['active', DK], ['active+5', P(DK, { fB: [8, 1], hB: [-23, -57] })],
+      ['land', P(S, { hip: [0, -36], lean: 18, sq: 1, hF: [21, -46], hB: [9, -44], skirt: 0.3, eyes: 'focus' }), 'snap'], ['land+5', P(S, ATK)], ['land+11', S]]
   });
 
-  // ---------------------------------------------------------------- super: crouch-gather, snap-point upward, held
-  var SU0 = P(C, ATK, { hip: [0, -12], lean: 30, hF: [14, -8], hB: [9, -8], handF: 'flat', handB: 'flat', eyes: 'closed', mouth: 'shout' });
-  var SU1 = P(S, HIT, { hip: [1, -26], lean: -10, bend: -6, tilt: -15, hF: [16, -62], handF: 'point', hB: [-6, -36], handB: 'fist',
-    fF: [12, 0], fB: [-11, 0], mouth: 'grin', weapon: 'hF' });
+  // super 「深度思考·鲸落」: gathers water low, then both arms thrown up to call the whale, held; tail raised
+  var SU0 = P(C, ATK, { hip: [0, -20], lean: 30, hF: [24, -26], hB: [16, -24], handF: 'flat', handB: 'flat', eyes: 'closed', mouth: 'shout', tail: 0, arch: 30 });
+  var SU1 = P(S, HIT, { hip: [0, -47], lean: -8, bend: -8, tilt: -10, fF: [12, 0], fB: [-12, 0], hF: [20, -96], hB: [-4, -98], handF: 'open', handB: 'open',
+    mouth: 'grin', weapon: 'hF', skirt: 0.35, tail: -40, arch: 30, tsw: 1.6 });
   def('super', {
     segs: [['startup', 6], ['cast', 8], ['active', 44], ['recovery', 34]], step: 2,
     keys: [['startup', P(S, ATK)], ['startup+5', SU0, 'out'],
-      ['cast', SU0], ['cast+5', P(SU0, { hip: [0, -11] }), 'snap'],
+      ['cast', SU0], ['cast+5', P(SU0, { hip: [0, -18] }), 'snap'],
       ['active', P(SU1, { smear: { part: 'hF', from: 'cast+5', n: 4 } }), 'snap'], ['active+3', SU1, 'snap'],
-      ['active+22', bob(SU1, 0, 1)], ['active+42', SU1],
-      ['recovery', P(SU1, { mouth: 'smile' }), 'snap'], ['recovery+10', P(SU1, { mouth: 'smile', hF: [14, -50] }), 'out'],
+      ['active+22', P(SU1, { hip: [0, -46], hF: [21, -95] })], ['active+42', SU1],
+      ['recovery', P(SU1, { mouth: 'smile', eyes: 'happy' }), 'snap'], ['recovery+10', P(SU1, { mouth: 'smile', eyes: 'happy', hF: [18, -80], hB: [0, -82] }), 'out'],
       ['recovery+26', P(S, ATK)], ['recovery+33', S]]
   });
 })();
