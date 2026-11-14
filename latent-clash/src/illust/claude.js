@@ -293,14 +293,21 @@
     strands(P, [[32, 46, 31, 70, 30, 100], [80, 50, 82, 80, 84, 110]]);
 
     // ---- hair ornament: black ribbon bow, cream tassel, sunburst flower (near side)
-    var bow = P.ell(17, 17, 7, 3.6, -0.5).or(P.ell(17, 29, 7, 3.6, 0.45));
-    var tail1 = P.sr([24, 24, 21, 32, 18, 42], 4, 2.4), tail2 = P.sr([25, 25, 26, 34, 24, 44], 3.4, 2);
-    P.part(tail1.or(tail2), S.d1, S.dl); P.recol(tail1.or(tail2).band(2, 0), [S.d1], S.d2);
-    P.part(bow, S.d1, S.dl); P.recol(bow.band(-1, 1), [S.d1], S.d0); P.recol(bow.band(2, -1), [S.d1], S.d2);
-    var tas = P.sr([30, 30, 30, 38, 29.5, 45], 2, 4);
+    var FX = 27, FY = 22;
+    var tails = P.poly([FX - 3, FY + 2, FX - 9, FY + 18, FX - 6, FY + 16, FX - 4, FY + 20, FX + 1, FY + 4])
+      .or(P.poly([FX - 1, FY + 3, FX - 2, FY + 22, FX + 1, FY + 19, FX + 4, FY + 22, FX + 2, FY + 4]));
+    P.part(tails, S.d1, S.dl); P.recol(tails.band(2, 0), [S.d1], S.d2); P.recol(tails.band(-1, 0), [S.d1], S.d0);
+    var loopA = P.poly([FX, FY, FX - 13, FY - 9, FX - 15, FY - 3, FX - 12, FY + 1]);
+    var loopB = P.poly([FX, FY + 1, FX - 13, FY + 6, FX - 13, FY + 12, FX - 9, FY + 11]);
+    [loopA, loopB].forEach(function (l, i) {
+      P.part(l, S.d1, S.dl); P.recol(l.band(-1, 1), [S.d1], S.d0); P.recol(l.band(1, -2), [S.d1], S.d2);
+    });
+    P.line([FX - 4, FY - 1, FX - 11, FY - 4], S.d3); P.line([FX - 4, FY + 3, FX - 10, FY + 8], S.d3);
+    var tas = P.sr([FX + 5, FY + 9, FX + 5.5, FY + 16, FX + 5, FY + 24], 2.4, 4.5);
     P.part(tas, S.c1, S.cl); P.recol(tas.band(2, 0), [S.c1], S.c2);
-    P.part(P.rect(28.5, 29, 3, 3), S.m1, S.ml);
-    paintFlower(P, 27, 23, 8.5, 12, 0.1);
+    P.line([FX + 5, FY + 17, FX + 5, FY + 23], S.c2);
+    P.part(P.rect(FX + 3.5, FY + 8, 3, 4), S.m1, S.ml); P.px(FX + 5, FY + 8, S.m0);
+    paintFlower(P, FX, FY, 9.5, 14, 0.1);
 
     if (!o.noProp) drawBook(P, o);
 
