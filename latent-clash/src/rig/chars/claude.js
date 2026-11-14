@@ -290,13 +290,16 @@
   // ------------------------------------------------------------ skirt (layered, ankle length)
   var K = 7;
   function skirtGeo(sk, sec) {
-    var L = sk.lean, pel = sk.pel, la = L * 0.35;
+    var L = sk.lean, pel = sk.pel;
+    // upright: the bell hangs by gravity (roots follow the pelvis a little); lying / tumbling:
+    // the whole skirt frame turns with the body (k → 1)
+    var kL = Math.max(0, Math.min(1, (Math.abs(L) - 30) / 50)), la = L * (0.35 + 0.65 * kL), rotA = L * kL;
     var rootB = fr(pel, la, -8, -1.5), rootF = fr(pel, la, 7, -2.5);
     var swF = swing(sec.skirtF), swB = swing(sec.skirtB);
     function cl5(v) { return [Math.max(-5, Math.min(5, v[0])), Math.max(-4, Math.min(4, v[1]))]; }
     swF = cl5(swF); swB = cl5(swB);
     var fl = (sk.skirt || 0) + Math.max(0, -swF[1] - swB[1]) * 1.4;
-    var aF = 80 - fl * 3 - swF[0] * 2.5, aB = 101 + fl * 3 - swB[0] * 2.5, Lf = 49, Lb = 50;
+    var aF = 80 + rotA - fl * 3 - swF[0] * 2.5, aB = 101 + rotA + fl * 3 - swB[0] * 2.5, Lf = 49, Lb = 50;
     var pts = [], k, s;
     for (s = 0; s < 2; s++) {
       var S = s ? 'B' : 'F', kn = sk['kn' + S], an = sk['an' + S], hp = sk['hip' + S];
@@ -341,7 +344,7 @@
     }
     var roots = [];
     for (k = 0; k <= 10; k++) roots.push(lerp(rootB, rootF, k / 10));
-    return { rootB: rootB, rootF: rootF, rf: rf, rb: rb, hem: hem, roots: roots, wB: fr(sk.waist, L, -5.6, 4.5), wF: fr(sk.waist, L, 5.4, 4.5) };
+    return { la: la, rootB: rootB, rootF: rootF, rf: rf, rb: rb, hem: hem, roots: roots, wB: fr(sk.waist, L, -5.6, 4.5), wF: fr(sk.waist, L, 5.4, 4.5) };
   }
 
   C._skirtGeo = function (sk, sec) { return skirtGeo(sk, sec); };
@@ -363,7 +366,7 @@
       if (i < 9) ln(p, [lerp(r0, h0, 0.3)[0] + 1, lerp(r0, h0, 0.3)[1]], [h0[0] + 1, h0[1] - 2], col(M.c1, 0), true);
     }
     // black side panel (back half) with a gold border, cream drape lined orange over its top
-    var pTop = fr(sk.pel, sk.lean * 0.35, -1, -2.5);
+    var pTop = fr(sk.pel, G.la, -1, -2.5);
     var panel = [pTop, G.rootB, G.rb.m, G.rb.e];
     for (i = 1; i <= 4; i++) panel.push(hem[i]);
     panel.push([hem[4][0] + 1, hem[4][1] - 1]);
@@ -399,7 +402,7 @@
   }
 
   function drawHipBow(p, sk, sec) {
-    var c = fr(sk.pel, sk.lean * 0.35, -3, 4);
+    var c = fr(sk.pel, sk.lean * (0.35 + 0.65 * Math.max(0, Math.min(1, (Math.abs(sk.lean) - 30) / 50))), -3, 4);
     p.poly(H.flat([[c[0] - 1, c[1]], [c[0] - 5, c[1] - 2.5], [c[0] - 5, c[1] + 2], [c[0] - 1, c[1] + 1]]), M.c2, SH.limb, 1);
     p.poly(H.flat([[c[0] + 1, c[1]], [c[0] + 4, c[1] - 2.5], [c[0] + 4.5, c[1] + 2], [c[0] + 1, c[1] + 1]]), M.c2, SH.limb, 1);
     var bt = H.chainPts(sec.bowT);
