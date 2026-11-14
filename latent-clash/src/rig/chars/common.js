@@ -123,45 +123,47 @@
   };
 
   // ------------------------------------------------------------- hands
-  // hand at (x,y) with direction ang (deg). shape: fist|grip|open|relax|point|flat
-  H.hand = function (p, at, ang, shape, skin, glove) {
-    var d = H.rot(1, 0, ang), x = at[0], y = at[1];
-    var gm = glove == null ? skin : glove;
-    switch (shape) {
-      case 'open': {
-        // palm + fingers fanned a little, thumb up
-        p.cap(x, y, x + d[0] * 3, y + d[1] * 3, 1.5, 1.3, gm, I.SH.soft);
-        p.cap(x + d[0] * 2, y + d[1] * 2, x + d[0] * 4.2, y + d[1] * 4.2, 1.1, 0.8, skin, I.SH.soft);
-        var t = H.rot(0, -1, ang);
-        p.px(Math.round(x + d[0] * 1.5 + t[0] * 2), Math.round(y + d[1] * 1.5 + t[1] * 2), col(skin, 1));
-        break;
-      }
-      case 'flat': {     // straight palm (blocking / pushing): fingers up
-        p.cap(x, y, x + d[0] * 2.5, y + d[1] * 2.5, 1.5, 1.4, gm, I.SH.soft);
-        p.cap(x + d[0] * 2, y + d[1] * 2, x + d[0] * 2 + 0, y + d[1] * 2 - 3, 1.1, 0.9, skin, I.SH.soft);
-        break;
-      }
-      case 'relax': {
-        p.cap(x, y, x + d[0] * 2.5, y + d[1] * 2.5, 1.4, 1.0, gm, I.SH.soft);
-        p.px(Math.round(x + d[0] * 3.4), Math.round(y + d[1] * 3.4), col(skin, 2));
-        break;
-      }
-      case 'point': {
-        p.ell(x + d[0], y + d[1], 1.7, 1.7, gm, I.SH.soft);
-        p.cap(x + d[0] * 2, y + d[1] * 2, x + d[0] * 4.5, y + d[1] * 4.5, 0.6, 0.6, skin, null);
-        break;
-      }
-      default: {    // fist / grip
-        var cxp = x + d[0] * 1.2, cyp = y + d[1] * 1.2;
-        p.ell(cxp, cyp, 1.9, 1.9, gm, I.SH.soft);
-        // knuckle line on the leading edge
-        var k = H.rot(1.7, 0, ang);
-        p.pxOn(Math.round(cxp + k[0]), Math.round(cyp + k[1]), col(gm, 2));
-        if (glove != null && glove !== skin) {      // fingers peek out of fingerless gloves
-          p.pxOn(Math.round(cxp + d[0] * 1.6), Math.round(cyp + d[1] * 1.6 - 1), col(skin, 1));
-        }
-      }
+  // Hand-made stamps, authored pointing right (0°) and down-right (45°), wrist at
+  // the pivot; the other 6 directions are exact 90° rotations / mirrors.
+  // Codes: G/g = glove (or skin) light/shade, k/q = skin (fingers) light/shade.
+  var HANDS = {
+    fist: { a0: ['.Gk.', 'GGkk', 'GgkQ', '.gq.'], p0: [0, 1],
+            a45: ['GG..', 'GGk.', '.kkk', '.kkq', '..q.'], p45: [0, 0] },
+    open: { a0: ['..k..', 'GGkkk', 'GGkkq', '.gq..'], p0: [0, 1],
+            a45: ['GG...', 'GGk..', '.kkk.', '..kkq', '...q.'], p45: [0, 0] },
+    flat: { a0: ['..kk', '..kk', 'GGkk', 'GGkq', '.gq.'], p0: [0, 2],
+            a45: ['.kk..', 'GGkk.', 'GGkq.', '.gq..'], p45: [0, 1] },
+    relax: { a0: ['.Gk.', 'GGkk', '.qq.'], p0: [0, 1],
+             a45: ['GG.', 'GGk', '.kq', '.q.'], p45: [0, 0] },
+    point: { a0: ['.Gk...', 'GGkkkk', 'GGkq..', '.gq...'], p0: [0, 1],
+             a45: ['GG...', 'GGk..', '.kkk.', '..q.k', '.....'], p45: [0, 0] }
+  };
+  HANDS.grip = HANDS.fist;
+  var handCache = {};
+  function handImg(shape, dir, skin, glove) {
+    var key = shape + dir + '|' + skin + '|' + glove;
+    if (handCache[key]) return handCache[key];
+    var hs = HANDS[shape] || HANDS.fist;
+    var lg = { 'G': col(glove, 1), 'g': col(glove, 2), 'k': col(skin, 1), 'q': col(skin, 2), 'Q': col(skin, 3), 'K': col(skin, 0) };
+    var b0 = I.parseArt(hs.a0, lg, hs.p0[0], hs.p0[1]), b45 = I.parseArt(hs.a45, lg, hs.p45[0], hs.p45[1]);
+    var img, flip = false;
+    switch (dir) {
+      case 0: img = b0; break;
+      case 1: img = b45; break;
+      case 2: img = I.rotate(b0, 90); break;
+      case 3: img = b45; flip = true; break;
+      case 4: img = b0; flip = true; break;
+      case 5: img = I.rotate(b45, 270); flip = true; break;
+      case 6: img = I.rotate(b0, 270); break;
+      default: img = I.rotate(b45, 270);
     }
+    return (handCache[key] = { img: img, flip: flip });
+  }
+  // hand at the wrist point `at`, forearm direction ang (deg). shape: fist|grip|open|flat|relax|point
+  H.hand = function (p, at, ang, shape, skin, glove) {
+    var dir = ((Math.round(ang / 45) % 8) + 8) % 8;
+    var h = handImg(shape || 'fist', dir, skin, glove == null ? skin : glove);
+    p.blit(h.img, Math.round(at[0]), Math.round(at[1]), h.flip);
   };
 
   // ------------------------------------------------------------- smear

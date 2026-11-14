@@ -123,22 +123,31 @@
     var tone = s === 'F' ? 1 : 2;
     p.cap(sh[0], sh[1], el[0], el[1], 2.6, 2.3, M.c1, SH.limbL, tone);
     p.cap(el[0], el[1], ha[0], ha[1], 2.3, 2.2, M.c1, SH.limbL, tone);
-    // sleeve stripe
-    var st = lerp(sh, el, 0.55), d0 = rot(1, 0, Math.atan2(el[1] - sh[1], el[0] - sh[0]) * 180 / Math.PI + 90);
-    p.line(Math.round(st[0] - d0[0] * 2.4), Math.round(st[1] - d0[1] * 2.4), Math.round(st[0] + d0[0] * 2.4), Math.round(st[1] + d0[1] * 2.4), col(M.c2, tone), true);
-    var d = rot(1, 0, ang);
-    H.hand(p, [ha[0] + d[0] * 0.8, ha[1] + d[1] * 0.8], ang, shape || 'fist', M.skin, M.acc);
+    // sleeve stripes (two blue bands)
+    var bands = [[sh, el, 0.5], [el, ha, 0.45]];
+    for (var bi = 0; bi < 2; bi++) {
+      var A = bands[bi][0], B = bands[bi][1], st = lerp(A, B, bands[bi][2]);
+      var ax = Math.atan2(B[1] - A[1], B[0] - A[0]) * 180 / Math.PI, pp = rot(1, 0, ax + 90), dd = rot(1, 0, ax);
+      for (var w2 = 0; w2 < 2; w2++) {
+        var o = [st[0] + dd[0] * w2, st[1] + dd[1] * w2];
+        p.line(Math.round(o[0] - pp[0] * 2.6), Math.round(o[1] - pp[1] * 2.6), Math.round(o[0] + pp[0] * 2.6), Math.round(o[1] + pp[1] * 2.6), col(M.c2, tone), true);
+      }
+    }
+    H.hand(p, ha, ang, shape || 'fist', M.skin, M.acc);
   }
 
   function drawHood(p, sk) {
-    // lowered hood = whale back, behind the neck
+    // lowered hood = the whale's blue back, lying on the shoulders behind the neck
     var c = sk.chest, ca = sk.chestAng;
-    var pts = H.flat([fr(c, ca, -8, 2), fr(c, ca, -7, -3), fr(c, ca, -3, -5), fr(c, ca, 1, -3.5), fr(c, ca, 1, 1), fr(c, ca, -4, 3)]);
-    p.poly(pts, M.c2, SH.body);
-    var e = fr(c, ca, -5, -1);
-    p.px(Math.round(e[0]), Math.round(e[1]), 1);
-    var e2 = fr(c, ca, -2, -1.5);
-    p.px(Math.round(e2[0]), Math.round(e2[1]), 1);
+    var pts = H.flat([fr(c, ca, -9, 4), fr(c, ca, -9.5, -1), fr(c, ca, -7, -4.5), fr(c, ca, -2.5, -5.5), fr(c, ca, 1.5, -3.5),
+      fr(c, ca, 1, 0), fr(c, ca, -3, 2.5), fr(c, ca, -6, 5)]);
+    p.poly(pts, M.c2, SH.body, 1);
+    // white belly rim of the hood opening
+    var r0 = fr(c, ca, -2.5, -4.5), r1 = fr(c, ca, 0.5, -1);
+    p.line(Math.round(r0[0]), Math.round(r0[1]), Math.round(r1[0]), Math.round(r1[1]), col(M.c1, 1), true);
+    // two tiny whale eyes
+    var e = fr(c, ca, -6, -1.5), e2 = fr(c, ca, -3.5, -2.5);
+    p.px(Math.round(e[0]), Math.round(e[1]), 1); p.px(Math.round(e2[0]), Math.round(e2[1]), 1);
   }
 
   function drawTorso(p, sk, sec) {
@@ -153,10 +162,10 @@
     // hem band
     p.line(Math.round(hb[0]), Math.round(hb[1]) - 1, Math.round(hf[0]), Math.round(hf[1]) - 1, col(M.c1, 2), true);
     // kangaroo pocket
-    var k0 = fr(pel, L, -1, -3), k1 = fr(pel, L, 5.5, -3), k2 = fr(pel, L, 6, 2), k3 = fr(pel, L, -2, 2);
-    p.darkLine(Math.round(k0[0]), Math.round(k0[1]), Math.round(k1[0]), Math.round(k1[1]), 1);
-    p.darkLine(Math.round(k0[0]), Math.round(k0[1]), Math.round(k3[0]), Math.round(k3[1]), 1);
-    void k2;
+    var k0 = fr(pel, L, 0, -3), k1 = fr(pel, L, 5, -3), k2 = fr(pel, L, 6.5, 2), k3 = fr(pel, L, -1.5, 2);
+    p.line(Math.round(k0[0]), Math.round(k0[1]), Math.round(k1[0]), Math.round(k1[1]), col(M.c1, 3), true);
+    p.line(Math.round(k0[0]), Math.round(k0[1]), Math.round(k3[0]), Math.round(k3[1]), col(M.c1, 2), true);
+    p.line(Math.round(k1[0]), Math.round(k1[1]), Math.round(k2[0]), Math.round(k2[1]), col(M.c1, 2), true);
     // neckline + strings
     var n0 = fr(c, ca, 0, -1), n1 = fr(c, ca, 4, -1);
     p.line(Math.round(n0[0]), Math.round(n0[1]), Math.round(n1[0]), Math.round(n1[1]), col(M.c1, 2), true);
@@ -200,7 +209,7 @@
       [-6, function () { drawArm(p, sk, 'B', ds); p.end(); }],
       [-4, function () { drawLeg(p, sk, 'B', D.lock.B); p.end(); }],
       [-3, function () { drawLeg(p, sk, 'F', D.lock.F); p.end(); }],
-      [-1, function () { drawHood(p, sk); p.end(); }],
+      [0.5, function () { drawHood(p, sk); p.end(); }],
       [0, function () { drawTorso(p, sk, sec); p.end(); }],
       [2, function () {
         var img = H.headImage(C.headSet, eyes, ds.mouth || 'smile', ds.blush ? 'blush' : '', sk.headAng);

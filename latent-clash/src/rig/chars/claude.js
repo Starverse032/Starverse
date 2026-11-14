@@ -131,8 +131,8 @@
     for (var i = 0; i < b.length; i++) { var q = fr(ft, fa, b[i][0], b[i][1]); pts.push(q[0], q[1]); }
     p.poly(pts, M.shoe, SH.limbL);
     // terracotta trim at the top of the shaft, dark sole
-    var t0 = fr(ft, fa, -2, -6), t1 = fr(ft, fa, 1, -6);
-    p.line(Math.round(t0[0]), Math.round(t0[1]), Math.round(t1[0]), Math.round(t1[1]), col(M.acc, 2), true);
+    for (var tr = 0; tr < 2; tr++) { var t0 = fr(ft, fa, -3, -6 + tr), t1 = fr(ft, fa, 2, -6 + tr);
+    p.line(Math.round(t0[0]), Math.round(t0[1]), Math.round(t1[0]), Math.round(t1[1]), col(M.acc, 1 + tr), true); }
     var s0 = fr(ft, fa, -2, 0), s1 = fr(ft, fa, 4, 0);
     p.line(Math.round(s0[0]), Math.round(s0[1]), Math.round(s1[0]), Math.round(s1[1]), col(M.shoe, 3), true);
   }
@@ -144,9 +144,9 @@
     p.cap(sh[0], sh[1], el[0], el[1], 2.2, 1.9, M.c1, SH.limbL, tone);
     p.cap(el[0], el[1], ha[0], ha[1], 1.9, 1.7, M.c1, SH.limbL, tone);
     // cuff
-    var d = rot(1, 0, ang), c0 = [ha[0] - d[0] * 1.8, ha[1] - d[1] * 1.8];
-    p.cap(c0[0], c0[1], ha[0] - d[0] * 0.3, ha[1] - d[1] * 0.3, 2.0, 2.0, M.acc, SH.limb, 2);
-    H.hand(p, [ha[0] + d[0] * 0.6, ha[1] + d[1] * 0.6], ang, shape || 'relax', M.skin);
+    var d = rot(1, 0, ang), c0 = [ha[0] - d[0] * 2.6, ha[1] - d[1] * 2.6];
+    p.cap(c0[0], c0[1], ha[0] - d[0] * 0.6, ha[1] - d[1] * 0.6, 2.1, 2.1, M.acc, SH.limb, tone);
+    H.hand(p, ha, ang, shape || 'relax', M.skin);
   }
 
   function drawPen(p, sk, ds) {
@@ -183,57 +183,68 @@
       dx /= l; dy /= l;
       var n1 = [-dy, dx], n2 = [dy, -dx], pick = side > 0 ? [1, 0.6] : [-1, 0.6];
       var n = (n1[0] * pick[0] + n1[1] * pick[1]) > (n2[0] * pick[0] + n2[1] * pick[1]) ? n1 : n2;
-      var b = lerp(hip, kn, 0.46);
-      return [b[0] + n[0] * (3.0 + fl), b[1] + n[1] * (3.0 + fl)];
+      var b = lerp(hip, kn, 0.5);
+      return [b[0] + n[0] * (4.6 + fl), b[1] + n[1] * (4.6 + fl)];
     }
     var hf = hem(sk.hipF, sk.knF, 1), hb = hem(sk.hipB, sk.knB, -1);
     var wB = fr(pel, L, -4.5, -7.5), wF = fr(pel, L, 4.5, -7.5);
-    var sB = fr(pel, L, -5.5, -2.5), sF = fr(pel, L, 5.5, -3);
-    // swing lag on the hem
-    hb = [hb[0] + sw[0] * 0.6, hb[1] + sw[1] * 0.3]; hf = [hf[0] + sw[0] * 0.6, hf[1] + sw[1] * 0.3];
-    sB = [sB[0] + sw[0] * 0.25, sB[1]]; sF = [sF[0] + sw[0] * 0.25, sF[1]];
+    var sB = fr(pel, L, -6, -2.5), sF = fr(pel, L, 6, -3);
+    // swing lag on the hem (secondary chain)
+    hb = [hb[0] + sw[0], hb[1] + sw[1] * 0.5]; hf = [hf[0] + sw[0], hf[1] + sw[1] * 0.5];
+    sB = [sB[0] + sw[0] * 0.4, sB[1]]; sF = [sF[0] + sw[0] * 0.4, sF[1]];
     var m1 = lerp(hb, hf, 0.33), m2 = lerp(hb, hf, 0.66);
     m1[1] += 1; m2[1] += 1;
     var poly = H.flat([wB, wF, sF, hf, m2, m1, hb, sB]);
-    p.poly(poly, M.c2, SH.body);
-    // pleats
-    var fs = [0.22, 0.45, 0.68, 0.88];
+    p.poly(poly, M.c2, SH.body, 0);
+    // pleats: shade folds from the waist fanning out to the hem
+    var fs = [0.2, 0.4, 0.6, 0.8];
+    var hemPts = [hb, m1, m2, hf];
     for (var i = 0; i < fs.length; i++) {
-      var a = lerp(wB, wF, fs[i]), b = i < 2 ? lerp(hb, m2, fs[i] * 1.6) : lerp(m1, hf, (fs[i] - 0.4) * 1.6);
-      p.darkLine(Math.round(a[0]), Math.round(a[1] + 2), Math.round(b[0]), Math.round(b[1]), 1);
+      var a = lerp(wB, wF, fs[i]), t = fs[i] * 3, k = Math.min(2, Math.floor(t)), b = lerp(hemPts[k], hemPts[k + 1], t - k);
+      p.darkLine(Math.round(a[0]), Math.round(a[1] + 3), Math.round(b[0]), Math.round(b[1]), 1);
     }
-    // waistband highlight
-    p.line(Math.round(wB[0]), Math.round(wB[1]), Math.round(wF[0]), Math.round(wF[1]), col(M.c2, 0), true);
+    // hem: one shaded row so the edge reads as cloth
+    for (i = 0; i < 3; i++) p.darkLine(Math.round(hemPts[i][0]), Math.round(hemPts[i][1]), Math.round(hemPts[i + 1][0]), Math.round(hemPts[i + 1][1]), 1);
+    // waistband
+    p.line(Math.round(wB[0]), Math.round(wB[1]), Math.round(wF[0]), Math.round(wF[1]), col(M.c2, 1), true);
   }
 
   function drawTorso(p, sk, sec, ds) {
     var c = sk.chest, ca = sk.chestAng, pel = sk.pel, L = sk.lean;
     // neck
     p.cap(c[0], c[1] - 1, sk.neck[0], sk.neck[1], 1.6, 1.5, M.skin, null, 2);
-    // jacket body
+    // jacket body (base tone)
     var body = H.flat([fr(c, ca, -4.5, 0), fr(c, ca, -1, -1.5), fr(c, ca, 2.5, -1.5), fr(c, ca, 5, 0.5), fr(c, ca, 5.5, 4),
       fr(pel, L, 4.2, -7), fr(pel, L, -4.2, -7), fr(c, ca, -5.2, 5)]);
-    p.poly(body, M.c1, SH.body);
-    // capelet (back corner lags)
+    p.poly(body, M.c1, { d: 1.6, l: 0 }, 1);
+    // jacket buttons line + shadow cast by the capelet
+    var s0 = fr(c, ca, -5, 9), s1 = fr(c, ca, 5, 8.5);
+    p.darkLine(Math.round(s0[0]), Math.round(s0[1]), Math.round(s1[0]), Math.round(s1[1]), 1);
+    var b0 = fr(c, ca, 3, 10), b1 = fr(pel, L, 3, -8);
+    p.line(Math.round(b0[0]), Math.round(b0[1]), Math.round(b1[0]), Math.round(b1[1]), col(M.c1, 2), true);
+    p.end();
+    // capelet: short separate layer (lighter), back corner lags
     var cs = swing(sec.cape);
     var bk = fr(c, ca, -7.5, 7.5);
     bk = [bk[0] + cs[0], bk[1] + cs[1] * 0.5];
     var cape = H.flat([fr(c, ca, -2.5, -2.5), fr(c, ca, 2.5, -2.5), fr(c, ca, 6.5, 0.5), fr(c, ca, 7, 4.5), fr(c, ca, 5, 7.5),
       fr(c, ca, 0, 8), bk, fr(c, ca, -8, 3), fr(c, ca, -6, -0.5)]);
-    p.poly(cape, M.c1, SH.body, 1);
-    // capelet hem line (scallop shadow)
-    // collar V with blouse + ribbon tie
+    p.poly(cape, M.c1, { d: 1.2, l: 0 }, 0);
+    // collar V with blouse
     var v = H.flat([fr(c, ca, 0.5, -2), fr(c, ca, 4, -2), fr(c, ca, 2.5, 4.5)]);
     p.poly(v, M.white, null, 1);
     var l0 = fr(c, ca, 0, -2), l1 = fr(c, ca, 2.5, 5), l2 = fr(c, ca, 4.5, -2);
     p.line(Math.round(l0[0]), Math.round(l0[1]), Math.round(l1[0]), Math.round(l1[1]), col(M.c1, 2));
     p.line(Math.round(l2[0]), Math.round(l2[1]), Math.round(l1[0]), Math.round(l1[1]), col(M.c1, 2));
+    // terracotta ribbon tie: bow + knot (gold brooch) + tails
     var k = fr(c, ca, 2.5, 3);
     var kx = Math.round(k[0]), ky = Math.round(k[1]);
-    p.px(kx - 1, ky, col(M.acc, 1)); p.px(kx + 1, ky, col(M.acc, 1)); p.px(kx - 1, ky - 1, col(M.acc, 0)); p.px(kx + 1, ky - 1, col(M.acc, 1));
-    p.px(kx, ky, col(M.metal, 0));
+    p.px(kx - 2, ky - 1, col(M.acc, 1)); p.px(kx - 1, ky - 1, col(M.acc, 0)); p.px(kx + 1, ky - 1, col(M.acc, 1)); p.px(kx + 2, ky - 1, col(M.acc, 1));
+    p.px(kx - 2, ky, col(M.acc, 2)); p.px(kx - 1, ky, col(M.acc, 1)); p.px(kx + 1, ky, col(M.acc, 2)); p.px(kx + 2, ky, col(M.acc, 2));
+    p.px(kx, ky - 1, col(M.acc, 2)); p.px(kx, ky, col(M.metal, 0));
     var tie = sec.tie;
-    p.px(tie.qx[1], tie.qy[1], col(M.acc, 2)); p.px(tie.qx[2], tie.qy[2], col(M.acc, 3));
+    p.line(kx - 1, ky + 1, tie.qx[1] - 1, tie.qy[1], col(M.acc, 1));
+    p.line(kx + 1, ky + 1, tie.qx[2], tie.qy[2], col(M.acc, 2));
   }
 
   function drawBackHair(p, sk, sec) {

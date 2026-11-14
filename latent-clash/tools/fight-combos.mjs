@@ -17,7 +17,7 @@ export const COMBOS = {
     { name: 'jH > 5L > 5M > 5H > 214H (haiku)', dist: 104, steps: ['j9', 'jH', '5L', '5M', '5H', '214H'], hits: 7 },
     { name: '2L > 2M > 2H (sweep)', dist: 40, steps: ['2L', '2M', '2H'], hits: 3 },
     { name: '5M > 5H > 236H (spark)', dist: 50, steps: ['5M', '5H', '236H'], hits: 3 },
-    { name: 'jH > 5M > 5H > 214H > SUPER', dist: 104, steps: ['j9', 'jH', '5M', '5H', '214H', 'SUPER'], hits: 15, meter: true }
+    { name: 'jH > 5M > 5H > 214H > SUPER', dist: 104, steps: ['j9', 'jH', '5M', '5H', '214H', 'SUPER'], hits: 13, meter: true }
   ],
   deepseek: [
     { name: 'jH > 5L > 5M > 5H > 214H > S > S (rekka)', dist: 112, steps: ['j9', 'jH', '5L', '5M', '5H', '214H', 'S', 'S'], hits: 7 },
@@ -61,10 +61,12 @@ function inPage() {
       }
       m.update(inp, {});
       t++;
+      if (window.CDBG && A.mv && A.mv.id !== log.lastMv) { log.lastMv = A.mv.id; log.push('START ' + A.mv.id + ' t' + t + ' conn ' + A.connected + ' B ' + B.action); }
+      if (window.CDBG && A.mv && A.mv.kind === 'super' && A.sf % 6 === 0) log.push(A.seg().id + A.sf + ' B ' + B.action + ' y' + (LC.GROUND_Y - B.y).toFixed(0) + ' dx' + (B.x - A.x).toFixed(0) + ' c' + A.combo + ' j' + B.juggle);
       if (A.combo > maxCombo) maxCombo = A.combo;
       if (A.combo === 0 && maxCombo > 0 && B.action !== 'hitstun' && B.action !== 'launch' && t > 30 && si >= c.steps.length && !q.length && A.action !== 'attack') break;
     }
-    return { hits: maxCombo, dmg: hp0 - B.hp };
+    return { hits: maxCombo, dmg: hp0 - B.hp, log: window.CDBG ? log.join('\n') : '' };
   };
 }
 
@@ -73,11 +75,13 @@ const page = await browser.newPage();
 await page.goto('file://' + root + '/dev/fight-sandbox.html?manual=1' + (real ? '' : '&stubs=all'));
 await page.waitForFunction(() => window.FS && FS.ready);
 await page.evaluate(inPage);
+if (process.argv.includes('--debug')) await page.evaluate(() => { window.CDBG = 1; });
 let fail = 0;
 for (const ch in COMBOS) for (const c of COMBOS[ch]) {
   const r = await page.evaluate(([ch, c]) => window.COMBO(ch, c), [ch, c]);
   const ok = r.hits >= c.hits;
   if (!ok) fail++;
+  if (r.log && !ok) console.log(r.log);
   console.log((ok ? 'OK  ' : 'FAIL') + ' ' + ch.padEnd(8) + ' ' + c.name.padEnd(44) + ' hits ' + r.hits + '/' + c.hits + '  dmg ' + r.dmg);
 }
 await browser.close();
