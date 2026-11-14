@@ -142,7 +142,7 @@
         kind: 'super', motion: '236236', lore: 'super',
         segs: [['startup', 6], ['cast', 10], ['active', 40], ['recovery', 30]],
         inv: { all: [0, 17] },
-        flashAt: 5,
+        flashAt: 5, bgOut: 12,        // backdrop outro from recovery f12 (fx V2 timeline)
         // beam drawn at the muzzle (book centre ~(34,-82)); visual 80 px tall, hitbox 68
         beam: { seg: 'active', y: -116, h: 68, x0: 30, grow: 40, max: 420 },
         hits: [{

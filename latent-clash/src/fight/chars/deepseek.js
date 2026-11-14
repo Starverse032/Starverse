@@ -37,7 +37,7 @@
     anchorFb: {
       head: [2, -86], chest: [1, -68], hip: [-1, -45], center: [0, -50], top: [0, -100],
       handF: [22, -57], handB: [-10, -55], footF: [8, 0], footB: [-8, 0],
-      muzzle: [40, 0], weapon: [22, -56], grab: [30, -62]
+      muzzle: [40, 0], weapon: [22, -56], grab: [30, -62], tail: [-34, -52]
     },
     grabPath: { hold: [[30, -64], [20, -70]], toss: [[36, -60], [42, -58], [46, -54]] },
 
@@ -146,7 +146,7 @@
         kind: 'super', motion: '236236', lore: 'super',
         segs: [['startup', 6], ['cast', 8], ['active', 44], ['recovery', 34]],
         inv: { all: [0, 15] },
-        flashAt: 5,
+        flashAt: 5, bgOut: 26,        // backdrop outro from recovery f26 (fx V2 timeline)
         // whale sprite t = 0 at cast f0 (fx V2 timeline); origin = her x + facing*52
         whale: { seg: 'active', x: 52, t0: 'cast' },
         hits: [{
