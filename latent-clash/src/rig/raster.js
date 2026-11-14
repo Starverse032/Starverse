@@ -207,6 +207,18 @@
     var x0 = clampX(Math.floor(minx) + OX), x1 = clampX(Math.ceil(maxx) + OX + 1);
     var y0 = clampY(Math.floor(miny) + OY), y1 = clampY(Math.ceil(maxy) + OY + 1);
     var s = this.s, c0 = 2 + mat * 4, hit = false, xs = this._xs || (this._xs = new Float64Array(64));
+    var eb = null;
+    if (sh) {   // per-edge bounding boxes (incl. the 15 % end overshoot + band width): exact early-out
+      eb = this._eb && this._eb.length >= n * 4 ? this._eb : (this._eb = new Float64Array(Math.max(n * 4, 256)));
+      var pad = Math.max(sh.d || 0, sh.l || 0) + 0.5;
+      for (i = 0; i < n; i++) {
+        j = (i + 1) % n;
+        var ex0 = pts[i * 2], ey0 = pts[i * 2 + 1], ex1 = pts[j * 2], ey1 = pts[j * 2 + 1];
+        var ov = 0.15 * Math.sqrt((ex1 - ex0) * (ex1 - ex0) + (ey1 - ey0) * (ey1 - ey0)) + pad;
+        eb[i * 4] = Math.min(ex0, ex1) - ov; eb[i * 4 + 1] = Math.max(ex0, ex1) + ov;
+        eb[i * 4 + 2] = Math.min(ey0, ey1) - ov; eb[i * 4 + 3] = Math.max(ey0, ey1) + ov;
+      }
+    }
     for (var y = y0; y < y1; y++) {
       var py = y - OY;   // centre-relative: vertex coords are already centres
       var k = 0;
@@ -227,7 +239,7 @@
           var bxp = x + OX;
           if (bxp < 1 || bxp >= BW - 1) continue;
           var tone2 = base;
-          if (sh) tone2 = polyTone(pts, n, orient, x, py, sh, base);
+          if (sh) tone2 = polyTone(pts, n, orient, x, py, sh, base, eb);
           s[y * BW + bxp] = c0 + tone2;
           hit = true;
         }
@@ -236,9 +248,10 @@
     if (hit) this._grow(x0, y0, x1, y1);
   };
 
-  function polyTone(pts, n, orient, px, py, sh, base) {
+  function polyTone(pts, n, orient, px, py, sh, base, eb) {
     var dark = false, light = false;
     for (var i = 0; i < n; i++) {
+      if (eb && (px < eb[i * 4] || px > eb[i * 4 + 1] || py < eb[i * 4 + 2] || py > eb[i * 4 + 3])) continue;
       var j = (i + 1) % n;
       var ax = pts[i * 2], ay = pts[i * 2 + 1], bx = pts[j * 2], by = pts[j * 2 + 1];
       var ex = bx - ax, ey = by - ay, el = Math.sqrt(ex * ex + ey * ey);
