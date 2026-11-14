@@ -67,7 +67,7 @@
 
       spark: {
         kind: 'special', motion: '236', simple: 5, lore: 'spark',
-        segs: [['startup', { L: 14, M: 13, H: 12 }], ['active', 3], ['recovery', 28]],
+        segs: [['startup', { L: 14, M: 13, H: 12 }], ['active', 3], ['recovery', 25]],   // V2: 28 -> 25 (balance)
         proj: {
           // leaves the palm (muzzle ~(40,-78)) and settles to cruise height -62 so crouchers are hit
           seg: 'active', kind: 'spark', sprite: 'claude.spark', box: { L: [-9, -9, 18, 18], M: [-11, -11, 22, 22], H: [-13, -13, 26, 26] },
