@@ -70,7 +70,7 @@
           // fx wave ~44x40 (bbox -24,-40,46,41); muzzle fixed at (40,0) where the fluke slaps the floor
           seg: 'active', kind: 'wave', sprite: 'deepseek.wave', box: [-17, -34, 34, 34], ground: true,
           spawn: 'muzzle', spawnFb: [40, 0],
-          vx: { L: 3.4, M: 3.8, H: 4.2 }, vy: 0, range: { L: 140, M: 250, H: 9999 },
+          vx: { L: 3.4, M: 3.8, H: 4.2 }, vy: 0, range: { L: 140, M: 230, H: 9999 },
           dmg: { L: 70, M: 80, H: 90 }, lv: 'S', stun: [22, 16], chip: 0.2, push: [10, 10],
           hitFx: 'deepseek.waveHit', hitSfx: 'deepseek.waveHit', castFx: 'deepseek.waveCast', castSfx: 'deepseek.wave'
         }
@@ -116,7 +116,7 @@
       dive: {
         kind: 'special', motion: '22', simple: 2, lore: 'dive', anim: 'diveIn',
         // M: surfaces `near` px in front of the opponent (max `far` px travel); H: `behind` px behind them
-        dist: { near: 44, far: 124, behind: 40 }, clipFloor: true,
+        dist: { near: 44, far: 124, behind: 46 }, clipFloor: true,
         segs: [
           ['startup', 6], ['sink', 6],
           ['travel', { L: 10, M: 14, H: 18 }, { hide: true, noPush: true, anim: 'diveIn', as: 'sink' }],
