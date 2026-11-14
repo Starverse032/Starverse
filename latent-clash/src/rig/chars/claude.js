@@ -296,9 +296,9 @@
     var kL = Math.max(0, Math.min(1, (Math.abs(L) - 30) / 50)), la = L * (0.35 + 0.65 * kL), rotA = L * kL;
     var rootB = fr(pel, la, -8, -1.5), rootF = fr(pel, la, 7, -2.5);
     var swF = swing(sec.skirtF), swB = swing(sec.skirtB);
-    function cl5(v) { return [Math.max(-5, Math.min(5, v[0])), Math.max(-4, Math.min(4, v[1]))]; }
+    function cl5(v) { var q = 1 - kL; return [Math.max(-5, Math.min(5, v[0])) * q, Math.max(-4, Math.min(4, v[1])) * q]; }
     swF = cl5(swF); swB = cl5(swB);
-    var fl = (sk.skirt || 0) + Math.max(0, -swF[1] - swB[1]) * 1.4;
+    var fl = (sk.skirt || 0) + Math.min(4, Math.max(0, -swF[1] - swB[1]) * 1.4);
     var aF = 80 + rotA - fl * 3 - swF[0] * 2.5, aB = 101 + rotA + fl * 3 - swB[0] * 2.5, Lf = 49, Lb = 50;
     var pts = [], k, s;
     for (s = 0; s < 2; s++) {

@@ -69,6 +69,12 @@
   FXV.cellFor = function (n) {
     if (/whale$/.test(n)) return { w: 384, h: 216, ox: 110, oy: 186 };
     if (/tidal$/.test(n)) return { w: 384, h: 130, ox: 150, oy: 120 };
+    if (/sonnetPillar|geyser|poolOut/.test(n)) return { w: 110, h: 210, ox: 0, oy: 200 };
+    if (/haikuSlash/.test(n)) return { w: 270, h: 130, ox: 90, oy: 75 };
+    if (/guardrail/.test(n)) return { w: 110, h: 120, ox: 30, oy: 112 };
+    if (/breachCrescent/.test(n)) return { w: 170, h: 160, ox: 0, oy: 150 };
+    if (/deepseek\.wave$/.test(n)) return { w: 80, h: 56, ox: 0, oy: 50 };
+    if (/chainHit|claude\.spark$/.test(n)) return { w: 110, h: 84, ox: 0, oy: 42 };
     if (/whaleSplash/.test(n)) return { w: 240, h: 130, ox: 0, oy: 110 };
     if (/ko\.burst/.test(n)) return { w: 220, h: 180, ox: 0, oy: 90 };
     if (/beam$/.test(n)) return { w: 360, h: 110, ox: 150, oy: 55 };
