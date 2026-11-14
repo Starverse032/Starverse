@@ -49,7 +49,26 @@ async function save(name, expr, ...a) {
 const pal = +opt('pal', 0), scale = +opt('scale', 4);
 const chars = await page.evaluate(() => Object.keys(LC.rig._.CHARS));
 
-if (flag('perf')) {
+if (flag('reach')) {
+  // node tools/rig-sheet.mjs --reach [char]  → weapon anchor (x,y) over each attack's active frames
+  const c = pos[0] || 'claude';
+  const r = await page.evaluate((c) => {
+    const p = LC.rig.createPuppet(c, { palette: 0 }), out = {};
+    LC.rig.listAnims(c).forEach((nm) => {
+      const info = LC.rig.animInfo(c, nm); let acc = 0;
+      info.segs.forEach((s) => {
+        if (/^(active|hit\d|rise)$/.test(s.id)) {
+          const v = [];
+          for (let f = 0; f < s.f; f++) { p.setPose(nm, acc + f); const a = p.getAnchor('weapon'); v.push(a.x + ',' + a.y); }
+          out[nm + '.' + s.id] = v.join(' ');
+        }
+        acc += s.f;
+      });
+    });
+    return out;
+  }, c);
+  Object.keys(r).forEach((k) => console.log(k.padEnd(22), r[k]));
+} else if (flag('perf')) {
   const r = await page.evaluate(() => {
     const res = { initMs: LC.rig.stats.initMs };
     const out = document.createElement('canvas'); out.width = 384; out.height = 216;

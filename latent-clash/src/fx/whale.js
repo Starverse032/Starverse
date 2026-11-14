@@ -18,7 +18,7 @@
   var A = I.A = I.A || {};
   var GY = LC.GROUND_Y || 186;
   var DUR = 60, BL = 300, VM = 66;                 // duration, body length, max |v|
-  var X0 = -14, X1 = 196, Y0 = 136, HA = 258;      // centre path (rel. origin, facing right)
+  var X0 = -14, X1 = 204, Y0 = 136, Y1 = 64, HA = 222;   // centre path (rel. origin, facing right)
   var TA = 27, TD = 24, PW = 1.6;                  // apex tick, half-duration, hang exponent
   var info = { duration: DUR, bbox: { x: -60, y: -205, w: 330, h: 206 }, frames: [], events: { emerge: 3, apex: TA, crash: 49 }, crashX: 160 };
   var WH = [{}, {}];
@@ -29,8 +29,9 @@
     return 0.5 + 0.5 * (s < 0 ? -g : g);
   }
   function pose(t) {
-    var u = tau(t), cx = X0 + (X1 - X0) * u, cy = Y0 - 4 * HA * u * (1 - u);
-    var th = Math.atan2(-4 * HA * (1 - 2 * u), X1 - X0);
+    var u = tau(t), cx = X0 + (X1 - X0) * u, cy = (1 - u) * Y0 + u * Y1 - 4 * HA * u * (1 - u);
+    var th = Math.atan2(Y1 - Y0 - 4 * HA * (1 - 2 * u), X1 - X0);
+    if (th > 0) th *= 0.58;                                                  // falls flatter than its path: a slam, not a dive
     var k = 0.22 + 0.42 * Math.sin(PI * I.clamp(u, 0, 1));                 // arch (back up) strongest at the apex
     var fk = u < 0.45 ? -0.35 * (1 - u / 0.45) : I.clamp((u - 0.5) / 0.35, 0, 1) * 1.05;   // flukes trail, then kick up on the dive
     return { cx: cx, cy: cy, th: th, k: k, fk: fk };
@@ -154,7 +155,7 @@
     for (u = 14; u < 30; u += 2) { lineUV(u, -8 - (30 - u) * 2.9, u + 2, -8 - (28 - u) * 2.9, G[2]); lineUV(u, 8 + (30 - u) * 2.9, u + 2, 8 + (28 - u) * 2.9, G[2]); }
     // eye + blush
     var e = map(270, -6), ex = Math.round(e[0] - ox), ey = Math.round(e[1] - oy);
-    b.rect(ex - 2, ey - 3, 4, 6, R.O); b.rect(ex - 1, ey - 2, 1, 2, I.col('#ffffff')); b.set(ex + 1, ey + 1, G[1]);
+    b.rect(ex - 2, ey - 3, 5, 7, R.O); b.rect(ex - 3, ey - 2, 7, 5, R.O); b.rect(ex - 1, ey - 2, 2, 2, I.col('#ffffff')); b.rect(ex, ey + 1, 2, 1, G[1]);
     var bl = map(262, 6); b.rect(Math.round(bl[0] - ox) - 3, Math.round(bl[1] - oy), 6, 2, R.blush);
     b.outline(R.O);
     if (clipFloor) b.erase(function (x, y) { return y + oy > 1; });
@@ -205,7 +206,7 @@
         if (y1 - y0 > 12) fr = { x: Math.round(x0 + 10), y: Math.round(y0 + 10), w: Math.max(0, Math.round(P.bb.w - 20)), h: Math.max(0, Math.round(y1 - y0 - 10)) };
       }
       info.frames.push(fr);
-      if (crash < 0 && t > TA) { spine(pose(t)); if (SPY[BL] >= 0) { crash = t; info.crashX = Math.round(SPX[BL]); } }
+      if (crash < 0 && t > TA) { var pc = pose(t); if (pc.cy >= -44) { crash = t; info.crashX = Math.round(pc.cx + 24); } }
     }
     info.events.crash = crash > 0 ? crash : 49;
     I.whaleBakeMs = performance.now() - t0;
