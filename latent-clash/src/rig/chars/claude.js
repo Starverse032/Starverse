@@ -312,17 +312,17 @@
       if (d < Lf - 1 && d > 1) {
         var a = Math.atan2(dy, dx) * 180 / Math.PI, m = Math.asin(Math.min(1, cl / d)) * 180 / Math.PI;
         if (a - m < aF) aF = a - m;
-        if (k % 6 === 0 && a < 55) kneeF = Math.min(kneeF, Math.max(8, d + 3));
+        if (k % 6 === 0 && a < 55 && kL < 0.5) kneeF = Math.min(kneeF, Math.max(8, d + 3));
       }
       dx = P[0] - rootB[0]; dy = P[1] - rootB[1]; d = Math.sqrt(dx * dx + dy * dy);
       if (d < Lb - 1 && d > 1) {
         var a2 = Math.atan2(dy, dx) * 180 / Math.PI, m2 = Math.asin(Math.min(1, cl / d)) * 180 / Math.PI;
         if (a2 + m2 > aB) aB = a2 + m2;
-        if (k % 6 === 0 && a2 > 125) kneeB = Math.min(kneeB, Math.max(8, d + 3));
+        if (k % 6 === 0 && a2 > 125 && kL < 0.5) kneeB = Math.min(kneeB, Math.max(8, d + 3));
       }
     }
     function rib(root, a, len, s1) {
-      var kk = a < 60 ? Math.min(1, (60 - a) / 50) : (a > 120 ? Math.min(1, (a - 120) / 50) : 0);
+      var kk = (a < 60 ? Math.min(1, (60 - a) / 50) : (a > 120 ? Math.min(1, (a - 120) / 50) : 0)) * (1 - kL);
       var b = a + ((a < 90 ? 96 : 84) - a) * kk;
       var r1 = Math.PI * a / 180, r2 = Math.PI * b / 180;
       var m = [root[0] + Math.cos(r1) * s1, root[1] + Math.sin(r1) * s1];
