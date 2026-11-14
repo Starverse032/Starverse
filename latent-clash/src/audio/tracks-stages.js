@@ -172,7 +172,7 @@
   // chorus quotes Claude's hook rhythm (Ab: C–Eb–Ab–G–Eb) and DeepSeek's pentatonic run (Eb).
   // Bridge: call (DeepSeek, pulse) / response (Claude, bell) over Fm–Eb–Db–G. Form: I A B C B | loop A.
   // ===================================================================================
-  var LT_OST = 'R:2 8:1 R:1 R:2 R#:2^ R:2 8:1 R:1 7:2 Rb:2^';
+  var LT_OST = 'R:2 8:1 R:1 R:2 R#:2^ R:2 8:1 R:1 5:2 Rb:2^';
   var LT_K = 'x.x...x.x.x...x.', LT_S = '....x.......x...', LT_H = 'xxxxxxxxxxxxxxxx';
   K.defTrack('stage.latent', {
     bpm: 150, vol: 1, scale: 'C minor +B +Db +A', loop: 'A',

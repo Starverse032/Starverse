@@ -441,7 +441,7 @@
         var lastC = null;
         for (var st = sec.s0; st < sec.s0 + sec.bars * bs; st++) {
           var c = chordAt(st);
-          var isChange = c !== lastC; lastC = c;
+          var isChange = c !== lastC && (!lastC || !c || lastC.root !== c.root || lastC.bass !== c.bass); lastC = c;
           if (!c || c.root < 0 || !((st - sec.s0) % bs === 0 || isChange)) continue;
           var e = soundingAt(list, st);
           if (!e) continue;
