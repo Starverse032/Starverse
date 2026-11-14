@@ -67,10 +67,10 @@
     build: function (r, o, t, p) {
       var b = S.bus(r, o, 1, { lp: 4200 });
       S.noise(r, b, t, { c: 'white', hp: 1200, g: S.ad(0.0003, 0.005), v: 0.55 });
-      S.osc(r, b, t, { w: 'sine', f: [[0, 920], [0.03, 720, 'e']], g: S.ad(0.0008, 0.038), v: 0.6 }, p);
+      S.osc(r, b, t, { w: 'sine', f: [[0, 920], [0.04, 700, 'e']], g: S.ad(0.0008, 0.06), v: 0.6 }, p);
       S.osc(r, b, t, { w: 'triangle', f: [[0, 1450], [0.02, 1150, 'e']], g: S.ad(0.0005, 0.02), v: 0.3 }, p);
-      S.noise(r, b, t, { c: 'white', bp: 1600, q: 3, g: S.ad(0.0005, 0.03), v: 0.5 }, p);
-      S.osc(r, b, t, { w: 'sine', f: [[0, 220], [0.03, 150, 'e']], g: S.ad(0.001, 0.03), v: 0.3 }, p);
+      S.noise(r, b, t, { c: 'white', bp: 1600, q: 3, g: S.ad(0.0005, 0.05), v: 0.5 }, p);
+      S.osc(r, b, t, { w: 'sine', f: [[0, 220], [0.04, 150, 'e']], g: S.ad(0.001, 0.05), v: 0.35 }, p);
     } });
 
   def('block.heavy', { cat: 'block', dur: 0.2, poly: 3, guard: 0.035, jitter: 0.04, prio: 2,
