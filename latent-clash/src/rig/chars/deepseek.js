@@ -87,8 +87,8 @@
   var TAIL_LEN = [6, 6, 6, 6, 5, 5, 5, 4];
   C.chains = [
     { id: 'tail', n: 8, len: TAIL_LEN, rest: [120, 136, 152, 168, 184, 200, 216, 232], stiff: 0.5, damp: 0.74, grav: 0.03, drag: 0.22, hys: 0.6 },
-    { id: 'hairA', n: 4, len: [9, 9, 9, 8], rest: [104, 98, 94, 92], stiff: [0.34, 0.28, 0.22, 0.18], damp: 0.84, grav: 0.24, drag: 0.32 },
-    { id: 'hairB', n: 4, len: [8, 8, 8, 7], rest: [97, 93, 91, 89], stiff: [0.36, 0.3, 0.24, 0.2], damp: 0.83, grav: 0.24, drag: 0.3 },
+    { id: 'hairA', n: 4, len: [10, 10, 10, 9], rest: [106, 98, 93, 91], stiff: [0.34, 0.28, 0.22, 0.18], damp: 0.84, grav: 0.24, drag: 0.32 },
+    { id: 'hairB', n: 4, len: [9, 9, 9, 8], rest: [97, 93, 91, 89], stiff: [0.36, 0.3, 0.24, 0.2], damp: 0.83, grav: 0.24, drag: 0.3 },
     { id: 'lockN', n: 3, len: [6, 6, 6], rest: [86, 90, 94], stiff: 0.32, damp: 0.8, grav: 0.22, drag: 0.25 },
     { id: 'ahoge', n: 3, len: [4, 4, 3], rest: [-95, -40, 20], stiff: 0.5, damp: 0.72, grav: 0.03, drag: 0.12 },
     { id: 'bowA', n: 3, len: [5, 5, 5], rest: [100, 104, 100], stiff: 0.22, damp: 0.82, grav: 0.22, drag: 0.35 },
@@ -527,9 +527,9 @@
     var steps = [
       [z.tail != null ? z.tail : -10, function () { drawTail(p, d, sec, ds); p.end(); }],
       [z.hair != null ? z.hair : -9, function () {
-        drawHairLock(p, sec.hairA, [8, 4, 3.5], 1.2, 0.3, [M.hair, MG, M.tip], [0.3, 0.55, 0.8]);
+        drawHairLock(p, sec.hairA, [9, 4.5, 3.5], 1.2, 0.3, [M.hair, MG, M.tip], [0.3, 0.55, 0.8]);
         p.end();
-        drawHairLock(p, sec.hairB, [6, 2.5, 2], 1, 1.9, [M.hair, MG, M.tip], [0.4, 0.75]);
+        drawHairLock(p, sec.hairB, [6.5, 3, 2], 1, 1.9, [M.hair, MG, M.tip], [0.4, 0.75]);
         p.end();
       }],
       [-8, function () {

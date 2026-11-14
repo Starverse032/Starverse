@@ -37,17 +37,17 @@
     '....Cshhhhhhhhhhhhhhhhhhhs..',  // 6
     '...sshhhhhhhhhhhhhhhhhhhhhs.',  // 7
     '...shhhhhhhhhhhhshhhhhshhhhs',  // 8
-    '..szfhhhhhhhhhhsmhhhhsmhhhhs',  // 9
-    '..zffPhhhhhsdkkhhdkkhhdhhhs.',  // 10
-    '.zfPPfhhhhhsqkkkkkkkkkkkhhs.',  // 11
-    'zfPPPfhhhhsqkkkkkkkkkkkkhhs.',  // 12
-    'zfPPfshhhsmqkkkkkkkkkkkkhhs.',  // 13
-    '.zfPPfshsmmqkkkkkkkkkkkkhs..',  // 14
-    '.zfPf.shmmsqkkkkkkkkkkkkhs..',  // 15
-    '.zfPf..smmsqqkkkkkkkkkks....',  // 16
-    'zfPf....smt.qqkkkkkkkkq.....',  // 17
-    'zff......mt...qqkkkkkq......',  // 18
-    '.zz.............qqqq........'   // 19
+    '..ozfohhhhhhhhhsmhhhhsmhhhhs',  // 9
+    '.ozffPohhhhsdkkhhdkkhhdhhhs.',  // 10
+    'ozfPPPfohhhsqkkkkkkkkkkkhhs.',  // 11
+    'zfPPPPfohhsqkkkkkkkkkkkkhhs.',  // 12
+    'zfPPPPfoshmqkkkkkkkkkkkkhhs.',  // 13
+    'zfPPPfo.smmqkkkkkkkkkkqkhs..',  // 14
+    'zfPPfo.shmmqkkkkkkkkkkkkhs..',  // 15
+    'zfPfo..smmsqqkkkkkkkkkks....',  // 16
+    'zffo....smt.qqkkkkkkkkq.....',  // 17
+    'zfo......mt...qqkkkkkq......',  // 18
+    '.z..............qqqq........'    // 19
   ];
 
   // eye overlay: near eye cols 0-3, far eye cols 7-9 (placed at eyeAt)
@@ -110,15 +110,15 @@
   var EYE_DY = { focus: -1, sad: -1, wide: -1 };
 
   var MOUTHS = {
-    neutral: ['.oo.'],
-    smile:   ['o..o', '.oWo'],
+    neutral: ['o..o', '.oo.'],
+    smile:   ['oooo', 'oWRo', '.oo.'],
     open:    ['.oo.', 'orro', '.oo.'],
     shout:   ['oooo', 'oWrr', 'orRr', '.oo.'],
     teeth:   ['oooo', 'oWWo', '.oo.'],
     hurt:    ['.o.o', 'o.o.'],
     o:       ['.o.', 'oro', '.o.'],
     frown:   ['.oo.', 'o..o'],
-    grin:    ['oooo', 'oWrr', '.oRo']
+    grin:    ['ooooo', 'oWrRo', '.ooo.']
   };
 
   // ---------------------------------------------------------------- hands (V2 size)
