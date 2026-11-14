@@ -78,10 +78,11 @@
         var sg = f.seg();
         f.mv.hits.forEach(function (h) {
           if (h.seg !== sg.id || (h.fr && (f.sf < h.fr[0] || f.sf > h.fr[1]))) return;
-          box(ctx, m, F.worldBox(F.hitLocal(f, h), f.x, f.y, f.facing), '#ff3b3b', '#ff3b3b');
+          var lb = F.hitLocal(f, h);
+          if (lb) box(ctx, m, F.worldBox(lb, f.x, f.y, f.facing), '#ff3b3b', '#ff3b3b');
         });
         if (f.mv.kind === 'throw') {
-          var tr = f.C.throwRange, tx = Math.round(f.x - m.camX), y = Math.round(f.y) - 30;
+          var tr = f.C.throwRange, tx = Math.round(f.x - m.camX), y = Math.round(f.y) - 50;
           rect(ctx, f.facing > 0 ? tx : tx - tr, y, tr, 1, '#ff4dff');
         }
       }
@@ -90,7 +91,7 @@
       var ox = Math.round(f.x - m.camX);
       rect(ctx, ox - 2, Math.round(f.y), 5, 1, '#ffffff'); rect(ctx, ox, Math.round(f.y) - 2, 1, 5, '#ffffff');
     }
-    m.projs.forEach(function (p) { box(ctx, m, F.worldBox(p.spec.box, p.x, p.y, F.sign(p.vx) || 1), '#ff3b3b', '#ff8a3b'); });
+    m.projs.forEach(function (p) { box(ctx, m, F.projBox(p), '#ff3b3b', '#ff8a3b'); });
   };
 
   // ------------------------------------------------------------------ input history + data

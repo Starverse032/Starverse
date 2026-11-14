@@ -230,8 +230,8 @@
 
   AI.prototype.punisher = function (me, dx) {
     var C = me.ch, d = this.P.depth;
-    var r5H = this.reachOf(me, '5H') + 10, r5M = this.reachOf(me, '5M') + 10;
-    if (dx <= this.reachOf(me, '5L') + 12 && d >= 2) return this.press('L');
+    var r5H = this.reachOf(me, '5H') + 13, r5M = this.reachOf(me, '5M') + 13;
+    if (dx <= this.reachOf(me, '5L') + 15 && d >= 2) return this.press('L');
     if (dx <= r5M) return this.press(d >= 1 ? 'M' : 'H');
     if (dx <= r5H) return this.press('H');
     if (C === 'deepseek' && dx < D(110)) return this.special('chain', dx > D(80) ? 'H' : 'M');
@@ -250,7 +250,7 @@
     var urgency = (m.timerMax > 0 && m.timer < 1500 ? 0.5 : 0) + (this.behind() ? 0.3 : 0) + Math.min(0.6, this.idleT / 400);
     var ag = P.aggr + urgency;
     function add(name, w, steps) { if (F.AI_OFF && F.AI_OFF[me.ch + '.' + name]) return; if (w > 0 && steps && steps.length) opts.push({ name: name, w: self.score(name, w), steps: steps }); }
-    var r = function (id) { return self.reachOf(me, id) + 12; };
+    var r = function (id) { return self.reachOf(me, id) + 15; };
     var full = me.meter >= 100;
     // universal
     add('walkF', 0.6 + ag * 0.6, [{ d: 6, n: 10 + this.rng.int(20) }]);
