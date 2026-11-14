@@ -66,14 +66,22 @@
     return 48 * Math.sqrt(Math.max(0, 1 - Math.pow((s - 0.62) / 0.385, 2)));
   }
   function sideY(s) { return hh(s) * 0.16 - (s > 0.78 ? (s - 0.78) * 60 : 0); }   // back/belly boundary (mouth rises to the snout)
-  function ramps(pal) {
+  // colour indices (the warp works on indices once; each palette recolours the result)
+  var IX = { B: [1, 2, 3, 4], Be: [5, 6, 7, 8], G: [9, 10, 11], O: 12, blush: 13, white: 14 };
+  function lutFor(pal) {
     var P = LC.PAL.deepseek[pal], hr = P.hair, sc = I.scheme('deepseek', pal);
     var back = pal === 0 ? [hr[0], hr[1], hr[2], hr[3]] : [hr[1], hr[2], hr[3], I.mix(hr[3], P.outline, 0.45)];
     var belly = ['#ffffff', '#e8eefc', '#b8c5ea', '#8492c6'];
-    return { B: back.map(I.col), Be: belly.map(I.col), G: sc.glow.u, O: I.col(P.outline), blush: I.col(P.blush), Bcss: back, Gcss: sc.glow.css };
+    var lut = new Uint32Array(16);
+    back.forEach(function (c, i) { lut[1 + i] = I.col(c); });
+    belly.forEach(function (c, i) { lut[5 + i] = I.col(c); });
+    lut[9] = sc.glow.u[0]; lut[10] = sc.glow.u[1]; lut[11] = sc.glow.u[2];
+    lut[12] = I.col(P.outline); lut[13] = I.col(P.blush); lut[14] = I.col('#ffffff');
+    return lut;
   }
-  function designBody(R) {
-    var Wd = BL, Hd = VM * 2 + 1, b = new I.Buf(Wd, Hd), B = R.B, Be = R.Be;
+  function recolor(buf, lut) { var b = new I.Buf(buf.w, buf.h), d = b.d, s = buf.d; for (var i = 0; i < s.length; i++) if (s[i]) d[i] = lut[s[i]]; return b; }
+  function designBody() {
+    var Wd = BL, Hd = VM * 2 + 1, b = new I.Buf(Wd, Hd), B = IX.B, Be = IX.Be;
     function put(u, v, c) { b.set(u, v + VM, c); }
     // flukes (fish-like V) + tail stock
     var fl = new I.Buf(Wd, Hd);
@@ -107,7 +115,7 @@
   }
 
   // ---- pose bake -------------------------------------------------------------------------
-  function bakePose(src, R, p, clipFloor) {
+  function bakePose(src, p, clipFloor) {
     spine(p);
     var minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9, i;
     for (i = 0; i <= BL; i += 4) {
@@ -121,13 +129,16 @@
     if (clipFloor) maxy = Math.min(maxy, 2);
     var W = Math.ceil(maxx) - ox + 5, H = Math.max(1, Math.ceil(maxy) - oy + 5);
     if (H <= 5) return null;
-    var b = new I.Buf(W, H), sd = src.d, SW = src.w, u, v, q;
-    for (v = 0; v < src.h; v++) for (u = 0; u < SW; u++) {
-      var c = sd[v * SW + u];
-      if (!c) continue;
-      for (q = 0; q < 4; q++) {
-        var m = map(u + (q & 1 ? 0.75 : 0.25), v - VM + (q & 2 ? 0.75 : 0.25));
-        b.set(m[0] - ox, m[1] - oy, c);
+    var b = new I.Buf(W, H), bd = b.d, sd = src.d, SW = src.w, SH = src.h, u, v, q;
+    for (u = 0; u < SW; u++) for (q = 0; q < 2; q++) {
+      var m = map(u + (q ? 0.75 : 0.25), 0), bx0 = m[0] - ox, by0 = m[1] - oy, ia = Math.min(BL - 1, u), a = SPA[ia], nx = -Math.sin(a), ny = Math.cos(a);
+      for (v = 0; v < SH; v++) {
+        var c = sd[v * SW + u];
+        if (!c) continue;
+        for (var r = 0; r < 2; r++) {
+          var vv = v - VM + (r ? 0.75 : 0.25), X = Math.floor(bx0 + nx * vv), Y = Math.floor(by0 + ny * vv);
+          if (X >= 0 && Y >= 0 && X < W && Y < H) bd[Y * W + X] = c;
+        }
       }
     }
     function lineUV(u0, v0, u1, v1, c) {
@@ -135,7 +146,7 @@
       b.line(ax, ay, Math.round(e[0] - ox), Math.round(e[1] - oy), c);
     }
     function dotUV(u0, v0, w, h, c) { var a = map(u0, v0); b.rect(Math.round(a[0] - ox - w / 2), Math.round(a[1] - oy - h / 2), w, h, c); }
-    var B = R.B, Be = R.Be, G = R.G, s;
+    var B = IX.B, Be = IX.Be, G = IX.G, s;
     // belly pleats (throat grooves) and the mouth line
     for (var g = 0; g < 4; g++) {
       var pu0 = 168 + g * 8, pu1 = 282 - g * 6;
@@ -155,14 +166,14 @@
     for (u = 14; u < 30; u += 2) { lineUV(u, -8 - (30 - u) * 2.9, u + 2, -8 - (28 - u) * 2.9, G[2]); lineUV(u, 8 + (30 - u) * 2.9, u + 2, 8 + (28 - u) * 2.9, G[2]); }
     // eye + blush
     var e = map(270, -6), ex = Math.round(e[0] - ox), ey = Math.round(e[1] - oy);
-    b.rect(ex - 2, ey - 3, 5, 7, R.O); b.rect(ex - 3, ey - 2, 7, 5, R.O); b.rect(ex - 1, ey - 2, 2, 2, I.col('#ffffff')); b.rect(ex, ey + 1, 2, 1, G[1]);
-    var bl = map(262, 6); b.rect(Math.round(bl[0] - ox) - 3, Math.round(bl[1] - oy), 6, 2, R.blush);
-    b.outline(R.O);
+    b.rect(ex - 2, ey - 3, 5, 7, IX.O); b.rect(ex - 3, ey - 2, 7, 5, IX.O); b.rect(ex - 1, ey - 2, 2, 2, IX.white); b.rect(ex, ey + 1, 2, 1, G[1]);
+    var bl = map(262, 6); b.rect(Math.round(bl[0] - ox) - 3, Math.round(bl[1] - oy), 6, 2, IX.blush);
+    b.outline(IX.O);
     if (clipFloor) b.erase(function (x, y) { return y + oy > 1; });
     var bb = b.bounds();
     if (!bb) return null;
     var r1 = map(150, -hh(0.5) * 0.42);
-    return { c: I.toCanvas(b), ox: ox - p.cx, oy: oy - p.cy, cx: p.cx, cy: p.cy, bb: { x: ox + bb.x, y: oy + bb.y, w: bb.w, h: bb.h }, r1x: r1[0] - p.cx, r1y: r1[1] - p.cy, r1a: SPA[150] };
+    return { buf: b, ox: ox - p.cx, oy: oy - p.cy, cx: p.cx, cy: p.cy, bb: { x: ox + bb.x, y: oy + bb.y, w: bb.w, h: bb.h }, r1x: r1[0] - p.cx, r1y: r1[1] - p.cy, r1a: SPA[150] };
   }
   /** Which baked pose a tick uses: 2-tick holds while the whole whale is in the air. */
   var POSEKEY = [];
@@ -174,32 +185,38 @@
     R: ['#######.', '########', '##....##', '##....##', '########', '#######.', '##..##..', '##...##.', '##....##', '##....##'],
     1: ['..##', '.###', '####', '..##', '..##', '..##', '..##', '..##', '####', '####']
   };
-  function r1Buf(R) {
-    var b = new I.Buf(20, 16), c = R.Be[0];
+  function r1Buf(lut) {
+    var b = new I.Buf(20, 16), c = lut[5];
     ['R', '1'].forEach(function (ch, ci) { var g = R1G[ch]; for (var y = 0; y < g.length; y++) for (var x = 0; x < g[y].length; x++) if (g[y][x] === '#') b.set(3 + x + ci * 10, 3 + y, c); });
-    b.outline(R.G[2]);
+    b.outline(lut[11]);
     return b;
   }
 
   function bake() {
     var t0 = performance.now();
     for (var tk = 0; tk < DUR; tk++) POSEKEY[tk] = tk >= 4 && airborne(tk) && airborne(tk & ~1) ? tk & ~1 : tk;
+    var src = designBody(), luts = [lutFor(0), lutFor(1)];
+    WH[0].poses = {}; WH[1].poses = {};
+    for (var t = 3; t <= 58; t++) {
+      var pt = poseTick(t);
+      if (WH[0].poses[pt] !== undefined) continue;
+      var P0 = bakePose(src, pose(pt), pt === t);
+      [0, 1].forEach(function (pal) {
+        if (!P0) { WH[pal].poses[pt] = null; return; }
+        var Q = {}; for (var k in P0) if (k !== 'buf') Q[k] = P0[k];
+        Q.c = I.toCanvas(recolor(P0.buf, luts[pal]));
+        WH[pal].poses[pt] = Q;
+      });
+    }
     [0, 1].forEach(function (pal) {
-      var R = ramps(pal), src = designBody(R), Wd = WH[pal];
-      Wd.poses = {};
-      for (var t = 3; t <= 58; t++) {
-        var pt = poseTick(t);
-        if (Wd.poses[pt] !== undefined) continue;
-        Wd.poses[pt] = bakePose(src, R, pose(pt), pt === t);
-      }
-      var rb = r1Buf(R), up = rb.scale2x().scale2x();
+      var rb = r1Buf(luts[pal]), up = rb.scale2x().scale2x(), Wd = WH[pal];
       Wd.r1 = [];
       for (var k = 0; k < 25; k++) { var rr = I.rotate(rb, (k - 12) * PI / 24, 10, 8, up); Wd.r1.push({ c: I.toCanvas(rr.buf), px: rr.px, py: rr.py }); }
     });
     // per-frame hitboxes (facing right, rel. origin, above the floor), crash tick and point
     info.frames = [];
     var crash = -1;
-    for (var t = 0; t < DUR; t++) {
+    for (t = 0; t < DUR; t++) {
       var P = t >= 3 && t <= 58 ? WH[0].poses[poseTick(t)] : null, fr = { x: 0, y: 0, w: 0, h: 0 };
       if (P) {
         var p = pose(t), dx = p.cx - P.cx, dy = p.cy - P.cy, x0 = P.bb.x + dx, y0 = P.bb.y + dy, y1 = Math.min(0, y0 + P.bb.h);
