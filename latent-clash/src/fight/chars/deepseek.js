@@ -151,7 +151,7 @@
         whale: { seg: 'active', x: 52, t0: 'cast' },
         hits: [{
           // whale t 8..44: holds and carries the victim forward (pull grows with whale t), final at the crash
-          seg: 'active', fr: [0, 38], every: 6, whaleBox: true, box: [40, -150, 220, 150], dmg: 40, lv: 'X', stun: [16, 12], chip: 0.25,
+          seg: 'active', fr: [0, 38], every: 6, whaleBox: true, box: [40, -150, 220, 150], dmg: 36, lv: 'X', stun: [16, 12], chip: 0.25,
           push: [0, 2], noCatch: true, juggleAny: true, lvx: 0, lvy: -3.0, holdY: 64, air: 'knock', pull: 110, pullGrow: 3, fx: 'deepseek.whaleSplash',
           final: { from: 36, dmg: 90, kd: 'launch', lvx: 2.4, lvy: -8.6, lv: 'H', fx: 'hit.heavy', impact: true }
         }, {
