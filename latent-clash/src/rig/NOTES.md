@@ -6,6 +6,8 @@
   `fillPlaceholders()` still guarantees names and logs an error if authored segments differ from the table in
   `anims/placeholders.js`). Viewer + sheet tool done. Determinism verified (anchor hash identical across runs).
 - Polish done: identity pass (faces, hair, palettes), walks, hitHigh, down/getup, guards, launch, Claude 5H, DS breach/5M.
+- Polish pass 2 step 1 DONE (costume: skirt light/tights dark A-line + swing, capelet layer + shadow, tie/cuffs/boot trim,
+  DS hood/stripes/pocket, stamp hands).
 - NOW (polish pass 2, lead's order): 1) costume readability (Claude skirt/tights split, capelet layer, terracotta
   accents, no jacket specks; DeepSeek visible whale hood, sleeve stripes, pocket; hand stamps) → 2) normals both chars
   (anticipation, held impact, smears on M/H, weapon at tip, reach 30/46/54 & 24/38/44) → 3) specials + supers
