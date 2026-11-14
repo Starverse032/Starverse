@@ -111,7 +111,7 @@
     var P = K.painter(size, size), S = K.S, s = size / 16;
     if (ch === 'claude') {
       // V2: the sunburst flower from her hair ornament (ring of petals around a round core)
-      I.paintFlower(P, 8 * s - 0.5, 8 * s - 0.5, 7.4 * s, size >= 32 ? 14 : 10, -0.15);
+      I.paintFlower(P, 8 * s - 0.5, 8 * s - 0.5, 7.6 * s, size >= 32 ? 12 : 9, -0.15);
       P.outer(S.ol);
       return P.canvas(K.slotColors('claude', 0));
     }

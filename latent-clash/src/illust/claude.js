@@ -122,7 +122,10 @@
     var pts = [], k = sq || 1;
     for (var i = 0; i < n * 2; i++) {
       var a = rot + i * Math.PI / n, rr = i % 2 === 0 ? r * (i % 4 === 0 ? 1 : 0.84) : r * 0.56;
-      pts.push(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr * k);
+      if (i % 2 === 0) {   // blunt petal tip: two points
+        var da = Math.PI / n * 0.22;
+        pts.push(cx + Math.cos(a - da) * rr, cy + Math.sin(a - da) * rr * k, cx + Math.cos(a + da) * rr, cy + Math.sin(a + da) * rr * k);
+      } else pts.push(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr * k);
     }
     return { petals: P.poly(pts), core: P.ell(cx, cy, r * 0.4, r * 0.4 * k) };
   }
@@ -134,7 +137,11 @@
     P.recol(f.petals.band(1, -1), [S.a1], S.a2);
     P.fill(all.edge(), S.al);
     P.fill(f.core, S.a3);
-    if (r > 5) { P.fill(K.inner(f.core), S.a2); P.px(Math.round(cx + 1), Math.round(cy - 1), S.a0); P.px(Math.round(cx), Math.round(cy), S.a1); }
+    if (r > 5) {
+      P.fill(K.inner(f.core), S.a2);
+      if (r > 11) P.fill(P.ell(cx, cy, r * 0.22, r * 0.22 * k), S.a3);
+      P.px(Math.round(cx + 1), Math.round(cy - 1), S.a0); P.px(Math.round(cx), Math.round(cy), S.a1);
+    }
     else P.px(Math.round(cx), Math.round(cy - 0.5), S.a0);
     return all;
   }
