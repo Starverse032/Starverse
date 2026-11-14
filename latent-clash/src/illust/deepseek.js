@@ -115,6 +115,7 @@
 
   // paint a region in the fin ramp (navy-grey), pale inner face on `inner`
   function paintFin(P, m, inner) {
+    P.fill(m.grow(1).sub(m).and(P.solid()), S.ol);
     P.part(m, S.x1, S.xl);
     P.recol(m.band(-1, 2), [S.x1], S.x0);
     P.recol(m.band(2, -2), [S.x1], S.x2);
@@ -187,8 +188,8 @@
     P.part(gem, S.a1, S.a3); P.px(56, 89, S.W); P.px(57, 90, S.a0); P.px(57, 91, S.a2);
 
     // ---- far fin (behind the head)
-    var finF = P.spoly([74, 28, 83, 32, 90, 39, 95, 48, 97, 57, 94, 60, 89, 54, 82, 48, 74, 44]);
-    paintFin(P, finF, P.spoly([74, 44, 82, 48, 89, 54, 94, 60, 96, 55, 90, 47, 82, 40, 74, 36]));
+    var finF = P.spoly([74, 27, 84, 30, 93, 36, 99, 45, 103, 55, 103, 61, 99, 60, 92, 53, 83, 47, 74, 43]);
+    paintFin(P, finF, P.spoly([74, 43, 83, 47, 92, 53, 99, 60, 102, 58, 96, 48, 86, 40, 74, 35]));
 
     // ---- head
     var skull = P.ell(53, 38, 25, 26).or(P.ell(47, 43, 21, 23));
@@ -232,14 +233,14 @@
     H.hairClump(P, [[75, 28, 80, 42, 79, 56, 83, 68, 82 + sw, 82, 86 + sw, 96, 85 + sw * 2, 110, 89 + sw * 2, 124], 10, 3, 11, 0.3, [0.1, 0.5]], S.h1);
 
     // ---- near fin (lop-ear, drooping outward), pale inner face
-    var finN = P.spoly([36, 28, 27, 33, 20, 41, 15, 50, 13, 58, 16, 62, 22, 57, 29, 52, 36, 48]);
-    paintFin(P, finN, P.spoly([36, 48, 29, 52, 22, 57, 16, 62, 15, 57, 21, 49, 29, 43, 36, 40]));
-    P.line([33, 34, 25, 41, 19, 50], S.x2, true, true);
+    var finN = P.spoly([37, 28, 27, 31, 18, 37, 11, 46, 6, 56, 5, 63, 9, 63, 16, 57, 25, 51, 36, 47]);
+    paintFin(P, finN, P.spoly([36, 47, 25, 51, 16, 57, 9, 63, 7, 59, 14, 50, 24, 43, 36, 40]));
+    P.line([33, 33, 23, 38, 15, 46, 10, 55], S.x2, true, true);
 
     // ---- maid headdress: white frilled band across the crown, cyan bow at the far side
     var band = P.sr([31, 31, 36, 21, 46, 15, 58, 14, 70, 17, 78, 25, 80, 29], 4, 3.5, 5);
     var fr = P.mask();
-    [[32, 25], [36, 19], [41, 15], [47, 12], [53, 11], [59, 11], [65, 13], [71, 16], [76, 20], [79, 25]].forEach(function (p) { fr = fr.or(P.ell(p[0], p[1], 3, 2.6)); });
+    [[32, 25], [36, 19], [41, 15], [47, 12], [53, 11], [59, 11], [65, 13], [71, 16], [76, 20], [79, 25]].forEach(function (p) { fr = fr.or(P.ell(p[0], p[1], 3.4, 3)); });
     fr = fr.sub(band);
     P.part(fr, S.c0, S.cl);
     P.recol(fr.band(2, -1), [S.c0], S.c2);

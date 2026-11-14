@@ -285,6 +285,12 @@
     var ring = P.ell(55, 33, 24, 20).sub(P.ell(56, 36, 24, 20)).and(skull);
     for (var gx = 0; gx < 112; gx += 7) ring = ring.sub(P.rect(gx, 0, 2, 40));
     P.recol(ring, [S.h1], S.h0);
+    // brows drawn through the fringe (level, composed)
+    if (!win) {
+      if (lose) { P.line([42, 38, 46, 37, 50, 37], S.hl); P.line([63, 37, 66, 37, 69, 38], S.hl); }
+      else if (expr === 'cut') { P.line([42, 37, 46, 38, 51, 40], S.hl); P.line([62, 40, 66, 38, 69, 37], S.hl); }
+      else { P.line([42, 39, 46, 38, 51, 38], S.hl); P.line([63, 38, 66, 38, 69, 39], S.hl); }
+    }
     // part line
     P.line([45, 10, 45, 14], S.h3);
 
