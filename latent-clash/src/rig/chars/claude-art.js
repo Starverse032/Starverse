@@ -155,7 +155,7 @@
       var a = (k * 30 + 8) * Math.PI / 180, L = (k & 1) ? 3.6 : 4.7;
       var lit = Math.cos(a) * 0.62 - Math.sin(a) * 0.78;        // light from the upper front
       for (var r = 1.6; r <= L + 0.01; r += 0.35) {
-        var c = r > L - 1.1 ? (lit > 0.3 ? col(M.acc, 0) : (lit < -0.4 ? col(M.acc, 2) : col(M.acc, 1))) : (lit > 0 ? col(M.acc, 1) : col(M.acc, 2));
+        var c = r > L - 1.6 ? (lit > -0.3 ? col(M.acc, 0) : col(M.acc, 1)) : (lit > 0.2 ? col(M.acc, 0) : col(M.acc, 1));
         put(cx + Math.cos(a) * r, cy + Math.sin(a) * r, c);
       }
     }
@@ -164,13 +164,14 @@
 
   // black ribbon bow (behind/below the flower) + cream tassel, painted into the head stamp
   var BOW = [
-    'uN....uN',
-    'NND..NND',
-    '.NNDDND.',
-    '.DN..ND.',
-    '..D...D.'
+    'uN.......',
+    'NNN....uN',
+    'NNDD.DNNN',
+    '.NDD.DND.',
+    '.DN...DD.',
+    '..D....D.'
   ];
-  var TASSEL = ['U', 'U', 'Y', 'Y'];
+  var TASSEL = ['U', 'U', 'Y'];
 
   I.ART = I.ART || {};
   I.ART.claude = {
@@ -182,8 +183,8 @@
       var W = raw.w + PADL + 1, Hh = raw.h + PADT, d = new Uint8Array(W * Hh);
       for (var y = 0; y < raw.h; y++) for (var x = 0; x < raw.w; x++) d[(y + PADT) * W + x + PADL] = raw.d[y * raw.w + x];
       var base = { w: W, h: Hh, d: d, px: 8 + PADL, py: 16 + PADT };
-      base = I.overlay(base, I.parseArt(BOW, LEGEND), PADL - 1, PADT + 6, null);
-      base = I.overlay(base, I.parseArt(TASSEL, LEGEND), PADL + 1, PADT + 10, null);
+      base = I.overlay(base, I.parseArt(BOW, LEGEND), PADL - 2, PADT + 4, null);
+      base = I.overlay(base, I.parseArt(TASSEL, LEGEND), PADL + 2, PADT + 10, null);
       flower(base, PADL + 3, PADT + 6);
       var set = {
         base: base, eyes: {}, mouth: {}, cache: {},

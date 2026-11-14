@@ -27,10 +27,10 @@
     // composed stance: upright, lead palm low and open, book raised in the rear hand
     rest: {
       root: [0, 0], hip: [0, -53], lean: 2, bend: 0, head: [0, 0], tilt: 0,
-      hF: [15, -60], hB: [-7, -51], fF: [9, 0], fB: [-7, 0], faF: 0, faB: 0,
+      hF: [17, -69], hB: [-5, -49], fF: [9, 0], fB: [-7, 0], faF: 0, faB: 0,
       pen: -60, sq: 0, shr: 0, haF: 0, haB: 0, pg: 0.15, skirt: 0, tail: 0, arch: 0,
       book: -100, bko: 0, bk: [0, -60], tw: 0, hem: 0,
-      eyes: 'open', mouth: 'neutral', handF: 'relax', handB: 'grip',
+      eyes: 'open', mouth: 'neutral', handF: 'palm', handB: 'grip',
       elF: 1, elB: 1, knF: -1, knB: -1, book_: 0, glow: 0, blush: 0
     },
     sigJoints: ['pel', 'waist', 'chest', 'neck', 'shF', 'elF', 'haF', 'shB', 'elB', 'haB',
@@ -55,7 +55,7 @@
 
   // ------------------------------------------------------------ chains
   C.chains = [
-    { id: 'hair', n: 8, len: 9, rest: [16, 8, 4, 2, 1, 0, 0, 0], stiff: [0.34, 0.26, 0.2, 0.15, 0.12, 0.1, 0.08, 0.07], damp: 0.88, grav: 0.24, drag: 0.1,
+    { id: 'hair', n: 9, len: 9, rest: [12, 5, 2, 1, 0, 0, 0, 0, 0], stiff: [0.34, 0.26, 0.2, 0.15, 0.12, 0.1, 0.08, 0.07, 0.06], damp: 0.88, grav: 0.24, drag: 0.1,
       limit: function (c, i, sk) {
         var lim = (i < 3 ? sk.chest[0] - 1 : sk.pel[0] + 1);
         if (c.x[i] > lim) c.x[i] = lim;
@@ -291,7 +291,7 @@
     var rootB = fr(pel, la, -8, -1.5), rootF = fr(pel, la, 7, -2.5);
     var swF = swing(sec.skirtF), swB = swing(sec.skirtB);
     var fl = (sk.skirt || 0) + Math.max(0, -swF[1] - swB[1]) * 1.4;
-    var aF = 80 - fl * 3 - swF[0] * 2.5, aB = 101 + fl * 3 - swB[0] * 2.5, Lf = 51, Lb = 52;
+    var aF = 80 - fl * 3 - swF[0] * 2.5, aB = 101 + fl * 3 - swB[0] * 2.5, Lf = 49, Lb = 50;
     var pts = [], k, s;
     for (s = 0; s < 2; s++) {
       var S = s ? 'B' : 'F', kn = sk['kn' + S], an = sk['an' + S], hp = sk['hip' + S];
@@ -420,6 +420,8 @@
       Wf(-5.4, 4.5), Wf(-4.9, -3), Cf(-5.4, 3.5), Cf(-6.1, -1.5), Cf(-5.2, -5.6)]);
     p.poly(body, M.c1, SH.body, 1);
     dl(p, Cf(6.2, 4), Cf(2.5, 4.6), 1);                          // under-bust shadow
+    var csw = swing(sec.cape), cbk = Cf(-8.6, -1.2); cbk = [cbk[0] + csw[0], cbk[1] + csw[1] * 0.5 + 1];
+    dl(p, Cf(7.2, -1.2), Cf(4.6, 0.6), 1); dl(p, Cf(4.6, 0.6), Cf(0.5, 1.8), 1); dl(p, Cf(0.5, 1.8), Cf(-4.5, 1.5), 1); dl(p, Cf(-4.5, 1.5), cbk, 1);
     // corset belt (wide, black) with gold buttons
     var belt = H.flat([Wf(-5.3, -5.5), Wf(5.4, -6.6), Wf(6.0, -1), Wf(5.7, 4.6), Wf(-5.9, 4.6), Wf(-5.5, -1)]);
     p.poly(belt, M.c2, SH.body, 1);
@@ -433,7 +435,7 @@
     bk = [bk[0] + cs[0], bk[1] + cs[1] * 0.5];
     var cape = [Cf(-2.2, -8.6), Cf(2.6, -8.6), Cf(5.8, -6), Cf(7.4, -2.4), Cf(4.6, -0.6), Cf(0.5, 0.6), Cf(-4.5, 0.3), bk, Cf(-7.4, -5)];
     p.poly(H.flat(cape), M.c1, { d: 1.3, l: 1 }, 1);
-    for (var i = 2; i < 7; i++) ln(p, cape[i], cape[i + 1], col(M.metal, i === 2 ? 1 : 2), true);
+    for (var i = 2; i < 7; i++) ln(p, cape[i], cape[i + 1], col(M.metal, i < 4 ? 1 : 2), true);
     var em = Cf(-2.5, -3.6);
     p.pxOn(em[0], em[1], col(M.acc, 1)); p.pxOn(em[0] - 1, em[1], col(M.acc, 2)); p.pxOn(em[0] + 1, em[1], col(M.acc, 2));
     p.pxOn(em[0], em[1] - 1, col(M.acc, 0)); p.pxOn(em[0], em[1] + 1, col(M.acc, 2));
