@@ -21,8 +21,8 @@ export const COMBOS = {
   ],
   deepseek: [
     { name: 'jH > 5L > 5M > 5H > 214H > S > S (rekka)', dist: 112, steps: ['j9', 'jH', '5L', '5M', '5H', '214H', 'S', 'S'], hits: 7 },
-    { name: '2L > 2M > 236H (wave)', dist: 34, steps: ['2L', '2M', '236H'], hits: 3 },
-    { name: '5M > 5H > 623H (breach)', dist: 40, steps: ['5M', '5H', '623H'], hits: 3 },
+    { name: '2L > 2M > 5H > 236H (wave)', dist: 34, steps: ['2L', '2M', '5H', '236H'], hits: 4 },
+    { name: '5L > 5M > 623H (breach)', dist: 30, steps: ['5L', '5M', '623H'], hits: 3 },
     { name: 'jH > 5L > 5H > 214M > S > S > SUPER', dist: 112, steps: ['j9', 'jH', '5L', '5H', '214M', 'S', 'S', 'SUPER'], hits: 13, meter: true }
   ]
 };
@@ -47,9 +47,9 @@ function inPage() {
       if (q.length) { const s = q.shift(); inp = Object.assign({}, DIR[s.d || 5]); for (const b of (s.b || '')) inp[b] = 1; }
       else if (si < c.steps.length) {
         const st = c.steps[si];
-        const ready = !waitHit || (A.connected === 'hit' && A.moveInst !== acted);
+        const ready = (!waitHit || (A.connected === 'hit' && A.moveInst !== acted) || (acted === -2 && !A.air)) && !(A.air && /^[25]/.test(st));
         if (st === 'j9') { queue([{ d: 9 }, { d: 9 }, { d: 9 }]); si++; }
-        else if (st === 'jH') { if (A.air && A.vy > 0 && (LC.GROUND_Y - A.y) < 58) { queue([{ b: 'H' }, { b: 'H' }]); si++; waitHit = true; acted = -1; } }
+        else if (st === 'jH') { if (A.air && A.vy > 0 && (LC.GROUND_Y - A.y) < 58) { queue([{ b: 'H' }, { b: 'H' }]); si++; waitHit = true; acted = -2; } }
         else if (ready) {
           acted = A.moveInst;
           if (st === 'SUPER') queue([{ b: 'HS' }, { b: 'HS' }]);

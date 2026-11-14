@@ -81,7 +81,7 @@
         ],
         inv: { strike: { L: [0, 6], M: [0, 8], H: [0, 10] }, 'throw': [0, 40] },
         hits: [{
-          seg: 'rise', fr: [0, 7], box: [0, -82, 30, 78], anchor: 'weapon', dmg: { L: 100, M: 120, H: 140 },
+          seg: 'rise', fr: [0, 7], box: [0, -82, 36, 78], anchor: 'weapon', dmg: { L: 100, M: 120, H: 140 },
           lv: 'S', kd: 'launch', lvx: 1.5, lvy: -7.4, stun: [0, 18], fx: 'hit.special', jug: 2
         }],
         trail: 'deepseek.breachTrail', sfx: 'deepseek.breach'
@@ -144,7 +144,7 @@
         whale: { seg: 'active', x: 52 },
         hits: [{
           seg: 'active', fr: [4, 40], every: 6, box: [24, -116, 176, 116], dmg: 40, lv: 'X', stun: [16, 12], chip: 0.25,
-          push: [0, 2], noCatch: true, juggleAny: true, lvx: 0, lvy: -3.0, air: 'knock', pull: 100, fx: 'deepseek.whaleSplash',
+          push: [0, 2], noCatch: true, juggleAny: true, lvx: 0, lvy: -3.8, air: 'knock', pull: 100, fx: 'deepseek.whaleSplash',
           final: { from: 40, dmg: 90, kd: 'launch', lvx: 2.4, lvy: -8.6, lv: 'H', fx: 'hit.heavy' }
         }],
         sfx: 'deepseek.whale'

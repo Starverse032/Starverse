@@ -247,6 +247,7 @@
       if (!h.kd && !wasAir) lvy = -3.4;
       vic.vx = lvx * dir; vic.vy = lvy;
       vic.grav = 0.36 + 0.025 * Math.min(vic.juggle, 10);
+      if (kind === 'super') { vic.grav = 0.3; if (wasAir) vic.juggle = Math.min(vic.juggle, 3); }
       if (vic.y >= GY) vic.y = GY - 1;
     } else {
       vic.setActionRaw('hitstun');

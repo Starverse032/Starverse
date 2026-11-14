@@ -41,6 +41,7 @@
     [0, 1].forEach(function (pal) {
       var sc = I.scheme('claude', pal), L = sc.light.u, P = sc.paper.u, S = sc.seal.u, Gd = sc.gold.u;
       var C = CL[pal];
+      sc.light.css.forEach(function (c) { I.glyphAtlas(c); });   // warm lazy glyph atlases (no first-use hitch)
 
       // SPARK CAST — 10f muzzle flash at the nib
       C.cast = I.anim(36, 32, 10, 14, 16, function (b, f) {

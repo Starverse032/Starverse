@@ -163,7 +163,12 @@
     var minEt = p.et - T.MOTION_LATE;
     var res = { key: key, sup: this.motionEt('236236', facing, endT, minEt) >= 0, m: null };
     var bestEt = -1, bestP = 0;
+    // "2X … 2Y" is a crouching chain, not a 22 motion: ignore 22 if another press was made
+    // while holding down within the window
+    var crouchPress = false, ps = this.presses;
+    for (var i = 0; i < ps.length; i++) if (ps[i] !== p && ps[i].y < 0 && ps[i].t < p.t && p.et - ps[i].et <= 15) crouchPress = true;
     for (var name in PRIO) {
+      if (name === '22' && crouchPress) continue;
       var e = this.motionEt(name, facing, endT, minEt);
       if (e < 0) continue;
       if (e > bestEt || (e === bestEt && PRIO[name] > bestP)) { bestEt = e; bestP = PRIO[name]; res.m = name; }

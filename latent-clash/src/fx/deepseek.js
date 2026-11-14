@@ -16,7 +16,7 @@
     var rng = I.bakeRng(seed), sp = [];
     for (var i = 0; i < spikes; i++) {
       var u = (i + 0.5) / spikes - 0.5;
-      sp.push({ x: u * (wide || 1) * W * 0.8, h: (Hh - 6) * (0.45 + 0.55 * (1 - Math.abs(u) * 1.6)) * (0.75 + rng() * 0.25), lean: u * 1.4, w: 1.6 + rng() * 1.2 });
+      sp.push({ x: u * (wide || 1) * W * 0.8, h: (Hh - 6) * (0.45 + 0.55 * (1 - Math.abs(u) * 1.6)) * (0.75 + rng() * 0.25), lean: u * 1.4, w: (1.6 + rng() * 1.2) * Math.max(1, W / 64) });
     }
     return I.anim(W, Hh, n, W / 2, Hh - 2, function (b, f) {
       var cx = W / 2, by = Hh - 2, k = f / (n - 1), grow = Math.min(1, (f + 1) / (n * 0.35)), brk = Math.max(0, (k - 0.45) / 0.55);
@@ -75,7 +75,6 @@
         var top = by - H;
         for (var y = top; y <= by; y++) {
           var u = (y - top) / Math.max(1, H), w = 3 + u * 6 + Math.sin(y * 0.6 + f) * 1;
-          if (f > 10 && I.bayer(cx, y + f) > 1 - (f - 10) / 10) continue;
           b.rect(cx - w, y, w * 2, 1, Wt[2]); b.rect(cx - w * 0.45, y, w * 0.6, 1, Wt[1]); b.set(cx - w * 0.2 - 1, y, Wt[0]);
         }
         if (f < 12) { b.ellipse(cx, top + 2, wTop + 3, 3, Wt[1]); b.rect(cx - wTop - 2, top, wTop * 2 + 4, 1, Wt[0]); }
@@ -85,6 +84,7 @@
         }
         b.ellipse(cx, by, 14, 3, Wt[2]); b.rect(cx - 10, by - 1, 20, 1, Wt[0]);
         if (f < 14) b.outline(Wt[5]);
+        if (f > 10) b.breakup(1 - (f - 10) / 10, f, 0);
       });
     });
   }
