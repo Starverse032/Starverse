@@ -20,7 +20,7 @@
   var R = LC.rig = LC.rig || {};
   var I = R._ = R._ || {};
 
-  var BW = 200, BH = 184, OX = 100, OY = 156;      // buffer size and origin
+  var BW = 320, BH = 256, OX = 160, OY = 204;      // buffer size and origin (V2: fits 104-px fighters + smears)
   I.BW = BW; I.BH = BH; I.OX = OX; I.OY = OY;
 
   var MAT = I.MAT = {
@@ -282,7 +282,7 @@
   P.end = function (o) {
     if (this.sx1 <= this.sx0) return;
     var outline = !o || o.outline !== false, inner = !o || o.inner !== false;
-    var forceOut = o && o.hard;
+    var forceOut = o && o.hard, ring = (o && o.ring) || 1;
     var s = this.s, m = this.m, lum = this.lum, tmp = this.tmp, nt = 0;
     var x0 = this.sx0 - 1, y0 = this.sy0 - 1, x1 = this.sx1 + 1, y1 = this.sy1 + 1;
     if (x0 < 1) x0 = 1; if (y0 < 1) y0 = 1; if (x1 > BW - 1) x1 = BW - 1; if (y1 > BH - 1) y1 = BH - 1;
@@ -294,8 +294,8 @@
           if (s[i]) continue;
           var n = s[i - 1] || s[i + 1] || s[i - BW] || s[i + BW];
           if (!n) continue;
-          var under = m[i], c = 1;
-          if (under > 1 && inner && !forceOut) {
+          var under = m[i], c = ring;
+          if (under > 1 && inner && !forceOut && ring === 1) {
             // deep tone of the neighbouring front material
             var fd = n < 2 ? 1 : (n - ((n - 2) & 3)) + 3;
             c = (lum[under] < lum[fd] + 0.06) ? 1 : fd;

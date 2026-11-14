@@ -82,7 +82,7 @@
     this.idx = new Uint8Array(BW * BH);
     this.ib = [BW, BH, 0, 0];               // bbox of idx
     this.cb = [BW, BH, 0, 0];               // bbox written to the canvas
-    this.sig = new Int32Array(320); this.sigN = 0; this.lsig = new Int32Array(320); this.lsigN = -1; this.lds = null;
+    this.sig = new Int32Array(2048); this.sigN = 0; this.lsig = new Int32Array(2048); this.lsigN = -1; this.lds = null;
     this.dirty = true; this.lookKey = ''; this.luts = {};
     this.setPose('idle', 0);
     this.sec.reset(null);
@@ -228,6 +228,7 @@
     s[n++] = Math.round(sk.handAngF); s[n++] = Math.round(sk.handAngB);
     s[n++] = Math.round(sk.skirt * 10); s[n++] = Math.round(sk.tail * 10); s[n++] = Math.round(sk.arch * 10);
     s[n++] = this.blink; s[n++] = this.lockOff.F; s[n++] = this.lockOff.B;
+    if (this.c.sigExtra) n = this.c.sigExtra(sk, s, n);      // V2: per-character extra state
     var L = this.sec.list;
     for (i = 0; i < L.length; i++) { var c = L[i]; for (var k = 0; k < c.n; k++) { s[n++] = c.qx[k]; s[n++] = c.qy[k]; } }
     if (this.smear) { var sp = this.smear.pts; s[n++] = sp.length; for (i = 0; i < sp.length; i++) s[n++] = Math.round(sp[i]); }

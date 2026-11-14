@@ -17,8 +17,8 @@
 
   // ---------------------------------------------------------- channels
   // vector fields expand to two channels (x, y)
-  var VEC = ['root', 'hip', 'head', 'hF', 'hB', 'fF', 'fB', 'muz', 'grab', 'wpn'];
-  var SCAL = ['lean', 'bend', 'tilt', 'faF', 'faB', 'pen', 'sq', 'shr', 'haF', 'haB', 'pg', 'skirt', 'tail', 'arch'];
+  var VEC = ['root', 'hip', 'head', 'hF', 'hB', 'fF', 'fB', 'muz', 'grab', 'wpn', 'bk'];
+  var SCAL = ['lean', 'bend', 'tilt', 'faF', 'faB', 'pen', 'sq', 'shr', 'haF', 'haB', 'pg', 'skirt', 'tail', 'arch', 'book', 'bko', 'tw', 'hem'];
   var CH = {}, NCH = 0;
   VEC.forEach(function (k) { CH[k] = NCH; NCH += 2; });
   SCAL.forEach(function (k) { CH[k] = NCH++; });
@@ -257,6 +257,8 @@
     out.faF = faF; out.faB = faB;
     out.pen = ch[CH.pen]; out.pg = ch[CH.pg];
     out.skirt = ch[CH.skirt]; out.tail = ch[CH.tail]; out.arch = ch[CH.arch];
+    out.book = ch[CH.book]; out.bko = ch[CH.bko]; out.tw = ch[CH.tw]; out.hem = ch[CH.hem];
+    out.bk = [R0(ch[CH.bk] + rx), R0(ch[CH.bk + 1] + ry)];
     // optional explicit anchors
     out.muz = ds.has && ds.has.muz ? [R0(ch[CH.muz] + rx), R0(ch[CH.muz + 1] + ry)] : null;
     out.grab = ds.has && ds.has.grab ? [R0(ch[CH.grab] + rx), R0(ch[CH.grab + 1] + ry)] : null;
