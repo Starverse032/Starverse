@@ -69,22 +69,23 @@
         kind: 'special', motion: '236', simple: 5, lore: 'spark',
         segs: [['startup', { L: 14, M: 13, H: 12 }], ['active', 3], ['recovery', 28]],
         proj: {
-          seg: 'active', kind: 'spark', sprite: 'claude.spark', box: [-7, -7, 14, 14],
-          spawn: 'muzzle', spawnFb: [32, -50],
-          vx: { L: 2.6, M: 3.6, H: 4.8 }, vy: 0,
-          dmg: { L: 70, M: 80, H: 90 }, lv: 'S', stun: [22, 16], chip: 0.2, push: [8, 8],
+          // leaves the palm (muzzle ~(40,-78)) and settles to cruise height -62 so crouchers are hit
+          seg: 'active', kind: 'spark', sprite: 'claude.spark', box: { L: [-9, -9, 18, 18], M: [-11, -11, 22, 22], H: [-13, -13, 26, 26] },
+          spawn: 'muzzle', spawnFb: [40, -78], cruiseY: -62, power: { L: 0.3, M: 0.6, H: 1 },
+          vx: { L: 3.0, M: 4.2, H: 5.4 }, vy: 0,
+          dmg: { L: 70, M: 80, H: 90 }, lv: 'S', stun: [22, 16], chip: 0.2, push: [10, 10],
           hitFx: 'claude.sparkHit', hitSfx: 'claude.sparkHit', castFx: 'claude.sparkCast', castSfx: 'claude.spark'
         }
       },
       airSpark: {
-        kind: 'special', motion: '236', simple: 'j', air: true, minHeight: 18, lore: 'spark',
+        kind: 'special', motion: '236', simple: 'j', air: true, minHeight: 28, lore: 'spark',
         segs: [['startup', 10], ['active', 3], ['recovery', 12, { loop: 'land' }]],
         landLag: 6,
         proj: {
-          seg: 'active', kind: 'spark', sprite: 'claude.spark', box: [-7, -7, 14, 14],
-          spawn: 'muzzle', spawnFb: [26, -36],
-          vx: { L: 2.0, M: 2.7, H: 3.4 }, vy: { L: 2.8, M: 2.2, H: 1.7 }, diag: true,
-          dmg: { L: 65, M: 70, H: 75 }, lv: 'S', stun: [20, 14], chip: 0.2, push: [6, 6],
+          seg: 'active', kind: 'spark', sprite: 'claude.spark', box: [-11, -11, 22, 22],
+          spawn: 'muzzle', spawnFb: [36, -56], power: 0.6,
+          vx: { L: 2.4, M: 3.2, H: 4.0 }, vy: { L: 3.3, M: 2.6, H: 2.0 }, diag: true,
+          dmg: { L: 65, M: 70, H: 75 }, lv: 'S', stun: [20, 14], chip: 0.2, push: [8, 8],
           hitFx: 'claude.sparkHit', hitSfx: 'claude.sparkHit', castFx: 'claude.sparkCast', castSfx: 'claude.spark'
         }
       },
@@ -92,37 +93,40 @@
         kind: 'special', motion: '623', simple: 6, lore: 'sonnet',
         segs: [
           ['startup', 5],
-          ['rise', 14, { vy0: { L: -6.9, M: -8.9, H: -10.6 }, g: { L: 0.49, M: 0.63, H: 0.76 }, vx: { L: 1.0, M: 1.3, H: 1.6 } }],
-          ['fall', 12, { loop: 'land', vx: 0.5, g: 0.5 }],
+          // rise heights ~54 / 70 / 83 px (V1 x1.2), same 14f rise
+          ['rise', 14, { vy0: { L: -8.3, M: -10.7, H: -12.7 }, g: { L: 0.59, M: 0.76, H: 0.9 }, vx: { L: 1.3, M: 1.7, H: 2.1 } }],
+          ['fall', 12, { loop: 'land', vx: 0.6, g: 0.6 }],
           ['land', 12]
         ],
         inv: { strike: { L: [0, 6], M: [0, 8], H: [0, 10] }, 'throw': [0, 40] },
         hits: [{
-          seg: 'rise', fr: [0, 8], box: [2, -84, 28, 80], anchor: 'weapon', dmg: { L: 100, M: 120, H: 140 },
-          lv: 'S', kd: 'launch', lvx: 1.6, lvy: -6.6, stun: [0, 18], fx: 'hit.special', jug: 2
+          seg: 'rise', fr: [0, 8], box: [4, -136, 36, 132], anchor: 'weapon', dmg: { L: 100, M: 120, H: 140 },
+          lv: 'S', kd: 'launch', lvx: 1.6, lvy: -6.6, stun: [0, 18], fx: 'hit.special', jug: 2, impact: true
         }],
-        trail: 'claude.sonnetTrail', sfx: 'claude.sonnet'
+        trail: 'claude.sonnetTrail', riseFx: 'claude.sonnetPillar', sfx: 'claude.sonnet'
       },
       haiku: {
         kind: 'special', motion: '214', simple: 4, lore: 'haiku',
         segs: [
-          ['startup', { L: 10, M: 9, H: 8 }, { vx: { L: 1.0, M: 1.4, H: 1.8 } }],
-          ['hit1', 3, { vx: { L: 1.2, M: 1.6, H: 2.0 } }], ['gap1', 6, { vx: { L: 1.2, M: 1.6, H: 2.0 } }],
-          ['hit2', 3, { vx: { L: 1.2, M: 1.6, H: 2.0 } }], ['gap2', 6, { vx: { L: 1.2, M: 1.6, H: 2.0 } }],
-          ['hit3', 4, { vx: { L: 1.4, M: 1.8, H: 2.2 } }], ['recovery', 20]
+          ['startup', { L: 10, M: 9, H: 8 }, { vx: { L: 1.3, M: 1.8, H: 2.3 } }],
+          ['hit1', 3, { vx: { L: 1.6, M: 2.1, H: 2.6 } }], ['gap1', 6, { vx: { L: 1.6, M: 2.1, H: 2.6 } }],
+          ['hit2', 3, { vx: { L: 1.6, M: 2.1, H: 2.6 } }], ['gap2', 6, { vx: { L: 1.6, M: 2.1, H: 2.6 } }],
+          ['hit3', 4, { vx: { L: 1.8, M: 2.3, H: 2.9 } }], ['recovery', 20]
         ],
+        // quill tip at the hits: (58,-44) rising, (54,-103) high, (70,-70) falling slash
         hits: [
-          { seg: 'hit1', box: [6, -62, 36, 36], dmg: { L: 40, M: 50, H: 50 }, lv: 'S', stun: [20, 14], push: [3, 4], fx: 'hit.special', chip: 0.2 },
-          { seg: 'hit2', box: [6, -58, 38, 38], dmg: { L: 56, M: 70, H: 70 }, lv: 'S', stun: [20, 14], push: [3, 4], fx: 'hit.special', chip: 0.2 },
-          { seg: 'hit3', box: [6, -60, 40, 42], dmg: { L: 40, M: 50, H: 50 }, lv: 'S', kd: 'launch', lvx: 2.6, lvy: -4.6,
-            adv: [0, { L: -4, M: -6, H: -9 }], push: [6, 10], fx: 'hit.special', chip: 0.2 }
+          { seg: 'hit1', box: [10, -76, 52, 56], dmg: { L: 40, M: 50, H: 50 }, lv: 'S', stun: [20, 14], push: [4, 5], fx: 'hit.special', chip: 0.2 },
+          { seg: 'hit2', box: [10, -110, 50, 80], dmg: { L: 56, M: 70, H: 70 }, lv: 'S', stun: [20, 14], push: [4, 5], fx: 'hit.special', chip: 0.2 },
+          { seg: 'hit3', box: [12, -98, 62, 72], dmg: { L: 40, M: 50, H: 50 }, lv: 'S', kd: 'launch', lvx: 2.6, lvy: -4.6,
+            adv: [0, { L: -4, M: -6, H: -9 }], push: [8, 13], fx: 'hit.special', chip: 0.2, impact: true }
         ],
         sfx: 'claude.haiku'
       },
       guardrail: {
         kind: 'special', motion: '22', simple: 2, lore: 'guardrail',
         segs: [['startup', 3], ['hold', { L: 12, M: 18, H: 24 }], ['recovery', { L: 18, M: 22, H: 26 }]],
-        catchSeg: 'hold', barrier: [6, -62, 26, 62],
+        // catch box: from just in front of her body to the barrier front (fx bbox x 26..62, y -102..-6)
+        catchSeg: 'hold', barrier: [8, -106, 54, 106], pullTo: 64,
         sfx: 'claude.guardrail'
       },
       guardrailHit: {
@@ -130,8 +134,8 @@
         segs: [['startup', 4], ['active', 4], ['recovery', 22]],
         inv: { all: [0, 9] },
         hits: [{
-          seg: 'active', box: [2, -72, 66, 72], dmg: { L: 100, M: 120, H: 140 }, lv: 'S', guard: 'none',
-          kd: 'launch', lvx: 3.2, lvy: -5.0, fx: 'hit.special', juggleAny: true
+          seg: 'active', box: [4, -106, 80, 106], dmg: { L: 100, M: 120, H: 140 }, lv: 'S', guard: 'none',
+          kd: 'launch', lvx: 3.2, lvy: -5.0, fx: 'hit.special', juggleAny: true, impact: true
         }]
       },
       'super': {
@@ -139,11 +143,12 @@
         segs: [['startup', 6], ['cast', 10], ['active', 40], ['recovery', 30]],
         inv: { all: [0, 17] },
         flashAt: 5,
-        beam: { seg: 'active', y: -64, h: 46, x0: 18, grow: 64, max: 440 },
+        // beam drawn at the muzzle (book centre ~(34,-82)); visual 80 px tall, hitbox 68
+        beam: { seg: 'active', y: -116, h: 68, x0: 30, grow: 40, max: 420 },
         hits: [{
           seg: 'active', fr: [0, 39], every: 4, beam: true, dmg: 33, lv: 'X', stun: [14, 10], chip: 0.25,
-          push: [1, 2], noCatch: true, juggleAny: true, lvx: 0.6, lvy: -2.2, holdY: 34, air: 'knock', fx: 'claude.beamHit',
-          final: { from: 36, kd: 'launch', lvx: 3.4, lvy: -6.2, lv: 'H', fx: 'hit.heavy' }
+          push: [1, 2], noCatch: true, juggleAny: true, lvx: 0.6, lvy: -2.2, holdY: 40, air: 'knock', fx: 'claude.beamHit',
+          final: { from: 36, kd: 'launch', lvx: 3.4, lvy: -6.2, lv: 'H', fx: 'hit.heavy', impact: true }
         }],
         sfx: 'claude.beam'
       }
