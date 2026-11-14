@@ -240,8 +240,9 @@
     // skirt: rest angles from the flare; legs push the contours (limits)
     var fl = d.skirt || 0, F0 = fr(d.pel, L, 9.5, -2), B0 = fr(d.pel, L, -10.5, -2);
     var hf = own(by.hemF), hb = own(by.hemB);
-    hf.def.rest[0] = 71 - fl * 40; hf.def.rest[1] = 80 - fl * 32;
-    hb.def.rest[0] = 112 + fl * 40; hb.def.rest[1] = 101 + fl * 32;
+    var rl = L * (0.4 + 0.6 * Math.min(1, Math.abs(L) / 90));   // the skirt turns with the pelvis
+    hf.def.rest[0] = 71 - fl * 40 + rl; hf.def.rest[1] = 80 - fl * 32 + rl;
+    hb.def.rest[0] = 112 + fl * 40 + rl; hb.def.rest[1] = 101 + fl * 32 + rl;
     sec.attach('hemF', F0[0], F0[1], 0);
     sec.attach('hemB', B0[0], B0[1], 0);
   };
