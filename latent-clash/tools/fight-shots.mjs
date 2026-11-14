@@ -65,6 +65,9 @@ for (const [c, o] of [['claude', 'deepseek'], ['deepseek', 'claude']]) {
   add(`v2-${c}-superko`, V(c, o, { hp2: 120 }), [...nearC[c], st(2, 5, 'HS'), ...W(c === 'claude' ? 80 : 100)], 'ko12');
   add(`v2-${c}-impact`, V(c, o), [...nearC[c], st(1, 5, 'H'), st(c === 'claude' ? 13 : 11, 5)]);
 }
+add('v2-flashoff-superko', V('claude', 'deepseek', { hp2: 120, settings: { flash: false } }), [...nearC.claude, st(2, 5, 'HS'), ...W(80)], 'ko12');
+add('v2-flashoff-impact', V('deepseek', 'claude', { settings: { flash: false } }), [...nearC.deepseek, st(1, 5, 'H'), st(11, 5)]);
+for (const k of [30, 60, 90]) add(`v2-ko-${k}`, { mode: 'demo', stage: 'abyss', seed: 21, intro: false, p1: { char: 'claude', control: 'cpu', level: 5 }, p2: { char: 'deepseek', control: 'cpu', level: 4 } }, [], 'ko' + k);
 add('v2-ko', { mode: 'demo', stage: 'abyss', seed: 21, intro: false, p1: { char: 'claude', control: 'cpu', level: 5 }, p2: { char: 'deepseek', control: 'cpu', level: 4 } }, [], 'ko12');
 
 const only = args.only ? String(args.only).split(',') : null;
@@ -87,12 +90,15 @@ for (const s of S) {
       if (pre.fight) { let t = 0; while (m.state !== 'fight' && t++ < 2000) m.update({}, {}); }
       if (pre.meter1 != null) m.f[0].meter = pre.meter1;
       if (pre.hp2 != null) m.f[1].hp = pre.hp2;
+      if (pre.settings) { window.__set = Object.assign({}, LC.settings); Object.assign(LC.settings = LC.settings || {}, pre.settings); }
     }
     for (const [k, inp] of s.steps) for (let i = 0; i < k; i++) m.update(inp, {});
-    if (s.after === 'ko12') { let t = 0; while (m.state !== 'ko' && t++ < 20000) m.update({}, {}); for (let i = 0; i < 12; i++) m.update({}, {}); }
+    const kn = /^ko(\d+)$/.exec(s.after || '');
+    if (kn) { let t = 0; while (m.state !== 'ko' && t++ < 20000) m.update({}, {}); for (let i = 0; i < +kn[1]; i++) m.update({}, {}); }
     if (s.after === 'ko') { let t = 0; while (m.state !== 'ko' && t++ < 20000) m.update({}, {}); for (let i = 0; i < 50; i++) m.update({}, {}); }
     if (s.after === 'quote') { let t = 0; while (m.state !== 'matchEnd' && t++ < 60000) m.update({}, {}); for (let i = 0; i < 140; i++) m.update({}, {}); }
     m.draw(FS.ctx);
+    if (window.__set) { LC.settings = window.__set; window.__set = null; }
     if (window.SHEET) return FS.canvas.toDataURL('image/png');
     const c = document.createElement('canvas'); c.width = 1152; c.height = 648;
     const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(FS.canvas, 0, 0, 1152, 648);
