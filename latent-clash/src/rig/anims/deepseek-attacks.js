@@ -17,7 +17,7 @@
   // ================================================================ NORMALS (V2)
   // 5L: snappy water-wrapped lead palm (reach 32)
   var L0 = P(S, ATK, { hip: [-2, -46], lean: 0, bend: -4, hF: [11, -63], hB: [5, -56], handF: 'flat' });
-  var L1 = P(S, HIT, { hip: [2, -46], lean: 12, bend: 2, hF: [27, -67], hB: [3, -58], handF: 'flat', handB: 'fist', fB: [-12, 0], weapon: 'hF', mouth: 'grin' });
+  var L1 = P(S, HIT, { hip: [2, -46], lean: 12, bend: 2, hF: [29, -67], hB: [3, -58], handF: 'flat', handB: 'fist', fB: [-12, 0], weapon: 'hF', mouth: 'grin' });
   def('5L', {
     segs: sar(4, 3, 7), step: 1,
     keys: [['startup', P(S, ATK)], ['startup+2', L0, 'out'],
@@ -26,7 +26,7 @@
   });
   // 5M: front snap kick, the hem lifted over the thigh (reach 50)
   var M0 = P(S, ATK, { hip: [-2, -47], lean: -8, bend: -4, fF: [14, -22], faF: 40, knF: -1, fB: [-9, 0], hF: [16, -66], hB: [-2, -62], skirt: 0.2 });
-  var M1 = P(S, HIT, { hip: [-1, -46], lean: -20, bend: -6, fF: [40, -46], faF: 4, knF: -1, fB: [-10, 0], faB: 10,
+  var M1 = P(S, HIT, { hip: [-1, -46], lean: -20, bend: -6, fF: [42, -46], faF: 4, knF: -1, fB: [-10, 0], faB: 10,
     hF: [10, -70], hB: [-12, -62], handF: 'fist', handB: 'open', skirt: 0.3, tail: 20, weapon: 'fF' });
   def('5M', {
     segs: sar(7, 4, 12), step: 2,
@@ -54,7 +54,7 @@
   // ---------------------------------------------------------------- crouching normals
   var c0 = P(C, ATK);
   // 2L: low palm jab (reach 34)
-  var CL = P(C, HIT, { hip: [3, -19], lean: 34, hF: [29, -34], hB: [16, -38], handF: 'flat', weapon: 'hF', mouth: 'grin' });
+  var CL = P(C, HIT, { hip: [3, -19], lean: 34, hF: [31, -34], hB: [16, -38], handF: 'flat', weapon: 'hF', mouth: 'grin' });
   def('2L', {
     segs: sar(4, 3, 8), step: 1,
     keys: [['startup', c0], ['startup+2', P(c0, { hF: [17, -40], lean: 24 }), 'out'],
@@ -85,7 +85,7 @@
   // ---------------------------------------------------------------- jump normals
   var j0 = P(JF, ATK, { skirt: 0.4 });
   // jL: downward palm (reach 30)
-  var JL = P(JF, HIT, { hip: [2, -47], lean: 16, hF: [24, -58], hB: [0, -62], handF: 'flat', weapon: 'hF', mouth: 'grin', skirt: 0.45 });
+  var JL = P(JF, HIT, { hip: [2, -47], lean: 16, hF: [26, -58], hB: [0, -62], handF: 'flat', weapon: 'hF', mouth: 'grin', skirt: 0.45 });
   def('jL', {
     segs: [['startup', 4], ['active', 8], ['recovery', 12, true]], step: 1,
     keys: [['startup', j0], ['startup+2', P(j0, { hF: [14, -68] }), 'out'],
@@ -93,7 +93,7 @@
       ['recovery', P(j0, { hF: [19, -64] })]]
   });
   // jM: flying knee under the lifted hem (reach 40 at the knee)
-  var JM = P(JF, HIT, { hip: [8, -48], lean: -6, bend: -6, fF: [22, -30], faF: 50, knF: -1, fB: [-4, -12], faB: 40,
+  var JM = P(JF, HIT, { hip: [10, -48], lean: -6, bend: -6, fF: [22, -30], faF: 50, knF: -1, fB: [-4, -12], faB: 40,
     hF: [14, -72], hB: [-10, -64], handF: 'fist', weapon: 'kF', skirt: 0.5, tail: -10 });
   def('jM', {
     segs: [['startup', 6], ['active', 6], ['recovery', 12, true]], step: 2,
@@ -102,7 +102,7 @@
       ['recovery', P(j0, { fF: [12, -12] })]]
   });
   // jH: heavy down-forward stomp kick, skirt blown up (reach 48)
-  var JH = P(JF, HIT, { hip: [6, -48], lean: 14, bend: 4, fF: [38, -18], faF: 28, knF: -1, fB: [-6, -14], faB: 50,
+  var JH = P(JF, HIT, { hip: [6, -48], lean: 14, bend: 4, fF: [40, -18], faF: 28, knF: -1, fB: [-6, -14], faB: 50,
     hF: [4, -76], hB: [-14, -66], handF: 'open', handB: 'open', weapon: 'fF', skirt: 0.7, tail: -20 });
   def('jH', {
     segs: [['startup', 9], ['active', 6], ['recovery', 12, true]], step: 2,

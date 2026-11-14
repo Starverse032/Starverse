@@ -74,15 +74,36 @@
     var a = angOf(px, py, ch.x[i], ch.y[i]), b = angOf(px, py, tx, ty);
     if (front ? a > b : a < b) { ch.x[i] = px + Math.cos(b * D2R) * L; ch.y[i] = py + Math.sin(b * D2R) * L; }
   }
+  // how far a leg is lifted (0 = hanging under the skirt, 1 = thigh raised): the hem then drapes from the thigh
+  function raised(d, s) {
+    var h = s === 'F' ? d.hipF : d.hipB, k = s === 'F' ? d.knF : d.knB;
+    var r = (h[1] + 19 - k[1]) / 10;
+    return r < 0 ? 0 : (r > 1 ? 1 : r);
+  }
   function limF(ch, i, sk) {
     var d = sk && (sk.d || sk); if (!d || !d.knF) return;
+    if (raised(d, 'F') > 0.5) return;
     if (i === 1) clampLink(ch, 1, d.knF[0] + 4, d.knF[1], true);
     else { clampLink(ch, 2, d.anF[0] + 4, d.anF[1] + 2, true); clampLink(ch, 2, d.knF[0] + 4, d.knF[1] + 6, true); }
   }
   function limB(ch, i, sk) {
     var d = sk && (sk.d || sk); if (!d || !d.knB) return;
+    if (raised(d, 'B') > 0.5) return;
     if (i === 1) clampLink(ch, 1, d.knB[0] - 4, d.knB[1], false);
     else { clampLink(ch, 2, d.anB[0] - 4, d.anB[1] + 2, false); clampLink(ch, 2, d.knB[0] - 4, d.knB[1] + 6, false); }
+  }
+  // drawing contour for a raised leg: over the top of the thigh, then hanging down
+  function drape(d, s, c0, c1, c2) {
+    var r = raised(d, s);
+    if (r <= 0) return [c1, c2];
+    var h = s === 'F' ? d.hipF : d.hipB, k = s === 'F' ? d.knF : d.knB, dx = k[0] - h[0], dy = k[1] - h[1], l = Math.sqrt(dx * dx + dy * dy) || 1;
+    var nx = dy / l, ny = -dx / l;              // normal on the upper side of the thigh (facing +x)
+    if (ny > 0) { nx = -nx; ny = -ny; }
+    var T = [h[0] + dx * 0.6 + nx * 3.5, h[1] + dy * 0.6 + ny * 3.5];
+    var used = Math.sqrt((T[0] - c0[0]) * (T[0] - c0[0]) + (T[1] - c0[1]) * (T[1] - c0[1]));
+    var hang = Math.max(5, 40 - used), sg = s === 'F' ? 1 : -1;
+    var B = [T[0] + sg * 3, Math.min(0, T[1] + hang)];
+    return [lerp(c1, T, r), lerp(c2, B, r)];
   }
   var TAIL_LEN = [6, 6, 6, 6, 5, 5, 5, 4];
   C.chains = [
@@ -397,9 +418,10 @@
 
   function skirtSurf(sk, sec) {
     var W = sk.waist, wa = sk.lean * 0.7 + sk.chestAng * 0.3, hf = H.chainPts(sec.hemF), hb = H.chainPts(sec.hemB);
+    var df = drape(sk, 'F', hf[0], hf[1], hf[2]), db = drape(sk, 'B', hb[0], hb[1], hb[2]);
     return {
-      f: plMake([fr(W, wa, 5, 2), hf[0], hf[1], hf[2]]),
-      b: plMake([fr(W, wa, -5.5, 2), hb[0], hb[1], hb[2]]),
+      f: plMake([fr(W, wa, 5, 2), hf[0], df[0], df[1]]),
+      b: plMake([fr(W, wa, -5.5, 2), hb[0], db[0], db[1]]),
       sag: 1.5
     };
   }
