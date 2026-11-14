@@ -149,13 +149,6 @@
     if (I.R() < 0.3) I.bubble(x + I.RS() * 6, y, 1, 14, s.water.css, I.FRONT);
   }, { desc: 'One segment of a water ribbon (foam core) that sheds drops; consecutive spawns join into an arc.', use: 'Every frame of breach rise+fall at anchor `weapon` (the kicking foot).' });
 
-  I.def('deepseek.diveTrail', function (x, y, O) {
-    var s = sc(O);
-    ribbon('d' + O.pal, x, y, 4, 9, s.water.css, lay(O, I.BACK));
-    if (I.R() < 0.6) I.drop(x, y, -O.facing * I.RR(0.5, 1.5), I.RR(-1, 0.5), I.RI(16, 24), s.water.css, I.FRONT, 1);
-    if (I.R() < 0.4) I.spark(x, y, O.facing > 0 ? PI * 0.8 : PI * 0.2, I.RR(2, 3), 6, s.water.css, I.FRONT, { max: 6 });
-  }, { desc: 'Diagonal water streak segment + drops (joins consecutive spawns).', use: 'Every frame of diveKick active at anchor `weapon`.' });
-
   I.def('deepseek.poolIn', function (x, y, O) {
     var s = sc(O), D = DS[O.pal];
     I.anim1(D.crownM, x, y, O.facing, lay(O, I.FRONT), 1);
@@ -163,22 +156,6 @@
     drops(x, y - 2, I.nOf(10, O), -PI / 2, 0.8, 2, 4, s.water.css, I.FRONT);
     for (var i = 0; i < I.nOf(6, O); i++) I.bubble(x + I.RS() * 10, y - I.R() * 6, I.RI(1, 2), I.RI(14, 22), s.water.css, I.FRONT, I.RI(4, 12));
   }, { desc: 'Sinking splash: crown + floor ring + drops + bubbles, ~30f.', use: 'At her origin on the first sink frame of diveIn (draw the deepseek.pool sprite too).' });
-
-  I.def('deepseek.poolOut', function (x, y, O) {
-    var s = sc(O), D = DS[O.pal];
-    I.anim1(D.column, x, y, 1, lay(O, I.FRONT), 1);
-    I.anim1(D.crownL, x, y, O.facing, I.BACK, 1);
-    drops(x, y - 30, I.nOf(16, O), -PI / 2, 0.9, 2, 5.5, s.water.css, I.FRONT, I.RI(30, 44));
-    I.anim1(D.foam[1], x - 8, y, -1, I.FRONT, 2, 4).vx = -0.7; I.anim1(D.foam[1], x + 8, y, 1, I.FRONT, 2, 4).vx = 0.7;
-  }, { desc: 'Water column bursting ~90 px up with crown, raining drops, foam, ~44f.', use: 'At the exit point (floor) on the first frame of diveOut.' });
-
-  I.def('deepseek.chainHit', function (x, y, O) {
-    var s = sc(O), D = DS[O.pal], idx = O.index | 0;
-    I.anim1(D.burst, x, y, O.facing, lay(O, I.FRONT), 1);
-    var up = idx === 2 ? -PI / 2 + O.facing * 0.3 : (O.facing > 0 ? -0.3 : PI + 0.3);
-    drops(x, y, I.nOf(idx === 2 ? 10 : 6, O), up, 0.7, 2, idx === 2 ? 5.5 : 4, s.water.css, I.FRONT);
-    if (idx === 2) I.anim1(A.ringC['deepseek' + O.pal][1], x, y, 1, I.FRONT, 1);
-  }, { desc: 'Water-fist impact burst + directional droplets; index 2 (launcher) adds a ring and an upward spray.', use: 'On each chain1/2/3 hit (index 0/1/2) at the contact point, together with hit.medium/heavy if wanted.' });
 
   I.def('deepseek.whaleSplash', function (x, y, O) {
     var s = sc(O), D = DS[O.pal];

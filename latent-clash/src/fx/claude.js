@@ -85,72 +85,7 @@
         }
       });
 
-      // HAIKU SLASH strokes (3 shapes) — 16f each, 96x80, origin (44,40)
-      C.slash = STROKES.map(function (st, si) {
-        var rng = I.bakeRng(300 + si * 17);
-        var gaps = [];   // flying-white streaks: lateral offsets that go dry toward the tail
-        for (var g = 0; g < 3; g++) gaps.push({ off: -0.6 + g * 0.6 + (rng() - 0.5) * 0.25, from: 0.55 + rng() * 0.25 });
-        return I.anim(96, 80, 16, 44, 40, function (b, f) {
-          var ox = 44, oy = 40;
-          function body(u0, u1, wscale, cOut, cMid, cCore, dry) {
-            var N = 90;
-            for (var i = 0; i <= N; i++) {
-              var u = u0 + (u1 - u0) * i / N, pt = bez(st, u), w = brushW(st, u) * wscale;
-              if (w < 0.4) continue;
-              var pt2 = bez(st, Math.min(1, u + 0.01)), dx = pt2[0] - pt[0], dy = pt2[1] - pt[1], dl = Math.hypot(dx, dy) || 1;
-              var nx = -dy / dl, ny = dx / dl;
-              for (var s = -w; s <= w; s += 0.5) {
-                var rel = s / w;
-                var isDry = false;
-                if (dry) for (var gi = 0; gi < gaps.length; gi++) if (u > gaps[gi].from && Math.abs(rel - gaps[gi].off) < 0.16) isDry = true;
-                if (isDry) continue;
-                var c = Math.abs(rel) > 0.72 ? cOut : Math.abs(rel + 0.25) < 0.3 ? cCore : cMid;
-                b.set(ox + pt[0] + nx * s, oy + pt[1] + ny * s, c);
-              }
-            }
-          }
-          if (f === 0) { body(0, 1, 1.15, L[0], L[0], L[0], false); b.outline(L[2]); b.outline(L[5]); }
-          else if (f === 1) { body(0, 1, 1.05, L[3], L[1], L[0], true); b.outline(L[5]); }
-          else if (f === 2) { body(0.08, 1, 1, L[3], L[2], L[0], true); b.outline(L[5]); }
-          else if (f < 9) {
-            var k = (f - 2) / 7;   // dries from the start (tail of the motion) toward the tip
-            var m = new I.Buf(96, 80), keepB = b;
-            b = m; body(0.1 + k * 0.62, 1, 1 - k * 0.45, L[4], L[2 + (k > 0.5 ? 1 : 0)], L[1], true); b = keepB;
-            m.breakup(function (x, y) { return 1 - k * 0.35; }, f, 0);
-            if (f < 5) { m.outline(L[5]); }
-            b.blit(m, 0, 0);
-            var tip = bez(st, 1), drops = 3 + si;
-            for (var d = 0; d < drops; d++) {   // ink droplets thrown off the tip
-              var r1 = I.bakeRng(si * 50 + d)(), ang = Math.atan2(st.p[5] - st.p[3], st.p[4] - st.p[2]) + (r1 - 0.5) * 1.2;
-              var dist = 3 + (f - 2) * (2 + r1 * 2.2);
-              b.rect(ox + tip[0] + Math.cos(ang) * dist, oy + tip[1] + Math.sin(ang) * dist + (f - 2) * (f - 2) * 0.12, d % 2 ? 1 : 2, 1, L[3 + (f > 6 ? 1 : 0)]);
-            }
-          } else {
-            var q = f - 9, m2 = new I.Buf(96, 80), kb = b;
-            b = m2; body(0.78 + q * 0.03, 1, 0.45, L[4], L[4], L[3], true); b = kb;
-            m2.breakup(0.55 - q * 0.08, q, 1); b.blit(m2, 0, 0);
-          }
-        });
-      });
-
-      // SEALS — 26f: white pop (f0), stamp holds, then dither-dissolves
-      C.seal = {};
-      ['五', '七'].forEach(function (ch) {
-        var mask = I.sealMask(ch), mw = mask.w, mh = mask.h, SZ = Math.max(mw, mh) + 4;
-        C.seal[ch] = I.anim(SZ + 4, SZ + 4, 26, (SZ + 4) / 2, (SZ + 4) / 2, function (b, f) {
-          var o = 2, x0 = o, y0 = o;
-          if (f === 0) { b.rect(x0 - 2, y0 - 2, SZ + 4, SZ + 4, S[0]); return; }
-          var m = new I.Buf(SZ + 4, SZ + 4);
-          m.rect(x0, y0, SZ, SZ, S[1]);
-          m.rect(x0, y0, SZ, 1, S[2]); m.rect(x0, y0 + SZ - 1, SZ, 1, S[2]); m.rect(x0, y0, 1, SZ, S[2]); m.rect(x0 + SZ - 1, y0, 1, SZ, S[2]);
-          m.set(x0, y0, 0); m.set(x0 + SZ - 1, y0 + SZ - 1, 0);      // worn stamp corners
-          var gx = x0 + Math.floor((SZ - mw) / 2), gy = y0 + Math.floor((SZ - mh) / 2);
-          for (var y = 0; y < mh; y++) for (var x = 0; x < mw; x++) if (mask.d[y * mw + x]) m.set(gx + x, gy + y, S[0]);
-          if (f === 1) m.outline(S[0]);
-          if (f > 18) m.breakup(1 - (f - 18) / 8, 0, f);
-          b.blit(m, 0, 0);
-        });
-      });
+      // (v1 haiku slash strokes + seals removed: claude.haikuSlash v2 lives in specials.js)
 
       // SHARDS (hex panel fragments): 8 rotations of 2 shapes
       C.shard = [5, 3].map(function (sz, si) {
@@ -243,33 +178,6 @@
     if (I.R() < 0.6) I.glyphP(x + I.RS() * 6, y, I.pick(I.LETTERS), I.RS() * 0.5, -I.RR(0.6, 1.4), I.RI(14, 20), s.light.css, L).d = 0.25;
     if (I.R() < 0.35) I.twinkle(x + I.RS() * 8, y + I.RS() * 8, 2, 10, s.light.css, I.FRONT);
   }, { desc: 'One segment of a rising ribbon: verse line of glyph blocks spiralling up + light ribbon joining consecutive spawns.', use: 'Every 2nd frame of sonnet rise (and fall) at anchor `weapon`; consecutive spawns within 4f are joined.' });
-
-  I.def('claude.haikuSlash', function (x, y, O) {
-    var s = sc(O), C = CL[O.pal], idx = ((O.index % 3) + 3) % 3, st = STROKES[idx], f = O.facing;
-    I.anim1(C.slash[idx], x, y, f, lay(O, I.FRONT), 1);
-    var ch = st.ch, sl = C.seal[ch];
-    var p = I.anim1(sl, x + f * st.seal[0], y + st.seal[1], 1, lay(O, I.FRONT), 1, 1);
-    p.vy = -0.12;
-    var tip = bez(st, 1);
-    for (var i = 0; i < I.nOf(4, O); i++) {
-      var a = Math.atan2(st.p[5] - st.p[3], (st.p[4] - st.p[2]) * f) + I.RS() * 0.6;
-      I.spark(x + tip[0] * f, y + tip[1], a, I.RR(2, 4), I.RI(6, 10), s.light.css, I.FRONT, { max: 6 });
-    }
-  }, { desc: 'Calligraphic light-brush stroke (index 0 rising / 1 wide sweep / 2 falling) with dry-brush streaks, ink drops and a vermilion 五/七/五 seal, ~16f (seal 26f).', use: 'At the `hip`/`chest` anchor on the first frame of hit1/hit2/hit3 (index 0/1/2), whether or not it connects.' });
-
-  I.def('claude.guardCatch', function (x, y, O) {
-    var s = sc(O), C = CL[O.pal], f = O.facing, bx = x + f * 26, cy = y - 30;
-    if (A.grFlash) I.anim1(A.grFlash[O.pal], x, y, f, lay(O, I.FRONT), 1);
-    I.anim1(A.ringC['claude' + O.pal][1], bx, cy, 1, I.FRONT, 1, 1);
-    for (var i = 0; i < I.nOf(18, O); i++) {
-      var p = I.add(I.K_SHARD, bx + I.RS() * 10, cy + I.RS() * 26, I.FRONT);
-      var a = (f > 0 ? 0 : PI) + I.RS() * 1.6;
-      p.A = C.shard[i % 3 ? 1 : 0]; p.vx = Math.cos(a) * I.RR(1, 3.6) + f * 0.6; p.vy = Math.sin(a) * I.RR(1, 3) - 1; p.g = 0.14; p.drag = 0.96;
-      p.life = I.RI(16, 26); p.rot = I.R() * 8; p.vrot = I.RS() * 0.6; p.floor = I.GY + 2; p.bounce = 0.3; p.delay = 1;
-    }
-    I.spark4P(bx - f * 2, cy, s.light.css);
-    for (i = 0; i < 5; i++) I.twinkle(bx + I.RS() * 12, cy + I.RS() * 24, 3, 12, s.light.css, I.FRONT, I.RI(1, 8));
-  }, { desc: 'Hex barrier pops white and shatters into spinning hex shards + ring, ~26f.', use: 'At the fighter ORIGIN (same point/facing as the claude.guardrail sprite) when the counter catches a strike.' });
 
   I.def('claude.beamHit', function (x, y, O) {
     var s = sc(O);

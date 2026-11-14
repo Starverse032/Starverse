@@ -81,8 +81,8 @@
         HB.special[ch + pal] = burst(88, 80, 18, 833, 8, 30, r, { diamond: true, fwd: 4 });
       });
     });
-    HB.blockL = shield(40, 52, 10, 20, 3, Co, false);
-    HB.blockH = shield(52, 80, 14, 32, 4, Co, true);
+    HB.blockL = shield(40, 52, 10, 20, 4, Co, false);
+    HB.blockH = shield(52, 80, 14, 32, 6, Co, true);
     HB.ko = burst(150, 140, 26, 851, 18, 56, [Ho[0], Ho[0], Ho[1], Ho[2], Ho[3], Rd[4], Rd[6]], { crackle: true, ring2: true, inv: Rd[6], cxf: 0.5 });
   });
 
