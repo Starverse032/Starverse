@@ -26,7 +26,7 @@
     var wall = [mixc(O, '#000000', 0.62), mixc(O, '#000000', 0.42), mixc(O, '#000000', 0.2), I.col(O)];
     var lit = [mixc(O, L[4], 0.3), mixc(O, L[3], 0.42), mixc(L[4], L[3], 0.5), I.col(L[3]), I.col(L[2])];
     var shelf = mixc(O, '#000000', 0.5), shelfHi = mixc(O, L[4], 0.22);
-    var spines = [mixc(O, L[4], 0.32), mixc(O, K[0], 0.4), mixc(O, P[3], 0.3), mixc(O, '#6a3050', 0.4), mixc(O, L[3], 0.22)];
+    var spines = [mixc(O, L[4], 0.24), mixc(O, K[0], 0.28), mixc(O, P[3], 0.2), mixc(O, '#6a3050', 0.3), mixc(O, L[3], 0.16)];
     var floor = [mixc(O, '#000000', 0.15), mixc(O, '#000000', 0.45), mixc(O, L[3], 0.55), mixc(O, L[4], 0.35)];
     var base = new I.Buf(BW, BH), d = base.d, x, y, i;
     var cxs = SUNX + 8, cys = SUNY + 8;
@@ -69,7 +69,7 @@
       var b = base.copy(), bd = b.d, rot = f * RAYP / NRF;
       for (i = 0; i < BW * BH; i++) {
         var r = polar.r[i], px = i % BW, pyy = (i / BW) | 0;
-        var inten = I.clamp(1.3 - r / 300, 0, 1), bay = I.bayer(px, pyy);
+        var inten = I.clamp(1.25 - r / 270, 0, 1) * (pyy > 70 ? 0.75 : 1), bay = I.bayer(px, pyy);
         if (pyy >= FY) {   // floor reflection of the sun: dithered streaks
           if (pyy > FY + 1 && ((pyy - FY) % 6 < 3) && bay < inten * inten * 0.55) bd[i] = (pyy - FY) % 6 === 1 ? lit[2] : lit[1];
           continue;
@@ -77,9 +77,9 @@
         var w = ((polar.a[i] - rot) / RAYP) % 1; if (w < 0) w += 1;
         if (r < 40) bd[i] = r < 26 ? lit[4] : bay < 0.6 ? lit[4] : lit[3];
         else if (r < 78 && bay < (78 - r) / 38 * 0.9) bd[i] = lit[r < 56 ? 3 : 2];
-        else if (w < 0.44) {
-          var core = Math.abs(w - 0.22) < 0.05;
-          if (bay < inten * (core ? 0.75 : 0.42)) bd[i] = core && r < 210 ? lit[2] : r < 140 ? lit[1] : lit[0];
+        else if (w < 0.36) {
+          var core = Math.abs(w - 0.18) < 0.045;
+          if (bay < inten * (core ? 0.6 : 0.3)) bd[i] = core && r < 210 ? lit[2] : r < 140 ? lit[1] : lit[0];
         } else if (bay < inten * 0.12) bd[i] = lit[0];
       }
       C.base.push(I.toCanvas(b));
@@ -100,13 +100,13 @@
       var near = ri < 4, wpx = tx.length * 4, n = Math.ceil((W + 16) / wpx) + 1, s = '';
       for (var q = 0; q < n; q++) s += tx;
       var rb = new I.Buf(wpx * n, 9);
-      I.text35(rb, s, 0, 2, I.col(near ? L[2] : I.mix(L[3], O, 0.25)));
-      rb.outline(near ? mixc(L[4], O, 0.35) : mixc(L[4], O, 0.6));
+      I.text35(rb, s, 0, 2, I.col(near ? L[2] : I.mix(L[4], O, 0.2)));
+      rb.outline(near ? mixc(L[4], O, 0.35) : mixc(L[4], O, 0.72));
       return { c: I.toCanvas(rb), w: wpx };
     });
     // manuscript pages: 2 sizes x 5 tilts (RotSprite-lite)
     function pageBuf(pw, ph, dim, seed) {
-      var pb = new I.Buf(pw + 4, ph + 4), r2 = I.bakeRng(seed), pc = P.map(function (c) { return mixc(c, O, dim); });
+      var pb = new I.Buf(pw + 4, ph + 4), r2 = I.bakeRng(seed), pc = P.map(function (c) { return mixc(I.mix(c, L[3], 0.3), O, dim); });
       var ink = mixc(L[3], O, dim * 0.4), inkHi = mixc(L[2], O, dim * 0.3), edge = mixc(L[1], O, dim * 0.3);
       pb.poly([2, 2, pw + 2, 2, pw + 2, ph - 8, pw - 8, ph + 2, 2, ph + 2], pc[1]);          // sheet with a folded corner
       pb.poly([pw + 2, ph - 8, pw - 8, ph - 8, pw - 8, ph + 2], pc[2]);
