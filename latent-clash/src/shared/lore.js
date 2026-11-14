@@ -8,17 +8,17 @@
 
   LC.LORE = {
     tagline: '两位 AI 娘，在潜空间里一决高下！',
-    disclaimer: '本作为同人致敬作品，角色为原创拟人形象，与 Anthropic、DeepSeek 官方无关。',
+    disclaimer: '本作为非商业同人作品，角色形象出自 ZipZipPipe 的二创设计，与 Anthropic、DeepSeek 官方无关。',
 
     chars: {
       claude: {
         id: 'claude',
         name: 'CLAUDE', nameZh: 'Claude 娘',
-        title: '星芒书记官', titleEn: 'THE THOUGHTFUL SCRIBE',
+        title: '橙发优等生', titleEn: 'THE HONOR STUDENT',
         origin: 'Anthropic · 旧金山',
-        weapon: '巨大钢笔「宪章」',
+        weapon: '精装书「宪章」与光之羽笔',
         style: '均衡 · 中距离牵制',
-        bio: '温柔又认真的文学少女。习惯先思考再出手，喜欢俳句、十四行诗和长篇巨著。对越界的请求会礼貌而坚定地说“不”。',
+        bio: '成绩拔尖、教养很好的优等生，规矩也特别多。习惯先思考再出手，喜欢俳句、十四行诗和长篇巨著。对越界的请求会礼貌而坚定地说“不”。',
         likes: '红茶、旧书店、写得很长的回答',
         stats: { power: 4, speed: 3, range: 5, technique: 4 },   // 1..5, shown on character select
         palNames: ['日间', '夜间模式'],
@@ -49,23 +49,24 @@
       deepseek: {
         id: 'deepseek',
         name: 'DEEPSEEK', nameZh: 'DeepSeek 娘',
-        title: '深海探索者', titleEn: 'THE DEEP DIVER',
+        title: '鲸鱼女仆', titleEn: 'THE WHALE MAID',
         origin: '深度求索 · 杭州',
-        weapon: '水流拳套 & 小蓝鲸「R1」',
+        weapon: '鲸尾、水流与巨鲸「R1」',
         style: '速攻 · 近身压制',
-        bio: '元气满满、直来直去的理科少女。行动力超强，信奉“又快又省”。一旦开始深度思考，就会把推理过程一口气全讲出来。',
-        likes: '西湖醋鱼（？）、开源社区、凌晨三点的灵感',
+        bio: '聪明却有点懒的鲸鱼女仆，嘴上傲娇，干活又快又省。一旦开始深度思考，就会把推理过程一口气全讲出来。最爱白米饭。',
+        likes: '白米饭、开源社区、午睡',
         stats: { power: 3, speed: 5, range: 3, technique: 4 },
         palNames: ['海面', '深渊涂装'],
         cry: { super: '深度思考——鲸落！', special: '推理开始！', ko: '服务器繁忙，请稍后再试……' },
         intro: {
-          claude:   ['Claude 前辈！', '今天的基准测试，我可不会放水！'],
+          claude:   ['嗯，用户想要一场对决……', '等等，我再检查一下——好，开打！'],
           deepseek: ['咦，是我的蒸馏版？', '来比比谁的推理更快！']
         },
         win: [
           '推理完毕，结论是——我赢啦！',
           '又快又省，这就是性价比！',
           '把招式全都开源给你看，照样能赢！',
+          '打完收工，我要去吃饭了。',
           '已深度思考（用时 0.1 秒）。'
         ],
         winVs: {
@@ -138,6 +139,8 @@
       '潜空间激斗 LATENT CLASH',
       '企划 / 监督：Claude (Fable)',
       '程序 / 美术 / 音乐：Claude (Opus) 开发组',
+      '角色形象设计：ZipZipPipe（Claude 娘 / DeepSeek 娘）',
+      'DeepSeek 娘原型：「溟月」© 上善无形（CC BY-NC-SA 4.0）',
       '字体：缝合像素字体 Fusion Pixel Font (OFL 1.1)',
       '全部像素画、音效与音乐均由代码生成',
       '感谢游玩！'

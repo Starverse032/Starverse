@@ -4,7 +4,7 @@
   'use strict';
   var LC = window.LC = window.LC || {};
 
-  LC.VERSION = '1.0.0';
+  LC.VERSION = '2.0.0';
   LC.TITLE_ZH = '潜空间激斗';
   LC.TITLE_EN = 'LATENT CLASH';
 
@@ -39,21 +39,21 @@
   // Index 0 = default colours, index 1 = alternate (used for mirror matches).
   LC.PAL = {
     claude: [
-      { // 0 — "Daylight": coral hair, cream jacket, slate skirt
+      { // 0 — "Daylight": long orange hair, cream long dress, black details
         id: 'daylight',
         outline: '#2a1a1c',
         skin:    ['#ffeadb', '#f7cdb2', '#dc9f86', '#b9715f'],
         blush:   '#ff9d8a',
         hair:    ['#ffc79a', '#ee8a5f', '#c25e42', '#8a3b30'],
-        hairTip: ['#fff1d6', '#ffd7a8'],
+        hairTip: ['#ffd9a8', '#ffb070'],
         eye:     ['#fff4d6', '#f0a03a', '#b3601f', '#5a2b14'],
-        cloth1:  ['#fffaf0', '#f1e7d3', '#cfbd9f', '#9d8a73'],   // cream: capelet jacket, boots
-        cloth2:  ['#5b5768', '#3e3b49', '#27252e', '#17161b'],   // slate: skirt, tights, pen barrel
-        accent:  ['#ffd9a0', '#ff9e6b', '#d97757', '#a34d36'],   // spark orange: ribbon, clip, magic
-        metal:   ['#fff3b8', '#edbd4f', '#b07e2a', '#7a5218'],   // gold: pen bands & nib, buttons
+        cloth1:  ['#fffaf0', '#f1e7d3', '#cfbd9f', '#9d8a73'],   // cream: the long dress
+        cloth2:  ['#4a4756', '#2f2d38', '#1f1e26', '#121116'],   // black: collar, cuffs, sash trim, shoes, book cover
+        accent:  ['#ffd9a0', '#ff9e6b', '#d97757', '#a34d36'],   // orange: ribbon, hem band, logo flower, magic
+        metal:   ['#fff3b8', '#edbd4f', '#b07e2a', '#7a5218'],   // gold: book clasp, buttons, light-quill
         ui:      '#d97757', uiLight: '#ffb58a', uiDark: '#7e3830'
       },
-      { // 1 — "Dark mode": ivory hair, slate jacket, terracotta skirt
+      { // 1 — "Dark mode": ivory hair, charcoal dress, terracotta details
         id: 'darkmode',
         outline: '#1d1416',
         skin:    ['#ffeadb', '#f7cdb2', '#dc9f86', '#b9715f'],
@@ -69,7 +69,7 @@
       }
     ],
     deepseek: [
-      { // 0 — "Surface": blue hair, white whale hoodie
+      { // 0 — "Surface": gradient blue hair, navy-and-white maid dress
         id: 'surface',
         outline: '#131a3c',
         skin:    ['#fff0e6', '#f8d6c4', '#dba595', '#b87a72'],
@@ -77,13 +77,13 @@
         hair:    ['#a9c0ff', '#4d6bfe', '#3346c9', '#222c85'],
         hairTip: ['#c9f7ff', '#6fe0ff'],
         eye:     ['#e6fbff', '#58d4ff', '#1f8fe0', '#123a8a'],
-        cloth1:  ['#ffffff', '#e8eefc', '#b8c5ea', '#8492c6'],   // white: hoodie body, sneakers
-        cloth2:  ['#7d95ff', '#4d6bfe', '#3346c9', '#222c85'],   // blue: hood top, stripes, shorts, whale tail
-        accent:  ['#d4faff', '#74e4ff', '#2bb8f0', '#1a7fc0'],   // cyan: water, glow, gloves
+        cloth1:  ['#ffffff', '#e8eefc', '#b8c5ea', '#8492c6'],   // white: apron, headdress, collar, cuffs, stockings
+        cloth2:  ['#4a5bb8', '#2f3d8f', '#1f2866', '#141a44'],   // navy: the maid dress (whale tail/fins use the hair ramp)
+        accent:  ['#d4faff', '#74e4ff', '#2bb8f0', '#1a7fc0'],   // cyan: water, glow, ribbon
         metal:   ['#ffffff', '#c9d4f0', '#8a97c2', '#56608c'],   // silver: zipper, eyelets
         ui:      '#4d6bfe', uiLight: '#a9c0ff', uiDark: '#222c85'
       },
-      { // 1 — "Abyss": pale aqua hair, navy hoodie, coral-pink glow
+      { // 1 — "Abyss": pale aqua hair, cyan dress with navy apron, coral-pink glow
         id: 'abyss',
         outline: '#0c1030',
         skin:    ['#fff0e6', '#f8d6c4', '#dba595', '#b87a72'],
