@@ -18,7 +18,7 @@
   var A = I.A = I.A || {};
   var GY = LC.GROUND_Y || 186;
   var DUR = 60, BL = 300, VM = 66;                 // duration, body length, max |v|
-  var X0 = -14, X1 = 204, Y0 = 136, Y1 = 64, HA = 222;   // centre path (rel. origin, facing right)
+  var X0 = -14, X1 = 204, Y0 = 136, Y1 = 64, HA = 208;   // centre path (rel. origin, facing right)
   var TA = 27, TD = 24, PW = 1.6;                  // apex tick, half-duration, hang exponent
   var info = { duration: DUR, bbox: { x: -60, y: -205, w: 330, h: 206 }, frames: [], events: { emerge: 3, apex: TA, crash: 49 }, crashX: 160 };
   var WH = [{}, {}];
