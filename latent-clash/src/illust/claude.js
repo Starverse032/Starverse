@@ -204,18 +204,19 @@
     var capeN = P.spoly([50, 78, 38, 81, 25, 87, 14, 95, 7, 104, 4, 112, 14, 116, 28, 117, 40, 114, 45, 106, 49, 96, 53, 86]);
     var capeF = P.spoly([60, 78, 72, 80, 85, 86, 96, 94, 103, 102, 106, 109, 96, 112, 84, 111, 74, 107, 68, 100, 63, 90]);
     [capeN, capeF].forEach(function (cp, i) {
-      P.part(cp, S.c1, S.cl);
-      P.recol(cp.band(i ? 3 : 5, -2), [S.c1], S.c2);
-      P.recol(cp.band(-2, 3), [S.c1], S.c0);
-      var hem = cp.sub(cp.shift(0, -3)).sub(cp.shift(-1, 0).sub(cp.shift(1, 0)).shift(0, 0));
-      P.recol(cp.band(0, -2), [S.c1, S.c0, S.c2], S.m1);
-      P.recol(cp.band(0, -1), [S.m1], S.m2);
+      P.part(cp, S.c0, S.cl);
+      P.recol(cp.band(i ? 3 : 6, -2), [S.c0], S.c1);
+      P.recol(cp.band(i ? 1 : 2, -1), [S.c1], S.c2);
+      // gold edging: hem + front edge
+      var front = (i ? cp.band(2, 0) : cp.band(-2, 0)).and(P.rect(i ? 60 : 36, 84, 16, 34));
+      P.recol(cp.band(0, -2).or(front), [S.c1, S.c0, S.c2], S.m1);
+      P.recol(cp.band(0, -1).or(i ? cp.band(1, 0) : cp.band(-1, 0)).and(cp.band(0, -2).or(front)), [S.m1], S.m2);
     });
     // fold shadows on the capelet
     P.line([30, 92, 24, 104, 22, 114], S.c2, true, true);
     P.line([40, 88, 38, 100, 36, 112], S.c2, true, true);
     P.line([80, 90, 84, 100, 86, 110], S.c2, true, true);
-    paintFlower(P, 26, 103, 5.2, 10, 0.2, 0.85);
+    paintFlower(P, 17, 103, 6.5, 9, 0.2, 0.8);
     // high collar with frilled edge
     // shadow cast by the capelet hem onto the sleeves / blouse
     P.recol(capeN.or(capeF).shift(1, 3).sub(capeN).sub(capeF), [S.c1, S.c0], S.c2);
