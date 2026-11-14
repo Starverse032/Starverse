@@ -23,15 +23,23 @@
   shared code assumes the old 70-px size any more.
 
 ## V2 progress / next steps (Claude) — kept current for restarts
-- V2 body DONE (`chars/claude.js`, `chars/claude-art.js`): 104 px, Victorian layered dress per the reference
-  (capelet, jabot + cravat, corset belt, cream skirt with black gold-bordered side panel + orange-lined drape,
-  orange front sash (chain) with tassel, hip bow with flower, frilled hem, cream heeled boots, black tights),
-  knee-length straight hair (9-link chain kept behind the back), sunburst flower on a black bow + tassel,
-  leather book 「宪章」 (`bm` holding mode), quill of light (`quill: true`), V2 hands table, shaped smears.
-- ALL §3.3 anims are V2-authored (first pass; no V1 data left): `anims/claude-base.js`, `anims/claude-attacks.js`.
-- Reviewed in sheets: idle, walkF, crouch set, jump set, guards, hits, dashes (rough), normals (reach tuned).
-- NEXT: review/polish specials + super (spark float book, sonnet, haiku, guardrail(+Hit)); throws; intro/win/lose;
-  polish down / launch / getup (lying skirt + hair), walkB check, perf numbers, final reach table.
+- V2 body DONE (`chars/claude.js`, `chars/claude-art.js`): 104 px (head top -104, crouch ≈ -70, width 26), Victorian
+  layered dress per the reference (capelet + gold edge/emblem, jabot + black cravat + flower brooch, wide black corset
+  belt with gold buttons/chain, cream pleated skirt with a black gold-bordered side panel under an orange-lined cream
+  drape, orange front sash (chain) + tassel, black hip bow + flower, frilled hem, cream heeled lace-up boots, black
+  tights), knee-length straight hair (9-link chain kept behind the back silhouette), sunburst flower on a black bow +
+  tassel, leather book 「宪章」, quill of light, V2 hand stamps, shaped smears (`H.smear2`). Palettes 0 and 1 checked.
+- Skirt = rib model (`skirtGeo`): front/back ribs pushed by knees/shins/boots, drape over a raised knee, hem = sagging
+  quadratic, floor clamp unless `air: true`; frame turns with the body when lying (|lean| > 30).
+- ALL §3.3 anims are V2-authored (no V1 data left) and reviewed in sheets at least once: base set, normals, specials,
+  super, throws, intro/win/lose. Segment ids/frame counts unchanged (placeholders.js check passes).
+- Reach (weapon anchor, px) 5L 41 · 5M 60 · 5H 72 · 2L 42 · 2M 62 · 2H 70 · jL 37 · jM 46 · jH 59 (targets met ±1);
+  spark muzzle (40,-78), airSpark (36,-56), haiku 58/54/70, guardrailHit 44, super muzzle = book centre (34,-82).
+- Perf: worst-case draw (re-render every frame) ≈ 1.0 ms; anchors ≈ 4 µs; init ≈ 1.2 ms.
+- Rough / next: getup f6–f10 (sit-up: skirt nearly vanishes over the bent knees), launch skirt is a stiff wedge,
+  hair is slow to fall after lying (looks wind-blown for ~10 f), walk reads as a glide (legs hidden by the dress),
+  intro/win/lose are simple (book reading → close → stance; book to chest; head down), quill draw-from-book is
+  implied (hand to hip, quill appears) rather than shown.
 
 ## Progress / next steps (V1, historical)
 
@@ -91,6 +99,9 @@ open shout teeth hurt o frown grin), `handF`/`handB` (fist grip open flat relax 
 `z` ({armF, armB, legF, legB, pen} layer overrides; torso = 0, head = 2, front arm = 5), `glow` (nib/glove glow),
 `blush`, `smear` ({ part: 'pen'|'hF'|'hB'|'fF'|'fB', from: 'seg+N', n }), `weapon` (DeepSeek: limb for the anchor),
 `penIn` ('F'|'B'|'none'), `plant` (walk foot lock).
+V2 Claude extras: `bm` book holding mode ('B' rear hand | 'F' | 'both' | 'float' at `bk` | 'none'), `book` spine angle
+(-90 upright), `bko` 0..1 open, `bsc` book scale, `quill` true/false (angle `pen`, grip `pg`), `weapon` 'quill'|'hF'|'hB'|
+'fF'|'fB'|'book', `muzAt: 'book'`, `air: true` (no skirt floor clamp), `skirt` flare, `hem` hem drop, `z.book`.
 Helpers: `P(base, a, b…)` copy + overrides, `bob(base, dx, dy, ch)` move everything but the feet, `shift()`.
 
 Anim definition: `I.defAnim(char, name, { segs: [[id, frames, loop?]...], step: 2, walk: px/f,
@@ -112,7 +123,7 @@ in3 out3 back snap(hold). Missing poses before a segment's first key are interpo
 - Additions: `animInfo().placeholder`, `animInfo().walk`, `LC.rig.stats`, `puppet.info()`.
 - `sx` should be `Math.round(worldX - camX)` for the foot lock to be pixel-exact.
 
-## Animation status
+## Animation status (V1 text below is historical; see V2 progress above for Claude)
 
 All §3.3 names exist for both characters; every one is authored (no aliases in use) and has been reviewed frame-by-frame
 in contact sheets at least once (passes 1–3). Reach of normals (weapon anchor, px): Claude 5L 31 5M 46 5H 54 2L 31 2M 51

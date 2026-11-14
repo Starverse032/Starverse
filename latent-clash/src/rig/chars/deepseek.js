@@ -316,13 +316,13 @@
   // wavy tapered ribbon (hair locks) — returns a flat polygon
   function wavy(pts, w, amp, seed) {
     var sub = [];
-    for (var i = 0; i < pts.length - 1; i++) for (var k = 0; k < 3; k++) sub.push(lerp(pts[i], pts[i + 1], k / 3));
+    for (var i = 0; i < pts.length - 1; i++) for (var k = 0; k < 2; k++) sub.push(lerp(pts[i], pts[i + 1], k / 2));
     sub.push(pts[pts.length - 1]);
     var n = sub.length, Lf = [], Rt = [];
     for (i = 0; i < n; i++) {
       var a = sub[i > 0 ? i - 1 : 0], b = sub[i < n - 1 ? i + 1 : n - 1], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.sqrt(dx * dx + dy * dy) || 1;
       var nx = -dy / l, ny = dx / l, t = i / (n - 1), ww = w[0] + (w[1] - w[0]) * t + (w[2] || 0) * Math.sin(Math.PI * t);
-      var wv = amp * Math.sin(i * 1.7 + seed);
+      var wv = amp * Math.sin(i * 2.5 + seed);
       Lf.push([sub[i][0] + nx * (ww + wv), sub[i][1] + ny * (ww + wv)]);
       Rt.push([sub[i][0] - nx * (ww - wv * 0.6), sub[i][1] - ny * (ww - wv * 0.6)]);
     }
@@ -446,9 +446,9 @@
 
   function drawSkirt(p, S) {
     // navy over-skirt
-    p.poly(band(S, 0, 1, 0, 1, 8), M.c2, SH.body);
+    p.poly(band(S, 0, 1, 0, 1, 5), M.c2, SH.body);
     // light-blue pinstriped under-skirt in the front opening
-    p.poly(band(S, sA, sB, 0.1, 1, 8), MU, SH.soft);
+    p.poly(band(S, sA, sB, 0.1, 1, 4), MU, null);
     for (var k = 1; k <= 4; k++) {
       (function (kk) { sLine(p, S, function (v) { return sA(v) + (sB(v) - sA(v)) * kk / 5; }, 0.18, 0.97, col(MU, 2), true); })(k);
     }
@@ -468,7 +468,7 @@
   }
 
   function drawApron(p, S) {
-    p.poly(band(S, aA, aB, 0, AV, 6), M.c1, SH.soft);
+    p.poly(band(S, aA, aB, 0, AV, 4), M.c1, SH.soft);
     // frilled edge: back side + bottom
     for (var k = 0; k <= 6; k++) {
       var v = 0.12 + (AV - 0.12) * k / 6, q = surf(S, aB(v) + 0.015, v);

@@ -68,24 +68,6 @@
           for (var j = 0; j < rr.length; j++) { var a = rr[j].a, dd = rr[j].len * (1.6 + q * 0.12); b.rect(cx + Math.cos(a) * dd, cy + Math.sin(a) * dd + (4 + q) * (4 + q) * 0.3, q < 3 ? 2 : 1, q < 3 ? 2 : 1, q < 3 ? Wt[2] : Wt[3]); }
         }
       });
-      // water column (pool out) — 20f, 40x96
-      D.column = I.anim(44, 100, 20, 22, 98, function (b, f) {
-        var cx = 22, by = 98, H = f < 5 ? 20 + f * 16 : 86 - Math.max(0, f - 9) * 7, wTop = f < 6 ? 4 : 4 + (f - 6) * 1.4;
-        if (H <= 0) return;
-        var top = by - H;
-        for (var y = top; y <= by; y++) {
-          var u = (y - top) / Math.max(1, H), w = 3 + u * 6 + Math.sin(y * 0.6 + f) * 1;
-          b.rect(cx - w, y, w * 2, 1, Wt[2]); b.rect(cx - w * 0.45, y, w * 0.6, 1, Wt[1]); b.set(cx - w * 0.2 - 1, y, Wt[0]);
-        }
-        if (f < 12) { b.ellipse(cx, top + 2, wTop + 3, 3, Wt[1]); b.rect(cx - wTop - 2, top, wTop * 2 + 4, 1, Wt[0]); }
-        for (var i = 0; i < 6; i++) {
-          var s = (i - 2.5) / 2.5, dy = Math.max(0, f - 4) * 1.6;
-          if (f > 3 && f < 17) b.rect(cx + s * (8 + (f - 3) * 2.2), top + 4 + dy * dy * 0.12 * (1 + Math.abs(s)), 2, 3, i % 2 ? Wt[1] : Wt[2]);
-        }
-        b.ellipse(cx, by, 14, 3, Wt[2]); b.rect(cx - 10, by - 1, 20, 1, Wt[0]);
-        if (f < 14) b.outline(Wt[5]);
-        if (f > 10) b.breakup(1 - (f - 10) / 10, f, 0);
-      });
     });
   }
   I.onInit('deepseek', bake);
