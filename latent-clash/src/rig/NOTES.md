@@ -6,9 +6,10 @@
   `fillPlaceholders()` still guarantees names and logs an error if authored segments differ from the table in
   `anims/placeholders.js`). Viewer + sheet tool done. Determinism verified (anchor hash identical across runs).
 - Polish done: identity pass (faces, hair, palettes), walks, hitHigh, down/getup, guards, launch, Claude 5H, DS breach/5M.
-- NEXT (lead's order): dash/crouch/jump/land review → normals (anticipation/smear timing per move, reach checks vs
-  §3.3 reach guide) → specials → super → throws → intro/win/lose. Art: Claude torso (capelet + collar/tie read
-  weakly), DeepSeek hood (whale eyes barely visible), hand stamps, Claude hair flip on fast rises.
+- NOW (polish pass 2, lead's order): 1) costume readability (Claude skirt/tights split, capelet layer, terracotta
+  accents, no jacket specks; DeepSeek visible whale hood, sleeve stripes, pocket; hand stamps) → 2) normals both chars
+  (anticipation, held impact, smears on M/H, weapon at tip, reach 30/46/54 & 24/38/44) → 3) specials + supers
+  → 4) dash/crouch/jump/land, hitLow/hitCrouch, throws, intro/win/lose, getup hair flip.
 - Perf (Chromium): draw worst case (re-render every frame) 0.39–0.46 ms Claude / 0.24–0.29 ms DeepSeek; cached frames
   are one drawImage. init 1–1.6 ms (head expressions are composed/rotated lazily). setPose+anchor ≈ 3–4 µs, no canvas.
 
