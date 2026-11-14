@@ -347,14 +347,14 @@
     });
     this.endT = t + fade;
     // replaced before it was ever audible (several music() calls in one frame): drop it at once
-    if (t <= this.t0 + 0.01) { this.fade.gain.cancelScheduledValues(0); this.fade.gain.value = 0; this.vfade.gain.cancelScheduledValues(0); this.vfade.gain.value = 0; this.endT = t; }
+    if (t <= this.t0 + 0.01) { this.fade.gain.cancelScheduledValues(0); this.fade.gain.value = 0; this.vfade.gain.cancelScheduledValues(0); this.vfade.gain.value = 0; this.endT = t; this.dead = true; }
   };
 
   // Disconnect once silent. Returns true when the instance can be dropped.
   TrackInst.prototype.reap = function (now) {
     // stopped: silent once the fade ends (echo/notes sit before the fade gain); finished one-shots
     // keep 3 s so release tails and echoes ring out
-    if (!(this.stopping || this.done) || now < this.endT + (this.stopping ? 0.1 : 3)) return false;
+    if (!(this.stopping || this.done) || now < this.endT + (this.dead ? 0 : this.stopping ? 0.1 : 3)) return false;
     try { this.fade.disconnect(); this.vfade.disconnect(); } catch (e) { /* ignore */ }
     return true;
   };
