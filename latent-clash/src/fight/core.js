@@ -6,7 +6,7 @@
   var LC = window.LC = window.LC || {};
   var F = LC.fight = LC.fight || {};
 
-  F.version = '1.0.0';
+  F.version = '2.0.0';
   F.chars = F.chars || {};
   F.headless = false;          // sim/test harness: skip fx/audio/stage calls entirely
 
@@ -15,8 +15,11 @@
   // ---------------------------------------------------------------- tuning
   F.T = {
     GY: GY,
-    WALL: 18,                  // closest an origin may get to the world edge
-    MAXSEP: 328,               // max horizontal distance between the two fighters
+    // V2 (tall fighters, CONTRACT-V2 §V2.2): spacing / pushback / launch arcs scaled ~1.3x
+    WALL: 22,                  // closest an origin may get to the world edge
+    MAXSEP: 320,               // max horizontal distance between the two fighters
+    START_SEP: 168,            // round-start distance between the origins
+    CAM_MARGIN: 30,            // fighters' origins stay this far inside the screen edges
     BUF_BTN: 6,                // button buffer (frames)
     MOTION: 13,                // motion window (first to last direction, frames)
     MOTION_LATE: 8,            // last direction of a motion -> button press, max frames
@@ -25,7 +28,8 @@
     CHAIN_EXTRA: 7,            // chain/special cancel window extends this far into recovery
     HITSTOP: { L: 7, M: 9, H: 11, S: 12, X: 3, T: 0 },
     BLOCKSTOP: { L: 6, M: 7, H: 9, S: 9, X: 2, T: 0 },
-    PUSH: { L: [7, 7], M: [10, 9], H: [14, 12], S: [16, 14], X: [1, 2], T: [0, 0] },   // [hit, block] px
+    PUSH: { L: [9, 9], M: [13, 12], H: [18, 16], S: [20, 18], X: [1, 2], T: [0, 0] },   // [hit, block] px
+    LAUNCH_K: 1.25,            // launch velocities and gravity x this: arcs 25 % taller, same airtime
     METER_HIT: { L: 4, M: 6, H: 8, S: 9, X: 0, T: 10 },
     SCALE: [1, 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3],
     SCALE_MIN: 0.3, SCALE_MIN_SUPER: 0.5,
@@ -37,6 +41,7 @@
     THROW_DMG: 120,
     KO_STOP: 42, KO_SLOW: 72,
     FLASH: 44,                 // super flash freeze length
+    IMPACT: 8,                 // screen.impact length (frames)
     LAND_LAG: 3,               // empty-jump landing frames (attacks may be buffered)
     DOWN_LIE: 26, QUICK_LIE: 8, GETUP: 24
   };
