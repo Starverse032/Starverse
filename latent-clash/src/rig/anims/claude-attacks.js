@@ -250,7 +250,7 @@
       ['startup+2', P(SU0, { hF: [12, -78], hB: [6, -80], tilt: 0, eyes: 'focus', bsc: 1 }), 'out'],
       ['startup+5', SU0, 'snap'],
       ['cast', SU0], ['cast+3', P(SU0, { hF: [10, -108], hB: [5, -110], eyes: 'focus', bko: 0.2 }), 'out'],
-      ['cast+6', P(SU1, { hF: [26, -88], hB: [18, -90], bko: 0.7, bsc: 1.35, smear: { part: 'hF', from: 'cast+3', n: 3 } }), 'snap'],
+      ['cast+6', P(SU1, { hF: [26, -88], hB: [18, -90], bko: 0.7, bsc: 1.35 }), 'snap'],
       ['cast+8', P(SU1, { hF: [29, -82], hB: [21, -84] }), 'snap'],
       ['active', SU1, 'snap'], ['active+20', bob(SU1, 0, 1)], ['active+38', SU1],
       ['recovery', P(SU1, { glow: 0, mouth: 'neutral' }), 'snap'],

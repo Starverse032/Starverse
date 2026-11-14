@@ -15,6 +15,8 @@
   (tapered crescent, deep trailing → bright leading tones, bright rim + dark inner edge). Old `H.smear` unchanged.
 - `dev/rig-sheet.html` cells are 300×240 with the origin at (150, 200); `dev/rig-viewer.html` view 320×220, ground 196.
   `tools/rig-sheet.mjs` usage unchanged.
+- `secondary.js`: opt-in chain option `cvel` (0..1): fraction of length-constraint/limit corrections NOT turned
+  into velocity (stops long hair whipping after pose snaps). Default 0 = old behaviour.
 - Per-character proportions were already per character (`C.body`, `C.height/crouchHeight/width`); nothing in the
   shared code assumes the old 70-px size any more.
 

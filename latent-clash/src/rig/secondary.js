@@ -73,8 +73,11 @@
       var tx = this.x[i - 1] + Math.cos(ra) * l, ty = this.y[i - 1] + Math.sin(ra) * l;
       this.x[i] += (tx - this.x[i]) * st; this.y[i] += (ty - this.y[i]) * st;
     }
-    // length constraints (from the root)
+    // length constraints (from the root). V2 opt-in d.cvel (0..1): that fraction of the
+    // constraint/limit correction is not turned into velocity (tames whips after pose snaps)
+    var cv = d.cvel || 0;
     for (i = 1; i < n; i++) {
+      var ox0 = this.x[i], oy0 = this.y[i];
       var ex = this.x[i] - this.x[i - 1], ey = this.y[i] - this.y[i - 1], el = Math.sqrt(ex * ex + ey * ey), L = arr(d.len, i - 1);
       if (el < 1e-6) { ex = 0; ey = 1; el = 1; }
       var mn = d.slack ? L * (1 - d.slack) : L;
@@ -83,6 +86,7 @@
         this.x[i] = this.x[i - 1] + ex / el * tl; this.y[i] = this.y[i - 1] + ey / el * tl;
       }
       if (d.limit) d.limit(this, i, sk);
+      if (cv) { this.px[i] += (this.x[i] - ox0) * cv; this.py[i] += (this.y[i] - oy0) * cv; }
       if (floor != null && this.y[i] > floor) { this.y[i] = floor; this.py[i] = floor + (this.py[i] - floor) * 0.5; }
     }
     // hysteresis snap
