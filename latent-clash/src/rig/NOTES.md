@@ -14,6 +14,8 @@
   active; DeepSeek super = crouch-gather → snap-point upward held; haiku three distinct strikes; chain1-3 distinct.
 - Step 4 partial: throwHit reworked for both (grab → pull/heave → palm shove / overhead slam, `grab` anchor follows);
   Claude hair can no longer flip above its root (getup). intro reviewed OK.
+- NOW pass 3 (lead's order): 1) crouch*/jump*/land/dash* both → 2) 2L 2M 2H jL jM jH both → 3) remaining specials
+  → 4) hitLow hitCrouch thrown throw win lose + Claude super smear + intro bow pen.
 - REMAINING ROUGH (authored, overview-checked only): dashF/dashB, crouchIn/crouch/crouchOut, jumpSquat/jumpRise/
   jumpFall/land, hitLow, hitCrouch, throw (whiff), thrown, win, lose, crouching + jump normals (structure updated
   earlier but not individually reviewed), airSpark, sonnet, guardrail/guardrailHit, wave, breach fall/land,

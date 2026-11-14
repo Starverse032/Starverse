@@ -3,16 +3,10 @@
 (Full documentation is written at the end; this file starts as a progress log so a restart is cheap.)
 
 ## Progress / next steps
-- [x] core.js — namespace `LC.audio._` (K), registries (K.SFX, K.TRACKS, K.INS, K.DRUMS), note/scale/chord parsing, voice-leading, RNG.
-- [x] synth.js — per-context resources (noise buffers, pulse PeriodicWaves, shaper curves, IR) + layer helpers S.osc / S.noise / S.bus / S.echo / S.bubble / S.bell.
-- [ ] mixer.js — Mixer(ctx): master→comp→softclip, sfx/music buses, reverb, duck, pause, voice limiting, sfx cache render, track instances.
-- [ ] engine.js — public API (init/unlock/sfx/voice/music/setVolume/getVolume/duck/setPaused/list), lifecycle, scheduler timer.
-- [ ] instruments.js + seq.js — instruments, drum buffers, track compiler/validator, look-ahead scheduler.
-- [ ] sfx-*.js, voice.js — all SFX of §5.7 + voice chirps.
-- [ ] tracks-*.js — 10 tracks.
-- [ ] dev/audio-test.html, dev/audio-render.html, tools/audio-render.mjs, tools/audio-analyze.js.
-- [ ] manifest.js, NOTES.md final, measurement passes.
-
-Design decisions so far: all SFX are pre-rendered to AudioBuffers (OfflineAudioContext) in the
-background after unlock (live synthesis fallback until ready); music is scheduled live with
-look-ahead; one convolver reverb on the music path only (SFX reverb is baked into cached buffers).
+- [x] core.js, synth.js, mixer.js, instruments.js, seq.js, engine.js (public API), offline.js (tool hooks)
+- [x] sfx-fight.js, sfx-system.js, sfx-chars.js — all 52 SFX of §5.7 render, no clipping (balance pass pending)
+- [x] voice.js — voice(charId, kind) formant chirps for both characters, all 9 kinds
+- [x] tools/audio-render.mjs + tools/audio-analyze.js + dev/audio-render.html (offline measurement works)
+- [ ] music: stage.library, stage.abyss, stage.latent (tracks-stages.js) -> then title, select, victory, vs, stage.training, continue, ending
+- [ ] SFX/voice/music loudness balance pass (trim table), loop seam checks
+- [ ] dev/audio-test.html, NOTES.md final docs

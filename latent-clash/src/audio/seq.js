@@ -25,7 +25,7 @@
   // ---------------------------------------------------------------------------
   var RE_REST = /^(r|_)(?::(\d+))?$/;
   var RE_NOTE = /^([A-G](?:#|b)?-?\d)(?::(\d+))?([!'~^]*)$/;
-  var RE_DEG = /^([RT2-9A])([+-]*)(?::(\d+))?([!'~^]*)$/;
+  var RE_DEG = /^([RT2-9A])([b#]?)([+-]*)(?::(\d+))?([!'~^]*)$/;
 
   function splitBars(str) { return String(str).split('|').map(function (b) { return b.trim(); }); }
 
@@ -38,11 +38,12 @@
         var m, ev;
         if ((m = RE_REST.exec(tk))) ev = { k: m[1] === 'r' ? 'r' : '_', len: m[2] ? +m[2] : dflt };
         else if ((m = RE_NOTE.exec(tk))) ev = { k: 'n', v: K.midi(m[1]), len: m[2] ? +m[2] : dflt, mods: m[3] };
-        else if ((m = RE_DEG.exec(tk))) ev = { k: 'd', v: m[1], sh: m[2], len: m[3] ? +m[3] : dflt, mods: m[4] };
+        else if ((m = RE_DEG.exec(tk))) ev = { k: 'd', v: m[1], acc: m[2], sh: m[3], len: m[4] ? +m[4] : dflt, mods: m[5] };
         else { err.push(where + ' bar ' + (bi + 1) + ': bad token "' + tk + '"'); return; }
         if (!(ev.len > 0)) { err.push(where + ' bar ' + (bi + 1) + ': zero length "' + tk + '"'); return; }
         dflt = ev.len;
         var mods = ev.mods || '';
+        ev.alt = ev.acc === '#' ? 1 : ev.acc === 'b' ? -1 : 0;
         ev.acc = mods.indexOf('!') >= 0; ev.soft = mods.indexOf("'") >= 0;
         ev.slide = mods.indexOf('~') >= 0; ev.chrom = mods.indexOf('^') >= 0;
         ev.at = at; at += ev.len;
@@ -105,6 +106,7 @@
       }
     }
     if (n < bassN && ev.v !== 'A') n += 12;
+    n += ev.alt || 0;
     for (var i = 0; i < ev.sh.length; i++) n += ev.sh.charAt(i) === '+' ? 12 : -12;
     return n;
   }

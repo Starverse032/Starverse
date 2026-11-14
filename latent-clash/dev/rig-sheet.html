@@ -192,6 +192,16 @@
     return drawCells(cells, scale || 10, char + ' heads pal ' + pal, function (c) { return c.seg; }, 6);
   };
 
+  // several anims at chosen frames in one sheet: spec = [[anim, [f...]], ...]
+  window.sheetMulti = function (char, pal, spec, scale, cols) {
+    var cells = [];
+    spec.forEach(function (sp) {
+      if (!LC.rig.hasAnim(char, sp[0])) return;
+      runAnim(char, sp[0], pal, sp[1], { anchors: true }).forEach(function (c) { c.name = sp[0] + ' f' + c.f + ' ' + c.seg; cells.push(c); });
+    });
+    return drawCells(cells, scale || 3, char + ' batch (pal ' + pal + ')', function (c) { return c.name; }, cols || 8);
+  };
+
   window.sheetReady = (LC.rig.init ? LC.rig.init() : Promise.resolve()).then(function () { return true; });
 
   // manual use

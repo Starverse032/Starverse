@@ -25,7 +25,7 @@ fs.mkdirSync(OUT, { recursive: true });
 const args = process.argv.slice(2);
 const flag = (n) => args.includes('--' + n);
 const opt = (n, d) => { const i = args.indexOf('--' + n); return i >= 0 ? args[i + 1] : d; };
-const pos = args.filter((a, i) => !a.startsWith('--') && !(i > 0 && args[i - 1].startsWith('--') && ['pal', 'scale', 'cols'].includes(args[i - 1].slice(2))));
+const pos = args.filter((a, i) => !a.startsWith('--') && !(i > 0 && args[i - 1].startsWith('--') && ['pal', 'scale', 'cols', 'name'].includes(args[i - 1].slice(2))));
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ deviceScaleFactor: 1 });
@@ -87,6 +87,11 @@ if (flag('perf')) {
     }
     await save('versus', 'sheetVersus', 'idle', 'idle', 3);
   }
+} else if (flag('multi')) {
+  // node tools/rig-sheet.mjs --multi <char> anim:f,f,f anim2:f,f [--name x]
+  const [c, ...rest] = pos;
+  const spec = rest.map((t) => { const [a, fs] = t.split(':'); return [a, fs.split(',').map(Number)]; });
+  await save(opt('name', `${c}-batch`), 'sheetMulti', c, pal, spec, scale === 4 ? 3 : scale, +opt('cols', 8));
 } else if (flag('heads')) {
   for (const c of (pos.length ? pos : chars)) for (const p of [0, 1]) await save(`${c}-heads-p${p}`, 'sheetHeads', c, p, +opt('scale', 10));
 } else if (flag('palettes')) {
