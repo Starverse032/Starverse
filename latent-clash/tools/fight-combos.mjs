@@ -21,7 +21,7 @@ export const COMBOS = {
   ],
   deepseek: [
     { name: 'jH > 5L > 5M > 5H > 214H > S > S (rekka)', dist: 112, steps: ['j9', 'jH', '5L', '5M', '5H', '214H', 'S', 'S'], hits: 7 },
-    { name: '2L > 2M > 5H > 236H (wave)', dist: 34, steps: ['2L', '2M', '5H', '236H'], hits: 4 },
+    { name: '2L > 2M > 5H > 236H (wave)', dist: 26, steps: ['2L', '2M', '5H', '236H'], hits: 4 },
     { name: '5L > 5M > 623H (breach)', dist: 30, steps: ['5L', '5M', '623H'], hits: 3 },
     { name: 'jH > 5L > 5H > 214H > S > S > SUPER', dist: 112, steps: ['j9', 'jH', '5L', '5H', '214H', 'S', 'S', 'SUPER'], hits: 11, meter: true }
   ]

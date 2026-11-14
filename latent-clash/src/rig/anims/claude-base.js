@@ -161,15 +161,17 @@
       ['recovery+21', S]
     ]
   });
-  var TG = P(S, { lean: 10, hip: [1, -29], hB: [16, -44], handB: 'fist', z: { armB: 6 }, eyes: 'focus', mouth: 'neutral', grab: [20, -42], fF: [11, 0] });
+  var TG = P(S, { lean: 12, hip: [2, -29], hB: [19, -44], handB: 'fist', z: { armB: 6 }, eyes: 'focus', mouth: 'neutral', grab: [21, -42], fF: [12, 0] });
   def('throwHit', {
     segs: [['hold', 16], ['toss', 14], ['recovery', 18]], step: 2,
     keys: [
       ['hold', TG],
-      ['hold+10', P(TG, { lean: 4, hB: [12, -46], grab: [17, -44], pen: 20 })],
-      ['toss', P(TG, { lean: -4, hip: [-1, -29], hB: [8, -48], grab: [12, -46], hF: [6, -32], pen: 120, eyes: 'focus', mouth: 'shout' }), 'in'],
-      ['toss+7', P(TG, { lean: 22, hip: [3, -28], hB: [28, -40], handB: 'open', grab: [32, -40], hF: [22, -38], pen: -10, smear: { part: 'pen', from: 'toss+0' }, mouth: 'shout' }), 'out'],
-      ['toss+13', P(TG, { lean: 18, hB: [26, -38], handB: 'open', grab: [36, -38], hF: [20, -36], pen: 0 })],
+      ['hold+8', P(TG, { lean: 2, hip: [0, -29], hB: [12, -46], grab: [14, -45], hF: [8, -30], pen: 50 }), 'out'],
+      ['hold+14', P(TG, { lean: -4, hip: [-1, -29], hB: [8, -46], grab: [11, -45], hF: [6, -32], pen: 60 })],
+      ['toss+2', P(TG, { lean: 22, bend: 4, hip: [4, -27], fF: [15, 0], hB: [30, -42], handB: 'flat', grab: [36, -42], hF: [6, -30], pen: 50,
+        mouth: 'shout', smear: { part: 'hB', from: 'hold+14', n: 3 } }), 'snap'],
+      ['toss+5', P(TG, { lean: 22, bend: 4, hip: [4, -27], fF: [15, 0], hB: [30, -42], handB: 'flat', grab: [40, -42], hF: [6, -30], pen: 50, mouth: 'shout' }), 'snap'],
+      ['toss+12', P(TG, { lean: 18, hip: [3, -28], fF: [15, 0], hB: [27, -40], handB: 'flat', grab: [44, -40], hF: [7, -29], pen: 45 })],
       ['recovery+6', P(S, { lean: 8 })],
       ['recovery+17', S]
     ]

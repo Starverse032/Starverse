@@ -155,17 +155,19 @@
       ['recovery+21', S]
     ]
   });
-  // grabs the hood, swings round and tosses her over the shoulder
-  var TG = P(S, { lean: 14, hip: [2, -21], hF: [18, -38], hB: [15, -40], handF: 'fist', handB: 'fist', grab: [21, -40], eyes: 'focus', mouth: 'grin' });
+  // grabs the hood, heaves her overhead and slams her down in front
+  var TG = P(S, { lean: 20, hip: [3, -21], hF: [22, -40], hB: [19, -42], handF: 'fist', handB: 'fist', grab: [24, -40], eyes: 'focus', mouth: 'grin', fF: [13, 0], z: { armB: 6 } });
   def('throwHit', {
     segs: [['hold', 16], ['toss', 14], ['recovery', 18]], step: 2,
     keys: [
       ['hold', TG],
-      ['hold+10', P(TG, { lean: 6, hip: [0, -20], hF: [12, -42], hB: [10, -44], grab: [15, -44] })],
-      ['toss', P(TG, { lean: -10, hip: [-2, -21], hF: [2, -50], hB: [0, -52], grab: [2, -54], mouth: 'shout' }), 'in'],
-      ['toss+7', P(TG, { lean: 30, hip: [4, -19], hF: [24, -30], hB: [20, -32], handF: 'open', handB: 'open', grab: [30, -26], mouth: 'shout', smear: { part: 'hF', from: 'toss+0' } }), 'out'],
-      ['toss+13', P(TG, { lean: 26, hF: [22, -30], hB: [18, -32], handF: 'open', handB: 'open', grab: [34, -22] })],
-      ['recovery+6', P(S, { lean: 14 })],
+      ['hold+8', P(TG, { lean: 8, hip: [1, -20], hF: [16, -44], hB: [14, -46], grab: [18, -46] }), 'out'],
+      ['hold+14', P(TG, { lean: -2, hip: [0, -18], hF: [14, -42], hB: [12, -44], grab: [16, -44], mouth: 'teeth' })],
+      ['toss+3', P(TG, { lean: -22, bend: -8, tilt: -15, hip: [-2, -24], fF: [11, 0], hF: [6, -62], hB: [3, -63], grab: [6, -68], mouth: 'shout' }), 'out'],
+      ['toss+8', P(TG, { lean: 40, bend: 8, hip: [6, -17], fF: [17, 0], hF: [28, -20], hB: [25, -22], handF: 'open', handB: 'open', grab: [32, -14],
+        mouth: 'shout', smear: { part: 'hF', from: 'toss+3', n: 4 } }), 'snap'],
+      ['toss+11', P(TG, { lean: 38, bend: 8, hip: [6, -17], fF: [17, 0], hF: [27, -20], hB: [24, -22], handF: 'open', handB: 'open', grab: [34, -10], mouth: 'grin' }), 'snap'],
+      ['recovery+6', P(S, { lean: 18, hip: [2, -19] }), 'out'],
       ['recovery+17', S]
     ]
   });

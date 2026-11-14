@@ -58,11 +58,13 @@
       }
       return b;
     }
-    if (h.anchor && f.puppet && !f.puppetFallback) {
+    // normals follow the rig's weapon anchor (tip-aligned), clamped close to the designed reach so
+    // a pose tweak can never change balance much; specials use their designed boxes
+    if (h.anchor && f.mv.kind === 'normal' && f.puppet && !f.puppetFallback) {
       var a = f.anchor(h.anchor);
       var tipD = b[0] + b[2], cyD = b[1] + b[3] / 2;
-      var tip = F.clamp(a.x + 2, tipD - 8, tipD + 6);
-      var cy = F.clamp(a.y, cyD - 14, cyD + 14);
+      var tip = F.clamp(a.x + 2, tipD - 5, tipD + 5);
+      var cy = F.clamp(a.y, cyD - 12, cyD + 12);
       return [tip - b[2], Math.round(cy - b[3] / 2), b[2], b[3]];
     }
     return b;
