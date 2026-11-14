@@ -222,8 +222,13 @@
       ctx.globalAlpha = a0 * 0.45; ctx.fillStyle = c.dark; ctx.fillRect(sx - 8, sy - 8, W + 16, H + 16); ctx.globalAlpha = a0;
       var cx = o.cx == null ? f[0] : Math.round(o.cx), cy = o.cy == null ? f[1] : Math.round(o.cy);
       rays(ctx, sx, sy, cx, cy, t, sf ? 20 : 36, 517, c, true, sf);
-      ctx.fillStyle = c.core;                         // pulsing core
-      var r = 14 + ((t >> 2) & 1) * 2;
+      var rc = 19 + ((t >> 2) & 1);                   // crisp core disc above the tint
+      ctx.fillStyle = c.ring;
+      for (var yy = -rc - 2; yy <= rc + 2; yy++) { var hw = Math.floor(Math.sqrt(Math.max(0, (rc + 2.5) * (rc + 2.5) - yy * yy))); ctx.fillRect(sx + cx - hw, sy + cy + yy, hw * 2 + 1, 1); }
+      ctx.fillStyle = c.core;
+      for (yy = -rc; yy <= rc; yy++) { var hw2 = Math.floor(Math.sqrt(Math.max(0, (rc + 0.5) * (rc + 0.5) - yy * yy))); ctx.fillRect(sx + cx - hw2, sy + cy + yy, hw2 * 2 + 1, 1); }
+      ctx.fillStyle = c.line2;                        // pulsing cross
+      var r = 12 + ((t >> 2) & 1) * 2;
       ctx.fillRect(sx + cx - r, sy + cy - 2, r * 2 + 1, 5); ctx.fillRect(sx + cx - 2, sy + cy - r, 5, r * 2 + 1);
     }
   });
