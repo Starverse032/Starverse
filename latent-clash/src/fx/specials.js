@@ -248,7 +248,7 @@
     });
   }
 
-  I.onInit('specials', function () { [0, 1].forEach(function (p) { bakeClaude(p); bakeDeep(p); }); });
+  I.onInit('specials', function () { [0, 1].forEach(function (p) { var t0 = performance.now(); bakeClaude(p); var t1 = performance.now(); bakeDeep(p); I.bakeTimes.push(['  specials claude' + p, +(t1 - t0).toFixed(1)], ['  specials deep' + p, +(performance.now() - t1).toFixed(1)]); }); });
 
   // ---- Claude: spawns + sprites -----------------------------------------------------------
   I.def('claude.sonnetPillar', function (x, y, O) {
