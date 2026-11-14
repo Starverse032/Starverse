@@ -121,21 +121,22 @@
   function sunflower(P, cx, cy, r, n, rot, sq) {
     var pts = [], k = sq || 1;
     for (var i = 0; i < n * 2; i++) {
-      var a = rot + i * Math.PI / n, rr = i % 2 === 0 ? r * (i % 4 === 0 ? 1 : 0.86) : r * 0.42;
+      var a = rot + i * Math.PI / n, rr = i % 2 === 0 ? r * (i % 4 === 0 ? 1 : 0.84) : r * 0.56;
       pts.push(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr * k);
     }
-    return { petals: P.poly(pts), core: P.ell(cx, cy, r * 0.36, r * 0.36 * k) };
+    return { petals: P.poly(pts), core: P.ell(cx, cy, r * 0.4, r * 0.4 * k) };
   }
-  // paint a sunburst flower in accent slots (lit from the upper right)
+  // paint a sunburst flower in accent slots (lit from the upper right); outline only on the outside
   function paintFlower(P, cx, cy, r, n, rot, sq) {
-    var f = sunflower(P, cx, cy, r, n, rot, sq);
-    P.part(f.petals, S.a1, S.al);
+    var f = sunflower(P, cx, cy, r, n, rot, sq), all = f.petals.or(f.core);
+    P.fill(f.petals, S.a1);
     P.recol(f.petals.band(-1, 1), [S.a1], S.a0);
-    P.recol(f.petals.band(2, -1), [S.a1], S.a2);
-    P.part(f.core, S.a2, S.a3);
-    P.recol(f.core.band(-1, 1), [S.a2], S.a1);
-    P.px(Math.round(cx), Math.round(cy - 0.5), S.a0);
-    return f.petals.or(f.core);
+    P.recol(f.petals.band(1, -1), [S.a1], S.a2);
+    P.fill(all.edge(), S.al);
+    P.fill(f.core, S.a3);
+    if (r > 5) { P.fill(K.inner(f.core), S.a2); P.px(Math.round(cx + 1), Math.round(cy - 1), S.a0); P.px(Math.round(cx), Math.round(cy), S.a1); }
+    else P.px(Math.round(cx), Math.round(cy - 0.5), S.a0);
+    return all;
   }
   I.sunflower = sunflower; I.paintFlower = paintFlower;
   function sparkle(P, x, y, big) {   // 4-point twinkle in light slots
