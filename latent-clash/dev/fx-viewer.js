@@ -63,11 +63,12 @@
   }
 
   // ---- placement rules per name -------------------------------------------------
-  var GROUND = /^(dust\.|throw\.slam|ring\.ground|deepseek\.pool|deepseek\.whale|deepseek\.wave$|deepseek\.waveCast|deepseek\.poolIn|deepseek\.poolOut|deepseek\.whaleSplash|claude\.guardrail|land)/;
+  var GROUND = /^(deepseek\.tidal|deepseek\.geyser|deepseek\.breachCrescent|claude\.sonnetPillar|dust\.|throw\.slam|ring\.ground|deepseek\.pool|deepseek\.whale|deepseek\.wave$|deepseek\.waveCast|deepseek\.poolIn|deepseek\.poolOut|deepseek\.whaleSplash|claude\.guardrail|land)/;
   function isScreen(n) { return /^screen\./.test(n); }
   function anchorY(n) { return GROUND.test(n) ? GY : GY - 40; }
   FXV.cellFor = function (n) {
-    if (/whale$/.test(n)) return { w: 300, h: 190, ox: 70, oy: 160 };
+    if (/whale$/.test(n)) return { w: 384, h: 216, ox: 110, oy: 186 };
+    if (/tidal$/.test(n)) return { w: 384, h: 130, ox: 150, oy: 120 };
     if (/whaleSplash/.test(n)) return { w: 240, h: 130, ox: 0, oy: 110 };
     if (/ko\.burst/.test(n)) return { w: 220, h: 180, ox: 0, oy: 90 };
     if (/beam$/.test(n)) return { w: 360, h: 110, ox: 150, oy: 55 };

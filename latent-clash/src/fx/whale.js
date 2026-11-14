@@ -163,8 +163,10 @@
     var r1 = map(150, -hh(0.5) * 0.42);
     return { c: I.toCanvas(b), ox: ox - p.cx, oy: oy - p.cy, cx: p.cx, cy: p.cy, bb: { x: ox + bb.x, y: oy + bb.y, w: bb.w, h: bb.h }, r1x: r1[0] - p.cx, r1y: r1[1] - p.cy, r1a: SPA[150] };
   }
-  /** Which baked pose a tick uses: 2-tick holds while the whale is high in the air. */
-  function poseTick(t) { return t >= 14 && t <= 40 ? t & ~1 : t; }
+  /** Which baked pose a tick uses: 2-tick holds while the whole whale is in the air. */
+  var POSEKEY = [];
+  function airborne(t) { spine(pose(t)); for (var i = 0; i <= BL; i += 6) if (SPY[i] + VM > -2) return false; return true; }
+  function poseTick(t) { return POSEKEY[t] == null ? t : POSEKEY[t]; }
 
   // ---- R1 lettering, 25 rotations ----------------------------------------------------------
   var R1G = {
@@ -180,14 +182,14 @@
 
   function bake() {
     var t0 = performance.now();
+    for (var tk = 0; tk < DUR; tk++) POSEKEY[tk] = tk >= 4 && airborne(tk) && airborne(tk & ~1) ? tk & ~1 : tk;
     [0, 1].forEach(function (pal) {
       var R = ramps(pal), src = designBody(R), Wd = WH[pal];
       Wd.poses = {};
       for (var t = 3; t <= 58; t++) {
         var pt = poseTick(t);
         if (Wd.poses[pt] !== undefined) continue;
-        var p = pose(pt), airborne = pt !== t || (t >= 14 && t <= 40);
-        Wd.poses[pt] = bakePose(src, R, p, !airborne);
+        Wd.poses[pt] = bakePose(src, R, pose(pt), pt === t);
       }
       var rb = r1Buf(R), up = rb.scale2x().scale2x();
       Wd.r1 = [];
@@ -275,8 +277,8 @@
   function bakeTidal() {
     [0, 1].forEach(function (pal) {
       var sc = I.scheme('deepseek', pal), Wt = sc.water.u, F = sc.foam.u, T = TS[pal];
-      T.crest = I.anim(150, 124, TDUR, 120, 120, function (b, f) {
-        var Hc = crestH(f), bx = 120, by = 120, rng = I.bakeRng(500 + f), col = f >= 38;
+      T.crest = I.anim(150, 124, TDUR >> 1, 120, 120, function (b, f2) {
+        var f = f2 * 2, Hc = crestH(f), bx = 120, by = 120, rng = I.bakeRng(500 + f), col = f >= 38;
         var curl = col ? Math.max(0, 1 - (f - 38) / 6) : 1;
         // body: long back slope, crest, overhanging lip curling forward
         var pts = [bx - 118, by - 12, bx - 84, by - Hc * 0.32, bx - 56, by - Hc * 0.72, bx - 36, by - Hc * 0.95, bx - 22, by - Hc,
@@ -309,7 +311,7 @@
         }
         // foam at the toe
         b.rect(bx - 24, by - 2, 30, 2, F[1]); for (var tq = 0; tq < 8; tq++) b.set(bx - 20 + tq * 3 + (f % 3), by - 3, F[0]);
-      });
+      }, 1, true);
       // flood tile: 64x16, 4 frames scrolling foam
       T.flood = I.anim(64, 16, 4, 0, 14, function (b, f) {
         for (var x = 0; x < 64; x++) {
@@ -341,7 +343,7 @@
           var w = Math.min(64, fx1 - x);
           if (w > 0) ctx.drawImage(T.flood.c, ((t >> 1) & 3) * 64, Math.round(lift), w, 16 - Math.round(lift), sx + x, sy - 14 + Math.round(lift) + 2, w, 16 - Math.round(lift));
         }
-        I.drawAnim(ctx, T.crest, t, sx + xf, sy + 2, 1);
+        I.drawAnim(ctx, T.crest, t >> 1, sx + xf, sy + 2, 1);
         // spray flung forward off the lip
         for (var k = 0; k < 14; k++) {
           var ph = ((t * 0.09 + I.hash(k * 3)) % 1), dx = ph * 36, dy = -Hc * 0.9 - ph * 18 + ph * ph * 40;

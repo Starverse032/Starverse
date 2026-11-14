@@ -334,8 +334,8 @@
    * fresh w*h Buf. Returns an anim def with a right-facing sheet (c) and a
    * per-frame mirrored sheet (m). (ox,oy) = origin inside a frame.
    */
-  function anim(w, h, n, ox, oy, fn, fd) {
-    var R = new Buf(w * n, h), M = new Buf(w * n, h);
+  function anim(w, h, n, ox, oy, fn, fd, noMirror) {
+    var R = new Buf(w * n, h), M = noMirror ? R : new Buf(w * n, h);
     for (var f = 0; f < n; f++) {
       var b = new Buf(w, h);
       fn(b, f, n);
@@ -343,10 +343,11 @@
         var c = b.d[y * w + x];
         if (!c) continue;
         R.d[y * R.w + f * w + x] = c;
-        M.d[y * M.w + f * w + (w - 1 - x)] = c;
+        if (!noMirror) M.d[y * M.w + f * w + (w - 1 - x)] = c;
       }
     }
-    return { c: toCanvas(R), m: toCanvas(M), w: w, h: h, n: n, ox: ox, oy: oy, fd: fd || 1 };
+    var cR = toCanvas(R);
+    return { c: cR, m: noMirror ? cR : toCanvas(M), w: w, h: h, n: n, ox: ox, oy: oy, fd: fd || 1 };
   }
   I.anim = anim;
 
