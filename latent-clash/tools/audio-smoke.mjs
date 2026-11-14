@@ -86,7 +86,7 @@ const api = await ev(async () => {
   await sleep(100); r.rapid = mx.tracks.length; r.rapidLive = liveN();
   await sleep(900); r.settled = mx.tracks.length;
   A.duck(0.6, 0.5); A.setPaused(true); await sleep(200); A.setPaused(false);
-  A.music('title', { fade: 2 }); await sleep(1200); r.fading = A._st.mx.tracks.filter(t => t.stopping).length; A.music(null, { fade: 0.2 }); r.stopLive = liveN(); await sleep(700); r.stopped = mx.tracks.length; r.cur = A.currentTrack();
+  A.music('title', { fade: 2 }); await sleep(1200); r.fading = A._st.mx.tracks.filter(t => t.stopping).length; A.music(null, { fade: 0.2 }); r.stopLive = liveN(); await sleep(1300); r.stopped = mx.tracks.length; r.cur = A.currentTrack();
   A.music('stage.library', { fade: 0 }); await sleep(300);
   return r;
 });

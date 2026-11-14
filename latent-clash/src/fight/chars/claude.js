@@ -21,36 +21,39 @@
   F.defineChar({
     id: 'claude',
     hp: 1000,
-    walkF: 1.3, walkB: 1.0,
-    jump: { vy: 6.2, g: 0.31, vxF: 2.5, vxB: 2.2 },
-    dashF: { d: 56, f: 18 },
-    dashB: { d: 48, f: 20, inv: 9 },
-    push: { stand: [-11, -44, 22, 44], crouch: [-12, -34, 24, 34], air: [-9, -52, 18, 40] },
+    // V2 body (CONTRACT-V2 §V2.2): 104 px tall, crouch 70, push width 26
+    walkF: 1.6, walkB: 1.2,
+    jump: { vy: 7.92, g: 0.36, vxF: 2.9, vxB: 2.5 },          // apex ~84 px, 44f airtime
+    dashF: { d: 76, f: 18 },
+    dashB: { d: 64, f: 20, inv: 9 },
+    push: { stand: [-13, -66, 26, 66], crouch: [-14, -50, 28, 50], air: [-11, -84, 22, 64], down: [-15, -26, 30, 26] },
     hurt: {
-      stand: [[-9, -70, 18, 24], [-13, -48, 26, 48]],
-      crouch: [[-14, -46, 28, 46]],
-      air: [[-11, -64, 22, 50]]
+      stand: [[-9, -104, 20, 32], [-14, -74, 30, 74]],
+      crouch: [[-16, -52, 34, 52], [2, -70, 24, 20]],
+      air: [[-14, -102, 28, 84]],
+      launch: [[-22, -78, 44, 64]]
     },
-    throwRange: 46,
+    throwRange: 58,
     projColor: 'accent',
     anchorFb: {
-      head: [2, -62], chest: [2, -46], hip: [0, -30], center: [0, -38], top: [0, -80],
-      handF: [16, -44], handB: [-8, -40], footF: [7, 0], footB: [-7, 0],
-      muzzle: [32, -50], weapon: [30, -50], grab: [26, -44]
+      head: [2, -95], chest: [1, -71], hip: [0, -53], center: [0, -56], top: [2, -107],
+      handF: [22, -70], handB: [-10, -64], footF: [8, 0], footB: [-8, 0],
+      muzzle: [40, -78], weapon: [22, -71], grab: [32, -72]
     },
     // throw victim path during throwHit when no rig: [seg, x, y] keyframes of the grab point
-    grabPath: { hold: [[24, -44], [22, -46]], toss: [[20, -52], [-4, -70], [-22, -40]] },
+    grabPath: { hold: [[32, -76], [20, -76]], toss: [[46, -72], [56, -84], [60, -60]] },
 
+    // normals: box front edge = designed reach + 2 (rig weapon anchor + 2), centred on the anchor y
     moves: {
-      '5L': N('L', 'stand', 5, 3, 8,   { box: [12, -56, 18, 10], dmg: 35, adv: [3, 1] }),
-      '5M': N('M', 'stand', 8, 4, 14,  { box: [20, -50, 26, 12], dmg: 65, adv: [2, -2] }),
-      '5H': N('H', 'stand', 12, 5, 22, { box: [18, -76, 36, 34], dmg: 100, adv: [1, -5], air: 'knock' }),
-      '2L': N('L', 'crouch', 5, 3, 9,  { box: [10, -16, 22, 10], dmg: 30, guard: 'low', adv: [2, 0] }),
-      '2M': N('M', 'crouch', 8, 4, 15, { box: [16, -14, 32, 10], dmg: 60, guard: 'low', adv: [1, -3] }),
-      '2H': N('H', 'crouch', 11, 5, 24, { box: [14, -12, 42, 12], dmg: 90, guard: 'low', kd: 'down', adv: [0, -10] }),
-      'jL': N('L', 'air', 5, 6, 12,    { box: [4, -42, 22, 16], dmg: 35, guard: 'high', stun: [12, 9] }),
-      'jM': N('M', 'air', 7, 6, 12,    { box: [6, -36, 28, 18], dmg: 60, guard: 'high', stun: [15, 11] }),
-      'jH': N('H', 'air', 10, 6, 12,   { box: [2, -32, 34, 28], dmg: 90, guard: 'high', stun: [18, 13] }),
+      '5L': N('L', 'stand', 5, 3, 8,   { box: [19, -76, 24, 14], dmg: 35, adv: [3, 1] }),
+      '5M': N('M', 'stand', 8, 4, 14,  { box: [28, -70, 34, 16], dmg: 65, adv: [2, -2] }),
+      '5H': N('H', 'stand', 12, 5, 22, { box: [26, -87, 48, 50], dmg: 100, adv: [1, -5], air: 'knock' }),
+      '2L': N('L', 'crouch', 5, 3, 9,  { box: [16, -14, 28, 14], dmg: 30, guard: 'low', adv: [2, 0] }),
+      '2M': N('M', 'crouch', 8, 4, 15, { box: [24, -14, 40, 14], dmg: 60, guard: 'low', adv: [1, -3] }),
+      '2H': N('H', 'crouch', 11, 5, 24, { box: [16, -24, 56, 22], dmg: 90, guard: 'low', kd: 'down', adv: [0, -10] }),
+      'jL': N('L', 'air', 5, 6, 12,    { box: [11, -66, 28, 18], dmg: 35, guard: 'high', stun: [12, 9] }),
+      'jM': N('M', 'air', 7, 6, 12,    { box: [12, -79, 36, 22], dmg: 60, guard: 'high', stun: [15, 11] }),
+      'jH': N('H', 'air', 10, 6, 12,   { box: [17, -66, 44, 38], dmg: 90, guard: 'high', stun: [18, 13] }),
 
       'throw': {
         kind: 'throw', anim: 'throw',
