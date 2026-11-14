@@ -14,16 +14,16 @@
   FallbackPuppet.prototype.tick = function () {};
   FallbackPuppet.prototype.reset = function () {};
   FallbackPuppet.prototype.getAnchor = function () { return null; };
-  FallbackPuppet.prototype.getBounds = function () { return { x: -14, y: -70, w: 28, h: 70 }; };
+  FallbackPuppet.prototype.getBounds = function () { return { x: -15, y: -104, w: 30, h: 104 }; };
   FallbackPuppet.prototype.draw = function (ctx, sx, sy, o) {
     var P = (LC.PAL[this.ch] || LC.PAL.claude)[this.pal] || LC.PAL.claude[0];
     var low = /crouch|down|getup|2[LMH]/.test(this.anim) || this.seg === 'lie';
-    var h = this.seg === 'lie' ? 14 : low ? 44 : 66;
+    var h = this.seg === 'lie' ? 20 : low ? 68 : (this.ch === 'deepseek' ? 98 : 104);
     var col = o && o.silhouette ? o.silhouette : P.cloth1[1];
     ctx.globalAlpha = o && o.alpha != null ? o.alpha : 1;
-    ctx.fillStyle = P.outline; ctx.fillRect(sx - 11, sy - h - 1, 22, h + 1);
-    ctx.fillStyle = col; ctx.fillRect(sx - 10, sy - h, 20, h);
-    if (!(o && o.silhouette)) { ctx.fillStyle = P.hair[1]; ctx.fillRect(sx - 10, sy - h, 20, 10); ctx.fillStyle = P.accent[1]; ctx.fillRect(sx + (o && o.facing < 0 ? -14 : 8), sy - h + 18, 6, 4); }
+    ctx.fillStyle = P.outline; ctx.fillRect(sx - 14, sy - h - 1, 28, h + 1);
+    ctx.fillStyle = col; ctx.fillRect(sx - 13, sy - h, 26, h);
+    if (!(o && o.silhouette)) { ctx.fillStyle = P.hair[1]; ctx.fillRect(sx - 13, sy - h, 26, 16); ctx.fillStyle = P.accent[1]; ctx.fillRect(sx + (o && o.facing < 0 ? -20 : 12), sy - h + 30, 8, 5); }
     ctx.globalAlpha = 1;
   };
 
@@ -45,7 +45,7 @@
   function shadow(ctx, m, f) {
     if (f.hidden) return;
     var sx = Math.round(f.x - m.camX), hgt = GY - f.y;
-    var w = Math.max(8, Math.round(30 * (1 - Math.min(hgt, 110) / 160)));
+    var w = Math.max(10, Math.round(40 * (1 - Math.min(hgt, 150) / 220)));
     var c = (m.stage && m.stage.shadowColor) || 'rgba(10,6,20,0.35)';
     ctx.fillStyle = c;
     ctx.fillRect(sx - (w >> 1), GY - 1, w, 3);
@@ -56,6 +56,13 @@
   function drawPuppet(ctx, m, f) {
     var p = f.puppet;
     if (!p || f.hidden) return;
+    if (f.action === 'attack' && f.mv && f.mv.clipFloor) {   // dive: hide what sinks below the ground line
+      ctx.save(); ctx.beginPath(); ctx.rect(-16, -64, LC.W + 32, GY + 64); ctx.clip();
+      drawPuppet0(ctx, m, f, p); ctx.restore(); return;
+    }
+    drawPuppet0(ctx, m, f, p);
+  }
+  function drawPuppet0(ctx, m, f, p) {
     var sx = Math.round(f.x - m.camX), sy = Math.round(f.y);
     if (f.stop > 0 && (f.action === 'hitstun' || f.action === 'launch' || f.action === 'blockstun' || f.action === 'caught')) sx += (m.tick & 2) ? 1 : -1;
     // after-images
@@ -79,9 +86,21 @@
     var a = f.anchor(name);
     return { x: Math.round(f.x + a.x * f.facing - m.camX), y: Math.round(f.y + a.y) };
   }
+  // super timeline: frames since cast f0 (fx V2 timelines start there), -1 outside the super
+  F.superT = function (f) {
+    if (f.action !== 'attack' || !f.mv || f.mv.kind !== 'super' || !f.res) return -1;
+    var segs = f.res.segs;
+    for (var i = 0; i < segs.length; i++) if (segs[i].id === 'cast') return f.mf >= segs[i].start ? f.mf - segs[i].start : -1;
+    return -1;
+  };
+  // whale sprite time for a fighter in the super (-1 when not out); tidal wave time after the crash
+  F.whaleT = function (f) { return f.mv && f.mv.whale ? F.superT(f) : -1; };
+  F.tidalT = function (f) { var t = F.whaleT(f); return t >= 0 && t >= F.whaleCrash() ? t - F.whaleCrash() : -1; };
+
   function engineSprites(ctx, m, f, layer) {
     var mv = f.mv, sg = f.seg(), sx = Math.round(f.x - m.camX), sy = Math.round(f.y), o = { facing: f.facing, palette: f.pal };
     if (f.action !== 'attack' || !mv) return;
+    var st = mv.kind === 'super' ? F.superT(f) : -1;
     if (layer === 'back') {
       if (mv.id === 'dive') {
         var pw = { facing: f.facing, palette: f.pal, power: 1 };
@@ -92,47 +111,40 @@
         }
         if (sg.id === 'emerge') { pw.power = 1 - f.sf / 6; F.sprite(ctx, 'deepseek.pool', sx, GY, f.sf + 20, pw); }
       }
+      // [C] the whale is behind the fighters
+      if (mv.whale && st >= 0 && st < 60) F.sprite(ctx, 'deepseek.whale', sx + f.facing * mv.whale.x, GY, st, o);
       return;
     }
     if (mv.catchSeg) {
       if (sg.id === 'hold' || sg.id === 'startup') F.sprite(ctx, 'claude.guardrail', sx, sy, f.mf, { facing: f.facing, palette: f.pal });
       else if (sg.id === 'recovery' && f.sf < 6) F.sprite(ctx, 'claude.guardrail', sx, sy, f.sf, { facing: f.facing, palette: f.pal, phase: 'end' });
     }
-    if (mv.kind === 'super' && f.ch === 'claude' && sg.id !== 'recovery') {
-      var ch = wpt(f, 'chest', m);
-      F.sprite(ctx, 'claude.book', ch.x + f.facing * 14, ch.y, f.mf, o);
-    }
-    if (mv.beam && (sg.id === 'cast' || sg.id === 'active' || (sg.id === 'recovery' && f.sf < 12))) {
-      var bm = mv.beam, len = sg.id === 'active' ? Math.min(bm.max, bm.grow * (f.sf + 1)) : (sg.id === 'cast' ? 12 : bm.max);
+    // [D] claude.beam -> claude.book (both at the muzzle = book centre)
+    if (mv.beam && st >= 0 && (sg.id !== 'recovery' || f.sf < 12)) {
+      var bm = mv.beam, mz = f.anchor('muzzle');
+      var bx = sx + f.facing * F.clamp(mz.x, 8, bm.x0 + 8), by = sy + F.clamp(mz.y, bm.y + 20, bm.y + bm.h - 20);
       var ph = sg.id === 'cast' ? 'charge' : sg.id === 'active' ? 'fire' : 'fade';
-      var pow = sg.id === 'cast' ? f.sf / sg.f : sg.id === 'active' ? 1 : 1 - f.sf / 12;
-      var mz = f.anchor('muzzle');
-      var by = sy + F.clamp(mz.y, bm.y + 10, bm.y + bm.h - 10), bx = sx + f.facing * F.clamp(mz.x, 8, bm.x0 + 8);
-      if (!F.sprite(ctx, 'claude.beam', bx, by, sg.id === 'recovery' ? f.sf : f.mf, { facing: f.facing, palette: f.pal, length: len, phase: ph, power: pow })) {
+      var len = sg.id === 'active' ? Math.min(bm.max, bm.grow * (f.sf + 1)) : (sg.id === 'cast' ? 0 : bm.max);
+      var pow = sg.id === 'cast' ? (f.sf + 1) / sg.f : sg.id === 'active' ? 1 : 1 - f.sf / 12;
+      if (!F.sprite(ctx, 'claude.beam', bx, by, st, { facing: f.facing, palette: f.pal, length: len, phase: ph, power: pow }) && len > 0) {
         var bx2 = f.facing > 0 ? sx + bm.x0 : sx - bm.x0 - len;
         rect(ctx, bx2, sy + bm.y + 6, len, bm.h - 12, palOf(f).accent[1]);
         rect(ctx, bx2, sy + bm.y + 14, len, bm.h - 28, palOf(f).accent[0]);
       }
+      F.sprite(ctx, 'claude.book', bx, by, st, o);
     }
+    // [D] the tidal wave from the whale's crash point
     if (mv.whale) {
-      var t = F.whaleT(f);
-      if (t >= 0 && t < 60) F.sprite(ctx, 'deepseek.whale', sx + f.facing * mv.whale.x, GY, t, o);
+      var tt = F.tidalT(f);
+      if (tt >= 0 && tt < 48) F.sprite(ctx, 'deepseek.tidal', sx + f.facing * (mv.whale.x + F.whaleCrashX()), GY, tt, o);
     }
   }
-  // whale sprite time for a fighter in the super (-1 when not out)
-  F.whaleT = function (f) {
-    var sg = f.seg();
-    if (!sg || !f.mv || !f.mv.whale) return -1;
-    if (sg.id === 'active') return f.sf;
-    if (sg.id === 'recovery') { var act = f.res.segs[f.si - 1]; return (act ? act.f : 44) + f.sf; }
-    return -1;
-  };
 
   function drawProjs(ctx, m) {
     for (var i = 0; i < m.projs.length; i++) {
       var p = m.projs[i], sx = Math.round(p.x - m.camX), sy = Math.round(p.y);
-      if (!F.sprite(ctx, p.sprite, sx, sy, p.t, { facing: F.sign(p.vx) || p.facing, palette: p.owner.pal, power: p.str === 'H' ? 1 : p.str === 'L' ? 0.4 : 0.7, angle: p.vy ? Math.atan2(p.vy, Math.abs(p.vx)) : 0 })) {
-        var P = palOf(p.owner), b = p.spec.box;
+      if (!F.sprite(ctx, p.sprite, sx, sy, p.t, { facing: F.sign(p.vx) || p.facing, palette: p.owner.pal, power: p.power != null ? p.power : 1, angle: p.vy ? Math.atan2(p.vy, Math.abs(p.vx)) : 0 })) {
+        var P = palOf(p.owner), b = p.box || p.spec.box;
         rect(ctx, sx + b[0], sy + b[1], b[2], b[3], P.accent[2]);
         rect(ctx, sx + b[0] + 2, sy + b[1] + 2, b[2] - 4, b[3] - 4, P.accent[0]);
       }
