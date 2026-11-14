@@ -255,9 +255,10 @@
         if (!m[i]) { var s = m[i - cw - 1]; if (s === 1 || s === 2) m[i] = 3; }
       }
     }
-    var cv = makeCanvas(cw, ch);
+    // Text with no ink (e.g. a lone space) has a zero-size mask; keep the canvas valid.
+    var cv = makeCanvas(Math.max(1, cw), Math.max(1, ch));
     var cx = cv.getContext('2d');
-    var img = cx.createImageData(cw, ch), d = img.data;
+    var img = cx.createImageData(Math.max(1, cw), Math.max(1, ch)), d = img.data;
     var cols = [null, col, outline, shadow];
     for (i = 0; i < m.length; i++) {
       var c = cols[m[i]];
