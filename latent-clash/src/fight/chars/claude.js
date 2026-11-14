@@ -100,7 +100,7 @@
         ],
         inv: { strike: { L: [0, 6], M: [0, 8], H: [0, 10] }, 'throw': [0, 40] },
         hits: [{
-          seg: 'rise', fr: [0, 8], box: [4, -136, 36, 132], anchor: 'weapon', dmg: { L: 100, M: 120, H: 140 },
+          seg: 'rise', fr: [0, 8], box: [0, -136, 46, 132], anchor: 'weapon', dmg: { L: 100, M: 120, H: 140 },
           lv: 'S', kd: 'launch', lvx: 1.6, lvy: -6.6, stun: [0, 18], fx: 'hit.special', jug: 2, impact: true
         }],
         trail: 'claude.sonnetTrail', riseFx: 'claude.sonnetPillar', sfx: 'claude.sonnet'
@@ -118,7 +118,7 @@
           { seg: 'hit1', box: [10, -76, 52, 56], dmg: { L: 40, M: 50, H: 50 }, lv: 'S', stun: [20, 14], push: [4, 5], fx: 'hit.special', chip: 0.2 },
           { seg: 'hit2', box: [10, -110, 50, 80], dmg: { L: 56, M: 70, H: 70 }, lv: 'S', stun: [20, 14], push: [4, 5], fx: 'hit.special', chip: 0.2 },
           { seg: 'hit3', box: [12, -98, 62, 72], dmg: { L: 40, M: 50, H: 50 }, lv: 'S', kd: 'launch', lvx: 2.6, lvy: -4.6,
-            adv: [0, { L: -4, M: -6, H: -9 }], push: [8, 13], fx: 'hit.special', chip: 0.2, impact: true }
+            adv: [0, { L: -3, M: -4, H: -7 }], push: [8, 13], fx: 'hit.special', chip: 0.2, impact: true }
         ],
         sfx: 'claude.haiku'
       },
