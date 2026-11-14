@@ -9,6 +9,7 @@
 
   var BAR_W = 140, BAR_H = 8, BAR_Y = 9, BAR_X0 = 30;     // P1 bar x range [30, 170]
   var MET_W = 92, MET_Y = 203;
+  var TAG_Y = 31, COMBO_Y = 50;          // V2: move-name tag under the names; combo counter on a plate
   var FIN = { super: '超', special: '技', 'throw': '投', time: 'T', chip: '削', perfect: 'P', draw: '=', normal: null, ko: null };
 
   function rect(ctx, x, y, w, h, c) { if (w <= 0 || h <= 0) return; ctx.fillStyle = c; ctx.fillRect(x | 0, y | 0, w | 0, h | 0); }
@@ -96,8 +97,9 @@
     if (f.tag && f.tagT > 0) {
       var a = f.tagT > 80 ? (90 - f.tagT) / 10 : f.tagT < 12 ? f.tagT / 12 : 1;
       ctx.globalAlpha = F.clamp(a, 0, 1);
-      var tw = F.measure(f.tag, { size: 10 }).w + 10, tx = side === 0 ? x0 : x0 + BAR_W - tw, ty = 40;
-      rect(ctx, tx, ty, tw, 13, 'rgba(11,10,20,0.75)'); rect(ctx, side === 0 ? tx : tx + tw - 2, ty, 2, 13, P.ui);
+      // V2: directly under the name row with an opaque plate (stage signage sits behind y 38-60)
+      var tw = F.measure(f.tag, { size: 10 }).w + 10, tx = side === 0 ? x0 : x0 + BAR_W - tw, ty = TAG_Y;
+      rect(ctx, tx - 1, ty - 1, tw + 2, 15, U.black); rect(ctx, tx, ty, tw, 13, 'rgba(11,10,20,0.92)'); rect(ctx, side === 0 ? tx : tx + tw - 2, ty, 2, 13, P.ui);
       F.text(ctx, f.tag, tx + 5 + (side === 0 ? 1 : -1), ty + 1, { size: 10, color: P.uiLight });
       ctx.globalAlpha = 1;
     }
@@ -144,12 +146,17 @@
     var fade = f.combo === 0 ? Math.max(0, 1 - f.comboT / 70) : 1;
     if (fade <= 0) return;
     ctx.globalAlpha = fade;
-    var x = side === 0 ? 8 : LC.W - 8, al = side === 0 ? 'left' : 'right', y = 56 - (H.pop[side] > 3 ? 2 : 0);
+    var x = side === 0 ? 8 : LC.W - 8, al = side === 0 ? 'left' : 'right', y = COMBO_Y - (H.pop[side] > 3 ? 2 : 0);
     var P = F.palOf(f);
-    F.text(ctx, String(n), x, y, { size: 12, scale: 2, align: al, color: U.gold, outline: U.black });
     var nw = F.measure(String(n), { size: 12, scale: 2 }).w;
+    var dtxt = String(f.comboShowDmg) + ' DMG';
+    var pw = Math.max(nw + 3 + F.measure('HITS', { size: 8 }).w, F.measure(dtxt, { size: 8 }).w) + 8;
+    var plx = side === 0 ? x - 4 : x + 4 - pw;
+    ctx.globalAlpha = fade * 0.62; rect(ctx, plx, COMBO_Y - 3, pw, 41, U.bg0 || '#05040a'); ctx.globalAlpha = fade;
+    rect(ctx, side === 0 ? plx : plx + pw - 2, COMBO_Y - 3, 2, 41, P.ui);
+    F.text(ctx, String(n), x, y, { size: 12, scale: 2, align: al, color: U.gold, outline: U.black });
     F.text(ctx, 'HITS', side === 0 ? x + nw + 3 : x - nw - 3, y + 11, { size: 8, align: al, color: U.text, outline: U.black });
-    F.text(ctx, String(f.comboShowDmg) + ' DMG', x, y + 26, { size: 8, align: al, color: P.uiLight, outline: U.black });
+    F.text(ctx, dtxt, x, y + 26, { size: 8, align: al, color: P.uiLight, outline: U.black });
     ctx.globalAlpha = 1;
   }
 
