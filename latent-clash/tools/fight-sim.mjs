@@ -84,7 +84,8 @@ async function main() {
   const consoleErrs = [];
   for (let i = 0; i < W; i++) {
     const p = await browser.newPage();
-    p.on('console', msg => { if (msg.type() === 'error') consoleErrs.push(msg.text()); });
+    p.on('console', msg => { if (msg.type() === 'error') consoleErrs.push(msg.text() + ' @ ' + JSON.stringify(msg.location())); });
+    p.on('pageerror', e => consoleErrs.push('pageerror ' + e.stack));
     p.on('pageerror', e => consoleErrs.push('pageerror ' + e.message));
     await p.goto(url);
     await p.waitForFunction(() => window.FS && FS.ready, null, { timeout: 20000 });
