@@ -122,7 +122,7 @@
     // [D] claude.beam -> claude.book (both at the muzzle = book centre)
     if (mv.beam && st >= 0 && (sg.id !== 'recovery' || f.sf < 12)) {
       var bm = mv.beam, mz = f.anchor('muzzle');
-      var bx = sx + f.facing * F.clamp(mz.x, 8, bm.x0 + 8), by = sy + F.clamp(mz.y, bm.y + 20, bm.y + bm.h - 20);
+      var bx = sx + f.facing * F.clamp(mz.x + (bm.fwd || 0), 8, bm.x0 + 8), by = sy + F.clamp(mz.y, bm.y + 20, bm.y + bm.h - 20);
       var ph = sg.id === 'cast' ? 'charge' : sg.id === 'active' ? 'fire' : 'fade';
       var len = sg.id === 'active' ? Math.min(bm.max, bm.grow * (f.sf + 1)) : (sg.id === 'cast' ? 0 : bm.max);
       var pow = sg.id === 'cast' ? (f.sf + 1) / sg.f : sg.id === 'active' ? 1 : 1 - f.sf / 12;

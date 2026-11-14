@@ -144,7 +144,7 @@
         inv: { all: [0, 17] },
         flashAt: 5, bgOut: 12,        // backdrop outro from recovery f12 (fx V2 timeline)
         // beam drawn at the muzzle (book centre ~(34,-82)); visual 80 px tall, hitbox 68
-        beam: { seg: 'active', y: -116, h: 68, x0: 30, grow: 40, max: 420 },
+        beam: { seg: 'active', y: -116, h: 68, x0: 44, grow: 40, max: 420, fwd: 16 },   // fwd: book/beam origin ahead of the muzzle so the book does not hide her face
         hits: [{
           seg: 'active', fr: [0, 39], every: 4, beam: true, dmg: 33, lv: 'X', stun: [14, 10], chip: 0.25,
           push: [1, 2], noCatch: true, juggleAny: true, lvx: 0.6, lvy: -2.2, holdY: 40, air: 'knock', fx: 'claude.beamHit',
