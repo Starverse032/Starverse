@@ -298,7 +298,8 @@
 
   // Schedule every event starting before `until`; events earlier than `now - 0.02` are dropped.
   TrackInst.prototype.schedule = function (until, now) {
-    if (this.done || this.stopping) return;
+    if (this.done) return;
+    if (this.stopping) { if (now > this.endT) return; until = Math.min(until, this.endT); }  // keep playing through a fade-out
     var song = this.song, ev = song.events, guard = 0;
     while (guard++ < 100000) {
       if (this.idx >= ev.length) {
@@ -380,7 +381,6 @@
   K.Mixer.prototype.tickMusic = function (until, now) {
     var tr = this.tracks;
     for (var i = tr.length - 1; i >= 0; i--) {
-      if (tr[i].stopping && tr[i].endT <= now) { if (tr[i].reap(now)) tr.splice(i, 1); continue; }
       tr[i].schedule(until, now);
       if (tr[i].reap(now)) { if (this.cur === tr[i]) this.cur = null; tr.splice(i, 1); }
     }
