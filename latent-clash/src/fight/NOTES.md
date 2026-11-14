@@ -1,6 +1,13 @@
 # FIGHT — NOTES
 
-## Progress / next steps
+## V2 progress / next steps (CONTRACT-V2 retune — keep truthful)
+- [ ] 1 retune to V2 bodies (boxes, movement, spacing, reach, specials, fx positions) + sim/combos/shots
+- [ ] 2 presentation fixes (training panels vs cut-in, tag/combo vs training wall sign, HUD)
+- [ ] 3 full-screen supers / KO backdrop / screen.impact / new special fx
+- [ ] 4 notes
+Status: started; nothing changed in code yet.
+
+## Progress / next steps (V1)
 
 Done: full engine, both move sets, CPU AI L1–5, HUD, training tools, presentation wired to the real
 rig / fx / illust / stages / audio (all feature-detected). Tools: sim (invariants, determinism,
