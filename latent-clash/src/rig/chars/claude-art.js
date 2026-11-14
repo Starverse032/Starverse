@@ -1,7 +1,7 @@
-/* LATENT CLASH — RIG: Claude 娘 hand-authored pixel stamps (head, faces).
- * Facing right, 3/4 view. Exterior outline is added by the renderer, so the
- * art only contains interior lines. Legend in LEGEND below.
- * Head pivot (neck top) = HEAD_PIVOT. Eyes overlay at EYE_AT, mouth at MOUTH_AT.
+/* LATENT CLASH — RIG: Claude 娘 V2 hand-authored pixel stamps (head, faces, hands).
+ * Facing right, 3/4 view, 104-px fighter (head ≈ 16 px chin → crown). The
+ * exterior outline is added by the renderer, so the art only holds interior
+ * lines. The sunburst flower ornament is drawn procedurally into the head.
  */
 (function () {
   'use strict';
@@ -23,144 +23,162 @@
     '-': 255
   };
 
+  // 17 wide × 17 tall. Pivot (neck joint, under the jaw) = (8, 16).
   var HEAD = [
-    //0123456789012345678901
-    '........hhhhh.........',  // 0
-    '......hhhhhhhhh.......',  // 1
-    '....shhhhhhhhhhhh.....',  // 2
-    '...shhhhhHHHHhhhhh....',  // 3
-    '..shhhhhHHhhHHHhhhh...',  // 4
-    '..shhhhhhhhhhhhhhhhh..',  // 5
-    '.sshhhhhhhhhhhhhhhhhh.',  // 6
-    '.sshhhhhhhshhhhhhhhhh.',  // 7
-    '.sshhhhhhshhhhhshhhhhh',  // 8
-    'sshhhhhhshhhhhshhhhshh',  // 9
-    'sshhhhhhshkhhshkhhshkh',  // 10
-    'sshhhhhhhkkkhhkkkhkkkh',  // 11
-    'sshhhshhkkkkkkkkkkkkkh',  // 12
-    'sshhhshhkkkkkkkkkkkkk.',  // 13
-    'sshhhshhkkkkkkkkkkkkk.',  // 14
-    'sshhhshhkkkkkkkkkkkkk.',  // 15
-    '.shhhshhkkkkkkkkkkkk..',  // 16
-    '.shhhshhkkkkkkkkkkkk..',  // 17
-    '..shhshhqkkkkkkkkkk...',  // 18
-    '..shhshh.qkkkkkkkk....',  // 19
-    '...shshh..qqkkkkk.....',  // 20
-    '....shh.....qkk.......'   // 21
+    //0123456789012345 6
+    '.....hhhhhh......',  // 0
+    '...hhhhhHHHhh....',  // 1
+    '..shhhhHHHHHhh...',  // 2
+    '.sshhhhhhhHHHhh..',  // 3
+    '.sshhhhhhhhhhhhh.',  // 4
+    'sshhhhhhhhhhhhhhh',  // 5
+    'sshhhhhhhhhhhhhhh',  // 6
+    'sshhhhhhhhshhhshh',  // 7
+    'sshhhhhhhshhhshhh',  // 8
+    'sshhhhhhshkhhkhhk',  // 9  fringe tips
+    'sshhhhhhkkkkkkkkk',  // 10 brow line
+    'sshhhhhhkkkkkkkkk',  // 11 eyes
+    'sshhhhhhkkkkkkkkk',  // 12 eyes
+    '.shhhhhhkkkkkkkk.',  // 13
+    '.shhhhhhqkkkkkkk.',  // 14 nose
+    '..shhhhh.qkkkkk..',  // 15 mouth
+    '..shhhh...qqkk...'   // 16 chin
   ];
 
-  // eyes block: 11 wide x 6 tall at EYE_AT (row 0 = brow row r11)
+  // eyes block: 9 wide × 5 tall at EYE_AT (row 0 = brow row). Near eye x0-2, far eye x6-7.
   var EYES = {
     open: [
-      '...........',
-      '.ooo....oo.',
-      'oxEw....xwo',
-      '.Eee....Ee.',
-      '.eew....e..',
-      '...........'
+      '.........',
+      'oooo..oo.',
+      '.xxw..xw.',
+      '.eeE..eE.',
+      '.........'
     ],
     half: [
-      '...........',
-      '...........',
-      'oooo....ooo',
-      '.Eee....Ee.',
-      '.eew....e..',
-      '...........'
+      '.........',
+      '.........',
+      'oooo..oo.',
+      '.eeE..eE.',
+      '.........'
     ],
     closed: [
-      '...........',
-      '...........',
-      '...........',
-      'oooo....ooo',
-      '...........',
-      '...........'
+      '.........',
+      '.........',
+      '.........',
+      'oooo..oo.',
+      '.........'
     ],
     happy: [
-      '...........',
-      '...........',
-      '.oo.....oo.',
-      'o..o...o..o',
-      '...........',
-      '...........'
+      '.........',
+      '.........',
+      '.oo...o..',
+      'o..o.o.o.',
+      '.........'
     ],
     focus: [
-      'o.......o..',
-      '.oo....o...',
-      '.ooo....oo.',
-      'oxEw....xwo',
-      '.Ee.....E..',
-      '...........'
+      '.dd....d.',
+      '...d..d..',
+      'oooo..oo.',
+      '.xxw..xw.',
+      '.........'
     ],
     shut: [
-      '...........',
-      'o........o.',
-      '.ooo...ooo.',
-      'o........o.',
-      '...........',
-      '...........'
+      '.........',
+      'o.....o..',
+      '.ooo.oo..',
+      'o.....o..',
+      '.........'
     ],
     dizzy: [
-      '...........',
-      '.ooo...ooo.',
-      '.o.o...o.o.',
-      '.oo....oo..',
-      '...........',
-      '...........'
+      '.........',
+      '.ooo..oo.',
+      '.o.o..o..',
+      '.oo...oo.',
+      '.........'
     ],
     sad: [
-      '...o.....o.',
-      '.oo.....o..',
-      '.ooo....oo.',
-      'oxEw....xwo',
-      '.eew....e..',
-      '...........'
+      '...d..d..',
+      '.dd....d.',
+      'oooo..oo.',
+      '.xxw..xw.',
+      '.eeE..eE.'
     ],
     wide: [
-      '...........',
-      '.ooo....oo.',
-      'oxEw....xwo',
-      '.Eee....Ee.',
-      '.eee....e..',
-      '..o........'
+      '.ooo..oo.',
+      '.xxw..xw.',
+      '.eeE..eE.',
+      '.eee..ee.',
+      '.........'
     ]
   };
 
-  // mouth block: 4 wide × 3 tall at MOUTH_AT
+  // mouth block: 3 wide × 2 tall at MOUTH_AT
   var MOUTHS = {
-    neutral: ['....', '.QQ.', '....'],
-    smile:   ['....', 'Q..Q', '.QQ.'],
-    open:    ['.oo.', 'orro', '.oo.'],
-    shout:   ['oooo', 'orro', '.oo.'],
-    teeth:   ['....', 'oWWo', '.oo.'],
-    hurt:    ['....', 'o.o.', '.o.o'],
-    o:       ['.o..', 'oro.', '.o..'],
-    frown:   ['....', '.QQ.', 'Q..Q'],
-    grin:    ['....', 'oWWo', '.rr.']
+    neutral: ['.Q.', '...'],
+    smile:   ['Q.Q', '.Q.'],
+    open:    ['oo.', 'ro.'],
+    shout:   ['ooo', 'rro'],
+    teeth:   ['oWo', '...'],
+    hurt:    ['o.o', '.o.'],
+    o:       ['oo.', 'oo.'],
+    frown:   ['.Q.', 'Q.Q'],
+    grin:    ['oWW', '.rr']
   };
+
+  // ---------------------------------------------------------------- hands (V2, bigger)
+  // authored pointing right (forearm direction 0°) and down-right (45°); wrist at the pivot.
+  var HL = { 'K': col(M.skin, 0), 'k': col(M.skin, 1), 'q': col(M.skin, 2), 'Q': col(M.skin, 3) };
+  var HANDS = {
+    id: 'claudeV2', legend: HL,
+    relax: { a0: ['.KK..', 'kkkkq', 'kkkqQ', '.qQq.'], p0: [0, 1],
+             a45: ['kK...', 'kkk..', '.kkkq', '.qkqQ', '..QQ.'], p45: [0, 0] },
+    fist:  { a0: ['.KKk.', 'kkkkq', 'kkkqQ', '.qQQ.'], p0: [0, 1],
+             a45: ['kK...', 'kkKk.', '.kkkq', '.qkQQ', '..QQ.'], p45: [0, 0] },
+    palm:  { a0: ['...Kq', '..Kkq', '..kkq', '.kkkq', 'kkkqQ', '.qQQ.'], p0: [0, 4],
+             a45: ['....K', '...Kq', '..kkq', '.kkq.', 'kkqQ.', '.QQ..'], p45: [0, 4] },
+    open:  { a0: ['...K..', '.KkK.k', 'kkkkkq', 'kkkqq.', '.qQ.q.'], p0: [0, 2],
+             a45: ['kK....', 'kkk.K.', '.kkkk.', '.kkqq.', '..q.qk', '...q..'], p45: [0, 0] },
+    grip:  { a0: ['.KKk', 'kkkq', 'kkqQ', '.QQ.'], p0: [0, 1],
+             a45: ['kK..', 'kkk.', '.kkq', '.qQQ'], p45: [0, 0] },
+    point: { a0: ['.KK....', 'kkkkkkq', 'kkkqQ..', '.qQ....'], p0: [0, 1],
+             a45: ['kK....', 'kkk...', '.kkq..', '.qkqk.', '..Q..k'], p45: [0, 0] },
+    flat:  { a0: ['.KKkk.', 'kkkkkk', 'kkkqqQ', '.qQ...'], p0: [0, 1],
+             a45: ['kK....', 'kkk...', '.kkkk.', '..kqkk', '...QQq'], p45: [0, 0] }
+  };
+
+  // sunburst flower: 12 tapering petals (alternating long/short) around a small gold core
+  function flower(img, cx, cy) {
+    var d = img.d, w = img.w;
+    function put(x, y, c) { x = Math.round(x); y = Math.round(y); if (x >= 0 && y >= 0 && x < w && y < img.h) d[y * w + x] = c; }
+    for (var k = 0; k < 12; k++) {
+      var a = (k * 30 + 8) * Math.PI / 180, L = (k & 1) ? 3.6 : 4.7;
+      var lit = Math.cos(a) * 0.62 - Math.sin(a) * 0.78;        // light from the upper front
+      for (var r = 1.6; r <= L + 0.01; r += 0.35) {
+        var c = r > L - 1.1 ? (lit > 0.3 ? col(M.acc, 0) : (lit < -0.4 ? col(M.acc, 2) : col(M.acc, 1))) : (lit > 0 ? col(M.acc, 1) : col(M.acc, 2));
+        put(cx + Math.cos(a) * r, cy + Math.sin(a) * r, c);
+      }
+    }
+    put(cx, cy, col(M.metal, 0)); put(cx + 1, cy, col(M.metal, 1)); put(cx, cy + 1, col(M.metal, 1)); put(cx - 1, cy, col(M.acc, 2)); put(cx, cy - 1, col(M.metal, 0));
+  }
 
   I.ART = I.ART || {};
   I.ART.claude = {
     legend: LEGEND,
+    hands: HANDS,
     build: function () {
+      var PADL = 4, PADT = 3;
+      var raw = I.parseArt(HEAD, LEGEND, 0, 0);
+      var W = raw.w + PADL + 1, Hh = raw.h + PADT, d = new Uint8Array(W * Hh);
+      for (var y = 0; y < raw.h; y++) for (var x = 0; x < raw.w; x++) d[(y + PADT) * W + x + PADL] = raw.d[y * raw.w + x];
+      var base = { w: W, h: Hh, d: d, px: 8 + PADL, py: 16 + PADT };
+      flower(base, PADL + 3, PADT + 6);
       var set = {
-        base: I.parseArt(HEAD, LEGEND, 9, 20),
-        eyes: {}, mouth: {}, cache: {},
-        eyeAt: [8, 11], mouthAt: [13, 17],
-        extras: {
-          blush: { img: I.parseArt(['bb.....bb'], LEGEND), at: [9, 16] }
-        }
+        base: base, eyes: {}, mouth: {}, cache: {},
+        eyeAt: [7 + PADL, 9 + PADT], mouthAt: [10 + PADL, 15 + PADT],
+        extras: { blush: { img: I.parseArt(['bb....b'], LEGEND), at: [7 + PADL, 13 + PADT] } }
       };
       Object.keys(EYES).forEach(function (k) { set.eyes[k] = I.parseArt(EYES[k], LEGEND); });
       Object.keys(MOUTHS).forEach(function (k) { set.mouth[k] = I.parseArt(MOUTHS[k], LEGEND); });
-      // starburst hair clip, drawn into the base
-      var clip = I.parseArt([
-        '..a..',
-        'a.A.a',
-        '.AMA.',
-        'a.A.a',
-        '..c..'
-      ], LEGEND);
-      set.base = I.overlay(set.base, clip, 1, 6, null);
       return set;
     }
   };
