@@ -36,7 +36,7 @@ window.fightStubs = function () {
     };
     ['5L', '5M', '5H', '2L', '2M', '2H'].forEach(function (n) { SEGS[n] = [['startup', 8], ['active', 4], ['recovery', 14]]; });
     ['jL', 'jM', 'jH'].forEach(function (n) { SEGS[n] = [['startup', 7], ['active', 6], ['recovery', 12, 1]]; });
-    var CH = { claude: { h: 70, ch: 46 }, deepseek: { h: 66, ch: 42 } };
+    var CH = { claude: { h: 104, ch: 70, w: 26 }, deepseek: { h: 98, ch: 66, w: 28 } };   // V2 metrics
     var R = LC.rig = {};
     R.init = function () { return Promise.resolve(); };
     R.listAnims = function () { return Object.keys(SEGS); };
@@ -45,7 +45,7 @@ window.fightStubs = function () {
       var s = SEGS[a] || SEGS.idle, t = 0;
       return { segs: s.map(function (x) { t += x[1]; return { id: x[0], f: x[1], loop: !!x[2] }; }), total: t, loop: !!s[s.length - 1][2] };
     };
-    R.charInfo = function (c) { return { height: CH[c].h, crouchHeight: CH[c].ch, width: 26, palettes: 2 }; };
+    R.charInfo = function (c) { return { height: CH[c].h, crouchHeight: CH[c].ch, width: CH[c].w, palettes: 2 }; };
 
     function Puppet(c, opts) { this.c = c; this.pal = (opts && opts.palette) | 0; this.a = 'idle'; this.s = 'loop'; this.u = 0; this.H = CH[c].h; }
     Puppet.prototype.setPose = function (a, f) { this.a = a; this.s = (SEGS[a] || SEGS.idle)[0][0]; this.u = f / 20; };
@@ -75,20 +75,20 @@ window.fightStubs = function () {
         case 'chest': return { x: lie ? -8 : 2, y: lie ? -6 : top + 24 };
         case 'hip': return { x: 0, y: lie ? -5 : top * 0.42 };
         case 'center': return { x: 0, y: top / 2 };
-        case 'handF': return b ? { x: b[0] + b[2] - 6, y: b[1] + b[3] / 2 } : { x: 14, y: top + 28 };
-        case 'handB': return { x: -8, y: top + 28 };
+        case 'handF': return b ? { x: b[0] + b[2] - 6, y: b[1] + b[3] / 2 } : { x: 20, y: top + 34 };
+        case 'handB': return { x: -10, y: top + 34 };
         case 'footF': return { x: 7, y: 0 };
         case 'footB': return { x: -7, y: 0 };
-        case 'weapon': return b ? { x: b[0] + b[2] - 2, y: b[1] + b[3] / 2 } : { x: this.c === 'claude' ? 30 : 16, y: top + 22 };
-        case 'muzzle': return this.c === 'deepseek' && this.a === 'wave' ? { x: 24, y: 0 } : (this.a === 'airSpark' ? { x: 24, y: -34 } : { x: 32, y: top + 20 });
+        case 'weapon': return b ? { x: b[0] + b[2] - 2, y: b[1] + b[3] / 2 } : { x: this.c === 'claude' ? 30 : 22, y: top + 32 };
+        case 'muzzle': return this.c === 'deepseek' && this.a === 'wave' ? { x: 40, y: 0 } : (this.a === 'airSpark' ? { x: 36, y: -56 } : { x: this.a === 'super' ? 34 : 40, y: this.a === 'super' ? -82 : top + 26 });
         case 'grab':
-          if (this.a !== 'throwHit') return { x: 24, y: top + 26 };
-          if (this.s === 'toss') { var k = Math.min(1, this.u); return { x: 22 - 40 * k, y: top + 24 - Math.sin(k * Math.PI) * 26 }; }
-          return { x: 24, y: top + 26 };
+          if (this.a !== 'throwHit') return { x: 32, y: top + 32 };
+          if (this.s === 'toss') { var k = Math.min(1, this.u); return { x: 32 + 28 * k, y: top + 32 - Math.sin(k * Math.PI) * 30 }; }
+          return { x: 32, y: top + 32 };
       }
       return { x: 0, y: top / 2 };
     };
-    Puppet.prototype.getBounds = function () { return { x: -14, y: -this.H, w: 28, h: this.H }; };
+    Puppet.prototype.getBounds = function () { return { x: -15, y: -this.H, w: 30, h: this.H }; };
     function line(ctx, x0, y0, x1, y1, w) {
       var n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) | 0;
       for (var i = 0; i <= n; i++) { var t = n ? i / n : 0; ctx.fillRect(Math.round(x0 + (x1 - x0) * t), Math.round(y0 + (y1 - y0) * t), w, w); }
