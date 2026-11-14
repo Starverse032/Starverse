@@ -95,15 +95,15 @@
       ['recovery', P(j0, { fF: [12, -4] })]]
   });
 
-  // ---------------------------------------------------------------- wave: double-fist ground slam (muzzle = leading foot)
-  var WV = P(S, HIT, { hip: [3, -14], lean: 40, bend: 8, hF: [20, -6], hB: [16, -6], handF: 'flat', handB: 'flat', fF: [14, 0], weapon: 'hF', muz: [20, 0] });
+  // ---------------------------------------------------------------- wave: knee-raise → stomp; wave spawns at the leading toe (muzzle)
+  var WV0 = P(S, ATK, { hip: [-2, -26], lean: -6, bend: -4, fF: [9, -17], faF: 25, knF: -1, fB: [-8, 0], hF: [10, -48], hB: [-8, -44], handB: 'open', muz: [23, 0] });
+  var WV = P(S, HIT, { hip: [4, -17], lean: 18, bend: 6, fF: [19, 0], faF: 0, fB: [-10, 0], hF: [18, -30], hB: [8, -32], handF: 'fist', handB: 'fist', weapon: 'fF', muz: [23, 0] });
   def('wave', {
     segs: sar(15, 3, 26), step: 2,
-    keys: [['startup', P(S, ATK)], ['startup+6', P(S, ATK, { hip: [-1, -25], lean: -10, hF: [8, -56], hB: [2, -58], handF: 'fist', handB: 'fist', muz: [20, 0] }), 'out'],
-      ['startup+12', P(S, ATK, { hip: [-1, -26], lean: -12, hF: [6, -58], hB: [0, -59], muz: [20, 0] })],
-      ['active', P(WV, { smear: { part: 'hF', from: 'startup+12', n: 4 } }), 'snap'], ['active+2', WV, 'snap'],
-      ['recovery', P(WV, { mouth: 'grin' }), 'snap'], ['recovery+12', P(WV, { mouth: 'grin', hip: [2, -16] }), 'out'],
-      ['recovery+22', P(S, ATK, { muz: [20, 0] })], ['recovery+25', S]]
+    keys: [['startup', P(S, ATK, { muz: [23, 0] })], ['startup+7', WV0, 'out'], ['startup+12', P(WV0, { fF: [9, -19], hip: [-2, -27] }), 'snap'],
+      ['active', P(WV, { smear: { part: 'fF', from: 'startup+12', n: 3 } }), 'snap'], ['active+2', WV, 'snap'],
+      ['recovery', P(WV, { mouth: 'grin' }), 'snap'], ['recovery+10', P(WV, { mouth: 'grin', hip: [3, -19] }), 'out'],
+      ['recovery+22', P(S, ATK, { muz: [23, 0] })], ['recovery+25', S]]
   });
 
   // ---------------------------------------------------------------- breach: rising whale-tail somersault kick
