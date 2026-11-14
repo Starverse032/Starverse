@@ -151,12 +151,18 @@
       x = ((h1 * 900 + t * (0.25 + h2 * 0.3)) % (W + 40)) - 20; y = ((h2 * 500 - t * (0.15 + h1 * 0.2)) % (H - 40) + (H - 40)) % (H - 40) + 10;
       I.drawAnim(ctx, C.mini, Math.floor(t * (0.12 + h2 * 0.1) + i * 3) % 8, sx + Math.round(x), sy + Math.round(y), 1);
     }
-    // script rows (parallax: upper rows faster, lane rows slow and dim)
-    var ROWY = [24, 40, 58, 76, 108, 136, 162], ROWV = [1.3, 1.0, 0.8, 1.6, 0.5, 0.7, 0.4];
-    for (i = 0; i < 7; i++) {
+  }
+  /** Script rows are drawn unmirrored (readable text); they scroll away from her. */
+  var ROWY = [24, 40, 58, 76, 108, 136, 162], ROWV = [1.3, 1.0, 0.8, 1.6, 0.5, 0.7, 0.4];
+  function drawClaudeRows(ctx, sx, sy, t, o) {
+    var C = CB[o.pal];
+    for (var i = 0; i < 7; i++) {
       var R = C.rows[i], off = Math.floor(t * ROWV[i] + i * 97) % R.w;
-      ctx.drawImage(R.c, R.w - off, 0, W + 16, 9, sx - 8, sy + ROWY[i] - 4, W + 16, 9);
+      ctx.drawImage(R.c, o.facing < 0 ? off : R.w - off, 0, W + 16, 9, sx - 8, sy + ROWY[i] - 4, W + 16, 9);
     }
+  }
+  function drawClaudeFront(ctx, sx, sy, t, o) {
+    var C = CB[o.pal], i, x, y;
     // huge drifting pages: 2 big (far), 3 medium
     for (i = 0; i < 5; i++) {
       var big = i < 2, set = C.pages[big ? 0 : 1], q1 = I.hash(i * 13 + 1), q2 = I.hash(i * 29 + 5);
@@ -251,6 +257,13 @@
       for (xx = 50; xx < 196; xx++) { var u2 = (xx - 26) / 192, h2 = u2 < 0.6 ? 4 + 20 * Math.pow(u2 / 0.6, 0.7) : 24 * Math.sqrt(Math.max(0, 1 - Math.pow((u2 - 0.6) / 0.41, 2))); if ((xx >> 1) % 3) bb.set(xx, Math.round(yc0 - h2 + 6 + beat * (1 - u2) * (1 - u2)), silHi); }
       bb.rect(198, yc0 + 2, 2, 2, eye);
     });
+    D.bub = I.anim(13, 13, 5, 6, 6, function (bb, ff) {
+      var r = ff + 1.2;
+      if (ff === 0) { bb.set(5, 6, I.col(Wt[2])); bb.set(7, 6, I.col(Wt[2])); bb.set(6, 5, I.col(Wt[2])); bb.set(6, 7, I.col(Wt[2])); return; }
+      bb.ring(6.5, 6.5, r - 0.9, r, I.col(ff > 2 ? Wt[1] : Wt[2]));
+      bb.set(Math.round(6.5 - r * 0.45), Math.round(6.5 - r * 0.45), I.col(Wt[0]));
+      if (ff > 2) bb.set(Math.round(6.5 - r * 0.45) + 1, Math.round(6.5 - r * 0.45), I.col(Wt[0]));
+    });
     D.cols = { snow: [I.mix(Wt[3], B[2], 0.45), Wt[3], Wt[2]], bub: [Wt[1], Wt[2], Wt[3], Wt[0]], streak: [I.mix(Wt[3], B[2], 0.3), Wt[3]] };
   }
 
@@ -289,22 +302,14 @@
       var age = (t * (i % 2 ? 1 : 1.4) + Math.floor(b1 * life)) % life, rs = age * (2.6 + b1 * 1.6);
       y = GY - 2 - rs; if (y < -6) continue;
       x = v + (b2 - 0.5) * 14 + Math.sin(age * 0.25 + i) * (2 + rs * 0.02);
-      var size = b1 < 0.25 ? 2 : b1 < 0.7 ? 1 : 0, X = sx + Math.round(x), Y = sy + Math.round(y);
-      ctx.fillStyle = B4[size === 2 ? 1 : 2];
-      if (size === 2) { ctx.fillRect(X - 1, Y - 2, 3, 1); ctx.fillRect(X - 1, Y + 2, 3, 1); ctx.fillRect(X - 2, Y - 1, 1, 3); ctx.fillRect(X + 2, Y - 1, 1, 3); ctx.fillStyle = B4[3]; ctx.fillRect(X - 1, Y - 1, 1, 1); }
-      else if (size === 1) { ctx.fillRect(X - 1, Y, 1, 1); ctx.fillRect(X + 1, Y, 1, 1); ctx.fillRect(X, Y - 1, 1, 1); ctx.fillRect(X, Y + 1, 1, 1); }
-      else { ctx.fillStyle = B4[0]; ctx.fillRect(X, Y, 1, 1); }
+      I.drawAnim(ctx, D.bub, b1 < 0.25 ? 2 : b1 < 0.7 ? 1 : 0, sx + Math.round(x), sy + Math.round(y), 1);
     }
     // big near bubbles hugging the screen edges (fast)
     for (i = 0; i < 10; i++) {
       var n1 = I.hash(i * 19 + 4), lf = 50 + Math.floor(n1 * 30), ag = (t + Math.floor(I.hash(i * 3 + 8) * lf)) % lf;
       var bx = (i & 1 ? W - 14 - n1 * 40 : 10 + n1 * 40) + Math.sin(ag * 0.2 + i) * 3, by = GY + 10 - ag * (4.5 + n1 * 2);
       if (by < -10) continue;
-      var R = 3 + (i % 3), X2 = sx + Math.round(bx), Y2 = sy + Math.round(by);
-      ctx.fillStyle = B4[1];
-      ctx.fillRect(X2 - R + 1, Y2 - R, R * 2 - 1, 1); ctx.fillRect(X2 - R + 1, Y2 + R, R * 2 - 1, 1);
-      ctx.fillRect(X2 - R, Y2 - R + 1, 1, R * 2 - 1); ctx.fillRect(X2 + R, Y2 - R + 1, 1, R * 2 - 1);
-      ctx.fillStyle = B4[3]; ctx.fillRect(X2 - R + 2, Y2 - R + 2, 2, 1); ctx.fillRect(X2 - R + 2, Y2 - R + 3, 1, 1);
+      I.drawAnim(ctx, D.bub, 3 + (i % 2), sx + Math.round(bx), sy + Math.round(by), 1);
     }
   }
 
@@ -315,31 +320,33 @@
     use: 'Instead of stage.drawBack from the end of the super flash until the super ends: drawSprite(ctx,"screen.superBackdrop",0,0,t,{char, palette, facing}) — facing = the attacker\'s facing (the light/whale come from her side). During t < 8 (intro) and phase:"out" (t = frames since the end, 8f) it only covers part of the screen: draw stage.drawBack first on those frames.',
     info: { duration: 0, bbox: { x: 0, y: 0, w: W, h: H }, intro: 8, outro: 8 },
     draw: function (ctx, sx, sy, t, o) {
-      var deep = o.char === 'deepseek', out = o.phase === 'out';
+      var deep = o.char === 'deepseek', out = o.phase === 'out', f = o.facing;
       if (out && t >= 8) return;
-      var k = out ? 1 - (t + 1) / 9 : Math.min(1, (t + 1) / 8), tt = out ? 200 + t : t;
-      I.mirrored(ctx, sx + W / 2, o.facing, function () {
-        var clip = k < 1;
-        if (clip) {
-          ctx.save(); ctx.beginPath();
-          if (deep) { var yr = Math.round(H + 8 - k * (H + 16)); ctx.rect(sx - 8, sy + yr, W + 16, H + 16); }
-          else { var xr = Math.round(-8 + k * (W + 16)); ctx.rect(sx - 8, sy - 8, xr + 8, H + 16); }
-          ctx.clip();
-        }
-        if (deep) drawDeep(ctx, sx, sy, tt, o); else drawClaude(ctx, sx, sy, tt, o);
-        if (clip) {
-          ctx.restore();
-          if (deep) {
-            var Wt = I.scheme('deepseek', o.pal).water.css, yy = sy + Math.round(H + 8 - k * (H + 16));
-            for (var x = -8; x < W + 8; x += 2) { var wv = Math.round(Math.sin(x * 0.12 + t) * 2); ctx.fillStyle = (x & 4) ? Wt[0] : Wt[1]; ctx.fillRect(sx + x, yy + wv - 1, 2, 2); }
-          } else {
-            var Lc = I.scheme('claude', o.pal).light.css, xx = sx + Math.round(-8 + k * (W + 16));
-            ctx.fillStyle = Lc[0]; ctx.fillRect(xx - 2, sy - 8, 2, H + 16);
-            ctx.fillStyle = Lc[1]; ctx.fillRect(xx, sy - 8, 2, H + 16);
-            ctx.fillStyle = Lc[3]; ctx.fillRect(xx + 2, sy - 8, 1, H + 16);
-          }
-        }
-      });
+      var k = out ? 1 - (t + 1) / 9 : Math.min(1, (t + 1) / 8), tt = out ? 200 + t : t, clip = k < 1;
+      var cx0 = sx - 8, cw = W + 16, ch = H + 16, edge = 0;
+      if (clip) {   // reveal from her side (claude) / from the floor up (deepseek), in screen space
+        ctx.save(); ctx.beginPath();
+        if (deep) { edge = Math.round(H + 8 - k * ch); ctx.rect(cx0, sy + edge, cw, ch); }
+        else { edge = Math.round(k * cw); if (f > 0) ctx.rect(cx0, sy - 8, edge, ch); else ctx.rect(cx0 + cw - edge, sy - 8, edge, ch); }
+        ctx.clip();
+      }
+      if (deep) I.mirrored(ctx, sx + W / 2, f, function () { drawDeep(ctx, sx, sy, tt, o); });
+      else {
+        I.mirrored(ctx, sx + W / 2, f, function () { drawClaude(ctx, sx, sy, tt, o); });
+        drawClaudeRows(ctx, sx, sy, tt, o);
+        I.mirrored(ctx, sx + W / 2, f, function () { drawClaudeFront(ctx, sx, sy, tt, o); });
+      }
+      if (!clip) return;
+      ctx.restore();
+      if (deep) {
+        var Wt = I.scheme('deepseek', o.pal).water.css, yy = sy + edge;
+        for (var x = -8; x < W + 8; x += 2) { var wv = Math.round(Math.sin(x * 0.12 + t) * 2); ctx.fillStyle = (x & 4) ? Wt[0] : Wt[1]; ctx.fillRect(sx + x, yy + wv - 1, 2, 2); }
+      } else {
+        var Lc = I.scheme('claude', o.pal).light.css, xx = f > 0 ? cx0 + edge : cx0 + cw - edge;
+        ctx.fillStyle = Lc[0]; ctx.fillRect(xx - 1, sy - 8, 2, ch);
+        ctx.fillStyle = Lc[1]; ctx.fillRect(xx + f * 2 - (f < 0 ? 1 : 0) - 1 + (f > 0 ? 0 : 0), sy - 8, 2, ch);
+        ctx.fillStyle = Lc[3]; ctx.fillRect(xx + f * 4 - 1, sy - 8, 1, ch);
+      }
     }
   });
 })();
