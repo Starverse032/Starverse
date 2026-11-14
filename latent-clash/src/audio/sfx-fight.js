@@ -18,13 +18,13 @@
     S.noise(r, out, t, { c: 'white', bp: 950, q: 1.3, g: S.ad(0.001, 0.09 * k), v: 0.9 }, p);
   }
 
-  def('hit.light', { cat: 'hit', dur: 0.12, poly: 3, guard: 0.03, jitter: 0.04, prio: 2,
+  def('hit.light', { cat: 'hit', dur: 0.15, poly: 3, guard: 0.03, jitter: 0.04, prio: 2,
     desc: 'tight snap', when: 'a light normal (L) connects',
     build: function (r, o, t, p) {
       S.noise(r, o, t, { c: 'white', hp: 2500, lp: 9000, g: S.ad(0.0003, 0.007), v: 0.9 });
       S.osc(r, o, t, { w: 'p25', f: [[0, 1100], [0.04, 360, 'e']], g: [[0, 0], [0.0008, 1], [0.07, 0.0001, 'e']], v: 0.4, lp: 4000 }, p);
-      S.noise(r, o, t, { c: 'white', bp: [[0, 2600], [0.09, 1200, 'e']], q: 1.1, g: [[0, 0], [0.0008, 1], [0.025, 0.4, 'e'], [0.11, 0.0001, 'e']], v: 1.2, lp: 6500 }, p);
-      S.osc(r, o, t, { w: 'triangle', f: [[0, 420], [0.05, 180, 'e']], g: S.ad(0.001, 0.06), v: 0.5 }, p);
+      S.noise(r, o, t, { c: 'white', bp: [[0, 2400], [0.11, 1100, 'e']], q: 1.1, g: [[0, 0], [0.0008, 1], [0.025, 0.4, 'e'], [0.14, 0.0001, 'e']], v: 1.2, lp: 5500 }, p);
+      S.osc(r, o, t, { w: 'triangle', f: [[0, 420], [0.06, 170, 'e']], g: S.ad(0.001, 0.085), v: 0.5 }, p);
       S.noise(r, o, t, { c: 'crackle', bp: 1800, q: 0.8, g: S.ad(0.001, 0.05), v: 0.5 });
     } });
 
