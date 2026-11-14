@@ -1,14 +1,17 @@
 # ILLUST — notes
 
 ## V2 progress / next steps (ZipZipPipe redesign — truthful, current)
-- core.js: new slots `x0..x3,xl` (Claude `book` / DeepSeek `fin`), `u0..u3,ul` (DeepSeek `under`), `eK`.
-- claude.js: REDRAWN bust/bustWin/bustLose (orange straight hair, sunburst flower + black bow + cream
-  tassel, high collar, cravat + brooch, jabot, gold-edged capelet with emblem, red-brown book in hand).
-  Face icon map redrawn (first pass). Helpers: `I.sunflower`, `I.paintFlower`, `I.H.strands`.
-- deepseek.js: REDRAWN bust first pass (wavy hair, fins, headdress, maid dress, waving hand). Face map
-  redrawn (first pass).
-- NOT yet: refinement round vs reference; cut-ins still crop the bust at 2× (title.js `I.cutin`);
-  `emblem.claude` still the old spark; title composition not checked with the new busts.
+- core.js: new slots `x0..x3,xl` (Claude `book` / DeepSeek `fin`), `u0..u3,ul` (DeepSeek `under`), `eK`
+  (dark iris rim), `xP` (pale fin inner face).
+- claude.js: REDRAWN bust/bustWin (closed-eye smile)/bustLose (heavy lids, sweat, empty battery gauge).
+  Orange straight hair, sunburst flower + black bow + cream tassel, high collar, cravat + brooch, jabot,
+  gold-edged capelet + emblem, red-brown book held up. Helpers `I.sunflower`, `I.paintFlower`, `I.H.strands`.
+- deepseek.js: REDRAWN bust/bustWin (wink, thumbs-up, rice bowl)/bustLose (spiral eyes, spinner, hand down).
+  Wavy hair with light inner layer, lop-ear fins, headdress + cyan bow, curled ahoge, maid dress, waving hand.
+- cutin.js (NEW, loaded after title.js): native-resolution cut-ins — head geometry exported by the char
+  files (`I.ART[c].head`) drawn at ×2.8 through the painter transform + vector eyes `I.bigEye`.
+- Face icons: redrawn maps (first pass).
+- NEXT: refinement pass on busts; title composition check; `emblem.claude` → sunburst flower.
 
 ## Progress (V1, historical)
 - Done: every API of contract §5.5 — portraits (face/bust/bustWin/bustLose/cutin × both chars × 2 palettes),

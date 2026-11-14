@@ -184,7 +184,7 @@
     var lose = expr === 'lose', win = expr === 'win';
 
     // ---- back hair: straight curtain behind the shoulders, falling out of frame
-    var back = P.spoly([52, 14, 36, 17, 27, 28, 23, 44, 19, 62, 14, 82, 10 + sw, 104, 8 + sw * 2, 132, 101 + sw * 2, 132, 98 + sw, 104, 94, 82, 90, 62, 86, 44, 81, 27, 70, 16]);
+    var back = P.spoly([52, 14, 36, 17, 27, 28, 23, 44, 19, 62, 14, 82, 10 + sw, 104, 8 + sw * 2, 132, 101 + sw * 2, 132, 98 + sw, 104, 94, 82, 90, 62, 86, 42, 80, 25, 70, 15]);
     P.part(back, S.h2, S.hl);
     P.recol(back.band(4, 0), [S.h2], S.h3);
     // clumps inside the curtain: lit streaks + dark partings
@@ -298,10 +298,11 @@
     P.line([45, 10, 45, 14], S.h3);
 
     // ---- face-framing locks (in front of the capelet), long and straight
-    hairClump(P, [[37, 26, 32, 38, 30, 54, 30, 72, 29 + sw, 96, 27 + sw * 2, 132], 10, 6, 11, 0, [0.12, 0.5]], S.h1);
+    hairClump(P, [[37, 26, 32, 38, 30, 52, 28, 68, 25 + sw, 90, 23 + sw * 2, 110, 22 + sw * 2, 132], 9, 9, 12, 0, [0.12, 0.5]], S.h1);
+    hairClump(P, [[33, 62, 32, 80, 33 + sw, 100, 35 + sw * 2, 132], 5, 4, 6, 0, [0.2, 0.7]], S.h1);
     hairClump(P, [[39, 30, 36, 44, 35, 58, 36, 70], 4.5, 0, 5], S.h1);
     hairClump(P, [[75, 26, 79, 40, 80, 56, 81, 74, 83 + sw, 98, 85 + sw * 2, 132], 9, 6, 10, 0, [0.1, 0.45]], S.h1);
-    strands(P, [[32, 46, 31, 70, 30, 100], [80, 50, 82, 80, 84, 110]]);
+    strands(P, [[32, 46, 30, 70, 26, 100], [80, 50, 82, 80, 84, 110]]);
 
     // ---- hair ornament: black ribbon bow, cream tassel, sunburst flower (near side)
     var FX = 27, FY = 22;
@@ -375,31 +376,31 @@
   var FACE = [
     '.......hhhhhhh..........',
     '.....hhHHHHHHHhh........',
-    '..AAhHHHHHHHHHHHhh......',
-    '.AaAAHHHHHhHHHHHHHh.....',
-    'AaoaAHHHHhHHHHhHHHHh....',
-    '.AaAAHHHhfHHHhfhHHHh....',
-    '.dAAhHHhfffHhfffhHHHh...',
-    'dddhHHhfffffhffffhHHh...',
-    '.dhHHhffffffhffffhHHh...',
-    '..hHHhKKKKfffKKKfhHHh...',
-    '..hHhfKDWDffKDWKfhHHh...',
+    '..oo.hHHHHHHHHHHh.......',
+    '.oAAohHHHHHHHHHHHh......',
+    'oAaAAoHHHHhHHHHHHHh.....',
+    'oAAAohHHHhHHHHHhHHHh....',
+    '.oAohHHHhfHHHHhfHHHh....',
+    '.ddhHHHhffhHHhfffhHHh...',
+    'ddhHHHhffffhhffffhHHh...',
+    '.dhHHhKKKKfffKKKfhHHh...',
+    '..hHHhKDWDffKDWKfhHHh...',
     '..hHhfwsBwfffsBwfhHHh...',
-    '..hHhfffffffffffhHHHh...',
-    '..hHHhfcffffffcfhHHHh...',
-    '..hHHhfffffmmfffhHHHh...',
-    '..hHHHhfffffffffhHHHh...',
-    '..hHHHHhhffffhhhHHHHh...',
-    '..hHHHhCChffhCCChHHHh...',
-    '..hHHhCCCCdAdCCCChHHh...',
-    '.hHHhCCCCCCdCCCCCChHHh..',
-    '.hHHhCCCCCcdcCCCCCChHh..',
-    '.hHhCCCCCCcccCCCCCCChHh.',
-    'hHHhCCMMMCcccCCMMMCChHh.',
-    'hHhCCCCCCCcccCCCCCCCChh.'
+    '..hHhffffffffffffhHHh...',
+    '..hHhfccfffffffcfhHHh...',
+    '..hHHhffffffmmffhHHHh...',
+    '..hHHhhfffffffffhHHHh...',
+    '..hHHHhhhfffffhhHHHHh...',
+    '..hHHHhCCCffhCCChHHHh...',
+    '..hHHhCCCCdrdCCCChHHh...',
+    '.hHHhCCCCCJdJCCCCChHh...',
+    '.hHHhCCCCCJJJCCCCCChHh..',
+    '.hHhCAACCCJJJCCCCCCChHh.',
+    'hHHhCAACCCJJJCCCMMMChHh.',
+    'hHhMMMMMMCJJJCCCCCCCChh.'
   ];
-  var FL = { h: S.hl, H: S.h1, A: S.a1, a: S.a0, o: S.a3, d: S.d1, f: S.s1, K: S.lash, D: S.e3, W: S.W, s: S.e2, w: S.ew, B: S.e1,
-    c: S.blS, m: S.mo, C: S.c1, M: S.m1 };
+  var FL = { h: S.hl, H: S.h1, A: S.a1, a: S.a0, o: S.al, r: S.a1, d: S.d1, f: S.s1, K: S.lash, D: S.e3, W: S.W, s: S.e2, w: S.ew, B: S.e1,
+    c: S.blS, m: S.mo, C: S.c1, J: S.c0, M: S.m1 };
 
   I.ART.claude = {
     bust: function () { var P = K.painter(112, 128); drawBust(P, {}); return P; },
