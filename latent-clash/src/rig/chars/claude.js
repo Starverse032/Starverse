@@ -63,8 +63,8 @@
         if (c.x[i] > lim) c.x[i] += (lim - c.x[i]) * 0.35;
         if (c.y[i] < c.ay - 3) c.y[i] = c.ay - 3;
       } },
-    { id: 'lockN', n: 4, len: [5, 6, 6, 6], rest: [-2, 2, 4, 2], stiff: 0.3, damp: 0.82, grav: 0.22, drag: 0.18, cvel: 0.5 },
-    { id: 'lockF', n: 3, len: [5, 6, 5], rest: [-4, 0, 2], stiff: 0.32, damp: 0.8, grav: 0.22, drag: 0.18, cvel: 0.5 },
+    { id: 'lockN', n: 4, len: [5, 6, 6, 6], rest: [-2, 2, 4, 2], stiff: 0.3, damp: 0.82, grav: 0.22, drag: 0.18, cvel: 0.7 },
+    { id: 'lockF', n: 3, len: [5, 6, 5], rest: [-4, 0, 2], stiff: 0.32, damp: 0.8, grav: 0.22, drag: 0.18, cvel: 0.7 },
     { id: 'cape', n: 1, len: [5], rest: [0], stiff: 0.25, damp: 0.84, grav: 0.18, drag: 0.4 },
     { id: 'skirtF', n: 1, len: [14], rest: [0], stiff: 0.2, damp: 0.86, grav: 0.2, drag: 0.45, cvel: 0.5 },
     { id: 'skirtB', n: 1, len: [14], rest: [0], stiff: 0.18, damp: 0.87, grav: 0.2, drag: 0.5, cvel: 0.5 },
