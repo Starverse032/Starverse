@@ -1,6 +1,6 @@
 /* LATENT CLASH — RIG: DeepSeek 娘 attacks (normals, specials, super).
- * Fists and feet: `weapon` anchor = the limb named by ds.weapon ('hF','hB','fF','fB'),
- * or an explicit `wpn: [x, y]`. Water trails on the gloves = smears.
+ * V2: `weapon` anchor = tip of the striking part named by ds.weapon ('hF','hB' palm/knuckles,
+ * 'fF','fB' toe, 'kF','kB' knee, 'tail' forward-most fluke point). Spins use `flip`.
  */
 (function () {
   'use strict';
