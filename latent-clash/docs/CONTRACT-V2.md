@@ -18,49 +18,70 @@ batch your screenshot reviews, keep `NOTES.md` "progress / next steps" truthful 
 
 ## V2.1 Character designs (replaces CONTRACT §4)
 
-Designs by the Bilibili creator **ZipZipPipe**. We draw our own pixel art of these designs (no
-copied images); credit lines are already in `LC.LORE.credits`. Colours come from the updated
-`LC.PAL` in `src/shared/config.js` (read it — ramps changed).
+Designs by the Bilibili creator **ZipZipPipe**. **Reference art (look at it before drawing):**
+`.shots/ref/claude-ref.png` and `.shots/ref/deepseek-ref.png` (git-ignored; reference only — we
+draw our own pixel art of these designs, never copy or trace pixels, never commit the files).
+Credit lines are already in `LC.LORE.credits`. Colours come from `LC.PAL` in
+`src/shared/config.js` (read it — ramps changed and new slots were added: `book` for Claude;
+`under` and `fin` for DeepSeek).
 
 ### Claude 娘 — 橙发优等生
-- The class's top student: impeccably mannered, composed, upright posture, a little strict. Calm
-  confident face; cool focus when attacking.
-- **Hair**: very long (hip length), **straight**, vivid orange (`hair`, ends in `hairTip`), neat
-  fringe with long side locks. **Hair ornament**: a flower on the side of her head shaped like a
-  radiating sunburst — a ring of ~10–12 tapering orange petals around a small core (it evokes the
-  Claude spark mark without copying it).
-- **Eyes**: warm amber (`eye`).
-- **Outfit**: an elegant **long dress** (ankle length, gently flaring) in cream (`cloth1`) with
-  black (`cloth2`) collar, cuffs and waist sash and orange (`accent`) ribbon at the collar and an
-  orange band near the hem; black shoes. No jacket/capelet, no pen in hand.
-- **Prop**: a thick hardcover **book** 「宪章」 (black cover, orange sunburst emblem, gold clasp)
-  carried in the rear hand / under the arm. For slashing moves she draws a **quill of light** out
-  of the book (a glowing orange-gold feather pen, only present during those moves).
+- The class's top student: tall, slender, mature, impeccably mannered, upright posture, a
+  little strict. Serious composed face (small closed mouth, level gaze); cool focus when attacking.
+- **Hair**: vivid orange (`hair`/`hairTip`), **straight and extremely long — down to the knees**,
+  parted fringe with long face-framing locks, loose flowing strands at the ends.
+- **Hair ornament** (side of the head): an orange **sunburst flower** (a ring of many thin
+  petals around a core) on a **black ribbon bow** with a cream tassel hanging below it.
+- **Eyes**: amber-brown (`eye`).
+- **Outfit** — Victorian "classic" long dress, cream / black / orange with gold trim:
+  - cream high-collared blouse with a frilled jabot; **black cravat** with a small orange
+    sunburst-flower brooch at the throat;
+  - short cream **capelet** over the shoulders (gold edging, an orange sunburst emblem on it);
+  - long puffed cream sleeves with frilled cuffs;
+  - wide **black corset belt** at the waist (gold buttons, a little gold chain);
+  - **ankle-length layered skirt**: a cream pleated front panel; over it, to the sides, cream
+    drapes lined in orange and **black panels with gold-line borders**; a long **orange sash
+    panel** hanging down the front with gold tassels; a **black bow with an orange sunburst
+    flower** and tassels on each hip; a cream frilled hem;
+  - cream lace-up **heeled boots**.
+- **Prop**: a thick leather-bound **book** 「宪章」 (`book` ramp: red-brown cover, gold corners)
+  held in one hand. For slashing moves she draws a **quill of light** out of the book (a glowing
+  orange-gold feather pen, only present during those moves).
 - **Fighting style**: precise and economical — palm strikes, book strikes (light jab with the
-  spine, heavy two-handed swing), long sweeping kicks that flare the skirt, quill-of-light
-  slashes for `5H`/`2H`/`jH`, `haiku` and `sonnet`. `spark` is cast from the open palm with the
-  book floating open beside her; `guardrail` holds the book out as the barrier's focus; the
-  `super` opens the book wide in both hands.
+  spine, heavy two-handed swing), long sweeping kicks that flare the layered skirt and show the
+  boots, quill-of-light slashes for `5H`/`2H`/`jH`, `haiku` and `sonnet`. `spark` is cast from
+  the open palm with the book floating open beside her; `guardrail` holds the book out as the
+  barrier's focus; the `super` opens the book wide in both hands.
+- **Silhouette keys**: knee-length straight hair, capelet + wide layered skirt, the book.
 
 ### DeepSeek 娘 — 鲸鱼女仆
 - Based on the original character 「溟月」 by 上善无形 (CC BY-NC-SA 4.0), redesigned as a maid by
   ZipZipPipe. Clever but a bit lazy, tsundere, quick when she finally moves; loves white rice.
-  Soft, slightly plump build; round friendly face; sleepy-smug default expression, fierce when
+  Soft, curvy build; round friendly face; cheerful open smile with a small fang; fierce when
   attacking.
-- **Hair**: long **gradient blue** hair (deep `hair` blue at the crown shading to cyan `hairTip`
-  at the ends), an ahoge, and a **whale fin on each side of the head** (fin-shaped, blue with a
-  pale underside, like ears).
-- **Eyes**: blue (`eye`).
-- **Outfit**: a **navy-and-white long maid dress**: navy (`cloth2`) dress with puffed sleeves and
-  long skirt, white (`cloth1`) frilled apron with a small **whale emblem** on the bib, white
-  frilled maid headdress, white collar and cuffs, cyan (`accent`) neck ribbon, white stockings,
-  dark shoes.
-- **Whale tail**: a large blue fluke (hair ramp, pale underside) emerging from under the back of
-  the skirt; it sways constantly and is her main heavy weapon.
+- **Hair**: long (hip length), **wavy and voluminous**, deep blue at the crown (`hair`) with
+  lighter blue inner layers and ends (`hairTip`); a long curled **ahoge**.
+- **Whale fins**: a drooping **fin on each side of the head** (like lop ears), dark navy-grey
+  with a paler inner face (`fin`).
+- **Head**: a white frilled **maid headdress**; a small cyan-blue (`accent`) bow at one side.
+- **Eyes**: bright blue (`eye`).
+- **Outfit** — classic long maid dress, navy / white with gold details:
+  - navy (`cloth2`) dress with puffed shoulders and long sleeves, white frilled cuffs;
+  - white blouse front with small buttons; a dark ribbon bow with a blue gem at the collar;
+  - fitted navy bodice with two rows of **gold buttons**;
+  - white **frilled apron** (waist to knee) with a small navy **whale emblem** (with a spout);
+  - **ankle-length skirt**: navy over-skirt open at the front over a lighter-blue pinstriped
+    under-skirt (`under`), gold embroidery along both hems, small gold-cream bows, and a white
+    frilled petticoat edge;
+  - white tights, navy mary-jane shoes.
+- **Whale tail**: a large dark navy-grey fluke (`fin` ramp) on a thick tail stock, emerging from
+  behind the skirt at hip height and curving up — it sways constantly and is her main heavy weapon.
 - **Fighting style**: lazy stance that explodes into fast rush-down — water-wrapped palms and
   hooks, knee and kicks under a lifted skirt hem, **tail swipes** for `5H`/`2H` (spin and lash)
   and `breach` (somersault tail kick). `wave` is a tail slam on the floor; `diveKick` leads with
   both feet, tail streaming behind.
+- **Silhouette keys**: voluminous wavy hair with ahoge, head fins + headdress, apron over a wide
+  skirt, the big tail.
 
 ---------------------------------------------------------------------------------------------------
 
