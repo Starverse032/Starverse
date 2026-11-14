@@ -15,7 +15,7 @@
   var sar = function (s, a, r) { return [['startup', s], ['active', a], ['recovery', r]]; };
 
   // ---------------------------------------------------------------- 5L: snappy lead jab (reach 24)
-  var L1 = P(S, HIT, { hF: [24, -38], lean: 14, hip: [2, -22], weapon: 'hF', mouth: 'grin' });
+  var L1 = P(S, HIT, { hF: [21, -38], lean: 14, hip: [2, -22], weapon: 'hF', mouth: 'grin' });
   def('5L', {
     segs: sar(4, 3, 7), step: 1,
     keys: [
@@ -25,7 +25,7 @@
     ]
   });
   // ---------------------------------------------------------------- 5M: front snap kick (reach 38)
-  var M1 = P(S, HIT, { hip: [4, -25], lean: -12, bend: -4, fF: [36, -22], faF: -70, knF: -1, fB: [-6, 0], hF: [10, -40], hB: [2, -36], weapon: 'fF' });
+  var M1 = P(S, HIT, { hip: [11, -26], lean: -16, bend: -4, fF: [37, -24], faF: -75, knF: -1, fB: [-4, 0], hF: [12, -42], hB: [4, -38], weapon: 'fF' });
   def('5M', {
     segs: sar(7, 4, 12), step: 2,
     keys: [
@@ -35,7 +35,7 @@
     ]
   });
   // ---------------------------------------------------------------- 5H: lunging hook-straight with water (reach 44)
-  var H1 = P(S, HIT, { hip: [10, -21], lean: 32, bend: 6, fF: [22, 0], fB: [-8, 0], faB: 40, hB: [40, -42], hF: [8, -34], z: { armB: 6 }, weapon: 'hB' });
+  var H1 = P(S, HIT, { hip: [17, -18], lean: 38, bend: 6, fF: [29, 0], fB: [-6, 0], faB: 50, hB: [48, -37], hF: [12, -34], z: { armB: 6 }, weapon: 'hB' });
   def('5H', {
     segs: sar(10, 5, 19), step: 2,
     keys: [

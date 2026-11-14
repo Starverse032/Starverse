@@ -71,44 +71,67 @@
       try { p.setPoseSeg(cur[0], cur[1], cur[2]); } catch (e) { F.err('rig.setPoseSeg', e); }
     }
     try {
-      p.draw(ctx, sx, sy, { facing: f.facing, flash: f.flash > 0 ? Math.min(1, f.flash * 1.4) : 0, flashColor: f.flashColor, alpha: 1, silhouette: null });
+      p.draw(ctx, sx, sy, { facing: f.facing, flash: f.flash > 0 ? Math.min(0.85, f.flash) : 0, flashColor: f.flashColor, alpha: 1, silhouette: null });
     } catch (e) { F.err('rig.draw ' + f.ch, e); }
   }
 
+  function wpt(f, name, m) {   // anchor -> screen point
+    var a = f.anchor(name);
+    return { x: Math.round(f.x + a.x * f.facing - m.camX), y: Math.round(f.y + a.y) };
+  }
   function engineSprites(ctx, m, f, layer) {
     var mv = f.mv, sg = f.seg(), sx = Math.round(f.x - m.camX), sy = Math.round(f.y), o = { facing: f.facing, palette: f.pal };
     if (f.action !== 'attack' || !mv) return;
     if (layer === 'back') {
       if (mv.id === 'dive') {
-        if (sg.id === 'sink' || sg.id === 'startup' || (sg.id === 'travel' && f.sf < 6)) F.sprite(ctx, 'deepseek.pool', Math.round((f.diveFrom != null && sg.id === 'travel' ? f.diveFrom : f.x) - m.camX), GY, f.mf, o);
-        if (sg.id === 'travel' && f.diveDest != null && f.sf >= sg.f - 10) F.sprite(ctx, 'deepseek.pool', Math.round(f.diveDest - m.camX), GY, f.sf, o);
-        if (sg.id === 'emerge') F.sprite(ctx, 'deepseek.pool', sx, GY, f.sf + 20, o);
+        var pw = { facing: f.facing, palette: f.pal, power: 1 };
+        if (sg.id === 'startup' || sg.id === 'sink') { pw.power = Math.min(1, f.mf / 10); F.sprite(ctx, 'deepseek.pool', sx, GY, f.mf, pw); }
+        if (sg.id === 'travel') {
+          if (f.sf < 8) { pw.power = 1 - f.sf / 8; F.sprite(ctx, 'deepseek.pool', Math.round(f.diveFrom - m.camX), GY, f.mf, pw); }
+          if (f.diveDest != null && f.sf >= sg.f - 10) { pw.power = Math.min(1, (f.sf - sg.f + 11) / 6); F.sprite(ctx, 'deepseek.pool', Math.round(f.diveDest - m.camX), GY, f.sf, pw); }
+        }
+        if (sg.id === 'emerge') { pw.power = 1 - f.sf / 6; F.sprite(ctx, 'deepseek.pool', sx, GY, f.sf + 20, pw); }
       }
-      if (mv.kind === 'super' && f.ch === 'claude' && sg.id !== 'recovery') F.sprite(ctx, 'claude.book', sx + f.facing * 16, sy - 58, f.mf, o);
       return;
     }
-    if (mv.catchSeg && (sg.id === 'hold' || sg.id === 'startup')) {
-      F.sprite(ctx, 'claude.guardrail', sx + f.facing * 20, sy, f.mf, { facing: f.facing, palette: f.pal, alpha: sg.id === 'startup' ? 0.5 : 1 });
+    if (mv.catchSeg) {
+      if (sg.id === 'hold' || sg.id === 'startup') F.sprite(ctx, 'claude.guardrail', sx, sy, f.mf, { facing: f.facing, palette: f.pal });
+      else if (sg.id === 'recovery' && f.sf < 6) F.sprite(ctx, 'claude.guardrail', sx, sy, f.sf, { facing: f.facing, palette: f.pal, phase: 'end' });
+    }
+    if (mv.kind === 'super' && f.ch === 'claude' && sg.id !== 'recovery') {
+      var ch = wpt(f, 'chest', m);
+      F.sprite(ctx, 'claude.book', ch.x + f.facing * 14, ch.y, f.mf, o);
     }
     if (mv.beam && (sg.id === 'cast' || sg.id === 'active' || (sg.id === 'recovery' && f.sf < 12))) {
       var bm = mv.beam, len = sg.id === 'active' ? Math.min(bm.max, bm.grow * (f.sf + 1)) : (sg.id === 'cast' ? 12 : bm.max);
       var ph = sg.id === 'cast' ? 'charge' : sg.id === 'active' ? 'fire' : 'fade';
-      if (!F.sprite(ctx, 'claude.beam', sx + f.facing * bm.x0, sy + bm.y + (bm.h >> 1), sg.id === 'recovery' ? f.sf : f.mf, { facing: f.facing, palette: f.pal, length: len, phase: ph })) {
-        var bx = f.facing > 0 ? sx + bm.x0 : sx - bm.x0 - len;
-        rect(ctx, bx, sy + bm.y + 6, len, bm.h - 12, palOf(f).accent[1]);
-        rect(ctx, bx, sy + bm.y + 14, len, bm.h - 28, palOf(f).accent[0]);
+      var pow = sg.id === 'cast' ? f.sf / sg.f : sg.id === 'active' ? 1 : 1 - f.sf / 12;
+      var mz = f.anchor('muzzle');
+      var by = sy + F.clamp(mz.y, bm.y + 10, bm.y + bm.h - 10), bx = sx + f.facing * F.clamp(mz.x, 8, bm.x0 + 8);
+      if (!F.sprite(ctx, 'claude.beam', bx, by, sg.id === 'recovery' ? f.sf : f.mf, { facing: f.facing, palette: f.pal, length: len, phase: ph, power: pow })) {
+        var bx2 = f.facing > 0 ? sx + bm.x0 : sx - bm.x0 - len;
+        rect(ctx, bx2, sy + bm.y + 6, len, bm.h - 12, palOf(f).accent[1]);
+        rect(ctx, bx2, sy + bm.y + 14, len, bm.h - 28, palOf(f).accent[0]);
       }
     }
-    if (mv.whale && (sg.id === 'active' || (sg.id === 'recovery' && f.sf < 16))) {
-      var t = sg.id === 'active' ? f.sf : sg.f + f.sf;
-      F.sprite(ctx, 'deepseek.whale', sx + f.facing * mv.whale.x, GY, t, o);
+    if (mv.whale) {
+      var t = F.whaleT(f);
+      if (t >= 0 && t < 60) F.sprite(ctx, 'deepseek.whale', sx + f.facing * mv.whale.x, GY, t, o);
     }
   }
+  // whale sprite time for a fighter in the super (-1 when not out)
+  F.whaleT = function (f) {
+    var sg = f.seg();
+    if (!sg || !f.mv || !f.mv.whale) return -1;
+    if (sg.id === 'active') return f.sf;
+    if (sg.id === 'recovery') { var act = f.res.segs[f.si - 1]; return (act ? act.f : 44) + f.sf; }
+    return -1;
+  };
 
   function drawProjs(ctx, m) {
     for (var i = 0; i < m.projs.length; i++) {
       var p = m.projs[i], sx = Math.round(p.x - m.camX), sy = Math.round(p.y);
-      if (!F.sprite(ctx, p.sprite, sx, sy, p.t, { facing: F.sign(p.vx) || p.facing, palette: p.owner.pal, power: p.str === 'H' ? 1 : p.str === 'L' ? 0.4 : 0.7 })) {
+      if (!F.sprite(ctx, p.sprite, sx, sy, p.t, { facing: F.sign(p.vx) || p.facing, palette: p.owner.pal, power: p.str === 'H' ? 1 : p.str === 'L' ? 0.4 : 0.7, angle: p.vy ? Math.atan2(p.vy, Math.abs(p.vx)) : 0 })) {
         var P = palOf(p.owner), b = p.spec.box;
         rect(ctx, sx + b[0], sy + b[1], b[2], b[3], P.accent[2]);
         rect(ctx, sx + b[0] + 2, sy + b[1] + 2, b[2] - 4, b[3] - 4, P.accent[0]);
@@ -193,8 +216,8 @@
       rect(ctx, sx, sy, len, 1, P.uiLight);
     }
     var por = F.portrait(f.ch, 'cutin', f.pal);
-    var slide = Math.round((1 - inK) * 160);
-    var px = f.side === 0 ? 8 - slide : LC.W - 248 + slide;
+    var slide = Math.round((1 - inK) * 200);
+    var px = f.side === 0 ? LC.W - 240 + slide : -slide;
     if (por) {
       if (f.side === 0) ctx.drawImage(por, px, cy - 36);
       else { ctx.save(); ctx.translate(px + por.width, cy - 36); ctx.scale(-1, 1); ctx.drawImage(por, 0, 0); ctx.restore(); }
@@ -203,9 +226,10 @@
     rect(ctx, 0, y0, LC.W, 1, P.uiLight); rect(ctx, 0, y0 + hgt - 1, LC.W, 1, P.uiDark);
     var mv = LC.LORE && LC.LORE.moves[f.ch] && LC.LORE.moves[f.ch]['super'];
     if (mv && hgt > 40) {
-      var tx = f.side === 0 ? LC.W - 10 : 10, al = f.side === 0 ? 'right' : 'left';
-      F.text(ctx, mv.zh, tx, cy + 4, { size: 12, scale: 2, align: al, color: '#ffffff', outline: P.outline });
-      F.text(ctx, mv.en, tx, cy + 34, { size: 8, align: al, color: P.uiLight, outline: P.outline });
+      var tx = f.side === 0 ? 10 : LC.W - 10, al = f.side === 0 ? 'left' : 'right';
+      var tin = Math.max(0, 10 - t) * 6 * (f.side === 0 ? -1 : 1);
+      F.text(ctx, mv.zh, tx + tin, cy - 14, { size: 12, scale: 2, align: al, color: '#ffffff', outline: P.outline });
+      F.text(ctx, mv.en, tx + tin, cy + 16, { size: 8, align: al, color: P.uiLight, outline: P.outline });
     }
   }
 
@@ -227,7 +251,8 @@
     if (!stageOk) drawFallbackStage(ctx, camX);
     if (m.flash) {
       var fl = m.flash;
-      if (!F.sprite(ctx, 'screen.superBg', 0, 0, fl.t, { palette: fl.who.pal, color: palOf(fl.who).ui, facing: fl.who.facing })) {
+      var cp = wpt(fl.who, 'chest', m);
+      if (!F.sprite(ctx, 'screen.superBg', 0, 0, fl.t, { palette: fl.who.pal, 'char': fl.who.ch, cx: cp.x, cy: cp.y, color: palOf(fl.who).ui, facing: fl.who.facing })) {
         ctx.globalAlpha = 0.6; rect(ctx, -8, -8, LC.W + 16, LC.H + 16, '#05040a'); ctx.globalAlpha = 1;
       }
     }

@@ -103,7 +103,12 @@
     return [Math.round(v[0]), Math.round(v[1])];
   };
   C.defaultMuzzle = function (sk) { return sk.ds && sk.ds.penIn === 'none' ? sk.haF : sk.nib; };
-  C.weaponPoint = function (sk) { return sk.ds && sk.ds.penIn === 'none' ? sk.haF : sk.nib; };
+  C.weaponPoint = function (sk) {
+    var w = sk.ds && sk.ds.weapon;
+    if (w === 'hB' || w === 'hF') { var h = w === 'hB' ? sk.haB : sk.haF, d = rot(3, 0, w === 'hB' ? sk.handAngB : sk.handAngF); return [Math.round(h[0] + d[0]), Math.round(h[1] + d[1])]; }
+    if (w === 'fF' || w === 'fB') { var v = fr(w === 'fF' ? sk.ftF : sk.ftB, w === 'fF' ? sk.faF : sk.faB, 5, -1.5); return [Math.round(v[0]), Math.round(v[1])]; }
+    return sk.ds && sk.ds.penIn === 'none' ? sk.haF : sk.nib;
+  };
   C.boundsExtra = function (sk) { return sk.ds && sk.ds.penIn === 'none' ? [] : [sk.nib]; };
   C.partPoints = function (sk, part) {
     switch (part) {

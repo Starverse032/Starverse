@@ -77,13 +77,16 @@
     return [Math.round(v[0]), Math.round(v[1])];
   };
   C.defaultMuzzle = function (sk) { return sk.haF; };
-  C.weaponPoint = function (sk) {
-    var w = sk.ds && sk.ds.weapon;
-    if (w === 'fF') return C.footPoint(sk, 'F');
-    if (w === 'fB') return C.footPoint(sk, 'B');
-    if (w === 'hB') return sk.haB;
-    return sk.haF;
-  };
+  // true striking tip: knuckles (hand + 3 along the forearm) or toe (sole + 5 along the foot)
+  function tip(sk, w) {
+    if (w === 'fF' || w === 'fB') {
+      var f = w === 'fF' ? sk.ftF : sk.ftB, a = w === 'fF' ? sk.faF : sk.faB, v = fr(f, a, 5, -1.5);
+      return [Math.round(v[0]), Math.round(v[1])];
+    }
+    var h = w === 'hB' ? sk.haB : sk.haF, ang = w === 'hB' ? sk.handAngB : sk.handAngF, d = rot(3, 0, ang);
+    return [Math.round(h[0] + d[0]), Math.round(h[1] + d[1])];
+  }
+  C.weaponPoint = function (sk) { return tip(sk, (sk.ds && sk.ds.weapon) || 'hF'); };
   C.partPoints = function (sk, part) {
     switch (part) {
       case 'hF': return [sk.elF[0], sk.elF[1], sk.haF[0], sk.haF[1]];

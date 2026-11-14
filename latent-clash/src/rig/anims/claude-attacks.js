@@ -14,40 +14,42 @@
   var ATK = { eyes: 'focus', mouth: 'neutral' };
   var HIT = { eyes: 'focus', mouth: 'shout', glow: 1 };
 
-  // ---------------------------------------------------------------- 5L: choked-up quick jab (reach 30)
-  var L0 = P(S, ATK, { hF: [7, -33], pen: 5, pg: 0.55, lean: 0 });
-  var L1 = P(S, HIT, { hF: [12, -38], pen: -14, pg: 0.55, lean: 6, hip: [1, -30], mouth: 'neutral' });
+  // ---------------------------------------------------------------- 5L: choked-up quick jab, slightly rising (reach 30)
+  var L0 = P(S, ATK, { hF: [5, -32], pen: 2, pg: 0.55, lean: -2, hip: [-1, -30] });
+  var L1 = P(S, HIT, { hF: [10, -38], pen: -14, pg: 0.55, lean: 7, hip: [1, -30], mouth: 'neutral' });
   def('5L', {
     segs: [['startup', 5], ['active', 3], ['recovery', 8]], step: 1,
     keys: [
-      ['startup', P(S, ATK)], ['startup+2', L0, 'out'],
-      ['active', P(L1, { smear: { part: 'pen', from: 'startup+2', n: 3 } }), 'snap'],
+      ['startup', P(S, ATK)], ['startup+2', L0, 'out'], ['startup+4', P(L0, { hF: [4, -32] }), 'snap'],
+      ['active', P(L1, { smear: { part: 'pen', from: 'startup+4', n: 3 } }), 'snap'],
       ['active+1', L1, 'snap'],
-      ['recovery', P(L1, { glow: 0 }), 'out'], ['recovery+5', P(S, ATK)], ['recovery+7', S]
+      ['recovery', P(L1, { glow: 0, hF: [9, -37] }), 'snap'], ['recovery+2', P(L1, { glow: 0, hF: [9, -37] }), 'out'],
+      ['recovery+6', P(S, ATK)], ['recovery+7', S]
     ]
   });
 
-  // ---------------------------------------------------------------- 5M: horizontal sweep slash (reach 46)
-  var M0 = P(S, ATK, { hF: [0, -42], pen: -150, pg: 0.3, lean: -6, hip: [-1, -30], hB: [-9, -36] });
-  var M1 = P(S, HIT, { hF: [16, -39], pen: 8, pg: 0.3, lean: 12, hip: [2, -29], hB: [-10, -40], handB: 'open', fF: [11, 0] });
+  // ---------------------------------------------------------------- 5M: chest-height thrust (reach 46)
+  var M0 = P(S, ATK, { hF: [-3, -36], pen: 4, pg: 0.3, lean: -8, bend: -3, hip: [-2, -30], fB: [-10, 0], hB: [-10, -38], handB: 'open' });
+  var M1 = P(S, HIT, { hF: [13, -39], pen: 0, pg: 0.3, lean: 12, bend: 3, hip: [2, -29], hB: [-12, -41], handB: 'open', fF: [12, 0] });
   def('5M', {
     segs: [['startup', 8], ['active', 4], ['recovery', 14]], step: 2,
     keys: [
-      ['startup', P(S, ATK)], ['startup+4', M0, 'out'], ['startup+6', P(M0, { pen: -145, hF: [2, -44] })],
-      ['active', P(M1, { smear: { part: 'pen', from: 'startup+6', n: 6 } }), 'snap'],
+      ['startup', P(S, ATK)], ['startup+4', M0, 'out'], ['startup+6', P(M0, { hF: [-4, -36] }), 'snap'],
+      ['active', P(M1, { smear: { part: 'pen', from: 'startup+6', n: 3 } }), 'snap'],
       ['active+2', M1, 'snap'],
-      ['recovery', P(M1, { pen: 16, glow: 0 }), 'out'], ['recovery+9', P(S, ATK, { pen: 28 })], ['recovery+13', S]
+      ['recovery', P(M1, { glow: 0, mouth: 'neutral' }), 'snap'], ['recovery+3', P(M1, { glow: 0, mouth: 'neutral', hF: [11, -38] }), 'out'],
+      ['recovery+10', P(S, ATK, { pen: 24 })], ['recovery+13', S]
     ]
   });
 
-  // ---------------------------------------------------------------- 5H: lunging thrust (reach 54)
-  var H0 = P(S, ATK, { hF: [-6, -40], pen: -12, pg: 0.3, lean: -10, bend: -4, hip: [-3, -31], fF: [8, 0], fB: [-10, 0], hB: [6, -40], handB: 'open', z: { armB: 6 } });
-  var H1 = P(S, HIT, { hF: [22, -37], pen: 0, pg: 0.3, lean: 18, bend: 4, hip: [5, -26], fF: [19, 0], fB: [-12, 0], faB: 20,
+  // ---------------------------------------------------------------- 5H: lunging thrust with a big wind-up (reach 54)
+  var H0 = P(S, ATK, { hF: [-8, -41], pen: -12, pg: 0.3, lean: -12, bend: -5, hip: [-3, -31], fF: [8, 0], fB: [-10, 0], hB: [6, -40], handB: 'open', z: { armB: 6 } });
+  var H1 = P(S, HIT, { hF: [21, -37], pen: 0, pg: 0.3, lean: 18, bend: 4, hip: [5, -26], fF: [19, 0], fB: [-12, 0], faB: 20,
     hB: [-16, -42], handB: 'open' });
   def('5H', {
     segs: [['startup', 12], ['active', 5], ['recovery', 22]], step: 2,
     keys: [
-      ['startup', P(S, ATK)], ['startup+5', H0, 'out'], ['startup+10', P(H0, { hF: [-8, -41], lean: -12 })],
+      ['startup', P(S, ATK)], ['startup+5', H0, 'out'], ['startup+10', P(H0, { hF: [-9, -42], lean: -13 }), 'snap'],
       ['active', P(H1, { smear: { part: 'pen', from: 'startup+10', n: 4 } }), 'snap'],
       ['active+2', H1, 'snap'],
       ['recovery', P(H1, { glow: 0 }), 'snap'], ['recovery+6', P(H1, { glow: 0, hip: [4, -27] }), 'out'],
@@ -183,7 +185,7 @@
       ['recovery', P(GR, { glow: 0 }), 'snap'], ['recovery+8', P(GR, { glow: 0, hB: [4, -36] })], ['recovery+18', P(S, ATK)], ['recovery+21', S]
     ]
   });
-  var GH = P(S, HIT, { hip: [4, -28], lean: 16, hF: [2, -42], pen: -70, hB: [24, -40], handB: 'flat', z: { armB: 6 }, fF: [14, 0], mouth: 'shout' });
+  var GH = P(S, HIT, { hip: [4, -28], lean: 16, hF: [2, -42], pen: -70, hB: [24, -40], handB: 'flat', z: { armB: 6 }, fF: [14, 0], mouth: 'shout', weapon: 'hB' });
   def('guardrailHit', {
     segs: [['startup', 4], ['active', 4], ['recovery', 22]], step: 1,
     keys: [

@@ -99,7 +99,7 @@
     var ctx = this.ctx, rnd = K.rand;
     var g = ctx.createGain(), lp = ctx.createBiquadFilter(), node = lp;
     lp.type = 'lowpass'; lp.frequency.value = ch.lp; lp.Q.value = 0.5;
-    g.gain.value = (opts.vol == null ? 1 : opts.vol) * ch.vol * 1.6;
+    g.gain.value = (opts.vol == null ? 1 : opts.vol) * ch.vol * 0.36;
     g.connect(lp);
     if (opts.pan && ctx.createStereoPanner) { var pn = ctx.createStereoPanner(); pn.pan.value = opts.pan; lp.connect(pn); node = pn; }
     node.connect(this.sfxBus);
