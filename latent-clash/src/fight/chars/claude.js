@@ -139,7 +139,7 @@
         beam: { seg: 'active', y: -64, h: 46, x0: 18, grow: 64, max: 440 },
         hits: [{
           seg: 'active', fr: [0, 39], every: 4, beam: true, dmg: 33, lv: 'X', stun: [14, 10], chip: 0.25,
-          push: [1, 2], noCatch: true, juggleAny: true, lvx: 0.6, lvy: -2.2, air: 'knock', fx: 'claude.beamHit',
+          push: [1, 2], noCatch: true, juggleAny: true, lvx: 0.6, lvy: -2.2, holdY: 34, air: 'knock', fx: 'claude.beamHit',
           final: { from: 36, kd: 'launch', lvx: 3.4, lvy: -6.2, lv: 'H', fx: 'hit.heavy' }
         }],
         sfx: 'claude.beam'

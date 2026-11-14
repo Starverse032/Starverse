@@ -2,8 +2,8 @@
 
 ## Progress / next steps (kept current in case of interruption)
 
-Done (on disk): core, input, moves, chars/*, fighter, combat, match, render, hud, training, ai (L1–5), movelist,
-manifest; dev/fight-stubs.js, dev/fight-sandbox.html; tools/fight-sim.mjs (invariants + determinism + balance, ~160k ticks/s).
-Sim status: 0 violations, deterministic, all matches finish.
-In progress (step 3): balance pass (target Claude 45–55 % at L3/L5).
-Next: HUD polish + screenshots, super flash/cut-in check, intro/outro check, tools/fight-shots.mjs, combo verification, NOTES final.
+Done (on disk): all src/fight files; dev/fight-stubs.js + dev/fight-sandbox.html; tools/fight-sim.mjs, tools/fight-shots.mjs,
+tools/fight-combos.mjs (8 BnB combos verify OK). Sim: 0 violations, deterministic. Balance (n=100/pair, stubs): 1v1 66 %,
+3v3 41 %, 4v4 48 %, 5v5 48 % Claude wins.
+In progress: real-module integration (rig anims/anchors, fx sprites, illust cut-in/banners, stage.update, audio).
+Next: screenshots of key moments with real modules, fix composition; final NOTES + report.

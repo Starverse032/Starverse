@@ -13,7 +13,7 @@
     id: 'claude', height: 70, crouchHeight: 47, width: 26,
     body: {
       spine: 17, waist: 6, neck: 3, upper: 10, fore: 9, thigh: 14, shin: 14, ankle: 3,
-      shF: [2, 1], shB: [-3, 1], hipF: [1.5, 0], hipB: [-1.5, 0]
+      shF: [0, 1], shB: [-3, 1], hipF: [1.5, 0], hipB: [-1.5, 0]
     },
     // default stance: poised, fencing-like, pen low and diagonal like a rapier
     rest: {
@@ -68,7 +68,7 @@
     var cp = fr(sk.chest, sk.chestAng, -7, 6);
     sec.attach('cape', cp[0], cp[1], 90 + sk.chestAng);
     sec.attach('skirt', sk.pel[0], sk.pel[1] - 6, 90 + sk.lean);
-    var tie = fr(sk.chest, sk.chestAng, 3, 3);
+    var tie = fr(sk.chest, sk.chestAng, 4, 3);
     sec.attach('tie', tie[0], tie[1], 90 + sk.chestAng);
   };
 
@@ -184,11 +184,11 @@
       var n1 = [-dy, dx], n2 = [dy, -dx], pick = side > 0 ? [1, 0.6] : [-1, 0.6];
       var n = (n1[0] * pick[0] + n1[1] * pick[1]) > (n2[0] * pick[0] + n2[1] * pick[1]) ? n1 : n2;
       var b = lerp(hip, kn, 0.5);
-      return [b[0] + n[0] * (4.6 + fl), b[1] + n[1] * (4.6 + fl)];
+      return [b[0] + n[0] * (5.4 + fl), b[1] + n[1] * (5.4 + fl)];
     }
     var hf = hem(sk.hipF, sk.knF, 1), hb = hem(sk.hipB, sk.knB, -1);
-    var wB = fr(pel, L, -4.5, -7.5), wF = fr(pel, L, 4.5, -7.5);
-    var sB = fr(pel, L, -6, -2.5), sF = fr(pel, L, 6, -3);
+    var wB = fr(pel, L, -4, -7.5), wF = fr(pel, L, 4, -7.5);
+    var sB = fr(pel, L, -6.5, -2), sF = fr(pel, L, 6.5, -2.5);
     // swing lag on the hem (secondary chain)
     hb = [hb[0] + sw[0], hb[1] + sw[1] * 0.5]; hf = [hf[0] + sw[0], hf[1] + sw[1] * 0.5];
     sB = [sB[0] + sw[0] * 0.4, sB[1]]; sF = [sF[0] + sw[0] * 0.4, sF[1]];
@@ -231,13 +231,13 @@
       fr(c, ca, 0, 8), bk, fr(c, ca, -8, 3), fr(c, ca, -6, -0.5)]);
     p.poly(cape, M.c1, { d: 1.2, l: 0 }, 0);
     // collar V with blouse
-    var v = H.flat([fr(c, ca, 0.5, -2), fr(c, ca, 4, -2), fr(c, ca, 2.5, 4.5)]);
+    var v = H.flat([fr(c, ca, 1.5, -2), fr(c, ca, 5, -2), fr(c, ca, 3.5, 4.5)]);
     p.poly(v, M.white, null, 1);
-    var l0 = fr(c, ca, 0, -2), l1 = fr(c, ca, 2.5, 5), l2 = fr(c, ca, 4.5, -2);
+    var l0 = fr(c, ca, 1, -2), l1 = fr(c, ca, 3.5, 5), l2 = fr(c, ca, 5.5, -2);
     p.line(Math.round(l0[0]), Math.round(l0[1]), Math.round(l1[0]), Math.round(l1[1]), col(M.c1, 2));
     p.line(Math.round(l2[0]), Math.round(l2[1]), Math.round(l1[0]), Math.round(l1[1]), col(M.c1, 2));
     // terracotta ribbon tie: bow + knot (gold brooch) + tails
-    var k = fr(c, ca, 2.5, 3);
+    var k = fr(c, ca, 3.5, 3);
     var kx = Math.round(k[0]), ky = Math.round(k[1]);
     p.px(kx - 2, ky - 1, col(M.acc, 1)); p.px(kx - 1, ky - 1, col(M.acc, 0)); p.px(kx + 1, ky - 1, col(M.acc, 1)); p.px(kx + 2, ky - 1, col(M.acc, 1));
     p.px(kx - 2, ky, col(M.acc, 2)); p.px(kx - 1, ky, col(M.acc, 1)); p.px(kx + 1, ky, col(M.acc, 2)); p.px(kx + 2, ky, col(M.acc, 2));

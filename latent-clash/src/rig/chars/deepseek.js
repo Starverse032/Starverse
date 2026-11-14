@@ -139,14 +139,14 @@
   function drawHood(p, sk) {
     // lowered hood = the whale's blue back, lying on the shoulders behind the neck
     var c = sk.chest, ca = sk.chestAng;
-    var pts = H.flat([fr(c, ca, -9, 4), fr(c, ca, -9.5, -1), fr(c, ca, -7, -4.5), fr(c, ca, -2.5, -5.5), fr(c, ca, 1.5, -3.5),
-      fr(c, ca, 1, 0), fr(c, ca, -3, 2.5), fr(c, ca, -6, 5)]);
+    var pts = H.flat([fr(c, ca, -11, 6), fr(c, ca, -11.5, 0), fr(c, ca, -9, -3.5), fr(c, ca, -4, -4.5), fr(c, ca, 0, -2.5),
+      fr(c, ca, 0, 1), fr(c, ca, -4, 4), fr(c, ca, -8, 7)]);
     p.poly(pts, M.c2, SH.body, 1);
     // white belly rim of the hood opening
-    var r0 = fr(c, ca, -2.5, -4.5), r1 = fr(c, ca, 0.5, -1);
+    var r0 = fr(c, ca, -3.5, -3.5), r1 = fr(c, ca, -0.5, 0);
     p.line(Math.round(r0[0]), Math.round(r0[1]), Math.round(r1[0]), Math.round(r1[1]), col(M.c1, 1), true);
     // two tiny whale eyes
-    var e = fr(c, ca, -6, -1.5), e2 = fr(c, ca, -3.5, -2.5);
+    var e = fr(c, ca, -9, 1), e2 = fr(c, ca, -7, 0);
     p.px(Math.round(e[0]), Math.round(e[1]), 1); p.px(Math.round(e2[0]), Math.round(e2[1]), 1);
   }
 
