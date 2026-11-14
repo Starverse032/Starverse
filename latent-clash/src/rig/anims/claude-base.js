@@ -47,8 +47,8 @@
   def('crouchOut', { segs: [['go', 4]], step: 1, keys: [[0, C], [3, bob(S, 0, 3, { lean: 6 })]] });
 
   // ---------------------------------------------------------------- jump
-  var SQ = POSE.squat = P(S, { hip: [0, -23], lean: 12, hF: [12, -21], hB: [-8, -23], pen: 40, eyes: 'focus' });
-  def('jumpSquat', { segs: [['go', 4]], step: 1, keys: [[0, bob(S, 0, 3)], [2, SQ]] });
+  var SQ = POSE.squat = P(S, { hip: [0, -20], lean: 18, bend: 6, sq: 1, head: [1, 1], hF: [11, -18], hB: [-10, -22], handB: 'open', pen: 42, eyes: 'focus' });
+  def('jumpSquat', { segs: [['go', 4]], step: 1, keys: [[0, bob(S, 0, 4, { lean: 8 })], [2, SQ, 'snap']] });
   var JR = POSE.jumpRise = P(S, { hip: [0, -32], lean: 4, fF: [6, -10], fB: [-6, -5], faF: 25, faB: 45, knF: -1,
     hF: [13, -40], hB: [-11, -47], pen: 5, handB: 'open', mouth: 'neutral' });
   def('jumpRise', { segs: [['loop', 12, true]], step: 3, keys: [[0, JR], [6, P(JR, { hB: [-12, -46], fF: [6, -11] })]] });
@@ -57,7 +57,12 @@
   def('jumpFall', { segs: [['loop', 12, true]], step: 3, keys: [[0, JF], [6, P(JF, { hB: [-12, -42], fB: [-6, -3] })]] });
   def('land', {
     segs: [['go', 6]], step: 1,
-    keys: [[0, P(S, { hip: [0, -22], lean: 14, hF: [13, -20], hB: [-9, -24], pen: 42 })], [2, P(S, { hip: [0, -24], lean: 10, pen: 38 })], [5, S]]
+    keys: [
+      [0, P(S, { hip: [0, -19], lean: 20, bend: 6, sq: 1, head: [1, 1], hF: [12, -17], hB: [-10, -21], handB: 'open', pen: 44, eyes: 'focus' }), 'snap'],
+      [2, P(S, { hip: [0, -22], lean: 14, bend: 3, hF: [12, -21], pen: 40 }), 'out'],
+      [4, P(S, { hip: [0, -28], lean: 4, pen: 34 })],
+      [5, S]
+    ]
   });
 
   // ---------------------------------------------------------------- dashes
@@ -67,10 +72,11 @@
   def('dashF', {
     segs: [['go', 18]], step: 2,
     keys: [
-      [0, P(S, { hip: [0, -27], lean: 12 })],
-      [2, DF, 'out'],
-      [10, P(DF, { fF: [12, 0], faF: 0, hip: [1, -25] })],
-      [14, P(S, { hip: [0, -26], lean: 8 })],
+      [0, P(S, { hip: [-1, -25], lean: 16, bend: 4, fB: [-10, 0], hF: [9, -24], pen: 40, eyes: 'focus' }), 'snap'],
+      [2, P(DF, { root: [0, -2] }), 'out'],
+      [6, P(DF, { root: [0, -2], fB: [-16, -3], faB: 55 })],
+      [10, P(DF, { fF: [12, 0], faF: 0, hip: [1, -24] }), 'in'],
+      [13, P(S, { hip: [1, -24], lean: 14, hF: [12, -24], pen: 36 }), 'out'],
       [17, S]
     ]
   });
@@ -79,10 +85,11 @@
   def('dashB', {
     segs: [['go', 20]], step: 2,
     keys: [
-      [0, P(S, { hip: [0, -26], lean: 6 })],
+      [0, P(S, { hip: [0, -24], lean: 10, bend: 4, eyes: 'focus' }), 'snap'],
       [3, DB, 'out'],
       [10, P(DB, { root: [0, -4] })],
-      [13, P(S, { hip: [0, -24], lean: 10, pen: 40 }), 'out'],
+      [13, P(S, { hip: [0, -21], lean: 14, sq: 1, pen: 42 }), 'snap'],
+      [15, P(S, { hip: [0, -26], lean: 8, pen: 38 }), 'out'],
       [19, S]
     ]
   });
