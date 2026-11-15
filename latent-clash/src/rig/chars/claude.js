@@ -83,7 +83,7 @@
   C.attach = function (sk, sec) {
     var a = sk.headAng, n = sk.neck;
     var hb = fr(n, a, -6, -12);
-    sec.attach('hair', hb[0], hb[1], 90 + a * 0.3 + (sk.tail || 0) * 1.3);
+    sec.attach('hair', hb[0], hb[1], 90 + a * 0.3 + (sk.tail || 0) * (sk.ds && sk.ds.air ? 1.3 : 0.4));
     var ln = fr(n, a, -1, -7);
     sec.attach('lockN', ln[0], ln[1], 90 + a * 0.5);
     var lf = fr(n, a, 7, -6);
@@ -312,9 +312,6 @@
     var tr = sk.tail || 0, bl = Math.max(0, Math.min(1.2, sk.arch || 0));
     var aF = 80 + rotA + tr - fl * 3 - bl * 16 - swF[0] * 2.5, aB = 101 + rotA + tr + fl * 3 + bl * 22 - swB[0] * 2.5;
     var Lf = 49 - bl * 9, Lb = 50 - bl * 6, peek = sk.ds && sk.ds.peek;
-    if (peek) {                       // walk: narrower bell riding ~3 px up so the striding boots show
-      aF = Math.max(aF, 83 + tr * 0.6); aB = Math.min(aB, 98 + tr * 0.6);
-    }
     var pts = [], k, s;
     for (s = 0; s < 2; s++) {
       var S = s ? 'B' : 'F', kn = sk['kn' + S], an = sk['an' + S], hp = sk['hip' + S];
@@ -345,9 +342,13 @@
       var e = [m[0] + Math.cos(r2) * (len - s1), m[1] + Math.sin(r2) * (len - s1)];
       return { m: m, e: e };
     }
-    if (peek) { aF = Math.max(aF, 72 + tr * 0.6); aB = Math.min(aB, 104 + tr * 0.6); }
+    // walk: narrower bell (the stepping knee may still push the front), hem riding ~4 px up so the
+    // striding boots show under it
+    if (peek) { aF = Math.max(aF, Math.min(aF + 12, 84 + tr * 0.6)); aB = Math.min(aB, 98 + tr * 0.6); }
     var rf = rib(rootF, aF, Lf, Math.min(Lf * 0.55, kneeF)), rb = rib(rootB, aB, Lb, Math.min(Lb * 0.55, kneeB));
-    if (peek) { rf.e[1] = -4.5 - (sk.hem || 0) * 0.5; rb.e[1] = -4; }
+    if (peek) {
+      rf.e = [Math.min(rf.e[0], rf.m[0] + 3), -4.5 - (sk.hem || 0) * 0.5]; rb.e = [Math.max(rb.e[0], rb.m[0] - 3), -4];
+    }
     var floor = sk.ds && sk.ds.air ? 999 : -1;
     if (sk.ds && sk.ds.drape && kL < 0.85) {
       // sitting / kneeling (getup): the front drapes over the raised knee and down the shin to the
