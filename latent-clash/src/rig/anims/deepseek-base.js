@@ -116,12 +116,16 @@
   // ---------------------------------------------------------------- launch / down / getup
   var LA = P(S, { hip: [0, -46], lean: -50, bend: -12, tilt: -40, fF: [12, -14], fB: [4, -6], faF: 40, faB: 30,
     hF: [-8, -74], hB: [-22, -62], handF: 'open', handB: 'open', eyes: 'shut', mouth: 'open', skirt: 0.15, tail: -30, arch: 8 });
+  // tumbling: the body rolls back, skirt, hair and tail trail and whip a beat behind
+  var LA2 = function (lean, tilt, hF, hB, fF, fB, sk, tail, pen) {
+    return P(LA, { lean: lean, tilt: tilt, hF: hF, hB: hB, fF: fF, fB: fB, skirt: sk, tail: tail, pen: pen, tsw: 2.2 });
+  };
   def('launch', {
     segs: [['loop', 24, true]], step: 3,
-    keys: [[0, LA],
-      [6, P(LA, { hB: [-26, -54], hF: [-12, -72], fF: [14, -8], fB: [2, -10], lean: -56, tilt: -45 })],
-      [12, P(LA, { hB: [-18, -68], hF: [-2, -76], fF: [8, -16], fB: [6, -4], lean: -44, tilt: -35 })],
-      [18, P(LA, { hB: [-24, -60], hF: [-8, -74], fF: [13, -10], fB: [3, -8], lean: -52 })]]
+    keys: [[0, LA2(-50, -40, [-8, -74], [-22, -62], [12, -14], [4, -6], 0.75, -40, 18)],
+      [6, LA2(-62, -50, [-14, -70], [-28, -52], [16, -6], [0, -12], 0.45, -10, -12), 'out'],
+      [12, LA2(-44, -32, [-2, -78], [-16, -70], [8, -18], [8, -4], 0.85, -45, 22), 'inout'],
+      [18, LA2(-58, -46, [-10, -72], [-26, -56], [15, -8], [2, -10], 0.5, -15, -10), 'out']]
   });
   var DN = P(S, { hip: [6, -6], lean: -90, bend: 0, tilt: -90, fF: [44, -3], fB: [41, -1], faF: -80, faB: -85, knF: -1, knB: -1,
     hF: [-8, -4], hB: [-30, -2], handF: 'open', handB: 'open', eyes: 'dizzy', mouth: 'hurt', tail: -65, arch: -6, skirt: 0 });
@@ -132,13 +136,18 @@
       ['impact+5', P(DN, { eyes: 'shut' }), 'in'], ['impact+7', P(DN, { root: [0, -1] })],
       ['lie', DN], ['lie+15', P(DN, { hip: [6, -7] })]]
   });
+  // getup: rolls onto her hands, pushes up with the tail braced on the floor, hops to her feet
   def('getup', {
     segs: [['rise', 24]], step: 2,
     keys: [[0, P(DN, { eyes: 'shut' })],
-      [5, P(S, { hip: [-2, -10], lean: -40, bend: 0, tilt: -20, fF: [26, -2], fB: [20, -1], faF: -40, faB: -40, hF: [-14, -6], hB: [-20, -4],
-        handF: 'flat', handB: 'flat', eyes: 'shut', mouth: 'hurt', tail: -30 }), 'out'],
-      [11, P(CR, { hip: [0, -18], lean: 20, eyes: 'focus', mouth: 'teeth' }), 'out'],
-      [17, P(S, { hip: [0, -40], lean: 14, eyes: 'focus' }), 'in'], [23, S]]
+      [4, P(S, { hip: [-4, -8], lean: -30, bend: 4, tilt: -10, fF: [18, -2], fB: [12, -1], faF: -30, faB: -30, hF: [-16, -2], hB: [-22, -2],
+        handF: 'flat', handB: 'flat', eyes: 'shut', mouth: 'hurt', tail: 30, arch: 2, tsw: 0.3, skirt: 0.2 }), 'out'],
+      [9, P(S, { hip: [-4, -18], lean: 62, bend: 6, tilt: 10, fF: [-2, 0], fB: [-10, 0], faF: 60, faB: 70, hF: [18, -1], hB: [12, -1],
+        handF: 'flat', handB: 'flat', eyes: 'focus', mouth: 'teeth', tail: -10, arch: 4, tsw: 0.3, skirt: 0.1 }), 'inout'],
+      [13, P(S, { root: [0, -9], hip: [0, -44], lean: 8, bend: -4, fF: [7, -8], fB: [-7, -10], faF: 35, faB: 40, hF: [16, -64], hB: [-6, -66],
+        handF: 'open', handB: 'open', eyes: 'focus', mouth: 'grin', tail: -35, arch: 26, pen: 12, skirt: 0.7, tsw: 1.5 }), 'out'],
+      [17, P(S, { hip: [0, -37], lean: 16, bend: 4, sq: 1, hF: [21, -48], hB: [9, -46], skirt: 0.35, tail: 10, eyes: 'focus', mouth: 'grin' }), 'in'],
+      [20, P(S, { hip: [0, -44], lean: 8, eyes: 'focus' }), 'out'], [23, S]]
   });
 
   // ---------------------------------------------------------------- throws
@@ -162,12 +171,14 @@
       ['toss+8', P(TG, { lean: 32, bend: 8, hip: [6, -40], fF: [20, 0], hF: [37, -55], hB: [31, -57], handF: 'open', handB: 'open', grab: [46, -54], mouth: 'grin', tail: 30 }), 'snap'],
       ['recovery+6', P(S, { lean: 18, hip: [2, -43] }), 'out'], ['recovery+17', S]]
   });
+  // thrown: held up by the collar, limp — arms and legs dangle, head lolls, tail hangs and swings
+  var TW = P(S, { root: [0, -4], hip: [-2, -48], lean: -6, bend: 4, tilt: 28, hF: [5, -36], hB: [-5, -35], handF: 'relax', handB: 'relax', elF: 1, elB: 1,
+    fF: [3, 0], fB: [-3, -1], faF: 55, faB: 60, eyes: 'dizzy', mouth: 'hurt', tail: 34, arch: 3, tsw: 0.4, skirt: -0.1 });
   def('thrown', {
     segs: [['loop', 20, true]], step: 4,
-    keys: [[0, P(S, { root: [0, -3], hip: [-2, -48], lean: -12, tilt: 15, hF: [6, -42], hB: [-6, -44], handF: 'open', handB: 'open', fF: [5, 1], fB: [-4, 0],
-      faF: 40, faB: 50, eyes: 'shut', mouth: 'hurt', tail: 20, arch: 6 })],
-      [10, P(S, { root: [0, -3], hip: [-2, -48], lean: -9, tilt: 20, hF: [5, -43], hB: [-7, -42], handF: 'open', handB: 'open', fF: [4, 1], fB: [-5, 0],
-        faF: 45, faB: 50, eyes: 'shut', mouth: 'hurt', tail: 25, arch: 4 })]]
+    keys: [[0, TW],
+      [6, P(TW, { lean: -2, tilt: 32, hF: [8, -36], hB: [-2, -35], fF: [5, 0], fB: [-1, -1], tail: 42 }), 'inout'],
+      [14, P(TW, { lean: -9, tilt: 24, hF: [3, -37], hB: [-7, -36], fF: [1, 0], fB: [-5, -1], tail: 28 }), 'inout']]
   });
 
   // ---------------------------------------------------------------- intro: maid curtsy → yawn → snaps into stance
