@@ -127,17 +127,16 @@
     }
     return m;
   }
-  // knot rosette: n interlaced cord loops (petals) around a small centre knot — white cord, dark line
-  // work, recessed backing in the holes. Neighbouring loops weave: over at the rim, under near the
-  // centre. Our own design. o = {line, small}
+  // knot rosette: n interlaced cord rings around a small centre knot — white cord, dark line work,
+  // recessed backing in the loop holes. Neighbouring rings weave: over at the rim, under near the
+  // centre. Our own design. o = {line, t (cord thickness), d, ro, core}
   function knot(P, cx, cy, r, n, rot, o) {
     o = o || {};
-    var L = o.line || S.d2, pet = [], all = P.mask(), i;
+    var L = o.line || S.d2, rg = [], all = P.mask(), i, d = r * (o.d || 0.42), ro = r * (o.ro || 0.56), t = o.t || Math.max(2, r * 0.22);
     for (i = 0; i < n; i++) {
-      var a = rot + i * Math.PI * 2 / n, px = cx + Math.cos(a) * r * 0.47, py = cy + Math.sin(a) * r * 0.47;
-      pet.push({ O: P.ell(px, py, r * 0.53, r * 0.38, a),
-        H: P.ell(px + Math.cos(a) * r * 0.06, py + Math.sin(a) * r * 0.06, r * 0.27, r * (o.small ? 0.1 : 0.13), a) });
-      all = all.or(pet[i].O);
+      var a = rot + i * Math.PI * 2 / n, px = cx + Math.cos(a) * d, py = cy + Math.sin(a) * d;
+      var O = P.ell(px, py, ro, ro), Hh = P.ell(px, py, ro - t, ro - t);
+      rg.push({ O: O, H: Hh }); all = all.or(O);
     }
     P.fill(all, S.c3);
     function ring(p, clip) {
@@ -145,15 +144,15 @@
       if (clip) { cord = cord.and(clip); e = e.and(clip); }
       P.fill(cord, S.c0); P.fill(e, L);
     }
-    for (i = 0; i < n; i++) ring(pet[i]);
-    ring(pet[0], pet[n - 1].O.sub(P.ell(cx, cy, r * 0.5, r * 0.5)));
-    var inn = P.ell(cx, cy, r * 0.5, r * 0.5);
-    for (i = 0; i < n; i++) ring(pet[(i + n - 1) % n], pet[i].O.and(inn));
+    for (i = 0; i < n; i++) ring(rg[i]);
+    var inn = P.ell(cx, cy, d, d), out = all.sub(inn);
+    ring(rg[0], rg[n - 1].O.and(out));
+    for (i = 0; i < n; i++) ring(rg[(i + n - 1) % n], rg[i].O.and(inn));
     P.recol(all.band(2, -2), [S.c0], S.c1);
     P.recol(all.band(1, -1).and(all.band(2, -2)), [S.c1], S.c2);
-    var core = P.ell(cx, cy, r * 0.22, r * 0.22);
-    P.part(core, S.c1, L);
-    P.px(Math.round(cx - 0.5), Math.round(cy - 1), S.c0);
+    var core = P.ell(cx, cy, r * (o.core || 0.2), r * (o.core || 0.2));
+    P.part(core, S.c0, L);
+    if (r >= 10) P.px(Math.round(cx), Math.round(cy - 1), S.W);
     return all;
   }
   I.gptEmblem = function (P, size) {
