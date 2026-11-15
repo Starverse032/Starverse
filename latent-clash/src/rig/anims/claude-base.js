@@ -225,6 +225,7 @@
       [39, P(RD, { tilt: 4, eyes: 'focus', bko: 1, hF: [14, -67], hB: [2, -65] }), 'snap'],
       [42, P(RD, { bko: 0, hF: [10, -68], hB: [7, -67], tilt: -4, eyes: 'closed', mouth: 'neutral', shr: 1, sq: -1, root: [0, -1], skirt: 2, tail: -6 }), { ease: 'snap', step: 1 }],
       [45, P(RD, { bko: 0, hF: [10, -66], hB: [7, -65], tilt: 0, eyes: 'closed', skirt: 1, tail: 3 }), 'out'],
+      [50, P(RD, { bko: 0, hF: [3, -57], hB: [-2, -56], book: -100, lean: 3, tilt: 6, eyes: 'closed', skirt: 1, tail: -1 }), 'inout'],
       [54, P(IS, { hF: [10, -60], hB: [-3, -54], lean: 4, tilt: 6, eyes: 'closed', skirt: 1, tail: -2 }), 'inout'],
       [63, P(IS, { lean: 1, tilt: -2, eyes: 'open', mouth: 'smile', tail: 1 }), 'inout'],
       [75, P(IS, { tilt: 0, eyes: 'open', mouth: 'neutral' })],
