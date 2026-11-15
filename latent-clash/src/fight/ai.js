@@ -348,7 +348,7 @@
       if (hit && full && P.depth >= 2 && this.chance(P.sup * 0.4)) { this.q.length = 0; this.push(this.special('super', 'H'), 'superCombo'); return {}; }
       if (mv.follow) {   // rekka: continue on hit; mix up on block
         this.lastInst = -1;
-        if (hit || (blk && this.chance(this.level >= 4 ? 0.25 : this.level >= 3 ? 0.45 : 0.75))) { this.q.length = 0; this.push([{ d: 5, n: 2 + this.rng.int(3) }, { d: 5, b: 'M', n: 2 }, { d: 5, n: 1 }]); }
+        if (hit || (blk && this.chance(this.level >= 4 ? 0.25 : this.level >= 3 ? 0.45 : this.level === 2 ? 0.5 : 0.75))) { this.q.length = 0; this.push([{ d: 5, n: 2 + this.rng.int(3) }, { d: 5, b: 'M', n: 2 }, { d: 5, n: 1 }]); }
       }
     }
     return {};
