@@ -83,7 +83,7 @@
   C.attach = function (sk, sec) {
     var a = sk.headAng, n = sk.neck;
     var hb = fr(n, a, -6, -12);
-    sec.attach('hair', hb[0], hb[1], 90 + a * 0.3);
+    sec.attach('hair', hb[0], hb[1], 90 + a * 0.3 + (sk.tail || 0) * 1.3);
     var ln = fr(n, a, -1, -7);
     sec.attach('lockN', ln[0], ln[1], 90 + a * 0.5);
     var lf = fr(n, a, 7, -6);
@@ -307,7 +307,11 @@
     function cl5(v) { var q = 1 - kL; return [Math.max(-5, Math.min(5, v[0])) * q, Math.max(-4, Math.min(4, v[1])) * q]; }
     swF = cl5(swF); swB = cl5(swB);
     var fl = (sk.skirt || 0) + Math.min(4, Math.max(0, -swF[1] - swB[1]) * 1.4);
-    var aF = 80 + rotA - fl * 3 - swF[0] * 2.5, aB = 101 + rotA + fl * 3 - swB[0] * 2.5, Lf = 49, Lb = 50;
+    // V2.1 channels: tail = skirt trail angle (deg, + = streams backward), arch = billow 0..1 (bell opens,
+    // fabric lifts off the legs; tumbles / launches)
+    var tr = sk.tail || 0, bl = Math.max(0, Math.min(1.2, sk.arch || 0));
+    var aF = 80 + rotA + tr - fl * 3 - bl * 16 - swF[0] * 2.5, aB = 101 + rotA + tr + fl * 3 + bl * 22 - swB[0] * 2.5;
+    var Lf = 49 - bl * 9, Lb = 50 - bl * 6;
     var pts = [], k, s;
     for (s = 0; s < 2; s++) {
       var S = s ? 'B' : 'F', kn = sk['kn' + S], an = sk['an' + S], hp = sk['hip' + S];
@@ -352,7 +356,7 @@
     var mid = lerp(rb.e, rf.e, 0.5), sag = 3 + Math.abs(rf.e[0] - rb.e[0]) * 0.06;
     var cy = Math.max(mid[1] + sag, Math.min(rb.e[1], rf.e[1]) + sag * 0.5);
     if (cy > floor) cy = floor;
-    var ctrl = [mid[0] - (sk.hem || 0) * 0.5, cy + (sk.hem || 0)];
+    var ctrl = [mid[0] - (sk.hem || 0) * 0.5 + bl * 4, cy + (sk.hem || 0) - bl * 12];
     var hem = [];
     for (k = 0; k <= 10; k++) {
       var t = k / 10, it = 1 - t;
