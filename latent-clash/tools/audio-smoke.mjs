@@ -17,10 +17,10 @@ const SFX = ('ui.move ui.confirm ui.cancel ui.start ui.error ui.pause ui.lock te
   'throw.slam throw.tech down ko super.flash super.charge meter.full counter.catch timer.tick ann.round ann.fight ' +
   'ann.ko ann.perfect ann.timeup ann.win claude.spark claude.sparkHit claude.sonnet claude.haiku claude.guardrail ' +
   'claude.beam deepseek.wave deepseek.waveHit deepseek.breach deepseek.dive deepseek.emerge deepseek.chain ' +
-  'deepseek.diveKick deepseek.whale').split(' ');
+  'deepseek.diveKick deepseek.whale gpt.breath gpt.rise gpt.call gpt.callSlam gpt.roar gpt.super').split(' ');
 const MUSIC = ['title', 'select', 'vs', 'stage.library', 'stage.abyss', 'stage.latent', 'stage.training', 'victory', 'continue', 'ending'];
 const KINDS = ['light', 'medium', 'heavy', 'special', 'super', 'hurt', 'ko', 'win', 'intro'];
-const CHARS = ['claude', 'deepseek'];
+const CHARS = ['claude', 'deepseek', 'gpt'];
 
 const fails = [];
 const check = (ok, msg) => { if (!ok) fails.push(msg); console.log((ok ? '  ok   ' : '  FAIL ') + msg); };

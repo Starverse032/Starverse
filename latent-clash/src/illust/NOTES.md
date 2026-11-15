@@ -1,5 +1,11 @@
 # ILLUST — notes
 
+## GPT progress / next steps (V2.5 third fighter — truthful, current)
+- core.js: slots appended (indices of old slots unchanged): `z0..z3,zl` = `blob` ramp; for gpt
+  `x*` = `scale`, `u*` = `wing` (fallbacks for the old chars unchanged: book/fin, under/cloth1).
+- NEXT: `gpt.js` (bust → face → cut-in → win/lose), `emblem.gpt(.lg)` in icons.js + api.js icon list,
+  `gpt` in tools/illust-shots.mjs.
+
 ## V2 progress / next steps (ZipZipPipe redesign — truthful, current)
 DONE (all render with zero console errors; init ≈ 340–390 ms, up from ≈ 260; title 0.1 ms/frame):
 - core.js: new slots `x0..x3,xl` (Claude `book` / DeepSeek `fin`), `u0..u3,ul` (DeepSeek `under`, not

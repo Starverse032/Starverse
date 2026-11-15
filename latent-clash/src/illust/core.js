@@ -34,7 +34,9 @@
     'm0', 'm1', 'm2', 'm3', 'W', 'hl', 'sl', 'cl', 'dl', 'al', 'ml', 'lash', 'mo', 'tg', 'tear',
     'tear2', 'ew', 'tl', 'blS', 'sp', 'K', 'gl0', 'gl1', 'sk1',
     // V2: x* = extra ramp (Claude `book`, DeepSeek `fin`), u* = DeepSeek `under` (Claude: cloth1)
-    'x0', 'x1', 'x2', 'x3', 'xl', 'u0', 'u1', 'u2', 'u3', 'ul', 'eK', 'xP'];
+    'x0', 'x1', 'x2', 'x3', 'xl', 'u0', 'u1', 'u2', 'u3', 'ul', 'eK', 'xP',
+    // V2.5 (GPT): x* = `scale`, u* = `wing`, z* = `blob` (others: cloth2 / cloth1 / accent)
+    'z0', 'z1', 'z2', 'z3', 'zl'];
   var S = K.S = {};
   SLOT_NAMES.forEach(function (n, i) { S[n] = i + 1; });
   K.NSLOT = SLOT_NAMES.length + 1;
@@ -68,9 +70,10 @@
     c.K = mix(ol, '#000000', 0.3);
     c.gl0 = mix(p.accent[0], '#ffffff', 0.5); c.gl1 = p.accent[1];
     c.sk1 = mix(p.skin[1], p.skin[2], 0.5);
-    var xr = p.book || p.fin || p.cloth2, ur = p.under || p.cloth1;
+    var xr = p.book || p.fin || p.scale || p.cloth2, ur = p.under || p.wing || p.cloth1, zr = p.blob || p.accent;
     for (var j = 0; j < 4; j++) { c['x' + j] = xr[j]; c['u' + j] = ur[j]; }
-    c.xl = mix(xr[3], ol, 0.5); c.ul = mix(ur[3], ol, 0.5);
+    for (var q = 0; q < 4; q++) c['z' + q] = zr[q];
+    c.xl = mix(xr[3], ol, 0.5); c.ul = mix(ur[3], ol, 0.5); c.zl = mix(zr[3], ol, 0.5);
     c.eK = mix(p.eye[3], ol, 0.5);     // dark iris rim / upper iris
     c.xP = mix(xr[0], '#ffffff', 0.32); // pale inner face of DeepSeek's fins
     var out = [[0, 0, 0, 0]];

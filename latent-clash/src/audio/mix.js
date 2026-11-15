@@ -16,7 +16,8 @@
     'ui.move': 2.2, 'ui.confirm': 1.13, 'ui.cancel': 0.77, 'ui.start': 0.66, 'ui.error': 0.93, 'ui.pause': 1.27, 'ui.lock': 1.0, 'text.blip': 2.57,
     'claude.spark': 1.07, 'claude.sparkHit': 1.5, 'claude.sonnet': 1.12, 'claude.haiku': 2.0, 'claude.guardrail': 0.79, 'claude.beam': 0.79,
     'deepseek.wave': 0.92, 'deepseek.waveHit': 1.19, 'deepseek.breach': 1.4, 'deepseek.dive': 1.07, 'deepseek.emerge': 1.58,
-    'deepseek.chain': 1.5, 'deepseek.diveKick': 1.3, 'deepseek.whale': 0.78
+    'deepseek.chain': 1.5, 'deepseek.diveKick': 1.3, 'deepseek.whale': 0.78,
+    'gpt.breath': 1.0, 'gpt.rise': 1.0, 'gpt.call': 1.0, 'gpt.callSlam': 1.0, 'gpt.roar': 1.0, 'gpt.super': 1.0
   };
   Object.keys(MIX).forEach(function (n) { if (K.SFX[n]) K.SFX[n].vol *= MIX[n]; });
   K.MIX = MIX;

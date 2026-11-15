@@ -145,7 +145,7 @@
   };
 
   A.list = function () {
-    return { sfx: K.SFX_ORDER.slice(), music: K.TRACK_ORDER.slice(), voice: { chars: ['claude', 'deepseek'], kinds: VOICE_KINDS.slice() } };
+    return { sfx: K.SFX_ORDER.slice(), music: K.TRACK_ORDER.slice(), voice: { chars: (K.VOICE_CHARS || ['claude', 'deepseek']).slice(), kinds: VOICE_KINDS.slice() } };
   };
 
   // ---- additions (documented in NOTES.md) -----------------------------------------
