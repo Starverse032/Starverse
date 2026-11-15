@@ -163,7 +163,7 @@
   var TG = P(S, { lean: 16, hip: [3, -44], hF: [28, -64], hB: [24, -66], handF: 'fist', handB: 'fist', grab: [30, -62], fF: [15, 0],
     eyes: 'focus', mouth: 'grin', z: { armB: 6 } });
   var TU = P(TG, { lean: -12, bend: -8, tilt: -10, hip: [-3, -42], sq: 1, fF: [16, 0], fB: [-13, 0], hF: [12, -86], hB: [8, -88], grab: [12, -90],
-    tail: -55, arch: 6, tsw: 0.2, mouth: 'teeth', skirt: 0.2 });
+    tail: 32, arch: 1, tsw: 0.2, mouth: 'teeth', skirt: 0.2 });
   var TS = P(TG, { lean: 36, bend: 10, tilt: 10, hip: [7, -37], fF: [21, 0], fB: [-12, 0], faB: 30, hF: [38, -40], hB: [33, -42], handF: 'open', handB: 'open',
     grab: [44, -36], mouth: 'shout', tail: 85, arch: 10, tsw: 0.3, skirt: 0.45 });
   def('throwHit', {
@@ -171,8 +171,8 @@
     keys: [['hold', TG],
       ['hold+5', P(TG, { lean: 4, hip: [0, -44], hF: [22, -70], hB: [18, -72], grab: [24, -70], tail: -20, arch: 14 }), 'out'],
       ['hold+12', TU, 'inout'], ['hold+15', P(TU, { hip: [-3, -44], hF: [10, -88], grab: [10, -92], sq: 0 })],
-      ['toss+2', P(TS, { smear: { part: 'hF', from: 'hold+15', n: 4 } }), 'snap'],
-      ['toss+4', P(TS, { hip: [7, -36], sq: 1, mouth: 'grin', tail: 95, arch: 4 }), 'snap'],
+      ['toss+2', P(TS, { hs: 0.45, smear: { part: 'hF', from: 'hold+15', n: 4 } }), 'snap'],
+      ['toss+4', P(TS, { hip: [7, -36], sq: 1, mouth: 'grin', tail: 95, arch: 4, hs: 0.3 }), 'snap'],
       ['toss+10', P(TS, { mouth: 'grin', tail: 70, arch: 12, eyes: 'happy' })],
       ['recovery+6', P(S, { lean: 18, hip: [2, -43], tail: 20, mouth: 'grin' }), 'out'], ['recovery+17', S]]
   });
@@ -188,14 +188,14 @@
 
   // ---------------------------------------------------------------- intro: maid curtsy → lazy stretch-yawn → eye rub → snaps into stance
   var ST = P(S, { hip: [0, -47], lean: 0, bend: 0, fF: [5, 0], fB: [-5, 0], hF: [10, -42], hB: [-7, -42], handF: 'relax', handB: 'relax' });
-  var CU = P(ST, { hip: [-2, -40], lean: 6, fB: [-15, 0], faB: 20, hF: [17, -40], hB: [-15, -40], handF: 'open', handB: 'open', skirt: 0.6,
-    head: [1, 1], tilt: 12, eyes: 'closed', mouth: 'smile', tail: 25, arch: 12, tsw: 0.5 });
+  var CU = P(ST, { hip: [-3, -36], lean: 8, fB: [-17, 0], faB: 25, hF: [17, -40], hB: [-15, -40], handF: 'open', handB: 'open', skirt: 0.6,
+    head: [1, 2], tilt: 18, eyes: 'closed', mouth: 'smile', tail: 25, arch: 12, tsw: 0.5 });
   var YW = P(ST, { hip: [0, -48], lean: -4, bend: -8, tilt: -16, fF: [5, 0], fB: [-5, 0], faF: 0, hF: [9, -91], hB: [3, -93], handF: 'fist', handB: 'fist',
     eyes: 'closed', mouth: 'o', tail: 62, arch: 5, tsw: 0.3, skirt: 0.1 });
   def('intro', {
     segs: [['act', 100]], step: 2,
     keys: [[0, P(ST, { eyes: 'closed', mouth: 'smile', skirt: 0.2 })],
-      [8, CU, 'inout'], [20, P(CU, { hip: [-2, -39], tilt: 14 })],
+      [8, CU, 'inout'], [20, P(CU, { hip: [-3, -35], tilt: 20 })],
       [28, P(ST, { eyes: 'happy', mouth: 'smile', blush: 1, skirt: 0.25, tail: -5 }), 'out'],
       [40, YW, 'inout'], [52, P(YW, { hip: [0, -49], bend: -10, tilt: -20, hF: [8, -92], hB: [2, -94] })],
       [58, P(ST, { hF: [13, -80], hB: [-6, -48], handF: 'relax', tilt: 6, eyes: 'half', mouth: 'neutral', tail: 10, tsw: 1 }), 'out'],

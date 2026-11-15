@@ -17,7 +17,7 @@
   var LV = [
     { react: 28, block: 0.12, guess: 0.5, aa: 0.04, punish: 0.06, depth: 0, confirm: 30, tech: 0.03, sup: 0.15, think: 16, aggr: 0.45, jump: 0.10, mash: 0.35, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 1 },
     { react: 22, block: 0.32, guess: 0.55, aa: 0.18, punish: 0.25, depth: 1, confirm: 16, tech: 0.10, sup: 0.35, think: 11, aggr: 0.50, jump: 0.09, mash: 0.15, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 1 },
-    { react: 17, block: 0.58, guess: 0.64, aa: 0.42, punish: 0.5, depth: 2, confirm: 10, tech: 0.25, sup: 0.65, think: 8, aggr: 0.55, jump: 0.08, mash: 0.05, cJump: 0.3, cHaiku: 0.02, cGuard: 0.12, cSpark: 1.5 },
+    { react: 17, block: 0.58, guess: 0.64, aa: 0.42, punish: 0.5, depth: 2, confirm: 10, tech: 0.25, sup: 0.65, think: 8, aggr: 0.55, jump: 0.08, mash: 0.05, cJump: 0.15, cHaiku: 0.02, cGuard: 0.12, cSpark: 1.5 },
     { react: 13, block: 0.76, guess: 0.72, aa: 0.62, punish: 0.72, depth: 3, confirm: 7, tech: 0.40, sup: 0.85, think: 6, aggr: 0.6, jump: 0.07, mash: 0, cJump: 0.45, cHaiku: 0.06, cGuard: 0.12, cSpark: 1 },
     { react: 10, block: 0.88, guess: 0.8, aa: 0.78, punish: 0.86, depth: 3, confirm: 5, tech: 0.55, sup: 1.0, think: 4, aggr: 0.62, jump: 0.06, mash: 0, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 1 }
   ];
@@ -345,7 +345,7 @@
       if (hit && full && P.depth >= 2 && this.chance(P.sup * 0.4)) { this.q.length = 0; this.push(this.special('super', 'H'), 'superCombo'); return {}; }
       if (mv.follow) {   // rekka: continue on hit; mix up on block
         this.lastInst = -1;
-        if (hit || (blk && this.chance(this.level >= 4 ? 0.25 : this.level >= 3 ? 0.35 : 0.75))) { this.q.length = 0; this.push([{ d: 5, n: 2 + this.rng.int(3) }, { d: 5, b: 'M', n: 2 }, { d: 5, n: 1 }]); }
+        if (hit || (blk && this.chance(this.level >= 4 ? 0.25 : this.level >= 3 ? 0.45 : 0.75))) { this.q.length = 0; this.push([{ d: 5, n: 2 + this.rng.int(3) }, { d: 5, b: 'M', n: 2 }, { d: 5, n: 1 }]); }
       }
     }
     return {};
