@@ -19,7 +19,7 @@
   // cMash / cThrow (L1: her mashed reach + throws over-performed).
   var LV = [
     { react: 28, block: 0.12, guess: 0.5, aa: 0.04, punish: 0.06, depth: 0, confirm: 30, tech: 0.03, sup: 0.15, think: 16, aggr: 0.45, jump: 0.10, mash: 0.35, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 0.6, cMash: 0.4, cThrow: 0.6 },
-    { react: 22, block: 0.32, guess: 0.55, aa: 0.18, punish: 0.25, depth: 1, confirm: 16, tech: 0.10, sup: 0.35, think: 11, aggr: 0.50, jump: 0.09, mash: 0.15, cJump: 0.3, cHaiku: 0.04, cGuard: 0.12, cSpark: 1.4, cPun: 0.5, cThrow: 0.4, cMash: 2 },
+    { react: 22, block: 0.32, guess: 0.55, aa: 0.18, punish: 0.25, depth: 1, confirm: 16, tech: 0.10, sup: 0.35, think: 11, aggr: 0.50, jump: 0.09, mash: 0.15, cJump: 0.3, cHaiku: 0.04, cGuard: 0.12, cSpark: 1.4, cPun: 0.5, cThrow: 0.4, cMash: 2, dChain: 0.6 },
     { react: 17, block: 0.58, guess: 0.64, aa: 0.42, punish: 0.5, depth: 2, confirm: 10, tech: 0.25, sup: 0.65, think: 8, aggr: 0.55, jump: 0.08, mash: 0.05, cJump: 0.3, cHaiku: 0.02, cGuard: 0.12, cSpark: 1.5, cPun: 0.72 },
     { react: 13, block: 0.76, guess: 0.72, aa: 0.62, punish: 0.72, depth: 3, confirm: 7, tech: 0.40, sup: 0.85, think: 6, aggr: 0.6, jump: 0.07, mash: 0, cJump: 0.3, cHaiku: 0.03, cGuard: 0.12, cSpark: 1.3, cPun: 0.88 },
     { react: 10, block: 0.88, guess: 0.8, aa: 0.78, punish: 0.86, depth: 3, confirm: 5, tech: 0.55, sup: 1.0, think: 4, aggr: 0.62, jump: 0.06, mash: 0, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 1 }
@@ -280,7 +280,7 @@
       if (dx < D(70) && this.level >= 3) add('guardrail', P.cGuard + (o.action === 'attack' ? 0.1 : 0), this.special('guardrail', this.pick(['L', 'M'])));
     } else {
       if (me.proj === 0 && dx > D(110)) add('wave', 0.7 + (dx > D(200) ? 0.4 : 0), this.special('wave', dx > D(200) ? 'H' : 'M'));
-      if (dx > D(50) && dx < D(110)) add('chain', 0.5 + ag * 0.25, this.special('chain', dx > D(90) ? 'H' : 'M'));
+      if (dx > D(50) && dx < D(110)) add('chain', (0.5 + ag * 0.25) * (P.dChain || 1), this.special('chain', dx > D(90) ? 'H' : 'M'));
       if (dx > D(90) && dx < D(240) && this.level >= 2) add('diveM', 0.07 + ag * 0.05, this.special('dive', 'M'));
       if (dx > D(60) && dx < D(200) && this.level >= 3) add('diveH', 0.07 + ag * 0.05, this.special('dive', 'H'));
       if (dx > D(90) && dx < D(170)) add('jumpKick', P.jump * 3, [{ d: 9, n: 3 }]);
