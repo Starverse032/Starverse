@@ -343,7 +343,7 @@
       // sitting / kneeling (getup): the front drapes over the raised knee and down the shin to the
       // floor; the back pools on the floor behind her
       var dk = sk.knF[1] < sk.knB[1] ? sk.knF : sk.knB, da = dk === sk.knF ? sk.anF : sk.anB;
-      rf = { m: [dk[0] + 1.5, dk[1] - 4.5], e: [Math.max(da[0], dk[0]) + 4, Math.min(-1, da[1] + 2)] };
+      rf = { m: [dk[0] + 2, dk[1] - 6], e: [Math.max(da[0], dk[0]) + 4, Math.min(-1, da[1] + 2)] };
       var bx = Math.min(rootB[0] - 8, rb.e[0]);
       rb = { m: [rootB[0] - 5, lerp(rootB, [bx, -1], 0.55)[1]], e: [bx, -1] };
     }
