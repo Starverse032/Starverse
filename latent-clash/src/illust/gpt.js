@@ -407,11 +407,36 @@
     farSleeve(P);
   }
 
-  // ---------------------------------------------------------------- face icon 24x24 (placeholder until drawn)
-  function face(P) {
-    P.fill(P.ell(12, 12, 9, 9), S.h1);
-    P.outer(S.ol);
-  }
+  // ---------------------------------------------------------------- face icon 24x24 (hand-typed)
+  var FACE = [
+    'oo...........ooo........',
+    'oXo.........oXXxo.......',
+    '.oXo.........ooXxo......',
+    '.oXxo..hhhhhh..oXo......',
+    '..oXxohhHHHJHhhoxo......',
+    '...oxyHHHHHJJHHHyo......',
+    '...hoyHHHHHHJHHHHh......',
+    '..hHHHHHHHhHHHHHHHh.....',
+    '.hHHHHHHHhfhHHHhHHHh....',
+    '.hHHHHHHhffhHHhffhHHh...',
+    'ohHHHhKKKKfffhKKKfhHHh..',
+    'ofohHKDWDKffffKDWfhHHh..',
+    '.offhwsBBwfffwsBwfhGHh..',
+    '..ofhfffffffffffffhGHh..',
+    '..hhffbbfffffffbbfhGHh..',
+    '..hGhfffffffmmfffhGHHh..',
+    '..hGHhfffffffffffhGHHh..',
+    '..hGHhhffffffffhhGHHh...',
+    '.hGGHhehhffffhhheGHHh...',
+    '.hGGHheeCdCCCCdCehGHh...',
+    'hGGHheffCCCdCCCCfehHh...',
+    'hGGheffCCCCfCCCCCfehh...',
+    'hGhefffCCCCMCCCCCCffh...',
+    'hhefffCCCCCdCCCCCCCfeh..'
+  ];
+  var FL = { o: S.ol, X: S.x0, x: S.x1, y: S.x2, h: S.hl, H: S.h1, J: S.h0, G: S.h2, f: S.s1, e: S.s2, K: S.lash, D: S.e3,
+    s: S.e2, B: S.e1, W: S.W, w: S.ew, b: S.bl, m: S.mo, C: S.c1, c: S.c2, d: S.d1, M: S.m1, A: S.a1, l: S.sl };
+  function face(P) { P.map(0, 0, FACE, FL); }
 
   I.ART.gpt = {
     bust: function () { var P = K.painter(112, 128); drawBust(P, {}); return P; },
