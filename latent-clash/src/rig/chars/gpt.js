@@ -114,10 +114,10 @@
     { id: 'lockN', n: 4, len: [7, 8, 8, 7], rest: [84, 88, 91, 93], stiff: 0.32, damp: 0.8, grav: 0.22, drag: 0.25, cvel: 0.5 },
     { id: 'lockF', n: 3, len: [6, 6, 6], rest: [86, 90, 93], stiff: 0.34, damp: 0.8, grav: 0.22, drag: 0.25, cvel: 0.5 },
     { id: 'ahoge', n: 3, len: [4, 4, 3], rest: [-100, -45, 15], stiff: 0.5, damp: 0.72, grav: 0.03, drag: 0.12 },
-    { id: 'sFa', n: 3, len: [10, 10, 10], rest: [100, 96, 93], stiff: [0.3, 0.24, 0.2], damp: 0.85, grav: 0.24, drag: 0.42, cvel: 0.5 },
-    { id: 'sFe', n: 3, len: [10, 10, 10], rest: [78, 83, 87], stiff: [0.3, 0.24, 0.2], damp: 0.85, grav: 0.24, drag: 0.42, cvel: 0.5 },
-    { id: 'sBa', n: 3, len: [10, 10, 10], rest: [100, 96, 93], stiff: [0.3, 0.24, 0.2], damp: 0.85, grav: 0.24, drag: 0.42, cvel: 0.5 },
-    { id: 'sBe', n: 3, len: [10, 10, 10], rest: [78, 83, 87], stiff: [0.3, 0.24, 0.2], damp: 0.85, grav: 0.24, drag: 0.42, cvel: 0.5 },
+    { id: 'sFa', n: 3, len: [11, 12, 12], rest: [100, 96, 93], stiff: [0.3, 0.24, 0.2], damp: 0.85, grav: 0.24, drag: 0.42, cvel: 0.5 },
+    { id: 'sFe', n: 3, len: [11, 12, 12], rest: [78, 83, 87], stiff: [0.3, 0.24, 0.2], damp: 0.85, grav: 0.24, drag: 0.42, cvel: 0.5 },
+    { id: 'sBa', n: 3, len: [11, 12, 12], rest: [100, 96, 93], stiff: [0.3, 0.24, 0.2], damp: 0.85, grav: 0.24, drag: 0.42, cvel: 0.5 },
+    { id: 'sBe', n: 3, len: [11, 12, 12], rest: [78, 83, 87], stiff: [0.3, 0.24, 0.2], damp: 0.85, grav: 0.24, drag: 0.42, cvel: 0.5 },
     { id: 'hemF', n: 2, len: [26, 26], rest: [80, 86], stiff: [0.4, 0.34], damp: 0.8, grav: 0.2, drag: 0.32, limit: limF },
     { id: 'hemB', n: 2, len: [26, 26], rest: [104, 97], stiff: [0.4, 0.34], damp: 0.8, grav: 0.2, drag: 0.32, limit: limB },
     { id: 'tas', n: 2, len: [5, 5], rest: [90, 90], stiff: 0.25, damp: 0.8, grav: 0.25, drag: 0.3 },
@@ -384,7 +384,7 @@
     var m = pts.length, rr = [];
     for (i = 0; i < m; i++) { var u = i / (m - 1) * (TAIL_R.length - 1), k = Math.floor(u), f = u - k; rr.push(k + 1 < TAIL_R.length ? TAIL_R[k] + (TAIL_R[k + 1] - TAIL_R[k]) * f : TAIL_R[k]); }
     // dorsal spikes first (behind the body of the tail): on the side n = (-dy, dx)
-    for (i = 2; i < m - 3; i += 2) {
+    for (i = 6; i < m - 3; i += 2) {
       var a = pts[i - 1], b = pts[i + 1], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.sqrt(dx * dx + dy * dy) || 1;
       dx /= l; dy /= l;
       var nx = -dy, ny = dx, r = rr[i], hgt = 1.8 + r * 0.55;
@@ -485,7 +485,7 @@
     var a = H.chainPts(sec['s' + s + 'a']), e = H.chainPts(sec['s' + s + 'e']), t = s === 'F' ? 1 : 2;
     var poly = [a[0], e[0], e[1], e[2], e[3], a[3], a[2], a[1]];
     // bell: push the hanging edges apart a little toward the bottom
-    var bw = [0, 0.5, 1.1, 1.9];
+    var bw = [0, 1, 2.4, 3.8];
     var E2 = e.map(function (q, i) { return [q[0] + bw[i], q[1]]; }), A2 = a.map(function (q, i) { return [q[0] - bw[i], q[1]]; });
     poly = [A2[0], E2[0], E2[1], E2[2], E2[3], A2[3], A2[2], A2[1]];
     p.poly(H.flat(poly), M.c1, SH.soft, t);
@@ -585,8 +585,8 @@
       sag: 1.5
     };
   }
-  var VS = 0.3;                                                        // slit top (fraction of the skirt length)
-  var flap = function (v) { return 0.16 * Math.max(0, 1 - (v - VS) / (1 - VS)) + 0.05; };   // front panel edge (s)
+  var VS = 0.22;                                                       // slit top (fraction of the skirt length)
+  var flap = function (v) { return 0.11 * Math.max(0, 1 - (v - VS) / (1 - VS)) + 0.03; };   // front panel edge (s)
   var slitB = function (v) { return 0.16 + 0.26 * Math.min(1, (v - VS) / 0.5); };          // back edge of the opening
 
   function drawHemFrill(p, S) {

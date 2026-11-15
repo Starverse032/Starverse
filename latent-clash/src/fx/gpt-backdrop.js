@@ -109,7 +109,7 @@
       for (q = 0; q < gd.n; q++) { gb.rect(4 + q * gd.cs + (gd.cs >> 1) - 1, 0, 2, 2, bc); gb.rect(0, 4 + q * gd.cs + (gd.cs >> 1) - 1, 2, 2, bc); }   // token ticks
       return I.toCanvas(gb);
     });
-    B.lv = [I.mix(N[2], N[1], 0.6), I.mix(N[1], L[4], 0.45), L[4], L[3], L[2], L[1]];
+    B.lv = [I.mix(N[2], N[1], 0.6), I.mix(N[1], L[4], 0.45), L[4], I.mix(L[4], L[3], 0.5), L[3], L[2]];
     B.cols = { dot: [L[4], L[3], N[0]], edge: [L[0], L[1], L[3]] };
   }
 
