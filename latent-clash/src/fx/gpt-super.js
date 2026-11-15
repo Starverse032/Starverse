@@ -70,19 +70,19 @@
       if (ji === 2) b.poly(mw, s[2]);
     }
     // lower jaw + beard spike
-    poly(JAWP, s[2], true); poly(JAWSH, s[4], true); poly(BEARD, s[3], true);
+    poly(JAWP, s[3], true); poly(JAWSH, s[4], true); poly(BEARD, s[3], true);
     // upper head
-    poly(UPPER, s[1]); poly(SHADOW, s[3]); poly(TOPHI, s[0]);
+    poly(UPPER, s[2]); poly(SHADOW, s[3]); poly(TOPHI, s[1]);
     SPINES.forEach(function (sp) { poly(sp, s[3]); });
     // scale scallops on the back of the skull (pattern in head-local space)
     var bd = b.d, BW = b.w;
     for (var y = 0; y < b.h; y++) for (var x = 0; x < BW; x++) {
       var i = y * BW + x, v = bd[i];
-      if (v !== s[1] && v !== s[3]) continue;
+      if (v !== s[2] && v !== s[3]) continue;
       var dx = x + 0.5 - OX, dy = y + 0.5 - OY, lx = (dx * c + dy * sn) / HS, ly = (-dx * sn + dy * c) / HS;
       if (lx > -58 || lx < -106 || ly > 0) continue;
       var r = Math.floor((ly + 40) / 4), fx = ((lx + 200 + (r & 1) * 3) % 6 + 6) % 6, fy = ((ly + 40) % 4 + 4) % 4;
-      if ((fy >= 3 && fx >= 1 && fx < 5) || (fy >= 2 && fy < 3 && (fx < 1 || fx >= 5))) bd[i] = v === s[1] ? s[2] : s[4];
+      if ((fy >= 3 && fx >= 1 && fx < 5) || (fy >= 2 && fy < 3 && (fx < 1 || fx >= 5))) bd[i] = v === s[2] ? s[3] : s[4];
     }
     // teeth (white), upper pointing down, lower pointing up (on the jaw)
     if (ji > 0) {
@@ -147,7 +147,7 @@
     var hov = [
       [Math.max(tx - 128, Math.min(100, tx - 36)), I.clamp(ty - 46, 50, 120)],
       [I.clamp(tx - 30, 60, W - 60), I.clamp(ty - 64, 60, 110)],
-      [Math.min(tx + 108, Math.max(W - 44, tx + 36)), I.clamp(ty - 40, 56, 130)]
+      [Math.min(tx + 100, Math.max(W - 70, tx + 36)), I.clamp(ty - 58, 52, 120)]
     ];
     var ent = [[-150, 0, 0], [0, -170, 90], [W + 150, 0, 180]];   // entry offsets / travel angle
     for (var k = 0; k < 3; k++) {
