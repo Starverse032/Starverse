@@ -36,7 +36,7 @@ async function sheet(name, expr, scale = 4, bg = '#15132a') {
 const info = await page.evaluate(() => ({ initMs: LC.illust.initMs, names: LC.illust.names(), chars: LC.CHARS.slice() }));
 console.log('init ms:', info.initMs && info.initMs.toFixed(1));
 
-for (const g of groups) if (g.startsWith('sheet:')) await sheet('sheet', g.slice(6));
+for (const g of groups) if (g.startsWith('sheet:')) await sheet('sheet', g.slice(6), +(process.env.SCALE || 4));
 
 for (const c of info.chars) {
   if (!(want('portraits') || want(c))) continue;

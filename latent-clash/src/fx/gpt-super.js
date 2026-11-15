@@ -72,32 +72,35 @@
     // lower jaw + beard spike
     poly(JAWP, s[2], true); poly(JAWSH, s[4], true); poly(BEARD, s[3], true);
     // upper head
-    poly(UPPER, s[1]); poly(SHADOW, s[2]); poly(TOPHI, s[0]);
+    poly(UPPER, s[1]); poly(SHADOW, s[3]); poly(TOPHI, s[0]);
     SPINES.forEach(function (sp) { poly(sp, s[3]); });
     // scale scallops on the back of the skull (pattern in head-local space)
     var bd = b.d, BW = b.w;
     for (var y = 0; y < b.h; y++) for (var x = 0; x < BW; x++) {
       var i = y * BW + x, v = bd[i];
-      if (v !== s[1] && v !== s[2]) continue;
+      if (v !== s[1] && v !== s[3]) continue;
       var dx = x + 0.5 - OX, dy = y + 0.5 - OY, lx = (dx * c + dy * sn) / HS, ly = (-dx * sn + dy * c) / HS;
       if (lx > -58 || lx < -106 || ly > 0) continue;
       var r = Math.floor((ly + 40) / 4), fx = ((lx + 200 + (r & 1) * 3) % 6 + 6) % 6, fy = ((ly + 40) % 4 + 4) % 4;
-      if ((fy >= 3 && fx >= 1 && fx < 5) || (fy >= 2 && fy < 3 && (fx < 1 || fx >= 5))) bd[i] = v === s[1] ? s[2] : s[3];
+      if ((fy >= 3 && fx >= 1 && fx < 5) || (fy >= 2 && fy < 3 && (fx < 1 || fx >= 5))) bd[i] = v === s[1] ? s[2] : s[4];
     }
     // teeth (white), upper pointing down, lower pointing up (on the jaw)
     if (ji > 0) {
-      [[-4, 3], [-12, 4.5], [-20, 3], [-30, 3], [-40, 2.5], [-50, 2]].forEach(function (q) { tri(q[0] - 2, 0, q[0] + 1.5, 0, q[0] - 0.5, q[1], s[0]); });
-      [[-8, 3], [-18, 4], [-28, 3], [-38, 2.5]].forEach(function (q) { tri(q[0] - 2, 2, q[0] + 1.5, 2, q[0] - 0.5, 2 - q[1], s[0], true); });
+      [[-4, 3.5], [-12, 7], [-21, 3.5], [-30, 3.5], [-40, 3], [-50, 2.5]].forEach(function (q) { tri(q[0] - 2, 0, q[0] + 1.5, 0, q[0] - 0.5, q[1], s[0]); });
+      [[-6, 6], [-17, 4], [-27, 3.5], [-37, 3]].forEach(function (q) { tri(q[0] - 2, 2, q[0] + 1.5, 2, q[0] - 0.5, 2 - q[1], s[0], true); });
     }
     // brow ridge + glowing eye
     poly(BROW, s[4]);
-    poly(EYE, s[0]);
-    var e1 = P2(-52, -21); b.set(e1[0], e1[1], s[4]); var e2 = P2(-51, -21); b.set(e2[0], e2[1], s[4]);
     b.outline(g.dkU);
+    // glowing eye: dark socket, teal rim, white-hot core, glow trail streaming back
+    poly([-62, -21, -54, -28, -43, -25, -41, -21, -47, -15, -58, -15], g.dkU);
+    poly(EYE, s[4]);
+    poly([-57, -21, -53, -24, -46, -22, -48, -19, -55, -18], s[0]);
     // inner line work after the outline: jaw seam (closed), nostril, eye-trail
     if (ji === 0) { var a0 = P2(-72, 3), a1 = P2(-2, 1); b.line(a0[0], a0[1], a1[0], a1[1], g.dkU); }
     var n0 = P2(-8, -9), n1 = P2(-10, -9); b.line(n0[0], n0[1], n1[0], n1[1], g.dkU);
-    var t0 = P2(-61, -21), t1 = P2(-70, -20); b.line(t0[0], t0[1], t1[0], t1[1], s[4]);
+    var t0 = P2(-62, -22), t1 = P2(-78, -22); b.line(t0[0], t0[1], t1[0], t1[1], s[4]);
+    t0 = P2(-62, -20); t1 = P2(-72, -19); b.line(t0[0], t0[1], t1[0], t1[1], s[0]);
     // crop
     var bb = b.bounds(), cb = new I.Buf(bb.w, bb.h);
     for (y = 0; y < bb.h; y++) for (x = 0; x < bb.w; x++) cb.d[y * bb.w + x] = bd.length ? b.d[(y + bb.y) * BW + x + bb.x] : 0;
@@ -107,18 +110,21 @@
 
   function bakeNeck(pal) {
     var g = G[pal], s = g.specU, r = 13, n = 30;
-    return [0, 1].map(function (v) {
+    // two passes at runtime: all outline discs, then all body discs -> one smooth scaled tube
+    function mk(body, v) {
       var b = new I.Buf(n, n), cx = 15, cy = 15;
-      b.disc(cx, cy, r, s[3]);
-      b.disc(cx - 1.5, cy - 1.5, r - 2.5, s[2]);
-      b.disc(cx - 4, cy - 4, r - 8, s[1]);
-      b.set(cx - 6, cy - 7, s[0]); b.set(cx - 5, cy - 7, s[0]); b.set(cx - 7, cy - 6, s[0]);
-      // scallops
-      for (var k = 0; k < 5; k++) { var a = -0.4 + k * 0.5, rr = r - 4; b.ring(cx + Math.cos(a) * rr * 0.5, cy + Math.sin(a) * rr * 0.5, 2.2, 3.1, s[4], 0.3, PI - 0.3); }
-      b.outline(g.dkU);
-      if (v) b.breakup(0.5);
+      if (!body) b.disc(cx, cy, r + 1, g.dkU);
+      else {
+        b.disc(cx, cy, r, s[4]);
+        b.disc(cx - 1, cy - 1.5, r - 2, s[3]);
+        b.disc(cx - 2.5, cy - 4, r - 6, s[2]);
+        b.disc(cx - 3.5, cy - 6.5, r - 10, s[1]);
+        for (var k = 0; k < 4; k++) { var a = 0.2 + k * 0.7, rr = r - 5; b.ring(cx + Math.cos(a) * rr * 0.55, cy + Math.sin(a) * rr * 0.55, 2.2, 3.2, s[4], 0.4, PI - 0.4); }
+      }
+      if (v) b.breakup(0.5, body ? 0 : 1, 0);
       return I.toCanvas(b);
-    });
+    }
+    return { o: [mk(false, 0), mk(false, 1)], b: [mk(true, 0), mk(true, 1)] };
   }
 
   function bakeSuper() {
@@ -140,8 +146,8 @@
   function layout(t, tx, ty) {
     var hov = [
       [Math.max(tx - 128, Math.min(100, tx - 36)), I.clamp(ty - 46, 50, 120)],
-      [I.clamp(tx - 22, 60, W - 60), I.clamp(ty - 66, 60, 110)],
-      [Math.min(tx + 116, Math.max(W - 100, tx + 36)), I.clamp(ty - 50, 50, 120)]
+      [I.clamp(tx - 30, 60, W - 60), I.clamp(ty - 64, 60, 110)],
+      [Math.min(tx + 108, Math.max(W - 44, tx + 36)), I.clamp(ty - 40, 56, 130)]
     ];
     var ent = [[-150, 0, 0], [0, -170, 90], [W + 150, 0, 180]];   // entry offsets / travel angle
     for (var k = 0; k < 3; k++) {
@@ -196,11 +202,14 @@
     var sw = Math.sin(t * 0.07 + k * 1.9) * 26;
     var x1 = nx - dx * 54, y1 = ny - dy * 54, x2 = h.ex + (k === 1 ? sw : 0), y2 = h.ey + (k === 1 ? 0 : sw), x3 = h.ex, y3 = h.ey;
     if (k === 1) { x2 = (x1 + h.ex) / 2 + sw; y2 = (y1 + h.ey) / 2; } else { x2 = (x1 + h.ex) / 2; y2 = (y1 + h.ey) / 2 + 30 + sw; }
-    var n = 34;
-    for (var i = n; i >= 0; i--) {
-      var u = i / n, px = bez(nx, x1, x2, x3, u), py = bez(ny, y1, y2, y3, u);
-      if (px < -24 || px > W + 24 || py < -24 || py > H + 24) continue;
-      ctx.drawImage(g.neck[u > 0.62 ? 1 : 0], Math.round(px) - 15, Math.round(py) - 15);
+    var n = 40, i, u, px, py;
+    for (var pass = 0; pass < 2; pass++) {
+      var set = pass ? g.neck.b : g.neck.o;
+      for (i = n; i >= 0; i--) {
+        u = i / n; px = bez(nx, x1, x2, x3, u); py = bez(ny, y1, y2, y3, u);
+        if (px < -24 || px > W + 24 || py < -24 || py > H + 24) continue;
+        ctx.drawImage(set[u > 0.62 ? 1 : 0], Math.round(px) - 15, Math.round(py) - 15);
+      }
     }
   }
   function drawHead(ctx, hs, mx, my) {
