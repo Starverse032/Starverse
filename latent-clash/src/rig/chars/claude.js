@@ -311,7 +311,8 @@
     // fabric lifts off the legs; tumbles / launches)
     var tr = sk.tail || 0, bl = Math.max(0, Math.min(1.2, sk.arch || 0));
     var aF = 80 + rotA + tr - fl * 3 - bl * 16 - swF[0] * 2.5, aB = 101 + rotA + tr + fl * 3 + bl * 22 - swB[0] * 2.5;
-    var Lf = 49 - bl * 9, Lb = 50 - bl * 6;
+    var Lf = 49 - bl * 9, Lb = 50 - bl * 6, peek = sk.ds && sk.ds.peek;
+    if (peek) { Lf -= 3; Lb -= 2.5; }       // walk: hem rides ~3 px up so the boot tips show under it
     var pts = [], k, s;
     for (s = 0; s < 2; s++) {
       var S = s ? 'B' : 'F', kn = sk['kn' + S], an = sk['an' + S], hp = sk['hip' + S];
@@ -319,6 +320,7 @@
     }
     var kneeF = Lf * 0.55, kneeB = Lb * 0.55;
     for (k = 0; k < (kL > 0.85 ? 0 : pts.length); k++) {     // lying: the dress simply lies over the legs
+      if (peek && k % 6 >= 4) continue;                       // walk: toes / heels may poke out of the hem
       var P = pts[k][0], cl = pts[k][1];
       var dx = P[0] - rootF[0], dy = P[1] - rootF[1], d = Math.sqrt(dx * dx + dy * dy);
       if (d < Lf - 1 && d > 1) {
