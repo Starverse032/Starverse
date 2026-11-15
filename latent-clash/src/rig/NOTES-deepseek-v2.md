@@ -36,12 +36,13 @@ Design source: CONTRACT-V2 §V2.1 (rewritten from the reference picture) + `LC.P
   → eye rub → snap into stance with a tail flick. win: hop → bouncing wave/hand-on-head with tail wag. lose: shock →
   sulk (arms folded, head down, foot scuff, sigh), tail flat on the floor.
 - Palm glow `wg` on 5L, 2L, chain1 (rear hand), chain3, super.
-- Known, not mine to fix in this pass: 2H flipped frames (startup+8 … recovery+6) draw no skirt at all (pre-existing,
-  verified against b06f962) — likely skirt surface degenerate in the flipped crouch frame.
-- Hem lift during walks pops 3 px at walk start/stop (idle has no lift).
+- Follow-ups: `raised()` ignores a thigh raised toward the opposite contour (back knee forward / front knee back) —
+  that drape twisted the skirt inside out and erased it on all 2H flipped frames (5H/wave were fine). Hem lift is
+  smoothed per puppet (`sec._hem` → `sk.hemS`, ~1 px/tick), so walk start/stop no longer pops. throwHit slam uses
+  `hs` 0.85/0.6: hair stays behind.
 
 ## Weak / next (polish)
-- Hair stays blocky in silhouette; throwHit toss still flips the hair forward for ~2 frames.
+- Hair stays blocky in silhouette.
 - Hands are small stamps.
 - No back-view head for spins (spins mirror the whole sprite instead).
 

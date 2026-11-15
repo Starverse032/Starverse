@@ -227,20 +227,17 @@
   }
 
   // walk: the toe of the leading boot drawn over the hem (it steps out from under the dress)
-  var TIP = [[1.4, 0], [3.5, 0], [7.8, 0], [8.4, -1.2], [7.4, -2.6], [3.6, -4], [1.4, -4.3]];
+  var TIP = [[3.2, 0], [7.8, 0], [8.4, -1.2], [7.4, -2.6], [4.6, -3.7], [3.2, -3.9]];
   function drawBootTip(p, sk, D) {
     var s = sk.ftF[0] + D.lock.F >= sk.ftB[0] + D.lock.B ? 'F' : 'B';
     var ft = s === 'F' ? sk.ftF : sk.ftB, fa = s === 'F' ? sk.faF : sk.faB, lo = s === 'F' ? D.lock.F : D.lock.B;
     if (ft[1] < -2.5) return;                        // lifted: stays under the skirt
     ft = [ft[0] + (lo || 0), ft[1]];
-    var a0 = fr(ft, fa, 1.2, -3.5), a1 = fr(ft, fa, 0.6, -7);
-    p.cap(a1[0], a1[1], a0[0], a0[1], 1.6, 2.0, M.legs, SH.limbL, 1);      // tights at the instep
     var pts = [];
     for (var i = 0; i < TIP.length; i++) { var q = fr(ft, fa, TIP[i][0], TIP[i][1]); pts.push(q[0], q[1]); }
     p.poly(pts, M.shoe, SH.limbL, 1);
     var s0 = fr(ft, fa, 3.5, 0), s1 = fr(ft, fa, 7.6, 0);
     ln(p, s0, s1, col(M.shoe, 2), true);
-    var l0 = fr(ft, fa, 3, -3.4); p.pxOn(l0[0], l0[1], col(M.shoe, 3));
     p.end();
   }
 
