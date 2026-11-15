@@ -3,8 +3,14 @@
 ## GPT progress / next steps (V2.5 third fighter — truthful, current)
 - core.js: slots appended (indices of old slots unchanged): `z0..z3,zl` = `blob` ramp; for gpt
   `x*` = `scale`, `u*` = `wing` (fallbacks for the old chars unchanged: book/fin, under/cloth1).
-- NEXT: `gpt.js` (bust → face → cut-in → win/lose), `emblem.gpt(.lg)` in icons.js + api.js icon list,
-  `gpt` in tools/illust-shots.mjs.
+- gpt.js (in manifest after deepseek.js): bust / bustWin / bustLose drawn and iterated (horns, wing,
+  ear + earring, knot rosette, collar + diamond cut-out, frilled detached sleeves, beckoning hand —
+  index finger only, blob companion). `knot()` = rosette (cord-ring weave ≥ 32 px, simple
+  scalloped loops below that — the weave turns into a pinwheel at small sizes, avoid).
+- icons.js: emblem regex generalised (`emblem.<char>` for any LC.PAL char), gpt branch calls
+  `I.gptEmblem`; api.js ICONS list + `emblem.gpt`, `emblem.gpt.lg`. Claude/DeepSeek emblems unchanged.
+- tools/illust-shots.mjs: iterates LC.CHARS; `trio-busts(-light)` sheets; `SCALE=n` env for `sheet:`.
+- NEXT: face 24×24 (placeholder now), cut-in (cutin.js hook), then hair polish.
 
 ## V2 progress / next steps (ZipZipPipe redesign — truthful, current)
 DONE (all render with zero console errors; init ≈ 340–390 ms, up from ≈ 260; title 0.1 ms/frame):
