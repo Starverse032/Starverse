@@ -207,7 +207,7 @@
   var WN = P(ST, { hip: [0, -47], hF: [16, -88], hB: [-6, -50], handF: 'open', handB: 'relax', eyes: 'happy', mouth: 'grin', blush: 1, tsw: 1.2, tail: -10 });
   var wag = function (k) {
     var r = k & 1 ? 1 : -1;
-    return P(WN, { hip: [0, k & 1 ? -46 : -48], hF: [16 + 4 * r, -88 + (k & 1)], tilt: 5 * r, tail: -10 + 22 * r, arch: 22 - 4 * r, sq: k & 1 });
+    return P(WN, { hip: [0, k & 1 ? -46 : -48], hF: [18 + 5 * r, -96 + (k & 1)], tilt: 5 * r, tail: -10 + 22 * r, arch: 22 - 4 * r, sq: k & 1 });
   };
   def('win', {
     segs: [['in', 30], ['loop', 60, true]], step: 2,
