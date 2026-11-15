@@ -414,6 +414,8 @@
   function drawHairLock(p, ch, w, amp, seed, strands, tipMat) {
     var pts = H.chainPts(ch), wv = wavy(pts, w, amp, seed), sub = wv.sub, n = sub.length, i;
     p.poly(wv.poly, M.hair, null);
+    // shade band on the back side of the lock (volume)
+    p.poly(H.flat(wv.L.concat(wv.L.map(function (q, k) { return lerp(q, wv.R[k], 0.3); }).reverse())), M.hair, null, 2);
     var cut = Math.floor(n * 0.7);
     if (tipMat != null) p.poly(H.flat(wv.L.slice(cut).concat([sub[n - 1]], wv.R.slice(cut).reverse())), tipMat, null, 1);
     var prev = null;
@@ -445,9 +447,9 @@
     // membrane: root → wrist → tip0 ⌒ tip1 ⌒ tip2 → back to the root, scalloped between the fingers
     function scal(a, b, k) { var m = lerp(a, b, 0.5); return lerp(m, w, k); }
     var mem = [r, w, tips[0], scal(tips[0], tips[1], 0.36), tips[1], scal(tips[1], tips[2], 0.38), tips[2], scal(tips[2], [r[0] + 1, r[1] + 5], 0.25), [r[0] + 1, r[1] + 5]];
-    p.poly(H.flat(mem), MW, SH.soft, 1 + t);
-    // darker inner panels near the body
-    p.poly(H.flat([r, w, scal(tips[1], tips[2], 0.55), lerp(tips[2], r, 0.6)]), MW, null, 2 + t);
+    p.poly(H.flat(mem), MW, SH.soft, 2 + t);
+    // lighter membrane along the leading edge (arm) and the first finger
+    p.poly(H.flat([r, w, lerp(w, tips[0], 0.75), lerp(r, tips[1], 0.35)]), MW, null, 1 + t);
     // bones: arm (thick) + three fingers, wrist claw
     p.cap(r[0], r[1], w[0], w[1], 1.6, 1.2, MS, SH.limb, 1 + t);
     for (var k = 0; k < 3; k++) {
@@ -596,6 +598,8 @@
   // main skirt (behind the front leg): back panel + far side, lining visible in the slit opening
   function drawSkirtBack(p, S) {
     p.poly(band(S, 0, 1, 0, 1, 6), M.c1, null);
+    p.poly(band(S, function (v) { return 0.74 - 0.08 * v; }, 1, 0.02, 1, 5), M.c1, null, 2);   // back of the gown in shade
+    p.poly(band(S, 0.45, 1, 0.9, 1, 3), M.c1, null, 2);
     sLine(p, S, 0.975, 0.04, 1, 0, true, true);
     sLine(p, S, 0.95, 0.3, 1, 0, true, true);
     hLine(p, S, 0.4, 1, 0.985, col(M.c1, 3), true);
