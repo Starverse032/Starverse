@@ -99,7 +99,7 @@
       ctx.globalAlpha = F.clamp(a, 0, 1);
       // V2: directly under the name row with an opaque plate (stage signage sits behind y 38-60)
       var tw = F.measure(f.tag, { size: 10 }).w + 10, tx = side === 0 ? x0 : x0 + BAR_W - tw, ty = TAG_Y;
-      rect(ctx, tx - 1, ty - 1, tw + 2, 15, U.black); rect(ctx, tx, ty, tw, 13, 'rgba(11,10,20,0.92)'); rect(ctx, side === 0 ? tx : tx + tw - 2, ty, 2, 13, P.ui);
+      plate(ctx, tx, ty, tw, 13, side, P);
       F.text(ctx, f.tag, tx + 5 + (side === 0 ? 1 : -1), ty + 1, { size: 10, color: P.uiLight });
       ctx.globalAlpha = 1;
     }
@@ -137,6 +137,15 @@
     if (full && (m.tick % 40) < 20) rect(ctx, side === 0 ? x0 + w - 2 : x0 + MET_W - w, y - 1, 2, 7, '#ffffff');
   }
 
+  // fully opaque plate (fix: stage signage showed through): 1-px light border + black keyline outside,
+  // opaque fill, 2-px accent stripe on the screen-edge side. x,y,w,h = the inner area.
+  function plate(ctx, x, y, w, h, side, P) {
+    rect(ctx, x - 2, y - 2, w + 4, h + 4, U.black);
+    rect(ctx, x - 1, y - 1, w + 2, h + 2, U.line || '#3a3550');
+    rect(ctx, x, y, w, h, '#0b0a14');
+    rect(ctx, side === 0 ? x : x + w - 2, y, 2, h, P.ui);
+  }
+
   function combo(ctx, m, side) {
     var f = m.f[side], H = hudState(m);
     var n = f.comboShow;
@@ -152,8 +161,7 @@
     var dtxt = String(f.comboShowDmg) + ' DMG';
     var pw = Math.max(nw + 3 + F.measure('HITS', { size: 8 }).w, F.measure(dtxt, { size: 8 }).w) + 8;
     var plx = side === 0 ? x - 4 : x + 4 - pw;
-    ctx.globalAlpha = fade * 0.62; rect(ctx, plx, COMBO_Y - 3, pw, 41, U.bg0 || '#05040a'); ctx.globalAlpha = fade;
-    rect(ctx, side === 0 ? plx : plx + pw - 2, COMBO_Y - 3, 2, 41, P.ui);
+    plate(ctx, plx, COMBO_Y - 3, pw, 41, side, P);
     F.text(ctx, String(n), x, y, { size: 12, scale: 2, align: al, color: U.gold, outline: U.black });
     F.text(ctx, 'HITS', side === 0 ? x + nw + 3 : x - nw - 3, y + 11, { size: 8, align: al, color: U.text, outline: U.black });
     F.text(ctx, dtxt, x, y + 26, { size: 8, align: al, color: P.uiLight, outline: U.black });
