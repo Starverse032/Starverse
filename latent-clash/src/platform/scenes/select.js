@@ -213,7 +213,8 @@
             c.fillRect(q[2] > 0 ? x : x + 4, q[3] > 0 ? y : y - 4, 2, 6);
           });
           var tag = tagOf(i), tw = LC.font.measure(tag, { size: 8 }).w + 6;
-          var tagX = i === 0 ? tx - 2 : tx + TS + 2 - tw, tagY = i === 0 ? ty - 9 : ty + TS + 3;
+          // tags sit outside the grid (above the top row, below the others) so they never cover a tile label
+          var tagX = i === 0 ? tx - 2 : tx + TS + 2 - tw, tagY = ty === GY ? ty - 9 : ty + TS + 3;
           ui.box(c, tagX, tagY, tw, 9, col);
           LC.font.draw(c, tag, tagX + 3, tagY + 1, { size: 8, color: U.bg0 });
           if (s.locked) { var ic = ui.icon('lock'); if (ic) c.drawImage(ic, i ? tx + 2 : tx + TS - ic.width - 2, ty + 2); }
