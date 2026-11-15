@@ -144,10 +144,20 @@
       if (clip) { cord = cord.and(clip); e = e.and(clip); }
       P.fill(cord, S.c0); P.fill(e, L);
     }
-    for (i = 0; i < n; i++) ring(rg[i]);
-    var inn = P.ell(cx, cy, d, d), out = all.sub(inn);
-    ring(rg[0], rg[n - 1].O.and(out));
-    for (i = 0; i < n; i++) ring(rg[(i + n - 1) % n], rg[i].O.and(inn));
+    if (o.small) {
+      // tiny: no weave (it turns into a pinwheel) — scalloped loops, hole dots, notch lines
+      P.fill(all, S.c0);
+      for (i = 0; i < n; i++) {
+        P.fill(rg[i].H, L);
+        var na = rot + (i + 0.5) * Math.PI * 2 / n;
+        P.line([cx + Math.cos(na) * r * 0.86, cy + Math.sin(na) * r * 0.86, cx + Math.cos(na) * r * 0.5, cy + Math.sin(na) * r * 0.5], L);
+      }
+    } else {
+      for (i = 0; i < n; i++) ring(rg[i]);
+      var inn = P.ell(cx, cy, d, d), out = all.sub(inn);
+      ring(rg[0], rg[n - 1].O.and(out));
+      for (i = 0; i < n; i++) ring(rg[(i + n - 1) % n], rg[i].O.and(inn));
+    }
     P.recol(all.band(2, -2), [S.c0], S.c1);
     P.recol(all.band(1, -1).and(all.band(2, -2)), [S.c1], S.c2);
     var core = P.ell(cx, cy, r * (o.core || 0.2), r * (o.core || 0.2));
