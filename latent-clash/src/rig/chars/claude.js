@@ -134,7 +134,7 @@
   C.quillGeo = function (sk) {
     // ds.ql (0..1): drawn-out length while the quill is pulled out of the book (start-ups)
     var g = handTip(sk, 'F', 2), u = rot(1, 0, sk.pen), pg = sk.pg || 0;
-    var ql = sk.ds && sk.ds.ql != null ? sk.ds.ql : 1, L = QL * ql, bt = 7 * Math.min(1, ql * 2);
+    var ql = sk.ds && sk.ds.ql != null ? sk.ds.ql : 1, L = QL * ql, bt = ql < 1 ? 1 : 7;
     return { g: g, u: u, ql: ql, L: L + bt + L * pg, butt: [g[0] - u[0] * (L * pg + bt), g[1] - u[1] * (L * pg + bt)],
       tip: [g[0] + u[0] * L * (1 - pg), g[1] + u[1] * L * (1 - pg)] };
   };
