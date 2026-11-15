@@ -145,8 +145,8 @@
       [9, P(S, { hip: [-3, -22], lean: 40, bend: 6, tilt: -5, fF: [0, 0], fB: [-10, 0], faF: 50, faB: 70, hF: [16, -1], hB: [10, -1],
         handF: 'flat', handB: 'flat', eyes: 'focus', mouth: 'teeth', tail: -10, arch: 4, tsw: 0.3, skirt: 0.1 }), 'inout'],
       [13, P(S, { root: [0, -5], hip: [0, -44], lean: 8, bend: -4, fF: [7, -8], fB: [-7, -10], faF: 35, faB: 40, hF: [16, -64], hB: [-6, -66],
-        handF: 'open', handB: 'open', eyes: 'focus', mouth: 'grin', tail: -35, arch: 26, pen: 12, skirt: 0.7, tsw: 1.5 }), 'inout'],
-      [17, P(S, { hip: [0, -37], lean: 16, bend: 4, sq: 1, hF: [21, -48], hB: [9, -46], skirt: 0.35, tail: 10, eyes: 'focus', mouth: 'grin' }), 'in'],
+        handF: 'open', handB: 'open', eyes: 'focus', mouth: 'grin', tail: -35, arch: 26, pen: 12, skirt: 0.7, tsw: 1.5, hs: 0.2 }), 'inout'],
+      [17, P(S, { hip: [0, -37], lean: 16, bend: 4, sq: 1, hF: [21, -48], hB: [9, -46], skirt: 0.35, tail: 10, eyes: 'focus', mouth: 'grin', hs: 0.15 }), 'in'],
       [20, P(S, { hip: [0, -44], lean: 8, eyes: 'focus' }), 'out'], [23, S]]
   });
 

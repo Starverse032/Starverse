@@ -151,7 +151,7 @@
       ['rise', P(spin(BRa, -50), { smear: { part: 'tail', from: 'startup+3', n: 4 } }), 'snap'],
       ['rise+2', spin(BRa, -100), 'out'], ['rise+5', spin(P(BRa, { mouth: 'grin' }), -150)],
       ['rise+8', spin(P(BRa, { tl: 0, z: {}, mouth: 'grin' }), -210)], ['rise+11', spin(P(JF, ATK, { tl: 0, skirt: 0.8 }), -290)],
-      ['fall', spin(P(JF, ATK, { skirt: 0.7, tail: -20 }), -360)], ['fall+6', spin(P(JF, ATK, { skirt: 0.6, hB: [-12, -63], tail: -20 }), -360)],
+      ['fall', spin(P(JF, ATK, { skirt: 0.7, tail: -20, hs: 0.3 }), -360)], ['fall+6', spin(P(JF, ATK, { skirt: 0.6, hB: [-12, -63], tail: -20, hs: 0.15 }), -360)],
       ['land', P(S, { hip: [0, -36], lean: 18, bend: 4, sq: 1, hF: [21, -46], hB: [9, -44], skirt: 0.35, eyes: 'focus' }), 'snap'],
       ['land+3', P(S, ATK, { hip: [0, -40], lean: 14, skirt: 0.1 }), 'out'], ['land+13', S]]
   });

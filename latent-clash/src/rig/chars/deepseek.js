@@ -261,6 +261,15 @@
     sec.attach('hairB', hB[0], hB[1], a * 0.5);
     sec.attach('lockN', lk[0], lk[1], a * 0.4);
     sec.attach('ahoge', ah[0], ah[1], a);
+    // hs (0..1): settle the hair toward its rest shape this tick (kills chain inertia after flips / hops)
+    if (ds.hs) ['hairA', 'hairB', 'lockN'].forEach(function (id) {
+      var c = by[id]; if (!c.ready) return;
+      for (var j = 1; j < c.n; j++) {
+        var r = c.restPos(j);
+        c.x[j] += (r[0] - c.x[j]) * ds.hs; c.y[j] += (r[1] - c.y[j]) * ds.hs;
+        c.px[j] += (r[0] - c.px[j]) * ds.hs; c.py[j] += (r[1] - c.py[j]) * ds.hs;
+      }
+    });
     // apron bow tails at the back of the waist
     var W = d.waist, wa = L * 0.7 + d.chestAng * 0.3, bw = fr(W, wa, -6.5, 1.5);
     sec.attach('bowA', bw[0], bw[1], 0);
