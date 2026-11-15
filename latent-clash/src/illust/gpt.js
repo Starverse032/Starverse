@@ -140,6 +140,7 @@
       var O = P.ell(px, py, ro, ro), Hh = o.small ? P.ell(px + Math.cos(a) * 0.4, py + Math.sin(a) * 0.4, o.hole || 0.9, o.hole || 0.9) : P.ell(px, py, ro - t, ro - t);
       rg.push({ O: O, H: Hh }); all = all.or(O);
     }
+    if (o.ring) P.fill(all.grow(1).sub(all).and(P.solid()), o.ring);
     P.fill(all, o.small ? L : S.c3);
     function ring(p, clip) {
       var cord = p.O.sub(p.H), e = o.small ? p.O.edge() : p.O.edge().or(p.H.grow(1).and(p.O).sub(p.H));
@@ -169,7 +170,7 @@
   }
   I.gptEmblem = function (P, size) {
     if (size >= 32) knot(P, 16, 16, 15, 5, -Math.PI / 2, {});
-    else knot(P, size / 2, size / 2, size * 0.475, 5, -Math.PI / 2, { small: 1, d: 0.5, ro: 0.5, hole: 1.3, core: 0.3 });
+    else knot(P, size / 2, size / 2, size * 0.465, 5, -Math.PI / 2, { small: 1, d: 0.58, ro: 0.44, hole: 1.2, core: 0.3, noNotch: 1 });
     P.outer(S.ol);
   };
   I.knot = knot;
@@ -332,7 +333,7 @@
     var tas = P.sr([80, 28, 81, 33, 80.5, 39], 1.8, 3);
     P.part(tas, S.c1, S.cl); P.recol(tas.band(1, 0), [S.c1], S.c2);
     P.part(P.rect(79, 28, 3, 2), S.m1, S.ml);
-    knot(P, 77, 23, 7.4, 5, -0.3, { small: 1, d: 0.5, ro: 0.52, hole: 1.2, core: 0.3, noNotch: 1 });
+    knot(P, 77, 23, 7.6, 5, -0.3, { small: 1, d: 0.58, ro: 0.44, hole: 1.2, core: 0.3, noNotch: 1, ring: S.hl });
 
     // ---- ahoge
     var aho = lose ? P.sr([50, 12, 48, 7, 44, 5, 41, 7], 3.6, 1.8) : P.sr([50, 12, 49, 6, 46, 3, 42, 2, 39, 4], 4, 1.8);
