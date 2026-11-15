@@ -35,7 +35,7 @@
       enter: function () { LC.input.setMode('solo'); },
       update: function () {
         swapT++;
-        if (swapT > 360) { swapT = 0; showcase ^= 1; }
+        if (swapT > 360) { swapT = 0; showcase = (showcase + 1) % LC.CHARS.length; }
         if (sub) {
           subT++;
           var r2 = sub.update();
@@ -49,18 +49,21 @@
       },
       draw: function (c) {
         var t = this.t;
-        var acc = showcase ? '#4d6bfe' : '#d97757';
+        // character showcase (right side): the featured fighter in front, the next one behind;
+        // slots alternate left/right so each swap reads as a change of turn.
+        var CL = LC.CHARS, fr = CL[showcase % CL.length], bk = CL[(showcase + 1) % CL.length];
+        var acc = ui.charCol(fr, 0).ui;
         ui.backdrop(c, t, { accent: acc });
-        // character showcase (right side)
-        var order = showcase ? ['claude', 'deepseek'] : ['deepseek', 'claude'];
+        var frontRight = showcase & 1;
         var sw = ui.ease.inOut(Math.min(1, swapT / 40));
-        order.forEach(function (ch, k) {
+        [bk, fr].forEach(function (ch, k) {
           var front = k === 1;
           var b = ui.portrait(ch, 'bust', 0);
           if (!b) return;
-          if (ch === 'deepseek') b = ui.flip(b);
-          var baseX = ch === 'claude' ? 204 : 266;
-          var dx = front ? Math.round((1 - sw) * (ch === 'claude' ? -10 : 10)) : 0;
+          var right = front ? frontRight : !frontRight;
+          if (right) b = ui.flip(b);
+          var baseX = right ? 266 : 204;
+          var dx = front ? Math.round((1 - sw) * (right ? 10 : -10)) : 0;
           var y = (front ? 70 : 62) + Math.round(Math.sin(t * 0.03 + k) * 2);
           c.drawImage(front ? b : ui.tint(b, '#0b0a14', 0.55), baseX + dx, y);
         });
