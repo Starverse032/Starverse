@@ -17,8 +17,10 @@
   var ATK = { eyes: 'focus', mouth: 'neutral' };
   var HIT = { eyes: 'focus', mouth: 'teeth', glow: 1 };
   var QON = { quill: true }, QOFF = { quill: false };
-  // front hand reaching to the book at the back hip (drawing the quill)
-  var DRAW = { hF: [0, -58], handF: 'grip', lean: 4, book: -70 };
+  // drawing the quill: the front hand crosses to the book at the back hip (it flicks open), then a short
+  // streak of light (ql < 1) is pulled out of it, trailing back toward the pages, before it unfurls
+  var DRAW = { hF: [-4, -53], handF: 'grip', lean: 5, bend: 2, book: -70, bko: 0.35, tilt: 6 };
+  function PULL(o) { return P({ quill: true, ql: 0.45, pen: -195, pg: 0.1, glow: 1, handF: 'grip', book: -80, bko: 0.2 }, o); }
 
   // ---------------------------------------------------------------- 5L: spine jab with the book (rear hand)
   var L0 = P(S, ATK, { hip: [-1, -53], lean: -2, hB: [-4, -70], book: -10, z: { armB: 6 }, hF: [12, -72], handF: 'fist' });
@@ -57,7 +59,8 @@
     segs: [['startup', 12], ['active', 5], ['recovery', 22]], step: 2,
     keys: [
       ['startup', P(S, ATK)], ['startup+2', P(S, ATK, DRAW), 'out'],
-      ['startup+4', P(S, ATK, QON, { hF: [2, -72], pen: -95, lean: -2 }), 'out'],
+      ['startup+4', P(S, ATK, PULL({ hF: [6, -60], lean: 1 })), 'out'],
+      ['startup+6', P(S, ATK, QON, { hF: [3, -76], pen: -105, lean: -4 }), 'out'],
       ['startup+8', H0, 'out'], ['startup+10', P(H0, { hF: [0, -88], pen: -155 }), 'snap'],
       ['active', P(H1, { smear: { part: 'quill', from: 'startup+10', n: 5 } }), 'snap'],
       ['active+2', H1, 'snap'],
@@ -99,8 +102,9 @@
   def('2H', {
     segs: [['startup', 11], ['active', 5], ['recovery', 24]], step: 2,
     keys: [
-      ['startup', c0], ['startup+2', P(c0, { hF: [-2, -32], handF: 'grip' }), 'out'],
-      ['startup+4', P(c0, QON, { hF: [2, -48], pen: -100 }), 'out'],
+      ['startup', c0], ['startup+2', P(c0, { hF: [-5, -30], handF: 'grip', bko: 0.35, book: -70 }), 'out'],
+      ['startup+4', P(c0, PULL({ hF: [6, -38] })), 'out'],
+      ['startup+5', P(c0, QON, { hF: [3, -52], pen: -110 }), 'out'],
       ['startup+7', CH0, 'out'], ['startup+9', P(CH0, { hF: [4, -66], pen: -140 }), 'snap'],
       ['active', P(CH1, { smear: { part: 'quill', from: 'startup+9', n: 5 } }), 'snap'],
       ['active+2', CH1, 'snap'],
@@ -142,8 +146,9 @@
   def('jH', {
     segs: [['startup', 10], ['active', 6], ['recovery', 12, true]], step: 2,
     keys: [
-      ['startup', j0], ['startup+2', P(j0, { hF: [2, -62], handF: 'grip', book: -60 }), 'out'],
-      ['startup+4', P(j0, QON, { hF: [4, -80], pen: -90 }), 'out'],
+      ['startup', j0], ['startup+2', P(j0, { hF: [-8, -60], handF: 'grip', book: -60, bko: 0.35 }), 'out'],
+      ['startup+4', P(j0, PULL({ hF: [4, -68] })), 'out'],
+      ['startup+5', P(j0, QON, { hF: [4, -84], pen: -105 }), 'out'],
       ['startup+6', JH0, 'out'], ['startup+8', P(JH0, { hF: [1, -99], pen: -135 }), 'snap'],
       ['active', P(JH1, { smear: { part: 'quill', from: 'startup+8', n: 5 } }), 'snap'],
       ['active+2', JH1, 'snap'], ['active+5', P(JH1, { glow: 0, hF: [32, -58], pen: 44 })],
@@ -186,7 +191,8 @@
   def('sonnet', {
     segs: [['startup', 5], ['rise', 14], ['fall', 12, true], ['land', 12]], step: 2,
     keys: [
-      ['startup', P(C, ATK, { hF: [4, -40], handF: 'grip' })], ['startup+3', P(C, ATK, QON, { hip: [0, -22], hF: [30, -34], pen: 30, lean: 30 })],
+      ['startup', P(C, ATK, { hF: [-5, -30], handF: 'grip', bko: 0.35, book: -70 })],
+      ['startup+2', P(C, ATK, PULL({ hF: [8, -36], pen: 165 }))], ['startup+3', P(C, ATK, QON, { hip: [0, -22], hF: [30, -34], pen: 30, lean: 30 })],
       ['rise', P(SN1, { smear: { part: 'quill', from: 'startup+3', n: 5 } }), 'snap'],
       ['rise+2', SN1, 'snap'], ['rise+8', P(SN1, { glow: 0, fB: [-4, -6], hF: [14, -104] })],
       ['fall', P(JF, ATK, QON, { hF: [18, -80], pen: -40 })], ['fall+6', P(JF, ATK, QOFF, { hF: [18, -76] })],
@@ -202,7 +208,8 @@
     segs: [['startup', 9], ['hit1', 3], ['gap1', 6], ['hit2', 3], ['gap2', 6], ['hit3', 4], ['recovery', 20]], step: 2,
     keys: [
       ['startup', P(S, ATK)], ['startup+2', P(S, ATK, DRAW), 'out'],
-      ['startup+5', P(S, ATK, QON, { hF: [8, -92], pen: -120, lean: -6 }), 'out'], ['startup+7', P(S, ATK, QON, { hF: [6, -93], pen: -125, lean: -7 }), 'snap'],
+      ['startup+4', P(S, ATK, PULL({ hF: [6, -62], lean: 1 })), 'out'],
+      ['startup+6', P(S, ATK, QON, { hF: [8, -92], pen: -120, lean: -6 }), 'out'], ['startup+7', P(S, ATK, QON, { hF: [6, -93], pen: -125, lean: -7 }), 'snap'],
       ['hit1', P(HK1, { smear: { part: 'quill', from: 'startup+7', n: 5 } }), 'snap'], ['hit1+2', HK1, 'snap'],
       ['gap1', P(HK1, { mouth: 'neutral', hF: [22, -46], pen: 120 }), 'out'], ['gap1+4', P(HK1, { mouth: 'neutral', hF: [18, -44], pen: 135 }), 'snap'],
       ['hit2', P(HK2, { smear: { part: 'quill', from: 'gap1+4', n: 5 } }), 'snap'], ['hit2+2', HK2, 'snap'],

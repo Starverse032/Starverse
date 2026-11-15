@@ -162,7 +162,7 @@
     var th = this.threat(me, pv, dx);
     if (th) {
       if (th === 'air') {
-        if (this.chance(P.aa * 0.25) || (this.aaRolled !== pv && (this.aaRolled = pv) && this.chance(P.aa))) {
+        if (this.chance(P.aa * 0.25) || (this.aaRolled !== pv && (this.aaRolled = pv) && this.chance(C === 'claude' && this.level === 3 ? 0.6 : P.aa))) {
           var air = dx < D(70);
           if (air && this.chance(0.7)) { this.push(this.special(C === 'claude' ? 'sonnet' : 'breach', this.level >= 4 ? 'H' : 'M'), 'aa'); return this.emit(); }
           if (dx < D(60)) { this.push(this.press('H'), 'aa5H'); return this.emit(); }
@@ -191,7 +191,7 @@
     // whiff / block punish
     if (pv && pv.act === 'attack' && pv.ph === 'recovery' && pv.hit !== 'hit' && this.punRolled !== pv.mv + pv.x) {
       this.punRolled = pv.mv + pv.x;
-      if (this.chance(C === 'claude' && this.level === 3 ? 0.68 : P.punish)) { var pp = this.punisher(me, dx); if (pp) { this.push(pp, 'punish'); this.comboStep = 0; return this.emit(); } }
+      if (this.chance(P.punish)) { var pp = this.punisher(me, dx); if (pp) { this.push(pp, 'punish'); this.comboStep = 0; return this.emit(); } }
     }
     // opponent knocked down: approach or set up
     if (o.action === 'down' || o.action === 'getup') {
