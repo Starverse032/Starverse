@@ -27,10 +27,24 @@
     k.forEach(function (q) { out.push([q[0] + 16, P(q[1]), q[2]]); });
     return out;
   }
+  // gait under the long skirt: heel strike = planted toe tipped up out of the hem, push-off toe down,
+  // hem lifted a little and swinging with the stepping leg, the tail counter-swaying, a small bounce
+  function gait(dir, sw, tl) {
+    return function (pose, k, ph) {
+      var a = k < 4 ? 'F' : 'B', o = a === 'F' ? 'B' : 'F', sg = (a === 'F' ? 1 : -1) * (1 - 2 * ph);
+      if (ph === 0) pose['fa' + a] = dir > 0 ? -22 : -12;          // heel strike: toe tips up past the hem
+      else if (ph === 0.25) pose['fa' + o] = 30;                   // push-off
+      else if (ph === 0.5) pose['fa' + o] = 12;
+      pose.tw = sw * Math.cos(Math.PI * ph) * (a === 'F' ? 1 : -1) + (dir > 0 ? 2 : -2);
+      pose.hem = ph === 0.5 ? -4 : -3;
+      pose.tail = (pose.tail || 0) - tl * sg;
+      pose.skirt = (pose.skirt || 0) + (ph === 0.5 ? 0.12 : 0.04);
+    };
+  }
   var WK = P(S, { lean: 7, bend: -2, hF: [17, -59], hB: [4, -56], skirt: 0.05 });
-  def('walkF', { segs: [['loop', 32, true]], step: 2, walk: 2.0, keys: walk2(WK, 2.0, { lift: 5, bob: 1.5, leg: 47, swingF: 2, swingB: 2 }) });
+  def('walkF', { segs: [['loop', 32, true]], step: 2, walk: 2.0, keys: walk2(WK, 2.0, { lift: 6, bob: 2, leg: 47, swingF: 3, swingB: 3, extra: gait(1, 7, 9) }) });
   var WKB = P(S, { lean: 0, bend: -3, hF: [15, -61], hB: [4, -57], tail: 8 });
-  def('walkB', { segs: [['loop', 32, true]], step: 2, walk: -1.5, keys: walk2(WKB, -1.5, { lift: 4, bob: 1, leg: 47, swingF: 1.5, swingB: 1.5 }) });
+  def('walkB', { segs: [['loop', 32, true]], step: 2, walk: -1.5, keys: walk2(WKB, -1.5, { lift: 5, bob: 1.5, leg: 47, swingF: 2, swingB: 2, extra: gait(-1, 5, 7) }) });
 
   // ---------------------------------------------------------------- crouch
   var CR = POSE.crouch = P(S, { hip: [1, -19], lean: 28, bend: 4, fF: [13, 0], fB: [-10, 0], faB: 25, hF: [27, -46], hB: [18, -40], head: [1, 0],

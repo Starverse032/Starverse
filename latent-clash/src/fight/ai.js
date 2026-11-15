@@ -15,11 +15,11 @@
   var T = F.T;
 
   var LV = [
-    { react: 28, block: 0.12, guess: 0.5, aa: 0.04, punish: 0.06, depth: 0, confirm: 30, tech: 0.03, sup: 0.15, think: 16, aggr: 0.45, jump: 0.10, mash: 0.35 },
-    { react: 22, block: 0.32, guess: 0.55, aa: 0.18, punish: 0.25, depth: 1, confirm: 16, tech: 0.10, sup: 0.35, think: 11, aggr: 0.50, jump: 0.09, mash: 0.15 },
-    { react: 17, block: 0.58, guess: 0.64, aa: 0.42, punish: 0.5, depth: 2, confirm: 10, tech: 0.25, sup: 0.65, think: 8, aggr: 0.55, jump: 0.08, mash: 0.05 },
-    { react: 13, block: 0.76, guess: 0.72, aa: 0.62, punish: 0.72, depth: 3, confirm: 7, tech: 0.40, sup: 0.85, think: 6, aggr: 0.6, jump: 0.07, mash: 0 },
-    { react: 10, block: 0.88, guess: 0.8, aa: 0.78, punish: 0.86, depth: 3, confirm: 5, tech: 0.55, sup: 1.0, think: 4, aggr: 0.62, jump: 0.06, mash: 0 }
+    { react: 28, block: 0.12, guess: 0.5, aa: 0.04, punish: 0.06, depth: 0, confirm: 30, tech: 0.03, sup: 0.15, think: 16, aggr: 0.45, jump: 0.10, mash: 0.35, cJump: 0.55, cHaiku: 0.1 },
+    { react: 22, block: 0.32, guess: 0.55, aa: 0.18, punish: 0.25, depth: 1, confirm: 16, tech: 0.10, sup: 0.35, think: 11, aggr: 0.50, jump: 0.09, mash: 0.15, cJump: 0.55, cHaiku: 0.1 },
+    { react: 17, block: 0.58, guess: 0.64, aa: 0.42, punish: 0.5, depth: 2, confirm: 10, tech: 0.25, sup: 0.65, think: 8, aggr: 0.55, jump: 0.08, mash: 0.05, cJump: 0.3, cHaiku: 0.02 },
+    { react: 13, block: 0.76, guess: 0.72, aa: 0.62, punish: 0.72, depth: 3, confirm: 7, tech: 0.40, sup: 0.85, think: 6, aggr: 0.6, jump: 0.07, mash: 0, cJump: 0.45, cHaiku: 0.06 },
+    { react: 10, block: 0.88, guess: 0.8, aa: 0.78, punish: 0.86, depth: 3, confirm: 5, tech: 0.55, sup: 1.0, think: 4, aggr: 0.62, jump: 0.06, mash: 0, cJump: 0.55, cHaiku: 0.1 }
   ];
 
   function AI(m, side, level, seed) {
@@ -259,8 +259,8 @@
     if (dx > D(70)) add('dashF', 0.25 + ag * 0.4 * (C === 'deepseek' ? 0.9 : 0.8), [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 1 }]);
     if (dx < D(70) && me.x > T.WALL + 60 && me.x < LC.STAGE_W - T.WALL - 60) add('dashB', 0.15, [{ d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }]);
     var jr = C === 'claude' ? [D(70), D(130)] : [D(70), D(150)];
-    if (dx > jr[0] && dx < jr[1]) add('jumpIn', P.jump * 4 * (0.6 + ag) * (C === 'claude' ? 0.55 : 1), [{ d: 9, n: 3 }]);   // V2: DeepSeek's breach box anti-airs Claude's jump-ins well
-    if (dx < D(70)) add('jumpN', P.jump, [{ d: 8, n: 3 }]);
+    if (dx > jr[0] && dx < jr[1]) add('jumpIn', P.jump * 4 * (0.6 + ag) * (C === 'claude' ? P.cJump : 1), [{ d: 9, n: 3 }]);   // V2: DeepSeek's breach box anti-airs Claude's jump-ins well
+    if (dx < D(70)) add('jumpN', P.jump * (C === 'claude' ? P.cJump / 0.55 : 1), [{ d: 8, n: 3 }]);
     // pokes at range
     if (dx <= r('5L')) { add('5L', 0.7, this.press('L')); add('2L', 0.7, this.press('L', 2)); }
     if (dx <= r('5M') && dx > r('5L') - 10) add('5M', 0.8, this.press('M'));
@@ -273,7 +273,7 @@
     if (C === 'claude') {
       if (me.proj === 0 && dx > D(120)) add('spark', 0.9 + (dx > D(200) ? 0.8 : 0), this.special('spark', dx > D(220) ? 'L' : this.pick(['M', 'H'])));
       if (me.proj === 0 && dx > D(70) && dx <= D(120)) add('spark', 0.35, this.special('spark', 'H'));
-      if (dx < D(80) && dx > D(30)) add('haiku', 0.1, this.special('haiku', this.pick(['L', 'M'])));   // unsafe raw; mostly a combo ender
+      if (dx < D(80) && dx > D(30)) add('haiku', P.cHaiku, this.special('haiku', this.pick(['L', 'M'])));   // unsafe raw; mostly a combo ender
       if (dx < D(70) && this.level >= 3) add('guardrail', 0.12 + (o.action === 'attack' ? 0.1 : 0), this.special('guardrail', this.pick(['L', 'M'])));
     } else {
       if (me.proj === 0 && dx > D(110)) add('wave', 0.7 + (dx > D(200) ? 0.4 : 0), this.special('wave', dx > D(200) ? 'H' : 'M'));

@@ -160,6 +160,9 @@
     'hipF', 'knF', 'anF', 'ftF', 'hipB', 'knB', 'anB', 'ftB'];
   function mir(sk, v) { return sk.flip ? [-v[0], v[1]] : v; }
 
+  // hem lift / swing are not joints: add them to the render signature
+  C.sigExtra = function (sk, s, n) { s[n++] = Math.round(sk.hem || 0); s[n++] = Math.round(sk.tw || 0); return n; };
+
   C.post = function (sk) {
     sk.headAng = Math.round(sk.headAng / 5) * 5;
     sk.headAng = ((sk.headAng + 180) % 360 + 360) % 360 - 180;
@@ -266,6 +269,7 @@
     var fl = d.skirt || 0, F0 = fr(d.pel, L, 9.5, -2), B0 = fr(d.pel, L, -10.5, -2);
     var hf = own(by.hemF), hb = own(by.hemB);
     var rl = L * (0.4 + 0.6 * Math.min(1, Math.abs(L) / 90));   // the skirt turns with the pelvis
+    rl -= (sk.tw || 0);                                         // tw: hem swing (deg, + = hem swings forward)
     hf.def.rest[0] = 71 - fl * 40 + rl; hf.def.rest[1] = 80 - fl * 32 + rl;
     hb.def.rest[0] = 112 + fl * 40 + rl; hb.def.rest[1] = 101 + fl * 32 + rl;
     sec.attach('hemF', F0[0], F0[1], 0);
@@ -424,9 +428,10 @@
     p.pxOn(tg[0], tg[1], col(shoeM, 0));
   }
 
-  function skirtSurf(sk, sec) {
+  function skirtSurf(sk, sec, hu) {
     var W = sk.waist, wa = sk.lean * 0.7 + sk.chestAng * 0.3, hf = H.chainPts(sec.hemF), hb = H.chainPts(sec.hemB);
     var df = drape(sk, 'F', hf[0], hf[1], hf[2]), db = drape(sk, 'B', hb[0], hb[1], hb[2]);
+    if (hu) { df = [df[0], [df[1][0], df[1][1] - hu]]; db = [db[0], [db[1][0], db[1][1] - hu]]; }   // hem: - = hem lifted (px)
     return {
       f: plMake([fr(W, wa, 5, 2), hf[0], df[0], df[1]]),
       b: plMake([fr(W, wa, -5.5, 2), hb[0], db[0], db[1]]),
@@ -557,7 +562,7 @@
     var pal = (LC.PAL.deepseek || [])[D.pal] || {}, shoeM = pal.cloth1 ? C.shoeMat(pal) : M.c2;
     var eyes = ds.eyes || 'open';
     if (D.blink && (eyes === 'open' || eyes === 'focus' || eyes === 'sad' || eyes === 'wide')) eyes = (D.blink > 5 || D.blink < 3) ? 'half' : 'closed';
-    var S = skirtSurf(d, sec);
+    var S = skirtSurf(d, sec, -Math.round(sk0.hem || 0));
     var lockF = sk0.flip ? 0 : D.lock.F, lockB = sk0.flip ? 0 : D.lock.B;
     var steps = [
       [z.tail != null ? z.tail : -10, function () { drawTail(p, d, sec, ds); p.end(); }],
