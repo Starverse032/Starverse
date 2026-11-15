@@ -1,15 +1,35 @@
 # PLATFORM — notes
 
 ## Progress / next steps (truthful as of this pass)
-Done and smoke-tested (`npm test`: index.html + dist, real FIGHT CPU-vs-CPU match to result, no errors):
+Done and smoke-tested (`npm test`: index.html + dist, real FIGHT CPU-vs-CPU match to result, no errors; roster checks: every char's arcade ladder, GPT pick via real select input, GPT ladder/VS/result/ending/how-to shots, GPT CPU match when FIGHT+RIG support her, else logged skip + degraded-match check):
 - font bake + runtime (pixel-identical to Chromium's own rendering of the woff2: `npm run font`)
 - input (keyboard 2P, gamepads, menu edges, pointer, overrides, rebinding), touch overlay, display, save
 - loop + scene stack + transitions (wipe / dissolve / iris / slash), LC.debug + LC_OPTS, build, smoke test
 - scenes: boot(+gate), title(+attract demo), menu(+versus sub-menu), select, stage, vs, match(+stub, pause
   with move list / training options), result, ladder, continue, ending, howto (4 pages), options, keys, credits
 Next (not done): options list is cramped (12 px rows) — paginate or scroll; portrait-phone polish (bigger
-buttons, decorative panel); per-scene screenshot pass after ILLUST icons/title + AUDIO music land;
-character select "random" tile; menu tap targets for the result/ladder screens.
+buttons, decorative panel); per-scene screenshot pass after ILLUST icons/title + AUDIO music land (and
+GPT art: re-shoot select/ladder/vs once ILLUST/RIG know her); menu tap targets for the result/ladder screens.
+
+## Roster (three fighters, V2.1)
+Nothing in PLATFORM names a fighter except cosmetic fallbacks; everything iterates `LC.CHARS`.
+- `flow.js`: `app.other(ch)` = first rival; `app.rivalsOf`, `app.randomChar(except)`, `app.homeOf` (prefers
+  `LORE.homeStage`), `app.arcadeStep(A, k)` resolves a ladder step (`foe: rival1|rival2|mirror`, legacy `rival`;
+  `stage: foeHome|<id>`, legacy `rivalHome/ownHome`; mirror forced to the other palette) — the ladder screen
+  and `arcadeFightParams` both use it. Taunts: mirror → `arcadeTaunt.mirror[char]`, else boss →
+  `arcadeTaunt.boss[foe]`, passed as `introLines`.
+- Feature detection: `app.fightSupports(ch)` (`LC.fight.chars[ch]`, else non-empty `getMoveList`) and
+  `app.rigSupports(ch)` (`LC.rig.hasAnim(ch,'idle')`). `ui.puppet` uses the fallback puppet when RIG has no
+  idle for ch and switches to it if a rig puppet throws; `ui.portrait` skips ILLUST for chars absent from
+  `LC.illust.ART` (fallback busts are tagged `lcFallback`; tiles crop them lower). FIGHT itself substitutes
+  an unknown char, so a GPT match plays (as a stand-in) without errors until FIGHT ships her.
+- Select: tiles in a grid (`COLS = ceil(sqrt(n+1))`, 2×2 for three + 随机) centred between the live
+  puppets (x 128 / 256); ←→ cycles all tiles with wrap, ↑↓ palette. Random rolls a visible preview every 24
+  frames and re-rolls on lock. Cursor tags sit above the top row / below lower rows.
+- How-to: two fixed pages + one move-list tab per char (tab width shrinks with roster size; long zh names
+  fall back to the latin name). Pause move list ←→ cycles `LC.CHARS`. Move lists from
+  `LC.fight.getMoveList` (cached only when non-empty) else `LORE.moves`.
+- Menu showcase cycles all fighters; attract demo picks any two (25% mirror).
 
 ## Files (src/platform/, load order = manifest.js)
 `../gen/fontdata.js` baked glyphs · `font.js` LC.font · `save.js` LC.save (+settings load/save) ·
@@ -53,6 +73,9 @@ character select "random" tile; menu tap targets for the result/ladder screens.
 
 ## Known issues
 - With FIGHT absent, the stub match is crude by design (attack buttons chip HP; keys 1/2/0 decide rounds).
-- Options screen: 14 rows at 12 px pitch is tight. Character select has no "random" tile.
+- Options screen: 14 rows at 12 px pitch is tight.
+- Select: DeepSeek's tail on the right live puppet slightly overlaps the inner edge of the P2 bust; the
+  latin name "DEEPSEEK" is ~1 px wider than its 38 px tile.
+- GPT fallback bust/puppet are crude placeholders until ILLUST/RIG add her.
 - The fullscreen option in Options runs outside the gesture event; it works in Chrome (transient
   activation) but may be refused elsewhere — the DOM button is the reliable path.

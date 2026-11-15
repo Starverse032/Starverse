@@ -2420,7 +2420,8 @@
     var key = ch + kind + (p || 0);
     if (cache[key]) return cache[key];
     var cv = null;
-    if (LC.illust && LC.illust.portrait) {
+    var known = !(LC.illust && LC.illust.ART && !LC.illust.ART[ch]);   // skip ILLUST for fighters it has no art for yet
+    if (known && LC.illust && LC.illust.portrait) {
       try { cv = LC.illust.portrait(ch, kind, p || 0); } catch (e) { console.error('[platform] illust.portrait', e); }
       if (cv && ui.isBlank(cv)) cv = null;
     }
@@ -2428,6 +2429,7 @@
       if (kind === 'face') cv = fallbackFace(ch, p);
       else if (kind === 'cutin') cv = null;
       else cv = fallbackBust(ch, kind, p);
+      if (cv) cv.lcFallback = true;
     }
     cache[key] = cv;
     return cv;
@@ -3685,7 +3687,7 @@
           } else {
             ui.box(c, tx, ty, TS, TS, ui.charCol(ch, 0).dark);
             var b = ui.portrait(ch, 'bust', 0);
-            if (b) c.drawImage(b, 37, 22, TS, TS, tx, ty, TS, TS);
+            if (b) c.drawImage(b, 37, b.lcFallback ? 40 : 22, TS, TS, tx, ty, TS, TS);   // fallback busts sit lower
             LC.font.draw(c, (LORE.chars[ch] || {}).name || ch, tx + (TS >> 1), ty + TS - 8, { size: 8, color: U.text, outline: U.black, align: 'center' });
           }
           if (!hov0 && !hov1) { c.globalAlpha = 0.45; ui.box(c, tx, ty, TS, TS, U.bg0); c.globalAlpha = 1; }
@@ -3705,7 +3707,8 @@
             c.fillRect(q[2] > 0 ? x : x + 4, q[3] > 0 ? y : y - 4, 2, 6);
           });
           var tag = tagOf(i), tw = LC.font.measure(tag, { size: 8 }).w + 6;
-          var tagX = i === 0 ? tx - 2 : tx + TS + 2 - tw, tagY = i === 0 ? ty - 9 : ty + TS + 3;
+          // tags sit outside the grid (above the top row, below the others) so they never cover a tile label
+          var tagX = i === 0 ? tx - 2 : tx + TS + 2 - tw, tagY = ty === GY ? ty - 9 : ty + TS + 3;
           ui.box(c, tagX, tagY, tw, 9, col);
           LC.font.draw(c, tag, tagX + 3, tagY + 1, { size: 8, color: U.bg0 });
           if (s.locked) { var ic = ui.icon('lock'); if (ic) c.drawImage(ic, i ? tx + 2 : tx + TS - ic.width - 2, ty + 2); }
@@ -4315,7 +4318,7 @@
           ui.box(c, x, y, 32, 32, U.bg1);
           var rs = LC.app.arcadeStep(A, i);
           var b = ui.portrait(rs.foe, 'bust', rs.palette);
-          if (b) c.drawImage(i > A.stage ? ui.tint(b, '#0b0a14', 0.85) : b, 40, 26, 32, 32, x, y, 32, 32);
+          if (b) c.drawImage(i > A.stage ? ui.tint(b, '#0b0a14', 0.85) : b, 40, b.lcFallback ? 44 : 26, 32, 32, x, y, 32, 32);
           if (done) LC.font.draw(c, 'CLEAR', x + 16, y + 22, { size: 8, color: U.green, outline: U.black, align: 'center' });
           LC.font.draw(c, s.title, x + 40, y + 4, { size: 12, color: cur ? U.gold : done ? U.dim : '#4f4a78' });
           LC.font.draw(c, s.sub, x + 40, y + 19, { size: 10, color: cur ? U.text : '#4f4a78' });
