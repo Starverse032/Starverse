@@ -9,7 +9,7 @@
 
   var BAR_W = 140, BAR_H = 8, BAR_Y = 9, BAR_X0 = 30;     // P1 bar x range [30, 170]
   var MET_W = 92, MET_Y = 203;
-  var TAG_Y = 31, COMBO_Y = 50;          // V2: move-name tag under the names; combo counter on a plate
+  var TAG_Y = 32, COMBO_Y = 50;          // V2: move-name tag under the names; combo counter on a plate
   var FIN = { super: '超', special: '技', 'throw': '投', time: 'T', chip: '削', perfect: 'P', draw: '=', normal: null, ko: null };
 
   function rect(ctx, x, y, w, h, c) { if (w <= 0 || h <= 0) return; ctx.fillStyle = c; ctx.fillRect(x | 0, y | 0, w | 0, h | 0); }
