@@ -219,9 +219,12 @@
   }
 
   /** Dashed marching line from (x0,y0) to (x1,y1), 1 px. */
-  function dashed(ctx, x0, y0, x1, y1, t, frac) {
-    var dx = x1 - x0, dy = y1 - y0, L = Math.sqrt(dx * dx + dy * dy), n = Math.floor(L * frac);
-    for (var s = 0; s < n; s++) { if (((s - t * 2) % 7 + 7) % 7 < 4) ctx.fillRect(Math.round(x0 + dx * s / L), Math.round(y0 + dy * s / L), 1, 1); }
+  function dashed(ctx, x0, y0, x1, y1, t, frac, cLine, cShadow) {
+    var dx = x1 - x0, dy = y1 - y0, L = Math.sqrt(dx * dx + dy * dy), n = Math.floor(L * frac), s;
+    for (var pass = 0; pass < 2; pass++) {
+      ctx.fillStyle = pass ? cLine : cShadow;
+      for (s = 0; s < n; s++) { if (((s - t * 2) % 7 + 7) % 7 < 4) ctx.fillRect(Math.round(x0 + dx * s / L), Math.round(y0 + dy * s / L) + (pass ? 0 : 1), 1, 1); }
+    }
   }
 
   // ---- the sprite ----------------------------------------------------------------------------
@@ -263,14 +266,15 @@
       var gr = Math.min(1, (t - EV.lock + 1) / 4);
       for (k = 0; k < 3; k++) {
         h = hd[k]; ar = h.aim * D2R;
-        ctx.fillStyle = (t >> 1) & 1 ? L[0] : L[1];
-        dashed(ctx, h.mx + Math.cos(ar) * 6, h.my + Math.sin(ar) * 6, tx, ty, t, gr);
+        dashed(ctx, h.mx + Math.cos(ar) * 6, h.my + Math.sin(ar) * 6, tx, ty, t, gr, (t >> 1) & 1 ? L[0] : L[1], L[4]);
       }
       var rs = Math.max(10, Math.round(30 - (t - EV.lock) * 2.6)), bl = 6;
-      ctx.fillStyle = t - EV.lock > 8 && (t & 2) ? L[1] : L[0];
-      for (var q = 0; q < 4; q++) {
-        var qx = q & 1 ? 1 : -1, qy = q & 2 ? 1 : -1, cx = tx + qx * rs, cy = ty + qy * rs;
-        ctx.fillRect(qx > 0 ? cx - bl + 1 : cx, cy, bl, 1); ctx.fillRect(cx, qy > 0 ? cy - bl + 1 : cy, 1, bl);
+      for (var rp = 0; rp < 2; rp++) {
+        ctx.fillStyle = rp ? (t - EV.lock > 8 && (t & 2) ? L[1] : L[0]) : L[4];
+        for (var q = 0; q < 4; q++) {
+          var qx = q & 1 ? 1 : -1, qy = q & 2 ? 1 : -1, cx = tx + qx * rs + (rp ? 0 : 1), cy = ty + qy * rs + (rp ? 0 : 1);
+          ctx.fillRect(qx > 0 ? cx - bl + 1 : cx, cy, bl, 2 - rp); ctx.fillRect(cx, qy > 0 ? cy - bl + 1 : cy, 2 - rp, bl);
+        }
       }
       ctx.fillStyle = L[2];
       ctx.fillRect(tx - 2, ty, 5, 1); ctx.fillRect(tx, ty - 2, 1, 5);

@@ -114,13 +114,13 @@
   }
   // curved, ribbed dragon horn in the scale ramp; spine from base to tip
   function horn(P, pts, w, ridges) {
-    var m = P.sr(pts, w, 0.8, w * 0.7), nr = ridges || 5;
+    var m = P.sr(pts, w, 1.9, w * 0.72), nr = ridges || 5;
     P.part(m, S.x1, S.x3);
     P.recol(m.band(3, -1), [S.x1], S.x2);
     P.recol(m.band(-1, 2), [S.x1], S.x0);
     P.recol(m.edge().and(m.band(2, -1)), [S.x3], S.xl);
     for (var k = 1; k <= nr; k++) {
-      var t = k / (nr + 1.2), a = along(pts, t), hw = (w * (1 - t) * (1 - t) + 2 * w * 0.7 * t * (1 - t) + 0.8 * t * t) / 2 + 1;
+      var t = k / (nr + 1.2), a = along(pts, t), hw = (w * (1 - t) * (1 - t) + 2 * w * 0.72 * t * (1 - t) + 1.9 * t * t) / 2 + 1;
       var nx = -a.ty, ny = a.tx, q = P.s < 1.5 ? 0.9 : 0.5;
       var r = P.poly([a.x + nx * hw, a.y + ny * hw, a.x - nx * hw + a.tx * 0.6, a.y - ny * hw + a.ty * 0.6,
         a.x - nx * hw + a.tx * (0.6 + q), a.y - ny * hw + a.ty * (0.6 + q), a.x + nx * hw + a.tx * q, a.y + ny * hw + a.ty * q]).and(K.inner(m));
@@ -176,8 +176,8 @@
 
   // bat-like wing rising behind the near shoulder; droop (radians) lowers it outward
   function wing(P, droop) {
-    var bx = 26, by = 102, a = droop || 0, ca = Math.cos(a), sa = Math.sin(a);
-    function R(pts) { var o = []; for (var i = 0; i < pts.length; i += 2) { var x = pts[i] - bx, y = pts[i + 1] - by; o.push(bx + x * ca - y * sa, by + x * sa + y * ca); } return o; }
+    var bx = 26, by = 102, a = droop || 0, ca = Math.cos(a), sa = Math.sin(a), dy = droop ? 14 : 0;
+    function R(pts) { var o = []; for (var i = 0; i < pts.length; i += 2) { var x = pts[i] - bx, y = pts[i + 1] - by; o.push(bx + x * ca - y * sa, by + x * sa + y * ca + dy); } return o; }
     var mem = P.poly(R([28, 100, 9, 36, -6, 18, -10, 44, -4, 56, 1, 57, 5, 64, 5, 80, 10, 79, 14, 86, 22, 96]));
     P.part(mem, S.u1, S.ul);
     P.recol(mem.band(3, -1), [S.u1], S.u2);
@@ -221,7 +221,7 @@
     var lose = expr === 'lose', win = expr === 'win';
 
     // ---- wing behind the near shoulder
-    wing(P, lose ? -0.32 : 0);
+    wing(P, lose ? 0.12 : 0);
 
     // ---- back hair: long, voluminous, wavy curtain
     var back = P.spoly([54, 12, 38, 14, 29, 22, 24, 34, 21, 48, 18, 58, 19, 68, 14, 78, 15, 88, 9 + sw, 100, 11 + sw, 110, 6 + sw * 2, 122, 5 + sw * 2, 132,
@@ -236,7 +236,7 @@
     ].forEach(function (c) { H.hairClump(P, c, S.h2); });
 
     // ---- far horn (base hidden behind the head)
-    horn(P, [71, 20, 74, 11, 71, 5, 65, 2, 58, 2], 8, 5);
+    horn(P, [71, 21, 74, 12, 72, 6, 66, 2.5, 59, 2.5], 9, 5);
 
     // ---- body: bare shoulders, sleeveless high-collared bodice
     var neck = P.poly([50, 60, 62, 60, 63, 84, 50, 84]);
@@ -309,9 +309,11 @@
     else if (!win) { P.line([42, 40, 46, 39, 51, 39], S.hl); P.line([63, 39, 66, 39, 69, 40], S.hl); }
 
     // ---- wavy face-framing locks in front of the shoulders (hair tucked behind the ear)
-    H.hairClump(P, [[34, 40, 29, 54, 31, 66, 25, 78, 28 + sw, 90, 22 + sw, 102, 25 + sw * 2, 116, 20 + sw * 2, 132], 10, 4, 11, 0, [0.1, 0.5]], S.h1);
-    H.hairClump(P, [[37, 30, 35, 44, 37, 56, 34, 66], 5, 0, 6, 0], S.h1);
-    H.hairClump(P, [[76, 30, 80, 44, 79, 56, 83, 68, 81 + sw, 80, 85 + sw, 92, 83 + sw * 2, 106, 87 + sw * 2, 122], 9, 2, 10, 0, [0.1, 0.5]], S.h1);
+    H.hairClump(P, [[31, 60, 25, 74, 27 + sw, 88, 21 + sw, 100, 23 + sw * 2, 112, 18 + sw * 2, 124, 20 + sw * 2, 134], 7, 3, 8, 0], S.h1);
+    H.hairClump(P, [[34, 40, 29, 54, 31, 66, 26, 78, 29 + sw, 90, 25 + sw, 101, 27 + sw * 2, 110, 25 + sw * 2, 116, 22 + sw * 2, 117], 10, 1.5, 11, 0, [0.1, 0.5]], S.h1);
+    H.hairClump(P, [[37, 30, 35, 44, 37, 56, 34, 66, 35, 72, 37, 74], 5, 1, 6, 0], S.h1);
+    H.hairClump(P, [[80, 52, 86, 64, 84, 76, 89 + sw, 88, 87 + sw, 98, 90 + sw * 2, 104], 5, 1.4, 6, 0], S.h1);
+    H.hairClump(P, [[76, 30, 80, 44, 79, 56, 83, 68, 81 + sw, 80, 85 + sw, 92, 83 + sw * 2, 104, 85 + sw * 2, 112, 88 + sw * 2, 113], 9, 1.5, 10, 0, [0.1, 0.5]], S.h1);
 
     // ---- pointed ear + drop earring
     var ear = P.spoly([36, 45, 31, 42, 25, 37, 20, 32, 23, 40, 27, 47, 30, 52, 34, 54, 36, 51]);
@@ -324,16 +326,16 @@
     P.part(drop, S.a1, S.al); P.px(32, 62, S.a0); P.px(33, 63, S.a0);
 
     // ---- near horn: sweeps up and back from the temple
-    horn(P, [36, 23, 31, 13, 25, 7, 17, 4, 10, 5], 9, 6);
+    horn(P, [37, 24, 32, 14, 26, 7.5, 18, 4.5, 10.5, 5], 11, 6);
 
     // ---- knot rosette + little tassel (far side, at the horn root)
     var tas = P.sr([80, 28, 81, 33, 80.5, 39], 1.8, 3);
     P.part(tas, S.c1, S.cl); P.recol(tas.band(1, 0), [S.c1], S.c2);
     P.part(P.rect(79, 28, 3, 2), S.m1, S.ml);
-    knot(P, 77, 23, 7, 5, -0.3, { small: 1, d: 0.5, ro: 0.5, hole: 1.1, core: 0.3 });
+    knot(P, 77, 23, 7.4, 5, -0.3, { small: 1, d: 0.5, ro: 0.52, hole: 1.3, core: 0.32, line: S.dl });
 
     // ---- ahoge
-    var aho = lose ? P.sr([50, 12, 48, 7, 44, 5, 41, 7], 3, 1) : P.sr([50, 12, 49, 6, 46, 3, 42, 2, 39, 4], 3.2, 1);
+    var aho = lose ? P.sr([50, 12, 48, 7, 44, 5, 41, 7], 3.6, 1.8) : P.sr([50, 12, 49, 6, 46, 3, 42, 2, 39, 4], 4, 1.8);
     P.part(aho, S.h1, S.hl); P.recol(aho.band(-1, 1), [S.h1], S.h0);
 
     // ---- raised far arm: wide frilled sleeve, bare forearm, bracelet, beckoning hand
@@ -350,10 +352,9 @@
     if (win) { H.sparkle(P, 88, 12, true); H.sparkle(P, 108, 40, false); H.sparkle(P, 90, 40, false); }
     if (lose) {
       // "regenerate" spinner: an open circular arrow over her shoulder
-      [[0, -5], [3.5, -3.5], [5, 0], [3.5, 3.5], [0, 5], [-3.5, 3.5], [-5, 0]].forEach(function (d, i) {
-        P.px(Math.round(97 + d[0]), Math.round(14 + d[1]), i < 2 ? S.a0 : i < 5 ? S.a1 : S.a2);
-      });
-      P.map(90, 6, ['..aa', '.aaA', 'aa..', '.a..'], { a: S.a1, A: S.a0 });
+      var spin = P.ell(96, 14, 6.5, 6.5).sub(P.ell(96, 14, 3.6, 3.6)).sub(P.poly([96, 14, 104, 2, 106, 12]));
+      spin = spin.or(P.poly([97.5, 4.5, 104.5, 8.5, 98, 11.5]));
+      P.part(spin, S.a1, S.al); P.recol(spin.band(-1, 1), [S.a1], S.a0); P.recol(spin.band(1, -1), [S.a1], S.a2);
       P.map(77, 34, ['.r.', 'rRr', 'rRR', '.R.'], EL);
       P.map(84, 40, ['..R', '.R.', '...', 'R..'], EL);
     }
