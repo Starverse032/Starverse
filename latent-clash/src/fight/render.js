@@ -270,6 +270,7 @@
         if (ft >= 0) { bd.under = true; bd.front = true; bd.alpha = 1 - (Math.floor(ft * 4 / T.KO_BG_FADE) + 1) / 5; }   // .8 .6 .4 .2
         return bd;
       }
+      return null;   // KO backdrop done: the stage, not a still-running super's backdrop
     }
     for (var j = 0; j < 2; j++) {
       var f = m.f[j], st = F.superT(f);
