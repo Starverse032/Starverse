@@ -171,8 +171,8 @@
     keys: [['hold', TG],
       ['hold+5', P(TG, { lean: 4, hip: [0, -44], hF: [22, -70], hB: [18, -72], grab: [24, -70], tail: -20, arch: 14 }), 'out'],
       ['hold+12', TU, 'inout'], ['hold+15', P(TU, { hip: [-3, -44], hF: [10, -88], grab: [10, -92], sq: 0 })],
-      ['toss+2', P(TS, { hs: 0.45, smear: { part: 'hF', from: 'hold+15', n: 4 } }), 'snap'],
-      ['toss+4', P(TS, { hip: [7, -36], sq: 1, mouth: 'grin', tail: 95, arch: 4, hs: 0.3 }), 'snap'],
+      ['toss+2', P(TS, { hs: 0.85, smear: { part: 'hF', from: 'hold+15', n: 4 } }), 'snap'],
+      ['toss+4', P(TS, { hip: [7, -36], sq: 1, mouth: 'grin', tail: 95, arch: 4, hs: 0.6 }), 'snap'],
       ['toss+10', P(TS, { mouth: 'grin', tail: 70, arch: 12, eyes: 'happy' })],
       ['recovery+6', P(S, { lean: 18, hip: [2, -43], tail: 20, mouth: 'grin' }), 'out'], ['recovery+17', S]]
   });

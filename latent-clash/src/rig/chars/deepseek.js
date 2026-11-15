@@ -165,7 +165,7 @@
   function mir(sk, v) { return sk.flip ? [-v[0], v[1]] : v; }
 
   // hem lift / swing are not joints: add them to the render signature
-  C.sigExtra = function (sk, s, n) { s[n++] = Math.round(sk.hem || 0); s[n++] = Math.round(sk.tw || 0); return n; };
+  C.sigExtra = function (sk, s, n) { s[n++] = Math.round(sk.hemS != null ? sk.hemS : (sk.hem || 0)); s[n++] = Math.round(sk.tw || 0); return n; };
 
   C.post = function (sk) {
     sk.headAng = Math.round(sk.headAng / 5) * 5;
@@ -265,6 +265,11 @@
     sec.attach('hairB', hB[0], hB[1], a * 0.5);
     sec.attach('lockN', lk[0], lk[1], a * 0.4);
     sec.attach('ahoge', ah[0], ah[1], a);
+    // hem lift eases in/out over a few ticks (no pop when a walk starts or stops)
+    var ht = d.hem != null ? d.hem : (sk.hem || 0);
+    sec._hem = sec._hem == null ? ht : sec._hem + (ht - sec._hem) * 0.35;
+    if (Math.abs(sec._hem - ht) < 0.05) sec._hem = ht;
+    sk.hemS = sec._hem;
     // hs (0..1): settle the hair toward its rest shape this tick (kills chain inertia after flips / hops)
     if (ds.hs) ['hairA', 'hairB', 'lockN'].forEach(function (id) {
       var c = by[id]; if (!c.ready) return;
@@ -587,7 +592,7 @@
     var pal = (LC.PAL.deepseek || [])[D.pal] || {}, shoeM = pal.cloth1 ? C.shoeMat(pal) : M.c2;
     var eyes = ds.eyes || 'open';
     if (D.blink && (eyes === 'open' || eyes === 'focus' || eyes === 'sad' || eyes === 'wide')) eyes = (D.blink > 5 || D.blink < 3) ? 'half' : 'closed';
-    var S = skirtSurf(d, sec, -Math.round(sk0.hem || 0));
+    var S = skirtSurf(d, sec, -Math.round(sk0.hemS != null ? sk0.hemS : (sk0.hem || 0)));
     var lockF = sk0.flip ? 0 : D.lock.F, lockB = sk0.flip ? 0 : D.lock.B;
     var steps = [
       [z.tail != null ? z.tail : -10, function () { drawTail(p, d, sec, ds); p.end(); }],

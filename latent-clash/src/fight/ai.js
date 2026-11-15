@@ -207,7 +207,7 @@
 
   // default between decisions: drift toward a preferred range, guard if the opponent looks active
   AI.prototype.hold = function (me, o, dx) {
-    var want = me.ch === 'claude' ? D(this.level === 3 ? 110 : 92) : D(60);
+    var want = me.ch === 'claude' ? D(this.level === 3 ? 80 : 92) : D(60);
     if (this.m.timer < 1800 && this.behind()) want -= D(30);
     var out = {};
     var tow = o.x > me.x ? 'right' : 'left', away = o.x > me.x ? 'left' : 'right';
