@@ -125,14 +125,14 @@
 
   // ---------------------------------------------------------------- launch / down / getup
   var LA = POSE.launch = P(S, AIR, { hip: [0, -40], lean: -45, bend: -10, tilt: -35, head: [-1, 0], fF: [11, -15], fB: [0, -4], faF: 40, faB: 30,
-    hF: [-6, -80], hB: [-24, -62], handF: 'open', book: -170, eyes: 'shut', mouth: 'open', skirt: 2 });
+    hF: [-6, -80], hB: [-24, -62], handF: 'open', book: -170, eyes: 'shut', mouth: 'open', skirt: 2, tail: 22, arch: 0.5 });
   def('launch', {
     segs: [['loop', 24, true]], step: 3,
     keys: [
       [0, LA],
-      [6, P(LA, { hB: [-28, -52], hF: [-12, -76], fF: [14, -7], fB: [-4, -9], lean: -50, tilt: -40 })],
-      [12, P(LA, { hB: [-20, -70], hF: [0, -82], fF: [8, -16], fB: [3, -3], lean: -40, tilt: -30 })],
-      [18, P(LA, { hB: [-26, -60], hF: [-8, -76], fF: [12, -10], fB: [-3, -6], lean: -47 })]
+      [6, P(LA, { hB: [-28, -52], hF: [-12, -76], fF: [14, -7], fB: [-4, -9], lean: -50, tilt: -40, tail: 40, arch: 1, skirt: 3 })],
+      [12, P(LA, { hB: [-20, -70], hF: [0, -82], fF: [8, -16], fB: [3, -3], lean: -40, tilt: -30, tail: 12, arch: 0.35, skirt: 1 })],
+      [18, P(LA, { hB: [-26, -60], hF: [-8, -76], fF: [12, -10], fB: [-3, -6], lean: -47, tail: 34, arch: 0.85 })]
     ]
   });
   var DN = POSE.down = P(S, { hip: [-3, -7], lean: -90, bend: 0, tilt: -90, head: [0, 0], fF: [50, -3], fB: [47, -1], faF: -80, faB: -85,

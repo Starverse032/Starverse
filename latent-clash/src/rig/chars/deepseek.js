@@ -415,6 +415,18 @@
     H.hand(p, [ha[0] + dx / l * 1.5, ha[1] + dy / l * 1.5], ang, shape || 'fist', M.skin, M.skin, I.ART.deepseek.hands);
   }
 
+  // wg: small cyan water glow + droplets on a palm (palm strikes, super)
+  function drawWater(p, sk, s) {
+    var ha = s === 'F' ? sk.haF : sk.haB, ang = (s === 'F' ? sk.handAngF : sk.handAngB) * D2R;
+    var ux = Math.cos(ang), uy = Math.sin(ang), t = [ha[0] + ux * 5.5, ha[1] + uy * 5.5];
+    p.ell(t[0] - 0.5, t[1] - 0.5, 1.6, 2.2, M.glow, null, 1);
+    var c = R0(t);
+    p.px(c[0], c[1], col(M.glow, 0));
+    [[2.5, -3.5, 1], [3.5, 2.5, 2], [-1, -4.5, 0], [5, -0.5, 0]].forEach(function (o) {
+      p.px(Math.round(t[0] + ux * o[0] - uy * o[1]), Math.round(t[1] + uy * o[0] + ux * o[1]), col(M.glow, o[2]));
+    });
+  }
+
   function drawLeg(p, sk, s, lockOff, shoeM) {
     var hip = s === 'F' ? sk.hipF : sk.hipB, kn = s === 'F' ? sk.knF : sk.knB;
     var an = s === 'F' ? sk.anF : sk.anB, ft = s === 'F' ? sk.ftF : sk.ftB, fa = s === 'F' ? sk.faF : sk.faB;
@@ -608,7 +620,8 @@
       }],
       [3, function () { drawHairLock(p, sec.lockN, [2.6, 1, 0.8], 0.6, 0.7, [M.hair, MG, M.tip], [0.5]); p.end(); }],
       [4, function () { if (D.smear) { H.smear2(p, D.smear, M.smear); p.end({ outline: false }); } }],
-      [z.armF != null ? z.armF : 5, function () { drawArm(p, d, 'F', ds); p.end(); }]
+      [z.armF != null ? z.armF : 5, function () { drawArm(p, d, 'F', ds); p.end(); }],
+      [5.5, function () { if (ds.wg) { if (ds.wg.indexOf('B') >= 0) drawWater(p, d, 'B'); if (ds.wg.indexOf('F') >= 0) drawWater(p, d, 'F'); p.end({ outline: false }); } }]
     ];
     steps.sort(function (a, b) { return a[0] - b[0]; });
     var prof = I._dsProf;

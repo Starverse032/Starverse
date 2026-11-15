@@ -17,7 +17,7 @@
   // ================================================================ NORMALS (V2)
   // 5L: snappy water-wrapped lead palm (reach 32)
   var L0 = P(S, ATK, { hip: [-2, -46], lean: 0, bend: -4, hF: [11, -63], hB: [5, -56], handF: 'flat' });
-  var L1 = P(S, HIT, { hip: [2, -46], lean: 12, bend: 2, hF: [29, -67], hB: [3, -58], handF: 'flat', handB: 'fist', fB: [-12, 0], weapon: 'hF', mouth: 'grin' });
+  var L1 = P(S, HIT, { hip: [2, -46], lean: 12, bend: 2, hF: [29, -67], hB: [3, -58], handF: 'flat', handB: 'fist', fB: [-12, 0], weapon: 'hF', mouth: 'grin', wg: 'F' });
   def('5L', {
     segs: sar(4, 3, 7), step: 1,
     keys: [['startup', P(S, ATK)], ['startup+2', L0, 'out'],
@@ -54,7 +54,7 @@
   // ---------------------------------------------------------------- crouching normals
   var c0 = P(C, ATK);
   // 2L: low palm jab (reach 34)
-  var CL = P(C, HIT, { hip: [3, -19], lean: 34, hF: [31, -34], hB: [16, -38], handF: 'flat', weapon: 'hF', mouth: 'grin' });
+  var CL = P(C, HIT, { hip: [3, -19], lean: 34, hF: [31, -34], hB: [16, -38], handF: 'flat', weapon: 'hF', mouth: 'grin', wg: 'F' });
   def('2L', {
     segs: sar(4, 3, 8), step: 1,
     keys: [['startup', c0], ['startup+2', P(c0, { hF: [17, -40], lean: 24 }), 'out'],
@@ -159,7 +159,7 @@
   // chain of thought rekka: 1 lunging water hook · 2 knee under the hem · 3 rising palm uppercut
   var C1a = P(S, ATK, { hip: [-3, -45], lean: 2, bend: -6, hB: [-8, -62], hF: [16, -66], handB: 'fist', z: { armB: 6 } });
   var C1 = P(S, HIT, { hip: [8, -43], lean: 26, bend: 6, fF: [22, 0], fB: [-10, 0], faB: 30, hF: [14, -60], hB: [40, -66], handB: 'fist', handF: 'open',
-    z: { armB: 6 }, weapon: 'hB', tail: -10 });
+    z: { armB: 6 }, weapon: 'hB', tail: -10, wg: 'B' });
   def('chain1', {
     segs: sar(9, 4, 18), step: 2,
     keys: [['startup', P(S, ATK)], ['startup+5', C1a, 'out'],
@@ -175,7 +175,7 @@
       ['recovery', P(C2, { mouth: 'grin' }), 'out'], ['recovery+8', P(S, ATK, { fF: [14, -6], hip: [3, -45] })], ['recovery+19', S]]
   });
   var C3 = P(S, HIT, { root: [0, -6], hip: [4, -50], lean: -8, bend: -6, tilt: -15, fF: [9, -2], fB: [-8, 0], faF: 40, faB: 30, hF: [18, -96], hB: [-4, -64],
-    handF: 'flat', handB: 'fist', weapon: 'hF', mouth: 'shout', skirt: 0.45, tail: -30, arch: 26 });
+    handF: 'flat', handB: 'fist', weapon: 'hF', mouth: 'shout', skirt: 0.45, tail: -30, arch: 26, wg: 'F' });
   def('chain3', {
     segs: sar(9, 5, 26), step: 2,
     keys: [['startup', P(C2, ATK)], ['startup+5', P(C, ATK, { hip: [2, -22], lean: 30, hF: [18, -32], hB: [10, -36], handF: 'flat' }), 'out'],
