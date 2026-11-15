@@ -53,7 +53,7 @@
     return (canv[k] = I.TYPE.banner(name));
   };
   I.ICONS = ['btn.L', 'btn.M', 'btn.H', 'btn.S', 'dir.1', 'dir.2', 'dir.3', 'dir.4', 'dir.5', 'dir.6', 'dir.7', 'dir.8', 'dir.9',
-    'emblem.claude', 'emblem.deepseek', 'emblem.claude.lg', 'emblem.deepseek.lg', 'pip.on', 'pip.off', 'cursor', 'lock',
+    'emblem.claude', 'emblem.deepseek', 'emblem.claude.lg', 'emblem.deepseek.lg', 'emblem.gpt', 'emblem.gpt.lg', 'pip.on', 'pip.off', 'cursor', 'lock',
     'keyboard', 'gamepad', 'touch', 'p1', 'p2', 'cpu'];
   I.icon = function (name) {
     var k = 'icon:' + name;

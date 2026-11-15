@@ -115,6 +115,11 @@
       P.outer(S.ol);
       return P.canvas(K.slotColors('claude', 0));
     }
+    if (ch === 'gpt') {
+      // V2.5: the knot rosette from her hair / gown (interlaced cord loops, white with dark line work)
+      if (I.gptEmblem) I.gptEmblem(P, size);
+      return P.canvas(K.slotColors('gpt', 0));
+    }
     // cute whale: round body, light belly, raised fluke, eye, spout
     var tail = I.fluke(P, 3.2 * s, 4.2 * s, -Math.PI / 2 - 0.5, 0.42 * s).or(P.sr([5 * s, 10 * s, 3.6 * s, 7 * s, 3.2 * s, 4.6 * s], 2.6 * s, 2 * s));
     P.part(tail, S.d1, S.dl);
@@ -240,7 +245,7 @@
     var m;
     if ((m = /^btn\.([LMHS])$/.exec(name))) return button(m[1]);
     if ((m = /^dir\.([1-9])$/.exec(name))) return arrow(+m[1]);
-    if ((m = /^emblem\.(claude|deepseek)(\.lg)?$/.exec(name))) return emblem(m[1], m[2] ? 32 : 16);
+    if ((m = /^emblem\.(\w+)(\.lg)?$/.exec(name)) && LC.PAL[m[1]]) return emblem(m[1], m[2] ? 32 : 16);
     switch (name) {
       case 'pip.on': return fromMap(PIP, { o: '#3a1a08', H: '#fff6c0', h: '#ffd166', B: '#d08a1a', W: '#ffffff' });
       case 'pip.off': return fromMap(PIP, { o: '#0b0a14', H: '#4a4570', h: '#2a2650', B: '#1c1938', W: '#3b3670' });
