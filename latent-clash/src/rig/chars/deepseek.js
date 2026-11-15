@@ -418,8 +418,8 @@
   // wg: small cyan water glow + droplets on a palm (palm strikes, super)
   function drawWater(p, sk, s) {
     var ha = s === 'F' ? sk.haF : sk.haB, ang = (s === 'F' ? sk.handAngF : sk.handAngB) * D2R;
-    var ux = Math.cos(ang), uy = Math.sin(ang), t = [ha[0] + ux * 5.5, ha[1] + uy * 5.5];
-    p.ell(t[0] - 0.5, t[1] - 0.5, 1.6, 2.2, M.glow, null, 1);
+    var ux = Math.cos(ang), uy = Math.sin(ang), t = [ha[0] + ux * 7.5, ha[1] + uy * 7.5];
+    p.ell(t[0] - 0.5, t[1] - 0.5, 1.3, 2, M.glow, null, 1);
     var c = R0(t);
     p.px(c[0], c[1], col(M.glow, 0));
     [[2.5, -3.5, 1], [3.5, 2.5, 2], [-1, -4.5, 0], [5, -0.5, 0]].forEach(function (o) {
