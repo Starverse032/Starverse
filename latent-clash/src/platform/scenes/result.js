@@ -105,7 +105,7 @@
           ui.box(c, x, y, 32, 32, U.bg1);
           var rs = LC.app.arcadeStep(A, i);
           var b = ui.portrait(rs.foe, 'bust', rs.palette);
-          if (b) c.drawImage(i > A.stage ? ui.tint(b, '#0b0a14', 0.85) : b, 40, 26, 32, 32, x, y, 32, 32);
+          if (b) c.drawImage(i > A.stage ? ui.tint(b, '#0b0a14', 0.85) : b, 40, b.lcFallback ? 44 : 26, 32, 32, x, y, 32, 32);
           if (done) LC.font.draw(c, 'CLEAR', x + 16, y + 22, { size: 8, color: U.green, outline: U.black, align: 'center' });
           LC.font.draw(c, s.title, x + 40, y + 4, { size: 12, color: cur ? U.gold : done ? U.dim : '#4f4a78' });
           LC.font.draw(c, s.sub, x + 40, y + 19, { size: 10, color: cur ? U.text : '#4f4a78' });

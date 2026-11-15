@@ -89,7 +89,8 @@
     var key = ch + kind + (p || 0);
     if (cache[key]) return cache[key];
     var cv = null;
-    if (LC.illust && LC.illust.portrait) {
+    var known = !(LC.illust && LC.illust.ART && !LC.illust.ART[ch]);   // skip ILLUST for fighters it has no art for yet
+    if (known && LC.illust && LC.illust.portrait) {
       try { cv = LC.illust.portrait(ch, kind, p || 0); } catch (e) { console.error('[platform] illust.portrait', e); }
       if (cv && ui.isBlank(cv)) cv = null;
     }
@@ -97,6 +98,7 @@
       if (kind === 'face') cv = fallbackFace(ch, p);
       else if (kind === 'cutin') cv = null;
       else cv = fallbackBust(ch, kind, p);
+      if (cv) cv.lcFallback = true;
     }
     cache[key] = cv;
     return cv;

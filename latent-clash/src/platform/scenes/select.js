@@ -193,7 +193,7 @@
           } else {
             ui.box(c, tx, ty, TS, TS, ui.charCol(ch, 0).dark);
             var b = ui.portrait(ch, 'bust', 0);
-            if (b) c.drawImage(b, 37, 22, TS, TS, tx, ty, TS, TS);
+            if (b) c.drawImage(b, 37, b.lcFallback ? 40 : 22, TS, TS, tx, ty, TS, TS);   // fallback busts sit lower
             LC.font.draw(c, (LORE.chars[ch] || {}).name || ch, tx + (TS >> 1), ty + TS - 8, { size: 8, color: U.text, outline: U.black, align: 'center' });
           }
           if (!hov0 && !hov1) { c.globalAlpha = 0.45; ui.box(c, tx, ty, TS, TS, U.bg0); c.globalAlpha = 1; }
