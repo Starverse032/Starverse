@@ -10,7 +10,7 @@
   var MIX = {
     'hit.light': 1.26, 'hit.medium': 1.2, 'hit.heavy': 1.1, 'hit.special': 1.2, 'hit.counter': 1.22,
     'block.light': 1.6, 'block.heavy': 1.33, 'whiff.light': 1.45, 'whiff.medium': 1.05, 'whiff.heavy': 0.78,
-    'jump': 1.72, 'land': 1.24, 'dash': 1.48, 'down': 1.0, 'throw.grab': 1.58, 'throw.slam': 0.71, 'throw.tech': 1.3,
+    'jump': 1.72, 'land': 1.24, 'dash': 1.48, 'down': 1.0, 'throw.grab': 1.58, 'throw.slam': 0.5, 'throw.tech': 1.3,
     'ko': 0.94, 'super.flash': 0.97, 'super.charge': 0.72, 'meter.full': 0.78, 'counter.catch': 1.84, 'timer.tick': 1.58,
     'ann.round': 1.0, 'ann.fight': 0.91, 'ann.ko': 0.91, 'ann.perfect': 1.1, 'ann.timeup': 0.86, 'ann.win': 0.8,
     'ui.move': 2.2, 'ui.confirm': 1.13, 'ui.cancel': 0.77, 'ui.start': 0.66, 'ui.error': 0.93, 'ui.pause': 1.27, 'ui.lock': 1.0, 'text.blip': 2.57,
