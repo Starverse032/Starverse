@@ -14,7 +14,21 @@ Balance (real, n = 400 per row, seeds 11 + 12): **L3 ≈ 43 % Claude** (41.8 / 4
 L1 ≈ 63 %. L3 sits just under the 45–55 % band and did not move with any data tweak tried (chain lunge, spark
 recovery, beam speed, whale damage, dive spacing); L3 ablations show Claude's own AI jump-ins / raw haiku
 cost her most. Next: AI work at L3 (Claude neutral plan quality), not move data.
-Next / open: illust init currently throws (`src/illust/claude.js:142 k is not defined`, not ours — portraits /
+- [x] 5 fix pass (AI balance, KO backdrop length, HUD plates):
+  - AI: per-level Claude-only plan multipliers in `ai.js` `LV` (`cJump cHaiku cGuard cSpark cPun cMash cThrow`)
+    plus `dChain` (DeepSeek rekka plan weight, L2) and rekka-on-block continue .5 at L2 (was .75). L2–L4: fewer
+    jump-ins / raw haiku, more sparks, higher punish (cPun .5/.8/.95); L1: fewer Claude mashes / throws / sparks.
+    **Balance (real, n = 400 per row, seeds 11 / 12): L1 50.6 / 53.1, L2 43.0 / 46.8, L3 45.6 / 50.9,
+    L4 49.5 / 47.5, L5 55.3 / 52.0 % Claude** (L3 over 7 runs ≈ 48–50 %; L5 untouched, noise ±2.5 %).
+  - KO: `screen.koBackdrop` / `superFinish` full until `T.KO_BG_HOLD` 64 ticks after the KO (or the body
+    landing, if earlier), then a stepped alpha fade (.8/.6/.4/.2) over the stage for `T.KO_BG_FADE` 12 ticks
+    (these sprites have no `phase:'out'`); stage (+ drawFront) back at ≈ 76 ticks, a running super's
+    backdrop no longer returns after it. Slow-mo ends ≈ 114, win pose after. Shots: `fight-shots --only=kot-`
+    (normal KO) / `kots-` (super KO) `--sheet`.
+  - HUD: move tag (now y 32) and combo counter on fully opaque plates (black keyline + 1-px `U.line` border,
+    accent stripe) — readable over the training sign on every stage.
+  Verified: sim 0 violations, deterministic, 0 console errors (also `--draw`); combos 8/8.
+Next / open: L2 sits at the low edge (≈ 45 %); illust init currently throws (`src/illust/claude.js:142 k is not defined`, not ours — portraits /
 icons fall back); `screen.koFlash` + `koBackdrop` with `settings.flash=false` only checked in code, not shots.
 
 ### V2 tuning numbers (chars/*.js, `F.T`)
@@ -58,8 +72,7 @@ at the crash point. `deepseek.whaleSplash` at whale t = `events.crash` at x + `c
 cast f4. [E] koFlash → bubbles → HUD → training panels → cut-in → banners. Specials: `claude.sonnetPillar` /
 `deepseek.breachCrescent` at the origin on the first rise frame (`riseFx`), breachTrail at `tail`,
 `deepseek.geyser` on emerge, `claude.guardCatch` at the origin. Dive: puppet clipped at the ground line
-(`clipFloor`). Not done: KO flash/backdrop length not tuned against the slow-mo (body usually lands
-≈ 40–60 frames after the KO).
+(`clipFloor`). KO backdrop length: see V2 progress item 5.
 `dev/fight-stubs.js` stub rig updated to the V2 heights / anchors.
 Tools: `fight-shots --sheet[=2] [--cols] [--tag]` contact sheets; `v2-*` scenarios (super timelines, super KO,
 impact, KO); `fight-combos --spread`; `fight-probe` (rig anchors / fx spriteInfo dump).
@@ -159,7 +172,7 @@ dive mix-ups through projectiles, dive kicks, jump-ins. Wake-up: block / reversa
 / throw. `F.AI_OFF = { 'claude.spark': 1 }` disables plans (sim ablations).
 
 ## Balance (fight-sim, real modules, V2 — see V2 progress above)
-L1 ≈ 63 %, L3 ≈ 43 %, L5 ≈ 53 % Claude wins (n = 400 per row). Stubs (V2 stub rig, n = 80): 3v3 51 %, 5v5 54 %.
+After the item-5 AI pass: L1 ≈ 52 %, L2 ≈ 45 %, L3 ≈ 48 %, L4 ≈ 48 %, L5 ≈ 53 % Claude wins (n = 400 per row, 2 seeds). Stubs (V2 stub rig, n = 80): 3v3 51 %, 5v5 54 %.
 Rounds average 19–28 s, no time-ups between CPUs.
 
 ## Contract deviations / additions
@@ -178,6 +191,6 @@ Rounds average 19–28 s, no time-ups between CPUs.
   tidal hit boxes, `events.crash`, `crashX` from `spriteInfo` (fallback boxes otherwise). AUDIO voices/music calls are guarded (silent until present).
 
 ## Known issues
-- L1 vs L1 is Claude-favoured (≈63 %); mashing AIs benefit from her reach. L3 ≈ 43 % (DeepSeek-leaning).
-- Training stage signage scrolls under the move tag / combo counter; both now sit on opaque plates.
+- L2 ≈ 45 % (low edge of the band); other levels 47–53 %.
+- Training stage signage scrolls under the move tag / combo counter; both sit on fully opaque bordered plates.
 - Speech-bubble wrap width tuned for the 10 px font only.
