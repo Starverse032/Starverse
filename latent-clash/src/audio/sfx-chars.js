@@ -1,6 +1,8 @@
 /* LATENT CLASH — character SFX (AUDIO module).
  * Claude 娘: warm — FM bells, chimes, paper/ink, major-key sparkle (D major / lydian colours).
- * DeepSeek 娘: cool — water, bubbles, splashes, sonar; quick and bouncy (E minor pentatonic). */
+ * DeepSeek 娘: cool — water, bubbles, splashes, sonar; quick and bouncy (E minor pentatonic).
+ * GPT 娘: regal dragon — cold teal fire (airy roar + icy shimmer), claws (metal ring), wing beats,
+ *         low growls and heavy floor impacts (A minor / open fifths). */
 (function () {
   'use strict';
   var LC = window.LC = window.LC || {};
@@ -178,5 +180,102 @@
       S.noise(r, o, t + X, { c: 'crackle', hp: 1500, lp: 9000, g: S.ad(0.005, 0.6), v: 0.4 });
       S.noise(r, o, t + X, { c: 'brown', lp: 500, g: S.ad(0.005, 0.8), v: 0.7 }, p);
       for (var i = 0; i < 10; i++) S.bubble(r, o, t + X + 0.05 + rnd() * 0.45, 350 + rnd() * 700, 0.1, 0.05, p);
+    } });
+
+  // ---- GPT 娘 ------------------------------------------------------------------------
+  function wingFlap(r, o, t, p, k, v) {   // low "fwump": filtered noise swell + sub push
+    S.noise(r, o, t, { c: 'pink', bp: [[0, 260 * k], [0.12, 520 * k, 'e']], q: 0.8, lp: 1800, g: [[0, 0], [0.05, 1], [0.18, 0.0001, 'e']], v: 0.7 * v }, p);
+    S.osc(r, o, t + 0.02, { w: 'sine', f: [[0, 90 * k], [0.12, 55 * k, 'e']], g: S.ad(0.02, 0.14), v: 0.4 * v }, p);
+  }
+  function icyShimmer(r, o, t, len, v, p, rnd) {   // cold glassy glints
+    ['A6', 'E7', 'B6', 'E6', 'A7'].forEach(function (n, i) {
+      var tt = t + (i / 5) * len * 0.8 + rnd() * 0.03;
+      S.osc(r, o, tt, { w: 'sine', f: N(n), g: [[0, 0], [0.003, 1], [0.18, 0.0001, 'e']], v: v, fm: { r: 2.41, i: [[0, 1.4], [0.1, 0.1, 'e']] } }, p);
+    });
+  }
+
+  def('gpt.breath', { cat: 'gpt', dur: 0.62, poly: 2, guard: 0.1, wet: 0.25,
+    desc: 'sustained teal dragon-fire: airy roar, crackle, icy shimmer, loop-like tail', when: 'dragon-fire breath starts (first active frame)',
+    build: function (r, o, t, p, rnd) {
+      var L = 0.5;
+      S.noise(r, o, t, { c: 'white', bp: [[0, 900], [0.06, 1600, 'e'], [L, 1300]], q: 0.6, lp: 6500, g: roar(0.04, L, 1, 24, 0.35, rnd).concat([[L + 0.1, 0.0001, 'e']]), v: 0.45 }, p);
+      S.noise(r, o, t, { c: 'pink', lp: 900, hp: 90, g: roar(0.05, L, 1, 17, 0.3, rnd).concat([[L + 0.1, 0.0001, 'e']]), v: 0.5 }, p);
+      S.noise(r, o, t + 0.02, { c: 'crackle', hp: 2500, lp: 9000, g: [[0, 0], [0.04, 1], [L - 0.02, 0.8], [L + 0.08, 0.0001, 'e']], v: 0.35 });
+      S.osc(r, o, t, { w: 'sawtooth', f: N('A2'), g: [[0, 0], [0.05, 1], [L, 0.8], [L + 0.1, 0.0001, 'e']], v: 0.07, lp: 600, vib: [9, 30, 0] }, p);
+      S.osc(r, o, t, { w: 'sine', f: [[0, 180], [0.06, 110, 'e']], g: S.ad(0.004, 0.1), v: 0.3 }, p);
+      icyShimmer(r, o, t + 0.05, L, 0.05, p, rnd);
+    } });
+
+  def('gpt.rise', { cat: 'gpt', dur: 0.55, poly: 1, guard: 0.15, wet: 0.2,
+    desc: 'rising claw uppercut: sharp upward whoosh, metallic claw ring, wing flap', when: 'rising claw (anti-air special) start-up → rise',
+    build: function (r, o, t, p) {
+      S.noise(r, o, t, { c: 'white', bp: [[0, 800], [0.28, 6000, 'e']], q: 1.3, lp: 9000, g: [[0, 0], [0.12, 1], [0.34, 0.0001, 'e']], v: 0.6 }, p);
+      S.noise(r, o, t + 0.04, { c: 'white', hp: 3000, lp: 9000, g: S.ad(0.0005, 0.01), v: 0.5 });
+      S.bell(r, o, t + 0.04, 2350, 0.09, 0.3, [1, 1.47, 2.09, 2.76], [1, 0.6, 0.4, 0.2], p);
+      S.noise(r, o, t + 0.04, { c: 'metal', bp: 4200, q: 3, g: S.ad(0.001, 0.2), v: 0.35 }, p);
+      S.osc(r, o, t, { w: 'sine', f: [[0, 140], [0.25, 320, 'e']], g: S.ad(0.01, 0.22), v: 0.25 }, p);
+      wingFlap(r, o, t + 0.2, p, 1, 0.9);
+    } });
+
+  def('gpt.call', { cat: 'gpt', dur: 0.5, poly: 1, guard: 0.15, prio: 3, wet: 0.15,
+    desc: 'command grab connects: quick snatch + low wing-beat lift', when: 'command grab connects (victim seized)',
+    build: function (r, o, t, p) {
+      S.noise(r, o, t, { c: 'white', bp: [[0, 3000], [0.05, 1200, 'e']], q: 1, lp: 7000, g: S.ad(0.001, 0.07), v: 0.8 }, p);
+      S.osc(r, o, t, { w: 'sine', f: [[0, 260], [0.05, 120, 'e']], g: S.ad(0.001, 0.08), v: 0.5, drive: 1.4 }, p);
+      S.noise(r, o, t + 0.005, { c: 'metal', bp: 3600, q: 2.5, g: S.ad(0.001, 0.08), v: 0.25 }, p);
+      wingFlap(r, o, t + 0.12, p, 0.8, 1.1);
+      wingFlap(r, o, t + 0.3, p, 0.9, 0.6);
+    } });
+
+  def('gpt.callSlam', { cat: 'gpt', dur: 0.95, poly: 1, guard: 0.15, prio: 4, wet: 0.25,
+    desc: 'command-grab slam: heavy ground impact with rumble', when: 'command grab: victim hits the floor',
+    build: function (r, o, t, p) {
+      S.noise(r, o, t, { c: 'white', hp: 1500, lp: 7000, g: S.ad(0.0004, 0.012), v: 0.7 });
+      S.osc(r, o, t, { w: 'sine', f: [[0, 130], [0.35, 38, 'e']], g: [[0, 0], [0.002, 1], [0.15, 0.6], [0.6, 0.0001, 'e']], v: 0.85, drive: 1.6 }, p);
+      S.noise(r, o, t, { c: 'white', bp: [[0, 1400], [0.2, 400, 'e']], q: 0.7, lp: 5000, g: S.ad(0.002, 0.25), v: 0.7 }, p);
+      S.noise(r, o, t, { c: 'brown', lp: [[0, 500], [0.8, 120, 'e']], g: [[0, 0], [0.01, 1], [0.25, 0.6], [0.85, 0.0001, 'e']], v: 0.9 }, p);
+      S.noise(r, o, t + 0.01, { c: 'crackle', hp: 1200, lp: 6000, g: S.ad(0.004, 0.3), v: 0.35 });
+    } });
+
+  def('gpt.roar', { cat: 'gpt', dur: 0.75, poly: 1, guard: 0.2, wet: 0.3,
+    desc: 'short dragon roar: growling formant sweep + pressure-wave thump', when: 'roar move (or win pose / taunt)',
+    build: function (r, o, t, p, rnd) {
+      var L = 0.6;
+      S.osc(r, o, t, { w: 'sine', f: [[0, 120], [0.1, 45, 'e']], g: S.ad(0.002, 0.18), v: 0.7, drive: 1.5 }, p);
+      var vox = S.bus(r, o, 1, { bp: [[0, 500], [0.18, 1100, 'e'], [L, 650, 'e']], q: 1.6, t: t, drive: 2 });
+      [[0, 0.22], [9, 0.18], [-11, 0.18]].forEach(function (x, i) {
+        S.osc(r, vox, t, { w: 'sawtooth', f: [[0, 70], [0.15, 95, 'e'], [L, 62, 'e']], det: x[0], g: roar(0.03, L - 0.05, 1, 31 + i * 4, 0.55, rnd).concat([[L + 0.08, 0.0001, 'e']]), v: x[1] }, p);
+      });
+      S.noise(r, o, t, { c: 'pink', bp: [[0, 700], [0.2, 1500, 'e'], [L, 800, 'e']], q: 0.9, g: roar(0.03, L - 0.05, 1, 27, 0.5, rnd).concat([[L + 0.08, 0.0001, 'e']]), v: 0.35 }, p);
+      S.noise(r, o, t, { c: 'brown', lp: 300, g: [[0, 0], [0.01, 1], [0.4, 0.0001, 'e']], v: 0.6 }, p);
+    } });
+
+  def('gpt.super', { cat: 'gpt', dur: 2.0, poly: 1, guard: 0.5, prio: 5, wet: 0.4, irDur: 1.5, stereo: true,
+    desc: '≈1.5 s: three rising lock-on tones (three dragon heads), then a huge converging beam blast, bright tail', when: 'GPT super: heads appear (after the super flash)',
+    build: function (r, o, t, p, rnd) {
+      var X = 0.62, B = 0.6;
+      // three heads locking on: E4 → A4 → E5, each a rising FM tone panned L / R / C
+      [['E4', -0.6], ['A4', 0.6], ['E5', 0]].forEach(function (x, i) {
+        var tt = t + i * 0.18, f = N(x[0]), w = S.bus(r, o, 1, { pan: x[1], t: tt });
+        S.osc(r, w, tt, { w: 's25', f: [[0, f * 0.7], [0.12, f, 'e']], g: [[0, 0], [0.01, 1], [0.15, 0.7], [X - i * 0.18 + 0.02, 0.5], [X - i * 0.18 + 0.06, 0.0001, 'e']], v: 0.08, lp: 3500 }, p);
+        S.osc(r, w, tt, { w: 'sine', f: [[0, f * 1.4], [0.12, f * 2, 'e']], g: [[0, 0], [0.005, 1], [0.25, 0.0001, 'e']], v: 0.07, fm: { r: 2.41, i: [[0, 2], [0.2, 0.2, 'e']] } }, p);
+        S.noise(r, w, tt, { c: 'white', bp: [[0, 1500], [0.15, 5000, 'e']], q: 2, g: S.ad(0.03, 0.15), v: 0.2 }, p);
+      });
+      S.noise(r, o, t, { c: 'white', bp: [[0, 500], [X, 4500, 'e']], q: 1.5, g: [[0, 0.0001], [X, 1, 'e'], [X + 0.02, 0.0001, 'e']], v: 0.3 }, p);
+      // converging blast
+      S.osc(r, o, t + X, { w: 'sine', f: [[0, 110], [0.25, 55, 'e']], g: [[0, 0], [0.003, 1], [B, 0.7], [B + 0.35, 0.0001, 'e']], v: 0.7, drive: 1.6 }, p);
+      S.noise(r, o, t + X, { c: 'white', hp: 1800, lp: 8000, g: S.ad(0.0005, 0.02), v: 0.6 });
+      var body = S.bus(r, o, 1, { lp: [[0, 1200], [0.06, 4200, 'e'], [B, 3000], [B + 0.35, 900, 'e']], t: t + X });
+      ['A2', 'E3', 'A3', 'E4', 'B4'].forEach(function (n) {
+        [-8, 8].forEach(function (d, j) {
+          S.osc(r, body, t + X, { w: 'sawtooth', f: N(n), det: d, g: roar(0.01, B, 1, 20 + j * 3, 0.35, rnd).concat([[B + 0.35, 0.0001, 'e']]), v: 0.07 }, p);
+        });
+      });
+      S.noise(r, o, t + X, { c: 'white', bp: 1400, q: 0.5, lp: 6000, g: roar(0.01, B, 1, 26, 0.45, rnd).concat([[B + 0.3, 0.0001, 'e']]), v: 0.4 });
+      S.noise(r, o, t + X, { c: 'brown', lp: 400, g: S.ad(0.005, 0.9), v: 0.6 }, p);
+      // bright icy tail
+      var wide = S.bus(r, o, 1, { pan: [[0, -0.5], [0.8, 0.5]], t: t + X + B - 0.1 });
+      icyShimmer(r, wide, t + X + B - 0.1, 0.5, 0.06, p, rnd);
+      S.noise(r, o, t + X + B - 0.05, { c: 'crackle', hp: 4000, lp: 10000, g: [[0, 0], [0.05, 1], [0.6, 0.0001, 'e']], v: 0.3 });
     } });
 })();
