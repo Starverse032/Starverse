@@ -46,12 +46,12 @@
   var W = P(S, { hF: [16, -67], lean: 4 });
   def('walkF', {
     segs: [['loop', 32, true]], step: 2, walk: 1.6,
-    keys: G.walk(W, 1.6, 32, { lift: 6, bob: 2.5, leg: LEG, swingF: 4, swingB: 3, extra: gait(1.6) })
+    keys: G.walk(W, 1.6, 32, { lift: 6, bob: 1.8, leg: LEG, swingF: 4, swingB: 3, extra: gait(1.6) })
   });
   var WB = P(S, { hF: [15, -70], lean: -1, hB: [-6, -50] });
   def('walkB', {
     segs: [['loop', 36, true]], step: 2, walk: -1.2,
-    keys: G.walk(WB, -1.2, 36, { lift: 4, bob: 2, leg: LEG, swingF: 3, swingB: 2, extra: gait(-1.2) })
+    keys: G.walk(WB, -1.2, 36, { lift: 4, bob: 1.5, leg: LEG, swingF: 3, swingB: 2, extra: gait(-1.2) })
   });
 
   // ---------------------------------------------------------------- crouch (top ≈ 70)

@@ -313,7 +313,6 @@
     var aF = 80 + rotA + tr - fl * 3 - bl * 16 - swF[0] * 2.5, aB = 101 + rotA + tr + fl * 3 + bl * 22 - swB[0] * 2.5;
     var Lf = 49 - bl * 9, Lb = 50 - bl * 6, peek = sk.ds && sk.ds.peek;
     if (peek) {                       // walk: narrower bell riding ~3 px up so the striding boots show
-      Lf -= 3; Lb -= 2.5;
       aF = Math.max(aF, 83 + tr * 0.6); aB = Math.min(aB, 98 + tr * 0.6);
     }
     var pts = [], k, s;
@@ -346,7 +345,9 @@
       var e = [m[0] + Math.cos(r2) * (len - s1), m[1] + Math.sin(r2) * (len - s1)];
       return { m: m, e: e };
     }
+    if (peek) { aF = Math.max(aF, 72 + tr * 0.6); aB = Math.min(aB, 104 + tr * 0.6); }
     var rf = rib(rootF, aF, Lf, Math.min(Lf * 0.55, kneeF)), rb = rib(rootB, aB, Lb, Math.min(Lb * 0.55, kneeB));
+    if (peek) { rf.e[1] = -4.5 - (sk.hem || 0) * 0.5; rb.e[1] = -4; }
     var floor = sk.ds && sk.ds.air ? 999 : -1;
     if (sk.ds && sk.ds.drape && kL < 0.85) {
       // sitting / kneeling (getup): the front drapes over the raised knee and down the shin to the
