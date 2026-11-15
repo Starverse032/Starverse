@@ -64,7 +64,7 @@
 
   // ---- placement rules per name -------------------------------------------------
   var GROUND = /^(deepseek\.tidal|deepseek\.geyser|deepseek\.breachCrescent|claude\.sonnetPillar|dust\.|throw\.slam|ring\.ground|deepseek\.pool|deepseek\.whale|deepseek\.wave$|deepseek\.waveCast|deepseek\.poolIn|deepseek\.poolOut|deepseek\.whaleSplash|claude\.guardrail|land)/;
-  function isScreen(n) { return /^screen\./.test(n); }
+  function isScreen(n) { return /^screen\.|^gpt\.attention$/.test(n); }
   function anchorY(n) { return GROUND.test(n) ? GY : GY - 40; }
   FXV.cellFor = function (n) {
     if (/whale$/.test(n)) return { w: 384, h: 216, ox: 110, oy: 186 };
@@ -111,6 +111,7 @@
   };
   function drawSpriteAt(g, name, t, mx, my, o) {
     var so = FXV.spriteOpts(name, t, o);
+    if (/^gpt\.attention$/.test(name)) { if (so.tx == null) { so.tx = mx; so.ty = my - 6; } }
     if (isScreen(name)) { if (so.cx == null) { so.cx = mx; so.cy = my - 30; } FX.drawSprite(g, name, 0, 0, t, so); }
     else FX.drawSprite(g, name, mx, anchorY(name) === GY ? GY : my, t, so);
   }
@@ -198,6 +199,11 @@
       FX.drawSprite(g, 'screen.superBackdrop', 0, 0, t + 8, { char: 'deepseek', facing: 1 });
       FX.drawSprite(g, 'deepseek.whale', 100, GY, t % 60, { facing: 1 });
       if (t >= 46) FX.drawSprite(g, 'deepseek.tidal', 294, GY, t - 46, { facing: 1 });
+    }, 90);
+    out.gptSuper = run(function (t) {
+      FX.drawSprite(g, 'screen.superBackdrop', 0, 0, t + 8, { char: 'gpt', facing: 1 });
+      FX.drawSprite(g, 'gpt.attention', 0, 0, t % 70, { facing: 1, tx: 270, ty: 140, part: 'back' });
+      FX.drawSprite(g, 'gpt.attention', 0, 0, t % 70, { facing: 1, tx: 270, ty: 140, part: 'front' });
     }, 90);
     out.superFinish = run(function (t) { FX.drawSprite(g, 'screen.superFinish', 0, 0, t + 3, { char: 'claude', cx: 200, cy: 120 }); }, 60);
     out.koBackdrop = run(function (t) { FX.drawSprite(g, 'screen.koBackdrop', 0, 0, t, { cx: 200, cy: 120 }); }, 60);
