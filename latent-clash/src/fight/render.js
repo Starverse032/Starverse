@@ -255,13 +255,20 @@
   function backdrop(m) {
     var K = m.koInfo;
     if (K && m.state === 'ko' && m.koFlash <= 24 - 5) {
-      var landed = true;
+      // full until KO_BG_HOLD ticks after the KO (freeze + the dramatic start of the slow-mo) or the body
+      // landing, then a stepped fade over the stage (KO_BG_FADE ticks); the stage is back well before the win pose.
+      var kt = m.tick - K.tick, landed = true;
       for (var i = 0; i < 2; i++) { var d = m.f[i]; if (d.ko && !(d.action === 'down' && d.af >= 6)) landed = false; }
-      if (!landed) {
+      if (m._koBg !== K) { m._koBg = K; m._koBgOut = 0; }   // render-only bookkeeping (not match state)
+      if (!m._koBgOut && (landed || kt >= T.KO_BG_HOLD)) m._koBgOut = Math.min(kt, T.KO_BG_HOLD) || 1;
+      var ft = m._koBgOut ? kt - m._koBgOut : -1;
+      if (ft < T.KO_BG_FADE) {
         var o = { cx: Math.round(K.x - m.camX), cy: Math.round(K.y) };
         var W = K.winner >= 0 ? m.f[K.winner] : null;
         if (W) { o['char'] = W.ch; o.palette = W.pal; }
-        return { name: K.kind === 'super' && W ? 'screen.superFinish' : 'screen.koBackdrop', t: m.tick - K.tick - 5, o: o, under: false };
+        var bd = { name: K.kind === 'super' && W ? 'screen.superFinish' : 'screen.koBackdrop', t: kt - 5, o: o, under: false };
+        if (ft >= 0) { bd.under = true; bd.front = true; bd.alpha = 1 - (Math.floor(ft * 4 / T.KO_BG_FADE) + 1) / 5; }   // .8 .6 .4 .2
+        return bd;
       }
     }
     for (var j = 0; j < 2; j++) {
@@ -299,7 +306,10 @@
     // [A] stage or a full-screen backdrop
     var bg = backdrop(m);
     if (!bg || bg.under) drawStage(ctx, m, camX);
+    var a0 = ctx.globalAlpha;
+    if (bg && bg.alpha != null) ctx.globalAlpha = a0 * bg.alpha;
     if (bg && !F.sprite(ctx, bg.name, 0, 0, bg.t, bg.o) && !bg.under) { drawStage(ctx, m, camX); bg = null; }
+    ctx.globalAlpha = a0;
     // [B] super flash backdrop / heavy-hit impact
     if (m.flash) {
       var fl = m.flash;
@@ -324,7 +334,7 @@
     engineSprites(ctx, m, under, 'front'); engineSprites(ctx, m, top, 'front');
     drawProjs(ctx, m);
     fxDraw(ctx, m, 'front');
-    if (!bg && m.stage && m.stage.drawFront) { try { m.stage.drawFront(ctx, camX); } catch (e) { F.err('stage.drawFront', e); } }
+    if ((!bg || bg.front) && m.stage && m.stage.drawFront) { try { m.stage.drawFront(ctx, camX); } catch (e) { F.err('stage.drawFront', e); } }
     if ((m.forceBoxes || (m.training && m.training.hitboxes)) && F.drawBoxes) F.drawBoxes(ctx, m);
     ctx.restore();
     // [E] KO white-out -> bubbles -> HUD -> training panels -> cut-in -> banners
