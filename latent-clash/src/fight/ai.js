@@ -15,7 +15,7 @@
   var T = F.T;
 
   var LV = [
-    { react: 28, block: 0.12, guess: 0.5, aa: 0.04, punish: 0.06, depth: 0, confirm: 30, tech: 0.03, sup: 0.15, think: 16, aggr: 0.45, jump: 0.10, mash: 0.35, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 0.6, cMash: 0.4 },
+    { react: 28, block: 0.12, guess: 0.5, aa: 0.04, punish: 0.06, depth: 0, confirm: 30, tech: 0.03, sup: 0.15, think: 16, aggr: 0.45, jump: 0.10, mash: 0.35, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 0.6, cMash: 0.4, cThrow: 0.6 },
     { react: 22, block: 0.32, guess: 0.55, aa: 0.18, punish: 0.25, depth: 1, confirm: 16, tech: 0.10, sup: 0.35, think: 11, aggr: 0.50, jump: 0.09, mash: 0.15, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 1 },
     { react: 17, block: 0.58, guess: 0.64, aa: 0.42, punish: 0.5, depth: 2, confirm: 10, tech: 0.25, sup: 0.65, think: 8, aggr: 0.55, jump: 0.08, mash: 0.05, cJump: 0.3, cHaiku: 0.02, cGuard: 0.12, cSpark: 1.5, cPun: 0.68 },
     { react: 13, block: 0.76, guess: 0.72, aa: 0.62, punish: 0.72, depth: 3, confirm: 7, tech: 0.40, sup: 0.85, think: 6, aggr: 0.6, jump: 0.07, mash: 0, cJump: 0.45, cHaiku: 0.06, cGuard: 0.12, cSpark: 1 },
@@ -267,7 +267,7 @@
     if (dx <= r('2M') && dx > r('2L') - 10) add('2M', 0.8, this.press('M', 2));
     if (dx <= r('5H') && dx > r('5M') - 8) add('5H', 0.35, this.press('H'));
     if (dx <= r('2H') && dx > r('2M') - 8) add('2H', 0.3, this.press('H', 3));
-    if (dx < me.C.throwRange - 2 && o.action !== 'blockstun') add('throw', 0.55 + ag * 0.3, [{ d: this.chance(0.3) ? 4 : 6, b: 'LM', n: 2 }, { d: 5, n: 1 }]);
+    if (dx < me.C.throwRange - 2 && o.action !== 'blockstun') add('throw', (0.55 + ag * 0.3) * (C === 'claude' && P.cThrow != null ? P.cThrow : 1), [{ d: this.chance(0.3) ? 4 : 6, b: 'LM', n: 2 }, { d: 5, n: 1 }]);
     if (P.mash > 0 && dx < D(80)) add('mash', P.mash * 2 * (C === 'claude' && P.cMash != null ? P.cMash : 1), this.press(this.pick(['L', 'M', 'H', 'S']), this.pick([5, 2, 6])));
     if (full && dx < (C === 'claude' ? D(200) : D(120)) && this.chance(P.sup * 0.15)) add('superRaw', 0.8, this.special('super', 'H'));
     if (C === 'claude') {
