@@ -60,7 +60,7 @@
         // lying face up (down / getup start): settle the hair quickly onto the floor, fanned out past
         // the head (cvel keeps this pull from turning into a whip)
         if (sk.lean < -60 && sk.pel[1] > -32) {
-          var ty = -3, tx = c.ax - 2 - i * 7.5;
+          var ty = -3, tx = c.ax - 2 - i * 6.2;
           if (c.y[i] < ty) c.y[i] += (ty - c.y[i]) * 0.55;
           c.x[i] += (tx - c.x[i]) * 0.3;
           return;

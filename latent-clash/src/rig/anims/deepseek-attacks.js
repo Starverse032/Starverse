@@ -72,7 +72,7 @@
   // 2H: crouching spin — the tail sweeps flat along the floor (reach 66)
   var CH0 = P(C, ATK, { hip: [-2, -18], lean: 34, hF: [26, -36], hB: [18, -32], tail: -20, arch: 30, tsw: 0.2 });
   var CHX = P(C, HIT, { flip: 1, hip: [-13, -17], lean: 36, bend: 4, fF: [8, 0], fB: [-14, 0], faB: 30, hF: [18, -22], hB: [12, -18], handF: 'flat', handB: 'flat',
-    tail: 77, arch: -1, tl: 1, tsw: 0, skirt: 0.5, pool: 0, z: { tail: 6 }, weapon: 'tail', eyes: 'focus', mouth: 'teeth' });
+    tail: 77, arch: -1, tl: 1, tsw: 0, skirt: 0.5, z: { tail: 6 }, weapon: 'tail', eyes: 'focus', mouth: 'teeth' });
   def('2H', {
     segs: sar(10, 5, 22), step: 2,
     keys: [['startup', c0], ['startup+4', CH0, 'out'], ['startup+7', P(CH0, { hip: [0, -17], lean: 38, tail: -30 }), 'snap'],
