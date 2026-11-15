@@ -65,6 +65,11 @@
           c.x[i] += (tx - c.x[i]) * 0.3;
           return;
         }
+        // walking: the hair sways but does not stream out like in a dash
+        if (sk.ds && sk.ds.peek && i >= 3) {
+          var wl = sk.pel[0] - 11 - i * 1.3;
+          if (c.x[i] < wl) c.x[i] += (wl - c.x[i]) * 0.5;
+        }
         // keep the long hair hanging behind the back silhouette (it is drawn behind everything)
         if (Math.abs(sk.lean) > 40 || i < 3) return;
         var lim = i < 2 ? sk.chest[0] - 2 : (i < 4 ? Math.min(sk.chest[0], sk.pel[0]) - 7 : sk.pel[0] - 9 - Math.max(0, c.y[i] - sk.pel[1]) * 0.12);
@@ -344,7 +349,7 @@
     }
     // walk: narrower bell (the stepping knee may still push the front), hem riding ~4 px up so the
     // striding boots show under it
-    if (peek) { aF = Math.max(aF, Math.min(aF + 12, 84 + tr * 0.6)); aB = Math.min(aB, 98 + tr * 0.6); }
+    if (peek) aB = Math.min(aB, 98 + tr * 0.6);
     var rf = rib(rootF, aF, Lf, Math.min(Lf * 0.55, kneeF)), rb = rib(rootB, aB, Lb, Math.min(Lb * 0.55, kneeB));
     if (peek) {
       rf.e = [Math.min(rf.e[0], rf.m[0] + 3), -4.5 - (sk.hem || 0) * 0.5]; rb.e = [Math.max(rb.e[0], rb.m[0] - 3), -4];

@@ -584,6 +584,7 @@
     var eyes = ds.eyes || 'open';
     if (D.blink && (eyes === 'open' || eyes === 'focus' || eyes === 'sad' || eyes === 'wide')) eyes = (D.blink > 5 || D.blink < 3) ? 'half' : 'closed';
     var S = skirtSurf(d, sec, -Math.round(sk0.hem || 0));
+    if (I._dsDbg) I._dsDbg.push({ f: S.f.p, b: S.b.p, waist: d.waist, pel: d.pel, lean: d.lean, flip: sk0.flip });
     var lockF = sk0.flip ? 0 : D.lock.F, lockB = sk0.flip ? 0 : D.lock.B;
     var steps = [
       [z.tail != null ? z.tail : -10, function () { drawTail(p, d, sec, ds); p.end(); }],
