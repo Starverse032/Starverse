@@ -115,7 +115,14 @@
 
   LC.scenes.define('howto', function (params) {
     var page = params.page || 0, scroll = 0, maxScroll = 0, pageT = 0;
-    var TABS = ['基本操作', '系统', LORE.chars.claude.nameZh, LORE.chars.deepseek.nameZh];
+    // two fixed pages, then one move-list page per fighter in LC.CHARS
+    var TABS = ['基本操作', '系统'].concat(LC.CHARS.map(function (ch) { return (LORE.chars[ch] || {}).nameZh || ch; }));
+    var TAB_W = Math.min(64, Math.floor((W - 86) / TABS.length) - 2), TAB_X = W - TABS.length * (TAB_W + 2);
+    function tabLabel(i) {
+      var tb = TABS[i], sz = i >= 2 ? 10 : 12;
+      if (i >= 2 && LC.font.measure(tb, { size: sz }).w > TAB_W - 4) tb = (LORE.chars[LC.CHARS[i - 2]] || {}).name || tb;
+      return tb;
+    }
     function setPage(p) { page = (p + TABS.length) % TABS.length; scroll = 0; pageT = 0; ui.sfx('ui.move'); }
     function drawControls(c) {
       var K = LC.input.keys, kn = LC.input.keyName;
@@ -191,15 +198,15 @@
         ui.box(c, 0, 0, W, 20, 'rgba(5,4,10,0.85)'); ui.box(c, 0, 20, W, 1, U.line);
         LC.font.draw(c, '出招表与教学', 8, 4, { size: 12, color: U.text });
         TABS.forEach(function (tb, i) {
-          var x = 120 + i * 66, sel = i === page;
-          if (sel) { ui.box(c, x, 2, 64, 18, U.bg2); ui.box(c, x, 18, 64, 2, U.gold); }
-          LC.font.draw(c, tb, x + 32, 5, { size: i >= 2 ? 10 : 12, color: sel ? U.text : U.dim, align: 'center' });
+          var x = TAB_X + i * (TAB_W + 2), sel = i === page;
+          if (sel) { ui.box(c, x, 2, TAB_W, 18, U.bg2); ui.box(c, x, 18, TAB_W, 2, U.gold); }
+          LC.font.draw(c, tabLabel(i), x + (TAB_W >> 1), i >= 2 ? 6 : 5, { size: i >= 2 ? 10 : 12, color: sel ? U.text : U.dim, align: 'center' });
         });
         var a = ui.ease.out(pageT / 10);
         c.save(); c.translate(Math.round((1 - a) * 16), 0);
         if (page === 0) { maxScroll = 0; drawControls(c); }
         else if (page === 1) drawSystem(c, t);
-        else maxScroll = ui.drawMoveList(c, page === 2 ? 'claude' : 'deepseek', 8, 26, W - 16, 172, scroll, t);
+        else maxScroll = ui.drawMoveList(c, LC.CHARS[page - 2] || LC.CHARS[0], 8, 26, W - 16, 172, scroll, t);
         c.restore();
         ui.hints(c, [['←→', '翻页'], ['↑↓', '滚动'], ['M', '返回']], { y: H - 13 });
       }

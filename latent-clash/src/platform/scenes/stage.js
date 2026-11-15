@@ -49,7 +49,7 @@
       var id = items[idx];
       if (id === 'random') id = ids[(Math.random() * ids.length) | 0];
       LC.app.lastStage = id;
-      var S = LC.app.session || { mode: mode, sides: [{ char: 'claude' }, { char: 'deepseek' }] };
+      var S = LC.app.session || { mode: mode, sides: [{ char: LC.CHARS[0] }, { char: LC.CHARS[1 % LC.CHARS.length] }] };
       var cfg = LC.app.matchConfig({ mode: mode, p1: S.sides[0], p2: S.sides[1], stage: id });
       if (LC.app.session) LC.app.session.lastConfig = cfg;
       if (mode === 'training') LC.scenes.go('match', { config: cfg }, { transition: 'iris' });

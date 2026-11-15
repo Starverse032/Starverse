@@ -66,8 +66,8 @@
         }
         if (idle > IDLE_DEMO) {
           out = true;
-          var ch = Math.random() < 0.5 ? 'claude' : 'deepseek';
-          var other = Math.random() < 0.75 ? LC.app.other(ch) : ch;
+          var ch = LC.app.randomChar();
+          var other = Math.random() < 0.75 ? LC.app.randomChar(ch) : ch;
           var ids = LC.app.stageIds().filter(function (s) { return s !== 'training'; });
           LC.scenes.go('match', { config: LC.app.matchConfig({ mode: 'demo', p1: { char: ch, control: 'cpu', level: 4 }, p2: { char: other, control: 'cpu', level: 4, palette: other === ch ? 1 : 0 }, stage: ids[(Math.random() * ids.length) | 0] || 'latent' }) }, { transition: 'dissolve', frames: 24 });
         }

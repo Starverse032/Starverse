@@ -95,7 +95,7 @@
 
   LC.scenes.define('pause', function (params) {
     var cfg = params.cfg || {};
-    var view = 'main', moves = null, movesChar = cfg.p1 ? cfg.p1.char : 'claude', scroll = 0;
+    var view = 'main', moves = null, movesChar = cfg.p1 ? cfg.p1.char : LC.CHARS[0], scroll = 0;
     var items = [{ id: 'resume', label: '继续游戏', en: 'RESUME' }, { id: 'moves', label: '出招表', en: 'MOVE LIST' }];
     if (cfg.mode === 'training') items.push({ id: 'training', label: '训练设置', en: 'TRAINING' }, { id: 'reset', label: '重置位置', en: 'RESET' });
     items.push({ id: 'restart', label: '重新开始', en: 'RESTART' }, { id: 'quit', label: cfg.mode === 'arcade' ? '放弃挑战' : '退出对局', en: 'QUIT' });
@@ -132,7 +132,7 @@
         if (confirmQuit) confirmQuit--;
         if (view === 'moves') {
           if (m.cancel || m.ok) { view = 'main'; ui.sfx('ui.cancel'); }
-          else if (m.left || m.right) { movesChar = movesChar === 'claude' ? 'deepseek' : 'claude'; scroll = 0; ui.sfx('ui.move'); }
+          else if (m.left || m.right) { var CL = LC.CHARS, mi = CL.indexOf(movesChar); movesChar = CL[(mi + (m.right ? 1 : CL.length - 1) + CL.length) % CL.length]; scroll = 0; ui.sfx('ui.move'); }
           else if (m.down) scroll++; else if (m.up) scroll = Math.max(0, scroll - 1);
           return;
         }
