@@ -152,7 +152,7 @@
       for (i = 0; i < n; i++) {
         P.fill(rg[i].H, L);
         var na = rot + (i + 0.5) * Math.PI * 2 / n;
-        P.line([cx + Math.cos(na) * r * 0.86, cy + Math.sin(na) * r * 0.86, cx + Math.cos(na) * r * 0.5, cy + Math.sin(na) * r * 0.5], L);
+        if (!o.noNotch) P.line([cx + Math.cos(na) * r * 0.86, cy + Math.sin(na) * r * 0.86, cx + Math.cos(na) * r * 0.5, cy + Math.sin(na) * r * 0.5], L);
       }
     } else {
       for (i = 0; i < n; i++) ring(rg[i]);
@@ -332,7 +332,7 @@
     var tas = P.sr([80, 28, 81, 33, 80.5, 39], 1.8, 3);
     P.part(tas, S.c1, S.cl); P.recol(tas.band(1, 0), [S.c1], S.c2);
     P.part(P.rect(79, 28, 3, 2), S.m1, S.ml);
-    knot(P, 77, 23, 7.4, 5, -0.3, { small: 1, d: 0.5, ro: 0.52, hole: 1.3, core: 0.32, line: S.dl });
+    knot(P, 77, 23, 7.4, 5, -0.3, { small: 1, d: 0.5, ro: 0.52, hole: 1.2, core: 0.3, noNotch: 1 });
 
     // ---- ahoge
     var aho = lose ? P.sr([50, 12, 48, 7, 44, 5, 41, 7], 3.6, 1.8) : P.sr([50, 12, 49, 6, 46, 3, 42, 2, 39, 4], 4, 1.8);
@@ -391,17 +391,16 @@
     // beckoning hand: palm toward us, index finger raised and crooking toward her, the rest folded
     var palm = P.spoly([95, 89, 94, 84, 95.5, 79, 100, 77, 104.5, 78, 106.5, 82, 106, 87, 102, 90]);
     var thumb = P.sr([96, 86, 92.5, 83, 90.5, 79.5], 3.8, 2.8);
-    var idx = P.sr([98, 79, 97.5, 72, 98, 67.5, 96.5, 64.5, 94.5, 64.5], 3.6, 2.6);
-    var mid = P.sr([101.2, 78.5, 101.8, 73, 101.2, 70], 3.6, 3.2);
-    var curl = P.ell(104, 79, 2, 2.2).or(P.ell(106, 82, 1.7, 1.9));
-    var hand = palm.or(thumb).or(idx).or(mid).or(curl);
+    var idx = P.sr([98, 79, 97.6, 72, 98.4, 67, 97.4, 63.6, 95, 62.8, 93.6, 64.2], 3.6, 2.4);
+    var curl = P.ell(101.2, 77.6, 2, 2).or(P.ell(103.8, 78.6, 2, 2)).or(P.ell(106, 81.4, 1.7, 1.8));
+    var hand = palm.or(thumb).or(idx).or(curl);
     P.part(hand, S.s1, S.sl);
     P.recol(hand.band(2, -1), [S.s1], S.s2);
     P.recol(hand.band(-1, 1), [S.s1], S.s0);
-    P.line([99.6, 79, 99.6, 74], S.s2);
-    P.line([103, 80, 104.5, 81.5], S.s2);
+    P.line([99.8, 80, 99.8, 77], S.s2);
+    P.line([101, 80, 102.5, 80.5], S.s2); P.line([104, 81, 105, 82.5], S.s2);
     P.line([96, 86, 99, 87.5, 103, 86.5], S.s2, true);
-    P.px(95, 65, S.bl);
+    P.px(94, 64, S.bl);
   }
   function drawLowArm(P) {
     farSleeve(P);
