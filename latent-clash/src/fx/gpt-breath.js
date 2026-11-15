@@ -13,7 +13,7 @@
   var I = FX._ = FX._ || {};
   var PI = Math.PI, D2R = PI / 180;
   var G = I.GPT = I.GPT || [{}, {}];
-  var RMAX = 20, CELL = RMAX * 2 + 1, NP = 18;
+  var RMAX = 20, CELL = RMAX * 2 + 1, NP = 15;
 
   function bake() {
     [0, 1].forEach(function (pal) {
@@ -57,14 +57,31 @@
       PX[n] = sx + dx * dist + nx * lat; PY[n] = sy + dy * dist + ny * lat; PR[n] = r * shrink; PU[n] = u; n++;
     }
     if (phase !== 'end') { PX[n] = sx + dx * 2; PY[n] = sy + dy * 2; PR[n] = 3.2; PU[n] = 0; n++; }   // nozzle at the mouth
-    // passes: rim (dk), deep, body, bright, pale, white
-    var D = g.discs, k, p;
-    for (k = n - 1; k >= 0; k--) dsc(ctx, D[5], PR[k] + 2, Math.round(PX[k]), Math.round(PY[k]));
-    for (k = n - 1; k >= 0; k--) dsc(ctx, D[4], PR[k] + 1, Math.round(PX[k]), Math.round(PY[k]));
-    for (k = n - 1; k >= 0; k--) dsc(ctx, D[3], PR[k], Math.round(PX[k]), Math.round(PY[k]));
-    for (k = n - 1; k >= 0; k--) { p = PU[k]; if (p < 0.8) dsc(ctx, D[2], PR[k] * (0.74 - p * 0.2), Math.round(PX[k] - dx), Math.round(PY[k] - dy)); }
-    for (k = n - 1; k >= 0; k--) { p = PU[k]; if (p < 0.55) dsc(ctx, D[1], PR[k] * (0.52 - p * 0.3), Math.round(PX[k] - dx * 2), Math.round(PY[k] - dy * 2)); }
-    for (k = n - 1; k >= 0; k--) { p = PU[k]; if (p < 0.32) dsc(ctx, D[0], PR[k] * 0.3 + (p < 0.1 ? 1 : 0), Math.round(PX[k] - dx * 2), Math.round(PY[k] - dy * 2)); }
+    // passes: rim (dk), deep, body as forward-pointing capsules (tongue tips), then the hot
+    // layers as single discs pulled toward the mouth and the axis; then the white-hot core line.
+    var D = g.discs, k, p, q, c1 = 0.92, c2 = 1.7;
+    for (q = 0; q < 3; q++) {
+      var sh = D[5 - q], add = 2 - q;
+      for (k = n - 1; k >= 0; k--) {
+        var r0 = PR[k], x = PX[k], y = PY[k];
+        dsc(ctx, sh, r0 + add, Math.round(x), Math.round(y));
+        if (r0 > 2.5) { dsc(ctx, sh, r0 * 0.58 + add, Math.round(x + dx * r0 * c1), Math.round(y + dy * r0 * c1)); dsc(ctx, sh, r0 * 0.26 + add, Math.round(x + dx * r0 * c2), Math.round(y + dy * r0 * c2)); }
+      }
+    }
+    for (q = 0; q < 3; q++) {
+      var lim = [0.86, 0.62, 0.4][q], fr = [0.78, 0.56, 0.34][q], back = [1, 2, 3][q];
+      for (k = n - 1; k >= 0; k--) {
+        p = PU[k]; if (p >= lim) continue;
+        var pull = (q + 1) * 0.12, ax = sx + dx * p * Ln, ay = sy + dy * p * Ln;      // toward the axis
+        var xx = PX[k] + (ax - PX[k]) * pull - dx * back, yy = PY[k] + (ay - PY[k]) * pull - dy * back;
+        dsc(ctx, D[2 - q], PR[k] * fr * (1 - p / lim * 0.35) + (q === 2 && p < 0.12 ? 1 : 0), Math.round(xx), Math.round(yy));
+      }
+    }
+    if (phase !== 'end' || t < 3) {      // white-hot core streak along the axis
+      var cl = Ln * (phase === 'start' ? Math.min(0.38, grow * 0.5) : 0.38) * (phase === 'end' ? 0.5 : 1);
+      ctx.fillStyle = '#ffffff';
+      I.runLine(ctx, sx + dx * 1, sy + dy * 1 - (Math.abs(dx) >= Math.abs(dy) ? 1 : 0), sx + dx * cl, sy + dy * cl - (Math.abs(dx) >= Math.abs(dy) ? 1 : 0), 3);
+    }
     // embers flying out of the cone
     var E = g.ember;
     for (i = 0; i < 12; i++) {

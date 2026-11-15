@@ -489,7 +489,8 @@
     var E2 = e.map(function (q, i) { return [q[0] + bw[i], q[1]]; }), A2 = a.map(function (q, i) { return [q[0] - bw[i], q[1]]; });
     poly = [A2[0], E2[0], E2[1], E2[2], E2[3], A2[3], A2[2], A2[1]];
     p.poly(H.flat(poly), M.c1, SH.soft, t);
-    // silver lining along the inner (back) edge
+    // lining visible inside the bell opening (bottom) and along the inner (back) edge
+    p.poly(H.flat([lerp(A2[2], A2[3], 0.55), lerp(E2[2], E2[3], 0.55), E2[3], A2[3]]), M.c2, null, t - 1);
     for (var i = 1; i < 4; i++) {
       var q0 = lerp(A2[i - 1], E2[i - 1], i === 1 ? 0.12 : 0.14), q1 = lerp(A2[i], E2[i], 0.16);
       ln(p, lerp(A2[i - 1], E2[i - 1], 0.02), lerp(A2[i], E2[i], 0.02), col(M.c2, 1), true);
@@ -608,8 +609,9 @@
     sLine(p, S, function (v) { return 0.8 + 0.04 * v; }, 0.2, 1, 0, true, true);
     sLine(p, S, function (v) { return 0.7 + 0.06 * v; }, 0.45, 0.98, col(M.c1, 0), true);
     // silver lining behind the leg (inside of the slit)
-    p.poly(band(S, flap, slitB, VS + 0.02, 1, 5), M.c2, null, 1);
-    sLine(p, S, function (v) { return slitB(v) - 0.03; }, VS + 0.08, 1, col(M.c2, 2), true);
+    p.poly(band(S, flap, slitB, VS + 0.02, 1, 5), M.c1, null, 2);
+    p.poly(band(S, function (v) { return slitB(v) - 0.07; }, slitB, VS + 0.04, 1, 4), M.c2, null, 1);
+    sLine(p, S, function (v) { return slitB(v) - 0.07; }, VS + 0.08, 1, col(M.c2, 0), true);
     sLine(p, S, slitB, VS + 0.04, 1, col(M.c1, 2), true);
     // hem: platinum band line + rosettes along the hem
     hLine(p, S, slitB(0.92), 1.0, 0.9, col(M.c2, 1), true, true);
@@ -676,7 +678,8 @@
       p.pxOn(q[0], q[1], i ? col(M.acc, 1) : col(M.skin, 1));    // keyhole cut-out at the top, teal gem lower
     });
     var w0 = fr(W, wa, -4.5, 2.5), w1 = fr(W, wa, 4, 2.5);
-    ln(p, w0, w1, col(M.c1, 2), true);
+    ln(p, w0, w1, col(M.c2, 1), true);
+    ln(p, fr(W, wa, -4.5, 1.5), fr(W, wa, 4, 1.5), col(M.c1, 2), true);
   }
   function drawCollar(p, sk) {
     var c = sk.chest, ca = sk.chestAng, n = sk.neck;

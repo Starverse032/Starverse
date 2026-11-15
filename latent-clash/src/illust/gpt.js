@@ -467,8 +467,8 @@
     H.hairClump(Q, [[34, 40, 29, 54, 31, 66, 26, 78], 10, 6, 11, 0, [0.1, 0.6]], S.h1);
     H.hairClump(Q, [[76, 30, 80, 44, 79, 56, 83, 68], 9, 6, 10, 0, [0.1, 0.6]], S.h1);
     // horns slicing up through the top of the frame
-    horn(Q, [33, 52, 28, 45.5, 23, 41, 17, 37.5, 11, 35.5], 9, 4);
-    horn(Q, [76, 46, 80.5, 42, 83, 38.5, 84, 35], 7, 3);
+    horn(Q, [31, 52, 27, 46, 24, 41.5, 22, 37.5, 21.5, 33], 7, 4);
+    horn(Q, [80, 50, 83, 45, 85, 40.5, 85.6, 35], 6, 3);
   }
   // band motif: dragon-scale crescents + teal flame tongues along the bottom (px coords)
   function cutinMotif(P) {
@@ -477,8 +477,8 @@
       P.fill(P.ell(x, y, 8, 7.5), S.a2); P.fill(P.ell(x, y - 1.6, 6.8, 6.2), S.a3);
     }
     var r = K.rng(7);
-    for (var k = 0; k < 9; k++) {
-      var fx = 70 + k * 19 + r() * 8, fh = 10 + r() * 14, fw = 5 + r() * 4;
+    for (var k = 0; k < 8; k++) {
+      var fx = 4 + k * 13 + r() * 6, fh = 8 + r() * 10 + (k > 4 ? 6 : 0), fw = 4 + r() * 3;
       var fl = P.poly([fx - fw, 72, fx - fw * 0.4, 72 - fh * 0.5, fx - fw * 1.1, 72 - fh, fx + fw * 0.3, 72 - fh * 0.55, fx + fw, 72]);
       P.fill(fl, S.a1); P.fill(fl.and(fl.shift(0, -3)).and(fl.shift(2, 0)).and(fl.shift(-2, 0)), S.a0);
     }
