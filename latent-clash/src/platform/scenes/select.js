@@ -7,14 +7,21 @@
   var LC = window.LC = window.LC || {};
   var U = LC.UI, W = LC.W, H = LC.H, ui = LC.ui, LORE = LC.LORE;
   var CH = LC.CHARS;
+  // Tile grid: every fighter plus a trailing "random" tile, centred between the two live puppets
+  // (x 128 / 256, ~44 px wide each) so they never overlap. 4 tiles -> 2×2.
+  var RND = CH.length, NT = CH.length + 1, TS = 38, TG = 3;
+  var COLS = Math.max(2, Math.ceil(Math.sqrt(NT)));
+  var GX = (W - (COLS * TS + (COLS - 1) * TG)) >> 1, GY = 26;
+  function tilePos(k) { return { x: GX + (k % COLS) * (TS + TG), y: GY + Math.floor(k / COLS) * (TS + TG) }; }
+  function roll(not) { var l = CH.filter(function (c) { return c !== not; }); if (!l.length) l = CH; return l[(Math.random() * l.length) | 0]; }
   var STATS = [['power', '力量'], ['speed', '速度'], ['range', '射程'], ['technique', '技巧']];
   var MODE_TAG = { arcade: '街机模式', versus: '对战', training: '训练' };
 
   function Side(i, ch, pal) {
-    this.i = i; this.cur = CH.indexOf(ch); this.pal = pal || 0; this.locked = false; this.active = i === 0;
+    this.i = i; this.cur = Math.max(0, CH.indexOf(ch)); this.rnd = roll(); this.pal = pal || 0; this.locked = false; this.active = i === 0;
     this.slide = 0; this.flash = 0; this.lockT = 0; this.puppets = {}; this.bioT = 0; this.moveT = 0;
   }
-  Side.prototype.ch = function () { return CH[this.cur]; };
+  Side.prototype.ch = function () { return this.cur === RND ? this.rnd : CH[this.cur]; };
   Side.prototype.puppet = function () {
     var k = this.ch() + this.pal;
     if (!this.puppets[k]) this.puppets[k] = ui.puppet(this.ch(), this.pal);
@@ -24,7 +31,7 @@
   LC.scenes.define('select', function (params) {
     var mode = params.mode || 'versus', vs = params.vs || (mode === 'versus' ? 'pvc' : 'pvc');
     var prev = (LC.app.lastPick && LC.app.lastPick[mode + vs]) || null;
-    var sides = [new Side(0, prev ? prev[0].char : 'claude', prev ? prev[0].palette : 0), new Side(1, prev ? prev[1].char : 'deepseek', prev ? prev[1].palette : 0)];
+    var sides = [new Side(0, prev ? prev[0].char : CH[0], prev ? prev[0].palette : 0), new Side(1, prev ? prev[1].char : CH[1 % CH.length], prev ? prev[1].palette : 0)];
     var twoSided = mode !== 'arcade';
     var pvp = vs === 'pvp' && mode === 'versus';
     if (pvp) sides[1].active = true;
@@ -41,10 +48,11 @@
     function tagOf(i) { return controlOf(i) === 'cpu' ? 'CPU' : (i === 0 ? '1P' : '2P'); }
     function palFor(i) {
       var s = sides[i], o = sides[1 - i];
-      if (twoSided && i === 1 && o.locked && o.ch() === s.ch() && o.pal === s.pal) return 1 - s.pal;
+      if (twoSided && i === 1 && o.locked && o.ch() === s.ch() && o.pal === s.pal) return s.pal ? 0 : 1;
       return s.pal;
     }
     function lock(s) {
+      if (s.cur === RND) s.rnd = roll();
       s.locked = true; s.lockT = 0; s.flash = 16;
       s.pal = palFor(s.i);
       ui.sfx('ui.lock');
@@ -79,7 +87,7 @@
         return;
       }
       if (m.left || m.right) {
-        s.cur = (s.cur + (m.right ? 1 : CH.length - 1)) % CH.length; s.slide = 0; s.bioT = 0; s.moveT = 0;
+        s.cur = (s.cur + (m.right ? 1 : NT - 1)) % NT; s.slide = 0; s.bioT = 0; s.moveT = 0;
         lastMoved = s.i; ui.sfx('ui.move');
       } else if (m.up || m.down) {
         s.pal = 1 - s.pal; s.flash = 6; ui.sfx('ui.move', { pitch: 1.2 }); lastMoved = s.i;
@@ -94,9 +102,9 @@
       var p = LC.input.pointer;
       if (!p.pressed) return;
       // tiles
-      for (var k = 0; k < CH.length; k++) {
-        var tx = 150 + k * 46, ty = 26;
-        if (p.x >= tx && p.x < tx + 40 && p.y >= ty && p.y < ty + 40) {
+      for (var k = 0; k < NT; k++) {
+        var tp = tilePos(k), tx = tp.x, ty = tp.y;
+        if (p.x >= tx && p.x < tx + TS && p.y >= ty && p.y < ty + TS) {
           var s = !sides[0].locked ? sides[0] : (twoSided && sides[1].active && !sides[1].locked ? sides[1] : null);
           if (!s) return;
           if (s.cur !== k) { s.cur = k; s.slide = 0; s.bioT = 0; ui.sfx('ui.move'); }
@@ -115,6 +123,7 @@
         sides.forEach(function (s) {
           s.slide++; s.bioT++; s.moveT++;
           if (s.flash) s.flash--;
+          if (s.cur === RND && !s.locked && s.slide % 24 === 0) s.rnd = roll(s.rnd);
           if (s.locked) s.lockT++;
           var p = s.puppet();
           p.tick(t, { x: 0, y: LC.GROUND_Y, vx: 0, vy: 0, facing: s.i ? -1 : 1, grounded: true });
@@ -173,36 +182,41 @@
         ui.header(c, '选择角色', 'CHARACTER SELECT', t, accL);
         LC.font.draw(c, MODE_TAG[mode] + (mode === 'versus' ? ' · ' + { pvc: '玩家 vs CPU', pvp: '玩家 vs 玩家', cvc: 'CPU vs CPU' }[vs] : ''), W >> 1, 5, { size: 10, color: U.gold, align: 'center' });
         // tiles
-        CH.forEach(function (ch, k) {
-          var tx = 150 + k * 46, ty = 26;
+        for (var k = 0; k < NT; k++) {
+          var tp = tilePos(k), tx = tp.x, ty = tp.y, ch = CH[k];
           var hov0 = sides[0].cur === k, hov1 = twoSided && sides[1].active && sides[1].cur === k;
-          ui.box(c, tx - 1, ty - 1, 42, 42, U.black);
-          ui.box(c, tx, ty, 40, 40, ui.charCol(ch, 0).dark);
-          var b = ui.portrait(ch, 'bust', 0);
-          if (b) c.drawImage(b, 36, 22, 40, 40, tx, ty, 40, 40);
-          if (!hov0 && !hov1) { c.globalAlpha = 0.45; ui.box(c, tx, ty, 40, 40, U.bg0); c.globalAlpha = 1; }
-          LC.font.draw(c, LORE.chars[ch].name, tx + 20, ty + 32, { size: 8, color: U.text, outline: U.black, align: 'center' });
-        });
+          ui.box(c, tx - 1, ty - 1, TS + 2, TS + 2, U.black);
+          if (k === RND) {
+            ui.box(c, tx, ty, TS, TS, '#1c1930');
+            LC.font.draw(c, '?', tx + (TS >> 1), ty + 3, { size: 12, scale: 2, color: (t >> 4) & 1 ? U.gold : U.text, outline: U.black, align: 'center' });
+            LC.font.draw(c, '随机', tx + (TS >> 1), ty + TS - 11, { size: 10, color: U.text, outline: U.black, align: 'center' });
+          } else {
+            ui.box(c, tx, ty, TS, TS, ui.charCol(ch, 0).dark);
+            var b = ui.portrait(ch, 'bust', 0);
+            if (b) c.drawImage(b, 37, 22, TS, TS, tx, ty, TS, TS);
+            LC.font.draw(c, (LORE.chars[ch] || {}).name || ch, tx + (TS >> 1), ty + TS - 8, { size: 8, color: U.text, outline: U.black, align: 'center' });
+          }
+          if (!hov0 && !hov1) { c.globalAlpha = 0.45; ui.box(c, tx, ty, TS, TS, U.bg0); c.globalAlpha = 1; }
+        }
         // cursors
         sides.forEach(function (s, i) {
           if (i === 1 && (!twoSided || !s.active)) return;
-          var tx = 150 + s.cur * 46, ty = 26;
+          var tp = tilePos(s.cur), tx = tp.x, ty = tp.y;
           var col = i === 0 ? U.gold : (tagOf(1) === 'CPU' ? '#9b96b8' : '#58d4ff');
           var pulse = s.locked ? 0 : ((t >> 3) & 1);
           var g = 2 + pulse;
           c.fillStyle = col;
           // corner brackets
-          [[-g, -g, 1, 1], [40 + g - 6, -g, -1, 1], [-g, 40 + g - 1, 1, -1], [40 + g - 6, 40 + g - 1, -1, -1]].forEach(function (q) {
+          [[-g, -g, 1, 1], [TS + g - 6, -g, -1, 1], [-g, TS + g - 1, 1, -1], [TS + g - 6, TS + g - 1, -1, -1]].forEach(function (q) {
             var x = tx + q[0], y = ty + q[1];
             c.fillRect(x + (q[2] < 0 ? 0 : 0), y, 6, 2);
             c.fillRect(q[2] > 0 ? x : x + 4, q[3] > 0 ? y : y - 4, 2, 6);
           });
           var tag = tagOf(i), tw = LC.font.measure(tag, { size: 8 }).w + 6;
-          var tagX = i === 0 ? tx - 2 : tx + 42 - tw, tagY = i === 0 ? ty - 9 : ty + 43;
-          if (i === 1 && sides[0].cur === s.cur) tagX = tx + 42 - tw;
+          var tagX = i === 0 ? tx - 2 : tx + TS + 2 - tw, tagY = i === 0 ? ty - 9 : ty + TS + 3;
           ui.box(c, tagX, tagY, tw, 9, col);
           LC.font.draw(c, tag, tagX + 3, tagY + 1, { size: 8, color: U.bg0 });
-          if (s.locked) { var ic = ui.icon('lock'); if (ic) c.drawImage(ic, i ? tx + 2 : tx + 40 - ic.width - 2, ty + 2); }
+          if (s.locked) { var ic = ui.icon('lock'); if (ic) c.drawImage(ic, i ? tx + 2 : tx + TS - ic.width - 2, ty + 2); }
         });
         // puppets
         sides.forEach(function (s, i) {
