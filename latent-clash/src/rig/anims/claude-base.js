@@ -211,45 +211,59 @@
   });
 
   // ---------------------------------------------------------------- intro / win / lose
-  // intro: reading the open book, snaps it shut, lowers it and settles into stance
+  // intro: reading the open book, a last glance up, SNAPS it shut (small jolt: shoulders up, skirt kicks,
+  // hair flicks), tucks it to the rear hand and settles into stance (hair / skirt settle on their own)
   var RD = P(S, { hip: [0, -54], lean: 0, fF: [5, 0], fB: [-5, 0], hF: [12, -66], hB: [4, -65], handF: 'grip', handB: 'grip', bm: 'both',
     book: -90, bko: 1, tilt: 20, eyes: 'half', mouth: 'neutral', z: { armB: 4.7 } });
+  var IS = P(S, { hip: [0, -54], fF: [6, 0], fB: [-6, 0], hF: [12, -64], handF: 'relax', hB: [-5, -51] });
   def('intro', {
     segs: [['act', 100]], step: 3,
     keys: [
       [0, RD],
-      [30, P(RD, { tilt: 15 })],
-      [42, P(RD, { tilt: 10, eyes: 'open' }), 'snap'],
-      [45, P(RD, { bko: 0, hF: [10, -66], hB: [6, -65], tilt: 5, eyes: 'open' }), 'out'],
-      [54, P(S, { hip: [0, -54], fF: [5, 0], fB: [-5, 0], hF: [10, -62], handF: 'relax', hB: [-4, -52], eyes: 'closed', mouth: 'neutral', tilt: 10 }), 'inout'],
-      [66, P(S, { hip: [0, -54], fF: [5, 0], fB: [-5, 0], hF: [10, -62], handF: 'relax', hB: [-4, -52], eyes: 'open', mouth: 'neutral', tilt: 0 })],
-      [80, P(S, { eyes: 'focus' }), 'out'],
+      [24, P(RD, { tilt: 16, hF: [12, -67] })],
+      [33, P(RD, { tilt: 6, eyes: 'open', head: [1, -1] }), 'inout'],
+      [39, P(RD, { tilt: 4, eyes: 'focus', bko: 1, hF: [14, -67], hB: [2, -65] }), 'snap'],
+      [42, P(RD, { bko: 0, hF: [10, -68], hB: [7, -67], tilt: -4, eyes: 'closed', mouth: 'neutral', shr: 1, sq: -1, root: [0, -1], skirt: 2, tail: -6 }), { ease: 'snap', step: 1 }],
+      [45, P(RD, { bko: 0, hF: [10, -66], hB: [7, -65], tilt: 0, eyes: 'closed', skirt: 1, tail: 3 }), 'out'],
+      [54, P(IS, { hF: [10, -60], hB: [-3, -54], lean: 4, tilt: 6, eyes: 'closed', skirt: 1, tail: -2 }), 'inout'],
+      [63, P(IS, { lean: 1, tilt: -2, eyes: 'open', mouth: 'smile', tail: 1 }), 'inout'],
+      [75, P(IS, { tilt: 0, eyes: 'open', mouth: 'neutral' })],
+      [84, P(S, { eyes: 'focus' }), 'out'],
       [99, S]
     ]
   });
-  // win: closes the book to her chest, composed half smile
-  var WN = P(S, { hip: [0, -54], lean: -2, fF: [5, 0], fB: [-5, 0], hF: [8, -70], handF: 'flat', hB: [6, -70], book: -95,
-    eyes: 'closed', mouth: 'smile', tilt: 8, z: { armB: 6 } });
+  // win: the back hand brings the book to her chest while the front hand rises to straighten the
+  // flower ornament in her hair; small confident smile; loop sways (capelet + hair follow)
+  var WN = P(S, { hip: [0, -54], lean: -2, fF: [5, 0], fB: [-5, 0], hF: [10, -66], handF: 'relax', hB: [6, -70], book: -95,
+    eyes: 'open', mouth: 'smile', tilt: 4, z: { armB: 6 } });
+  var FLW = P(WN, { hF: [-1, -101], handF: 'flat', tilt: -8, lean: -4, eyes: 'closed', mouth: 'smile', head: [-1, 0] });
   def('win', {
     segs: [['in', 30], ['loop', 60, true]], step: 2,
     keys: [
       ['in', P(S, { eyes: 'closed' })],
-      ['in+8', P(WN, { hB: [2, -64], tilt: 0, eyes: 'open' }), 'out'],
-      ['in+16', P(WN, { eyes: 'closed' }), 'inout'],
+      ['in+6', P(WN, { hB: [2, -64], hF: [12, -78], tilt: 0, eyes: 'closed' }), 'out'],
+      ['in+12', FLW, 'inout'],
+      ['in+16', P(FLW, { hF: [0, -102], tilt: -11, tail: -4 }), 'snap'],
+      ['in+20', P(FLW, { hF: [1, -100], tilt: -6, eyes: 'happy', tail: 3 }), 'out'],
+      ['in+27', P(WN, { eyes: 'happy', tail: 0 }), 'inout'],
       ['loop', WN],
-      ['loop+30', P(WN, { hip: [0, -53], tilt: 5, hB: [6, -69] })]
+      ['loop+15', P(WN, { hip: [0, -53], lean: -1, tilt: 6, tail: 3, hF: [11, -65] }), 'inout'],
+      ['loop+30', P(WN, { tilt: 2, eyes: 'closed', tail: 0 }), 'inout'],
+      ['loop+45', P(WN, { hip: [0, -53], lean: -3, tilt: 5, tail: -3, hF: [10, -67] }), 'inout']
     ]
   });
-  var LS = P(S, { hip: [0, -53], lean: 6, bend: 4, tilt: 25, head: [1, 1], fF: [6, 0], fB: [-5, 0], hF: [10, -50], handF: 'relax', hB: [-3, -46], book: -80,
-    shr: -1, eyes: 'sad', mouth: 'frown' });
+  // lose: slumped, the book hugged to her chest with both arms, head hanging, hair falling forward
+  var LS = P(S, { bm: 'both', hip: [0, -51], lean: 12, bend: 8, tilt: 32, head: [1, 2], fF: [6, 0], fB: [-5, 0], hF: [8, -63], hB: [5, -62],
+    handF: 'grip', handB: 'grip', book: -80, z: { armB: 4.7 }, shr: -1, sq: 1, eyes: 'sad', mouth: 'frown', knF: -1, knB: -1 });
   def('lose', {
     segs: [['in', 30], ['loop', 60, true]], step: 3,
     keys: [
       ['in', P(S, { eyes: 'wide', mouth: 'o' })],
-      ['in+10', P(LS, { tilt: 10, eyes: 'wide', mouth: 'o' }), 'out'],
-      ['in+22', LS],
+      ['in+6', P(S, { eyes: 'wide', mouth: 'o', tilt: -4, shr: 1, hB: [-4, -56] }), 'out'],
+      ['in+15', P(LS, { tilt: 12, lean: 6, bend: 2, eyes: 'sad', mouth: 'o', hF: [10, -66], hB: [6, -65] }), 'inout'],
+      ['in+24', P(LS, { tilt: 36, sq: 2 }), 'in'],
       ['loop', LS],
-      ['loop+30', P(LS, { hip: [0, -52], tilt: 28, eyes: 'closed', sq: 1 })]
+      ['loop+30', P(LS, { hip: [0, -50], tilt: 35, eyes: 'closed', sq: 2, shr: -2, hF: [8, -62] }), 'inout']
     ]
   });
 })();
