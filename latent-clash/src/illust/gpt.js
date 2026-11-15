@@ -127,28 +127,39 @@
     }
     return m;
   }
-  // knot rosette: n interlaced cord loops around a centre ring, white with dark line work (our own design)
-  function knot(P, cx, cy, r, n, rot, line) {
-    var lobes = [], all = P.mask(), L = line || S.dl;
-    for (var i = 0; i < n; i++) {
-      var a = rot + i * Math.PI * 2 / n, lx = cx + Math.cos(a) * r * 0.46, ly = cy + Math.sin(a) * r * 0.46;
-      lobes.push({ o: P.ell(lx, ly, r * 0.54, r * 0.4, a), h: P.ell(lx + Math.cos(a) * r * 0.06, ly + Math.sin(a) * r * 0.06, r * 0.22, r * 0.13, a) });
-      all = all.or(lobes[i].o);
+  // knot rosette: n interlaced cord loops (petals) around a small centre knot — white cord, dark line
+  // work, recessed backing in the holes. Neighbouring loops weave: over at the rim, under near the
+  // centre. Our own design. o = {line, small}
+  function knot(P, cx, cy, r, n, rot, o) {
+    o = o || {};
+    var L = o.line || S.d2, pet = [], all = P.mask(), i;
+    for (i = 0; i < n; i++) {
+      var a = rot + i * Math.PI * 2 / n, px = cx + Math.cos(a) * r * 0.47, py = cy + Math.sin(a) * r * 0.47;
+      pet.push({ O: P.ell(px, py, r * 0.53, r * 0.38, a),
+        H: P.ell(px + Math.cos(a) * r * 0.06, py + Math.sin(a) * r * 0.06, r * 0.27, r * (o.small ? 0.1 : 0.13), a) });
+      all = all.or(pet[i].O);
     }
-    P.fill(all.grow(1).sub(all).and(P.solid()), S.ol);
-    lobes.forEach(function (l) { P.part(l.o, S.c0, L); });
-    // over-under: the first loop passes over the last one on its leading half
-    var lead = lobes[0].o.and(P.ell(cx + Math.cos(rot + 0.9) * r * 0.5, cy + Math.sin(rot + 0.9) * r * 0.5, r * 0.5, r * 0.5));
-    P.part(lead.and(lobes[0].o), S.c0, L);
-    P.fill(P.ell(cx, cy, r * 0.42, r * 0.42).edge(), L);
-    lobes.forEach(function (l) { if (r >= 5) P.fill(l.h, L); });
-    P.recol(all.band(2, -2), [S.c0], S.c2);
-    P.recol(all.band(1, -1), [S.c0], S.c1);
-    var core = P.ell(cx, cy, r * 0.24, r * 0.24);
+    P.fill(all, S.c3);
+    function ring(p, clip) {
+      var cord = p.O.sub(p.H), e = p.O.edge().or(p.H.grow(1).and(p.O).sub(p.H));
+      if (clip) { cord = cord.and(clip); e = e.and(clip); }
+      P.fill(cord, S.c0); P.fill(e, L);
+    }
+    for (i = 0; i < n; i++) ring(pet[i]);
+    ring(pet[0], pet[n - 1].O.sub(P.ell(cx, cy, r * 0.5, r * 0.5)));
+    var inn = P.ell(cx, cy, r * 0.5, r * 0.5);
+    for (i = 0; i < n; i++) ring(pet[(i + n - 1) % n], pet[i].O.and(inn));
+    P.recol(all.band(2, -2), [S.c0], S.c1);
+    P.recol(all.band(1, -1).and(all.band(2, -2)), [S.c1], S.c2);
+    var core = P.ell(cx, cy, r * 0.22, r * 0.22);
     P.part(core, S.c1, L);
-    P.px(Math.round(cx), Math.round(cy - 0.5), S.c0);
+    P.px(Math.round(cx - 0.5), Math.round(cy - 1), S.c0);
     return all;
   }
+  I.gptEmblem = function (P, size) {
+    knot(P, size / 2, size / 2, size * 0.47, size >= 32 ? 6 : 5, -Math.PI / 2, { small: size < 32 });
+    P.outer(S.ol);
+  };
   I.knot = knot;
 
   // bat-like wing rising behind the near shoulder; droop (radians) lowers it outward
@@ -304,7 +315,7 @@
     var tas = P.sr([80, 28, 81, 33, 80.5, 39], 1.8, 3);
     P.part(tas, S.c1, S.cl); P.recol(tas.band(1, 0), [S.c1], S.c2);
     P.part(P.rect(79, 28, 3, 2), S.m1, S.ml);
-    knot(P, 77, 23, 6.6, 5, -0.3);
+    knot(P, 77, 23, 7, 5, -0.3, { small: true });
 
     // ---- ahoge
     var aho = lose ? P.sr([50, 12, 48, 7, 44, 5, 41, 7], 3, 1) : P.sr([50, 12, 49, 6, 46, 3, 42, 2, 39, 4], 3.2, 1);
