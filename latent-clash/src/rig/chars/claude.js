@@ -339,6 +339,14 @@
     }
     var rf = rib(rootF, aF, Lf, Math.min(Lf * 0.55, kneeF)), rb = rib(rootB, aB, Lb, Math.min(Lb * 0.55, kneeB));
     var floor = sk.ds && sk.ds.air ? 999 : -1;
+    if (sk.ds && sk.ds.drape && kL < 0.85) {
+      // sitting / kneeling (getup): the front drapes over the raised knee and down the shin to the
+      // floor; the back pools on the floor behind her
+      var dk = sk.knF[1] < sk.knB[1] ? sk.knF : sk.knB, da = dk === sk.knF ? sk.anF : sk.anB;
+      rf = { m: [dk[0] + 1.5, dk[1] - 4.5], e: [Math.max(da[0], dk[0]) + 4, Math.min(-1, da[1] + 2)] };
+      var bx = Math.min(rootB[0] - 8, rb.e[0]);
+      rb = { m: [rootB[0] - 5, lerp(rootB, [bx, -1], 0.55)[1]], e: [bx, -1] };
+    }
     [rf, rb].forEach(function (r) { if (r.e[1] > floor) r.e[1] = floor; if (r.m[1] > floor) r.m[1] = floor; });
     // hem: quadratic curve back end → front end, sagging toward the floor
     var mid = lerp(rb.e, rf.e, 0.5), sag = 3 + Math.abs(rf.e[0] - rb.e[0]) * 0.06;
