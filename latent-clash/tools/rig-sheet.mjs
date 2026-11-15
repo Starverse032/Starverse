@@ -110,7 +110,7 @@ if (flag('reach')) {
   // node tools/rig-sheet.mjs --multi <char> anim:f,f,f anim2:f,f [--name x]
   const [c, ...rest] = pos;
   const spec = rest.map((t) => { const [a, fs] = t.split(':'); return [a, fs.split(',').map(Number)]; });
-  await save(opt('name', `${c}-batch`), 'sheetMulti', c, pal, spec, scale === 4 ? 3 : scale, +opt('cols', 8));
+  await save(opt('name', `${c}-batch`), 'sheetMulti', c, pal, spec, scale === 4 ? 3 : scale, +opt('cols', 8), flag('noanchors'));
 } else if (flag('heads')) {
   for (const c of (pos.length ? pos : chars)) for (const p of [0, 1]) await save(`${c}-heads-p${p}`, 'sheetHeads', c, p, +opt('scale', 10));
 } else if (flag('palettes')) {
