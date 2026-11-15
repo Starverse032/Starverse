@@ -146,7 +146,7 @@
   function layout(t, tx, ty) {
     var hov = [
       [Math.max(tx - 128, Math.min(100, tx - 36)), I.clamp(ty - 46, 50, 120)],
-      [I.clamp(tx - 30, 60, W - 60), I.clamp(ty - 64, 60, 110)],
+      [I.clamp(tx - 40, 60, W - 60), I.clamp(ty - 66, 60, 110)],
       [Math.min(tx + 100, Math.max(W - 70, tx + 36)), I.clamp(ty - 58, 52, 120)]
     ];
     var ent = [[-150, 0, 0], [0, -170, 90], [W + 150, 0, 180]];   // entry offsets / travel angle

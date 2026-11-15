@@ -409,13 +409,13 @@
 
   // ---------------------------------------------------------------- face icon 24x24 (hand-typed)
   var FACE = [
-    'oo...........ooo........',
-    'oXo.........oXXxo.......',
-    '.oXo.........ooXxo......',
-    '.oXxo..hhhhhh..oXo......',
-    '..oXxohhHHHJHhhoxo......',
-    '...oxyHHHHHJJHHHyo......',
-    '...hoyHHHHHHJHHHHh......',
+    'o............ooo........',
+    'oXo.........oXXXo.......',
+    'oXXo........o.oXxo......',
+    '.oXxo..hhhhh..oXxyo.....',
+    '.oXxxohhHHHJhh.oxyo.....',
+    '..oxxyoHHHHJJHhhxyo.....',
+    '...oyyhHHHHHJHHHyo......',
     '..hHHHHHHHhHHHHHHHh.....',
     '.hHHHHHHHhfhHHHhHHHh....',
     '.hHHHHHHhffhHHhffhHHh...',

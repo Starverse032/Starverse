@@ -97,7 +97,9 @@ Next / known weaknesses:
   bake/tint per `I.CHS`. Checked in strips: claude/deepseek output unchanged; gpt teal on dark/warm/light.
 - [~] 2. super: `gpt.attention` DONE in `gpt-super.js` (heads baked 10 angles x 3 jaws x 2 pal, two-pass necks,
   lock lines + reticle + Q/K/V tags, charge, 3 beams + tokens, orb, burst using the gpt superFinish wedge,
-  scale dissolve; reviewed on warm/light/dark, pal 1, facing -1). `screen.superBackdrop` gpt: NOT yet.
+  scale dissolve; reviewed on warm/light/dark, pal 1, facing -1). `screen.superBackdrop` gpt DONE in
+  `gpt-backdrop.js` (wraps the previous def; night sky, moon, aurora, 3 attention matrices, 2 dragon
+  silhouettes, falling scales, staircase-cell intro/outro). Review tool: `node tools/fx-gpt-comp.mjs`.
 - [ ] 3. specials: `gpt.breath` sprite + `breathCast/riseTrail/callSlam/roarRing/clawHit/scales`
 - [ ] 4. strips / review / viewer / bench
 - [ ] 5. "GPT integration" section below
