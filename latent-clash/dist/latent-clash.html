@@ -6659,7 +6659,7 @@
   var MIX = {
     'hit.light': 1.26, 'hit.medium': 1.2, 'hit.heavy': 1.1, 'hit.special': 1.2, 'hit.counter': 1.22,
     'block.light': 1.6, 'block.heavy': 1.33, 'whiff.light': 1.45, 'whiff.medium': 1.05, 'whiff.heavy': 0.78,
-    'jump': 1.72, 'land': 1.24, 'dash': 1.48, 'down': 1.0, 'throw.grab': 1.58, 'throw.slam': 0.71, 'throw.tech': 1.3,
+    'jump': 1.72, 'land': 1.24, 'dash': 1.48, 'down': 1.0, 'throw.grab': 1.58, 'throw.slam': 0.5, 'throw.tech': 1.3,
     'ko': 0.94, 'super.flash': 0.97, 'super.charge': 0.72, 'meter.full': 0.78, 'counter.catch': 1.84, 'timer.tick': 1.58,
     'ann.round': 1.0, 'ann.fight': 0.91, 'ann.ko': 0.91, 'ann.perfect': 1.1, 'ann.timeup': 0.86, 'ann.win': 0.8,
     'ui.move': 2.2, 'ui.confirm': 1.13, 'ui.cancel': 0.77, 'ui.start': 0.66, 'ui.error': 0.93, 'ui.pause': 1.27, 'ui.lock': 1.0, 'text.blip': 2.57,
@@ -17660,6 +17660,19 @@
   C.chains = [
     { id: 'hair', n: 9, len: 9, rest: [12, 5, 2, 1, 0, 0, 0, 0, 0], stiff: [0.34, 0.26, 0.2, 0.15, 0.12, 0.1, 0.08, 0.07, 0.06], damp: 0.88, grav: 0.24, drag: 0.1, cvel: 0.75,
       limit: function (c, i, sk) {
+        // lying face up (down / getup start): settle the hair quickly onto the floor, fanned out past
+        // the head (cvel keeps this pull from turning into a whip)
+        if (sk.lean < -60 && sk.pel[1] > -32) {
+          var ty = -3, tx = c.ax - 2 - i * 6.2;
+          if (c.y[i] < ty) c.y[i] += (ty - c.y[i]) * 0.55;
+          c.x[i] += (tx - c.x[i]) * 0.3;
+          return;
+        }
+        // walking: the hair sways but does not stream out like in a dash
+        if (sk.ds && sk.ds.peek && i >= 3) {
+          var wl = sk.pel[0] - 11 - i * 1.3;
+          if (c.x[i] < wl) c.x[i] += (wl - c.x[i]) * 0.5;
+        }
         // keep the long hair hanging behind the back silhouette (it is drawn behind everything)
         if (Math.abs(sk.lean) > 40 || i < 3) return;
         var lim = i < 2 ? sk.chest[0] - 2 : (i < 4 ? Math.min(sk.chest[0], sk.pel[0]) - 7 : sk.pel[0] - 9 - Math.max(0, c.y[i] - sk.pel[1]) * 0.12);
@@ -17678,7 +17691,7 @@
   C.attach = function (sk, sec) {
     var a = sk.headAng, n = sk.neck;
     var hb = fr(n, a, -6, -12);
-    sec.attach('hair', hb[0], hb[1], 90 + a * 0.3);
+    sec.attach('hair', hb[0], hb[1], 90 + a * 0.3 + (sk.tail || 0) * (sk.ds && sk.ds.air ? 1.3 : 0.4));
     var ln = fr(n, a, -1, -7);
     sec.attach('lockN', ln[0], ln[1], 90 + a * 0.5);
     var lf = fr(n, a, 7, -6);
@@ -17722,9 +17735,11 @@
     return { c: c, U: U, V: V, o: sk.bko, h: BKH * sc, w: BKW * sc };
   };
   C.quillGeo = function (sk) {
+    // ds.ql (0..1): drawn-out length while the quill is pulled out of the book (start-ups)
     var g = handTip(sk, 'F', 2), u = rot(1, 0, sk.pen), pg = sk.pg || 0;
-    return { g: g, u: u, butt: [g[0] - u[0] * (QL * pg + 7), g[1] - u[1] * (QL * pg + 7)],
-      tip: [g[0] + u[0] * QL * (1 - pg), g[1] + u[1] * QL * (1 - pg)] };
+    var ql = sk.ds && sk.ds.ql != null ? sk.ds.ql : 1, L = QL * ql, bt = ql < 1 ? 1 : 7;
+    return { g: g, u: u, ql: ql, L: L + bt + L * pg, butt: [g[0] - u[0] * (L * pg + bt), g[1] - u[1] * (L * pg + bt)],
+      tip: [g[0] + u[0] * L * (1 - pg), g[1] + u[1] * L * (1 - pg)] };
   };
   C.post = function (sk) {
     sk.pen = Math.round(sk.pen);
@@ -17816,6 +17831,21 @@
     ln(p, s0, s1, col(M.shoe, 2), true);
   }
 
+  // walk: the toe of the leading boot drawn over the hem (it steps out from under the dress)
+  var TIP = [[3.2, 0], [7.8, 0], [8.4, -1.2], [7.4, -2.6], [4.6, -3.7], [3.2, -3.9]];
+  function drawBootTip(p, sk, D) {
+    var s = sk.ftF[0] + D.lock.F >= sk.ftB[0] + D.lock.B ? 'F' : 'B';
+    var ft = s === 'F' ? sk.ftF : sk.ftB, fa = s === 'F' ? sk.faF : sk.faB, lo = s === 'F' ? D.lock.F : D.lock.B;
+    if (ft[1] < -2.5) return;                        // lifted: stays under the skirt
+    ft = [ft[0] + (lo || 0), ft[1]];
+    var pts = [];
+    for (var i = 0; i < TIP.length; i++) { var q = fr(ft, fa, TIP[i][0], TIP[i][1]); pts.push(q[0], q[1]); }
+    p.poly(pts, M.shoe, SH.limbL, 1);
+    var s0 = fr(ft, fa, 3.5, 0), s1 = fr(ft, fa, 7.6, 0);
+    ln(p, s0, s1, col(M.shoe, 2), true);
+    p.end();
+  }
+
   // ------------------------------------------------------------ arms (puffed sleeves, frilled cuffs)
   var HANDS = null;
   function drawArm(p, sk, s, ds) {
@@ -17879,7 +17909,14 @@
   function drawQuill(p, sk) {
     var g = C.quillGeo(sk), u = g.u, v = [-u[1], u[0]], b = g.butt, t = g.tip;
     function q(a, s) { return [b[0] + u[0] * a + v[0] * s, b[1] + u[1] * a + v[1] * s]; }
-    var L = QL + 7 + QL * (sk.pg || 0);
+    var L = g.L;
+    if (g.ql < 1) {
+      // being drawn out: a bare streak of light with a bright head, vane not yet unfurled
+      p.cap(b[0], b[1], t[0], t[1], 0.9, 1.6, M.glow, null, 0);
+      ln(p, b, t, col(M.glow, 0), true);
+      p.ell(t[0], t[1], 1.6, 1.6, M.glow, null, 0);
+      return;
+    }
     // feather vane (blade of light): wide on the upper side, tapering to the nib
     p.poly(H.flat([q(0, 0), q(L * 0.18, -2.6), q(L * 0.45, -3.6), q(L * 0.75, -2.6), q(L - 3, -0.8), q(L - 3, 0.8), q(L * 0.6, 1.8), q(L * 0.25, 1.4)]), M.glow, null, 1);
     // light along the leading (upper) edge, shade on the lower barbs
@@ -17902,7 +17939,11 @@
     function cl5(v) { var q = 1 - kL; return [Math.max(-5, Math.min(5, v[0])) * q, Math.max(-4, Math.min(4, v[1])) * q]; }
     swF = cl5(swF); swB = cl5(swB);
     var fl = (sk.skirt || 0) + Math.min(4, Math.max(0, -swF[1] - swB[1]) * 1.4);
-    var aF = 80 + rotA - fl * 3 - swF[0] * 2.5, aB = 101 + rotA + fl * 3 - swB[0] * 2.5, Lf = 49, Lb = 50;
+    // V2.1 channels: tail = skirt trail angle (deg, + = streams backward), arch = billow 0..1 (bell opens,
+    // fabric lifts off the legs; tumbles / launches)
+    var tr = sk.tail || 0, bl = Math.max(0, Math.min(1.2, sk.arch || 0));
+    var aF = 80 + rotA + tr - fl * 3 - bl * 16 - swF[0] * 2.5, aB = 101 + rotA + tr + fl * 3 + bl * 22 - swB[0] * 2.5;
+    var Lf = 49 - bl * 9, Lb = 50 - bl * 6, peek = sk.ds && sk.ds.peek;
     var pts = [], k, s;
     for (s = 0; s < 2; s++) {
       var S = s ? 'B' : 'F', kn = sk['kn' + S], an = sk['an' + S], hp = sk['hip' + S];
@@ -17910,6 +17951,7 @@
     }
     var kneeF = Lf * 0.55, kneeB = Lb * 0.55;
     for (k = 0; k < (kL > 0.85 ? 0 : pts.length); k++) {     // lying: the dress simply lies over the legs
+      if (peek && k % 6 >= 4) continue;                       // walk: toes / heels may poke out of the hem
       var P = pts[k][0], cl = pts[k][1];
       var dx = P[0] - rootF[0], dy = P[1] - rootF[1], d = Math.sqrt(dx * dx + dy * dy);
       if (d < Lf - 1 && d > 1) {
@@ -17926,24 +17968,40 @@
     }
     function rib(root, a, len, s1) {
       var kk = (a < 60 ? Math.min(1, (60 - a) / 50) : (a > 120 ? Math.min(1, (a - 120) / 50) : 0)) * (1 - kL);
-      var b = a + ((a < 90 ? 96 : 84) - a) * kk;
+      var b = a + ((a < 90 ? 96 : 84) - a) * kk + tr * 0.7 + bl * 8;
       var r1 = Math.PI * a / 180, r2 = Math.PI * b / 180;
       var m = [root[0] + Math.cos(r1) * s1, root[1] + Math.sin(r1) * s1];
       var e = [m[0] + Math.cos(r2) * (len - s1), m[1] + Math.sin(r2) * (len - s1)];
       return { m: m, e: e };
     }
+    // walk: narrower bell (the stepping knee may still push the front), hem riding ~4 px up so the
+    // striding boots show under it
+    if (peek) aB = Math.min(aB, 98 + tr * 0.6);
     var rf = rib(rootF, aF, Lf, Math.min(Lf * 0.55, kneeF)), rb = rib(rootB, aB, Lb, Math.min(Lb * 0.55, kneeB));
+    if (peek) {
+      var tF = toe(sk, 'F'), tB = toe(sk, 'B'), tx = Math.max(tF[0], tB[0]);
+      rf.e = [Math.min(rf.e[0], rf.m[0] + 3, Math.max(tx - 4, rf.m[0] - 2)), -4.5 - (sk.hem || 0) * 0.5]; rb.e = [Math.max(rb.e[0], rb.m[0] - 3), -4];
+    }
     var floor = sk.ds && sk.ds.air ? 999 : -1;
+    if (sk.ds && sk.ds.drape && kL < 0.85) {
+      // sitting / kneeling (getup): the front drapes over the raised knee and down the shin to the
+      // floor; the back pools on the floor behind her
+      var kx = Math.max(sk.knF[0], sk.knB[0]), ky = Math.min(sk.knF[1], sk.knB[1]), ax = Math.max(sk.anF[0], sk.anB[0]);
+      rf = { m: [kx + 2, ky - 6], e: [Math.max(ax, kx) + 4, -2] };
+      var bx = Math.min(rootB[0] - 8, rb.e[0]);
+      rb = { m: [rootB[0] - 5, lerp(rootB, [bx, -1], 0.55)[1]], e: [bx, -1] };
+    }
     [rf, rb].forEach(function (r) { if (r.e[1] > floor) r.e[1] = floor; if (r.m[1] > floor) r.m[1] = floor; });
     // hem: quadratic curve back end → front end, sagging toward the floor
     var mid = lerp(rb.e, rf.e, 0.5), sag = 3 + Math.abs(rf.e[0] - rb.e[0]) * 0.06;
     var cy = Math.max(mid[1] + sag, Math.min(rb.e[1], rf.e[1]) + sag * 0.5);
     if (cy > floor) cy = floor;
-    var ctrl = [mid[0] - (sk.hem || 0) * 0.5, cy + (sk.hem || 0)];
+    var ctrl = [mid[0] - (sk.hem || 0) * 0.5 + bl * 4, cy + (sk.hem || 0) - bl * 12];
     var hem = [];
     for (k = 0; k <= 10; k++) {
       var t = k / 10, it = 1 - t;
-      hem.push([it * it * rb.e[0] + 2 * it * t * ctrl[0] + t * t * rf.e[0], it * it * rb.e[1] + 2 * it * t * ctrl[1] + t * t * rf.e[1]]);
+      var rp = bl ? Math.sin(k * 2.2 + tr * 0.17) * 2.4 * bl * Math.sin(Math.PI * t) : 0;   // billow ripple
+      hem.push([it * it * rb.e[0] + 2 * it * t * ctrl[0] + t * t * rf.e[0] + rp * 0.5, it * it * rb.e[1] + 2 * it * t * ctrl[1] + t * t * rf.e[1] + rp]);
     }
     var roots = [];
     for (k = 0; k <= 10; k++) roots.push(lerp(rootB, rootF, k / 10));
@@ -18119,7 +18177,7 @@
       [-1.5, function () { if (bm === 'B') { drawBook(p, sk, ds); p.end(); } }],
       [-4, function () { drawLeg(p, sk, 'B', D.lock.B); p.end(); }],
       [-3, function () { drawLeg(p, sk, 'F', D.lock.F); p.end(); }],
-      [-2, function () { drawSkirt(p, sk, sec, ds); p.end(); drawHipBow(p, sk, sec); p.end(); }],
+      [-2, function () { drawSkirt(p, sk, sec, ds); p.end(); drawHipBow(p, sk, sec); p.end(); if (ds.peek) drawBootTip(p, sk, D); }],
       [0, function () { drawTorso(p, sk, sec, ds); }],
       [0.5, function () { drawSash(p, sk, sec); p.end(); }],
       [1, function () { drawLock(p, sec.lockF, null, 1.6); p.end(); }],
@@ -18395,6 +18453,10 @@
   function raised(d, s) {
     var h = s === 'F' ? d.hipF : d.hipB, k = s === 'F' ? d.knF : d.knB;
     var r = (h[1] + 19 - k[1]) / 10, f = d.ds && d.ds.drape;
+    // a thigh raised toward the OTHER side of the skirt (back knee forward in a crouch, front knee back) is
+    // covered by the opposite contour: draping this one over it would twist the skirt inside out
+    var across = (s === 'F' ? h[0] - k[0] : k[0] - h[0]);
+    if (across > 2) r *= Math.max(0, 1 - (across - 2) / 4);
     if (f && f[s] != null && f[s] > r) r = f[s];
     return r < 0 ? 0 : (r > 1 ? 1 : r);
   }
@@ -18417,10 +18479,12 @@
     var h = s === 'F' ? d.hipF : d.hipB, k = s === 'F' ? d.knF : d.knB, dx = k[0] - h[0], dy = k[1] - h[1], l = Math.sqrt(dx * dx + dy * dy) || 1;
     var nx = dy / l, ny = -dx / l;              // normal on the upper side of the thigh (facing +x)
     if (ny > 0) { nx = -nx; ny = -ny; }
-    var T = [h[0] + dx * 0.6 + nx * 3.5, h[1] + dy * 0.6 + ny * 3.5];
+    // pool (crouch): the hem runs over the knee cap and spills to the floor in front of the shin
+    var pl = (d.ds && d.ds.pool) || 0, fT = 0.6 + 0.52 * pl, nT = 3.5 + 1.5 * pl;
+    var T = [h[0] + dx * fT + nx * nT, h[1] + dy * fT + ny * nT];
     var used = Math.sqrt((T[0] - c0[0]) * (T[0] - c0[0]) + (T[1] - c0[1]) * (T[1] - c0[1]));
     var hang = Math.max(5, 40 - used), sg = s === 'F' ? 1 : -1;
-    var B = [T[0] + sg * 3, Math.min(0, T[1] + hang)];
+    var B = [T[0] + sg * (3 + 3 * pl), pl ? 0 : Math.min(0, T[1] + hang)];
     return [lerp(c1, T, r), lerp(c2, B, r)];
   }
   var TAIL_LEN = [6, 6, 6, 6, 5, 5, 5, 4];
@@ -18474,6 +18538,9 @@
   var JK = ['pel', 'waist', 'chest', 'neck', 'shF', 'elF', 'haF', 'shB', 'elB', 'haB',
     'hipF', 'knF', 'anF', 'ftF', 'hipB', 'knB', 'anB', 'ftB'];
   function mir(sk, v) { return sk.flip ? [-v[0], v[1]] : v; }
+
+  // hem lift / swing are not joints: add them to the render signature
+  C.sigExtra = function (sk, s, n) { s[n++] = Math.round(sk.hemS != null ? sk.hemS : (sk.hem || 0)); s[n++] = Math.round(sk.tw || 0); return n; };
 
   C.post = function (sk) {
     sk.headAng = Math.round(sk.headAng / 5) * 5;
@@ -18573,6 +18640,20 @@
     sec.attach('hairB', hB[0], hB[1], a * 0.5);
     sec.attach('lockN', lk[0], lk[1], a * 0.4);
     sec.attach('ahoge', ah[0], ah[1], a);
+    // hem lift eases in/out over a few ticks (no pop when a walk starts or stops)
+    var ht = d.hem != null ? d.hem : (sk.hem || 0);
+    sec._hem = sec._hem == null ? ht : sec._hem + (ht - sec._hem) * 0.35;
+    if (Math.abs(sec._hem - ht) < 0.05) sec._hem = ht;
+    sk.hemS = sec._hem;
+    // hs (0..1): settle the hair toward its rest shape this tick (kills chain inertia after flips / hops)
+    if (ds.hs) ['hairA', 'hairB', 'lockN'].forEach(function (id) {
+      var c = by[id]; if (!c.ready) return;
+      for (var j = 1; j < c.n; j++) {
+        var r = c.restPos(j);
+        c.x[j] += (r[0] - c.x[j]) * ds.hs; c.y[j] += (r[1] - c.y[j]) * ds.hs;
+        c.px[j] += (r[0] - c.px[j]) * ds.hs; c.py[j] += (r[1] - c.py[j]) * ds.hs;
+      }
+    });
     // apron bow tails at the back of the waist
     var W = d.waist, wa = L * 0.7 + d.chestAng * 0.3, bw = fr(W, wa, -6.5, 1.5);
     sec.attach('bowA', bw[0], bw[1], 0);
@@ -18581,6 +18662,7 @@
     var fl = d.skirt || 0, F0 = fr(d.pel, L, 9.5, -2), B0 = fr(d.pel, L, -10.5, -2);
     var hf = own(by.hemF), hb = own(by.hemB);
     var rl = L * (0.4 + 0.6 * Math.min(1, Math.abs(L) / 90));   // the skirt turns with the pelvis
+    rl -= (sk.tw || 0);                                         // tw: hem swing (deg, + = hem swings forward)
     hf.def.rest[0] = 71 - fl * 40 + rl; hf.def.rest[1] = 80 - fl * 32 + rl;
     hb.def.rest[0] = 112 + fl * 40 + rl; hb.def.rest[1] = 101 + fl * 32 + rl;
     sec.attach('hemF', F0[0], F0[1], 0);
@@ -18717,6 +18799,18 @@
     H.hand(p, [ha[0] + dx / l * 1.5, ha[1] + dy / l * 1.5], ang, shape || 'fist', M.skin, M.skin, I.ART.deepseek.hands);
   }
 
+  // wg: small cyan water glow + droplets on a palm (palm strikes, super)
+  function drawWater(p, sk, s) {
+    var ha = s === 'F' ? sk.haF : sk.haB, ang = (s === 'F' ? sk.handAngF : sk.handAngB) * D2R;
+    var ux = Math.cos(ang), uy = Math.sin(ang), t = [ha[0] + ux * 7.5, ha[1] + uy * 7.5];
+    p.ell(t[0] - 0.5, t[1] - 0.5, 1.3, 2, M.glow, null, 1);
+    var c = R0(t);
+    p.px(c[0], c[1], col(M.glow, 0));
+    [[2.5, -3.5, 1], [3.5, 2.5, 2], [-1, -4.5, 0], [5, -0.5, 0]].forEach(function (o) {
+      p.px(Math.round(t[0] + ux * o[0] - uy * o[1]), Math.round(t[1] + uy * o[0] + ux * o[1]), col(M.glow, o[2]));
+    });
+  }
+
   function drawLeg(p, sk, s, lockOff, shoeM) {
     var hip = s === 'F' ? sk.hipF : sk.hipB, kn = s === 'F' ? sk.knF : sk.knB;
     var an = s === 'F' ? sk.anF : sk.anB, ft = s === 'F' ? sk.ftF : sk.ftB, fa = s === 'F' ? sk.faF : sk.faB;
@@ -18739,9 +18833,10 @@
     p.pxOn(tg[0], tg[1], col(shoeM, 0));
   }
 
-  function skirtSurf(sk, sec) {
+  function skirtSurf(sk, sec, hu) {
     var W = sk.waist, wa = sk.lean * 0.7 + sk.chestAng * 0.3, hf = H.chainPts(sec.hemF), hb = H.chainPts(sec.hemB);
     var df = drape(sk, 'F', hf[0], hf[1], hf[2]), db = drape(sk, 'B', hb[0], hb[1], hb[2]);
+    if (hu) { df = [df[0], [df[1][0], df[1][1] - hu]]; db = [db[0], [db[1][0], db[1][1] - hu]]; }   // hem: - = hem lifted (px)
     return {
       f: plMake([fr(W, wa, 5, 2), hf[0], df[0], df[1]]),
       b: plMake([fr(W, wa, -5.5, 2), hb[0], db[0], db[1]]),
@@ -18872,7 +18967,7 @@
     var pal = (LC.PAL.deepseek || [])[D.pal] || {}, shoeM = pal.cloth1 ? C.shoeMat(pal) : M.c2;
     var eyes = ds.eyes || 'open';
     if (D.blink && (eyes === 'open' || eyes === 'focus' || eyes === 'sad' || eyes === 'wide')) eyes = (D.blink > 5 || D.blink < 3) ? 'half' : 'closed';
-    var S = skirtSurf(d, sec);
+    var S = skirtSurf(d, sec, -Math.round(sk0.hemS != null ? sk0.hemS : (sk0.hem || 0)));
     var lockF = sk0.flip ? 0 : D.lock.F, lockB = sk0.flip ? 0 : D.lock.B;
     var steps = [
       [z.tail != null ? z.tail : -10, function () { drawTail(p, d, sec, ds); p.end(); }],
@@ -18909,7 +19004,8 @@
       }],
       [3, function () { drawHairLock(p, sec.lockN, [2.6, 1, 0.8], 0.6, 0.7, [M.hair, MG, M.tip], [0.5]); p.end(); }],
       [4, function () { if (D.smear) { H.smear2(p, D.smear, M.smear); p.end({ outline: false }); } }],
-      [z.armF != null ? z.armF : 5, function () { drawArm(p, d, 'F', ds); p.end(); }]
+      [z.armF != null ? z.armF : 5, function () { drawArm(p, d, 'F', ds); p.end(); }],
+      [5.5, function () { if (ds.wg) { if (ds.wg.indexOf('B') >= 0) drawWater(p, d, 'B'); if (ds.wg.indexOf('F') >= 0) drawWater(p, d, 'F'); p.end({ outline: false }); } }]
     ];
     steps.sort(function (a, b) { return a[0] - b[0]; });
     var prof = I._dsProf;
@@ -19026,15 +19122,30 @@
   });
 
   // ---------------------------------------------------------------- walk (feet planted at 1.6 / 1.2 px/f)
+  // gait under the long dress: boot tips peek out of the raised hem (peek), hem + hair swing against
+  // the stride (tail), body rises over the passing leg (bob), shoulders/head counter-sway
+  function gait(amp) {
+    return function (pose, k, ph) {
+      var s = (k < 4 ? 1 : -1) * (1 - 2 * ph);       // +1 front foot leads, -1 back foot leads
+      var pass = Math.sin(Math.PI * ph);               // 1 at the passing position
+      pose.peek = true;
+      pose.tail = amp * (1.5 - 2.5 * s);
+      pose.hem = 1.5 * (1 - pass);
+      pose.lean += amp * 0.8 * s;
+      pose.tilt = (pose.tilt || 0) - amp * 1.5 * s;
+      pose.shr = Math.round(pass);
+      pose.head = [0, Math.round(-0.5 * pass)];
+    };
+  }
   var W = P(S, { hF: [16, -67], lean: 4 });
   def('walkF', {
     segs: [['loop', 32, true]], step: 2, walk: 1.6,
-    keys: G.walk(W, 1.6, 32, { lift: 6, bob: 1.5, leg: LEG, swingF: 2, swingB: 2 })
+    keys: G.walk(W, 1.6, 32, { lift: 6, bob: 1.8, leg: LEG, swingF: 4, swingB: 3, extra: gait(1.6) })
   });
   var WB = P(S, { hF: [15, -70], lean: -1, hB: [-6, -50] });
   def('walkB', {
     segs: [['loop', 36, true]], step: 2, walk: -1.2,
-    keys: G.walk(WB, -1.2, 36, { lift: 4, bob: 1, leg: LEG, swingF: 1, swingB: 1 })
+    keys: G.walk(WB, -1.2, 36, { lift: 4, bob: 1.5, leg: LEG, swingF: 3, swingB: 2, extra: gait(-1.2) })
   });
 
   // ---------------------------------------------------------------- crouch (top ≈ 70)
@@ -19123,14 +19234,14 @@
 
   // ---------------------------------------------------------------- launch / down / getup
   var LA = POSE.launch = P(S, AIR, { hip: [0, -40], lean: -45, bend: -10, tilt: -35, head: [-1, 0], fF: [11, -15], fB: [0, -4], faF: 40, faB: 30,
-    hF: [-6, -80], hB: [-24, -62], handF: 'open', book: -170, eyes: 'shut', mouth: 'open', skirt: 2 });
+    hF: [-6, -80], hB: [-24, -62], handF: 'open', book: -170, eyes: 'shut', mouth: 'open', skirt: 2, tail: 22, arch: 0.5 });
   def('launch', {
     segs: [['loop', 24, true]], step: 3,
     keys: [
       [0, LA],
-      [6, P(LA, { hB: [-28, -52], hF: [-12, -76], fF: [14, -7], fB: [-4, -9], lean: -50, tilt: -40 })],
-      [12, P(LA, { hB: [-20, -70], hF: [0, -82], fF: [8, -16], fB: [3, -3], lean: -40, tilt: -30 })],
-      [18, P(LA, { hB: [-26, -60], hF: [-8, -76], fF: [12, -10], fB: [-3, -6], lean: -47 })]
+      [6, P(LA, { hB: [-28, -52], hF: [-12, -76], fF: [14, -7], fB: [-4, -9], lean: -50, tilt: -40, tail: 40, arch: 1, skirt: 3 })],
+      [12, P(LA, { hB: [-20, -70], hF: [0, -82], fF: [8, -16], fB: [3, -3], lean: -40, tilt: -30, tail: 12, arch: 0.35, skirt: 1 })],
+      [18, P(LA, { hB: [-26, -60], hF: [-8, -76], fF: [12, -10], fB: [-3, -6], lean: -47, tail: 34, arch: 0.85 })]
     ]
   });
   var DN = POSE.down = P(S, { hip: [-3, -7], lean: -90, bend: 0, tilt: -90, head: [0, 0], fF: [50, -3], fB: [47, -1], faF: -80, faB: -85,
@@ -19150,8 +19261,8 @@
     keys: [
       [0, P(DN, { eyes: 'shut' })],
       [6, P(S, { hip: [-8, -12], lean: -42, bend: 14, tilt: -20, fF: [28, 0], fB: [24, -1], faF: -20, faB: -30, knF: -1, knB: -1,
-        hF: [4, -16], handF: 'flat', hB: [-22, -4], book: 180, eyes: 'shut', mouth: 'hurt' }), 'out'],
-      [12, P(C, { hip: [-3, -20], lean: 34, tilt: 10, hF: [20, -36], handF: 'flat', eyes: 'focus' })],
+        hF: [4, -16], handF: 'flat', hB: [-22, -4], book: 180, eyes: 'shut', mouth: 'hurt', drape: true }), 'out'],
+      [12, P(C, { hip: [-3, -23], faB: 50, lean: 34, tilt: 10, hF: [20, -36], handF: 'flat', eyes: 'focus', drape: true })],
       [18, P(S, { hip: [0, -45], lean: 12, hF: [17, -62], eyes: 'focus', skirt: 1 }), 'out'],
       [23, S]
     ]
@@ -19194,45 +19305,60 @@
   });
 
   // ---------------------------------------------------------------- intro / win / lose
-  // intro: reading the open book, snaps it shut, lowers it and settles into stance
+  // intro: reading the open book, a last glance up, SNAPS it shut (small jolt: shoulders up, skirt kicks,
+  // hair flicks), tucks it to the rear hand and settles into stance (hair / skirt settle on their own)
   var RD = P(S, { hip: [0, -54], lean: 0, fF: [5, 0], fB: [-5, 0], hF: [12, -66], hB: [4, -65], handF: 'grip', handB: 'grip', bm: 'both',
     book: -90, bko: 1, tilt: 20, eyes: 'half', mouth: 'neutral', z: { armB: 4.7 } });
+  var IS = P(S, { hip: [0, -54], fF: [6, 0], fB: [-6, 0], hF: [12, -64], handF: 'relax', hB: [-5, -51] });
   def('intro', {
     segs: [['act', 100]], step: 3,
     keys: [
       [0, RD],
-      [30, P(RD, { tilt: 15 })],
-      [42, P(RD, { tilt: 10, eyes: 'open' }), 'snap'],
-      [45, P(RD, { bko: 0, hF: [10, -66], hB: [6, -65], tilt: 5, eyes: 'open' }), 'out'],
-      [54, P(S, { hip: [0, -54], fF: [5, 0], fB: [-5, 0], hF: [10, -62], handF: 'relax', hB: [-4, -52], eyes: 'closed', mouth: 'neutral', tilt: 10 }), 'inout'],
-      [66, P(S, { hip: [0, -54], fF: [5, 0], fB: [-5, 0], hF: [10, -62], handF: 'relax', hB: [-4, -52], eyes: 'open', mouth: 'neutral', tilt: 0 })],
-      [80, P(S, { eyes: 'focus' }), 'out'],
+      [24, P(RD, { tilt: 16, hF: [12, -67] })],
+      [33, P(RD, { tilt: 6, eyes: 'open', head: [1, -1] }), 'inout'],
+      [39, P(RD, { tilt: 4, eyes: 'focus', bko: 1, hF: [14, -67], hB: [2, -65] }), 'snap'],
+      [42, P(RD, { bko: 0, hF: [10, -68], hB: [7, -67], tilt: -4, eyes: 'closed', mouth: 'neutral', shr: 1, sq: -1, root: [0, -1], skirt: 2, tail: -6 }), { ease: 'snap', step: 1 }],
+      [45, P(RD, { bko: 0, hF: [10, -66], hB: [7, -65], tilt: 0, eyes: 'closed', skirt: 1, tail: 3 }), 'out'],
+      [50, P(RD, { bko: 0, hF: [-1, -56], hB: [-5, -55], book: -100, lean: 3, tilt: 6, eyes: 'closed', skirt: 1, tail: -1 }), 'inout'],
+      [54, P(IS, { hF: [10, -60], hB: [-3, -54], lean: 4, tilt: 6, eyes: 'closed', skirt: 1, tail: -2 }), 'inout'],
+      [63, P(IS, { lean: 1, tilt: -2, eyes: 'open', mouth: 'smile', tail: 1 }), 'inout'],
+      [75, P(IS, { tilt: 0, eyes: 'open', mouth: 'neutral' })],
+      [84, P(S, { eyes: 'focus' }), 'out'],
       [99, S]
     ]
   });
-  // win: closes the book to her chest, composed half smile
-  var WN = P(S, { hip: [0, -54], lean: -2, fF: [5, 0], fB: [-5, 0], hF: [8, -70], handF: 'flat', hB: [6, -70], book: -95,
-    eyes: 'closed', mouth: 'smile', tilt: 8, z: { armB: 6 } });
+  // win: the back hand brings the book to her chest while the front hand rises to straighten the
+  // flower ornament in her hair; small confident smile; loop sways (capelet + hair follow)
+  var WN = P(S, { hip: [0, -54], lean: -2, fF: [5, 0], fB: [-5, 0], hF: [10, -66], handF: 'relax', hB: [6, -70], book: -95,
+    eyes: 'open', mouth: 'smile', tilt: 4, z: { armB: 6 } });
+  var FLW = P(WN, { hF: [-1, -101], handF: 'flat', tilt: -8, lean: -4, eyes: 'closed', mouth: 'smile', head: [-1, 0] });
   def('win', {
     segs: [['in', 30], ['loop', 60, true]], step: 2,
     keys: [
       ['in', P(S, { eyes: 'closed' })],
-      ['in+8', P(WN, { hB: [2, -64], tilt: 0, eyes: 'open' }), 'out'],
-      ['in+16', P(WN, { eyes: 'closed' }), 'inout'],
+      ['in+6', P(WN, { hB: [2, -64], hF: [12, -78], tilt: 0, eyes: 'closed' }), 'out'],
+      ['in+12', FLW, 'inout'],
+      ['in+16', P(FLW, { hF: [0, -102], tilt: -11, tail: -4 }), 'snap'],
+      ['in+20', P(FLW, { hF: [1, -100], tilt: -6, eyes: 'happy', tail: 3 }), 'out'],
+      ['in+27', P(WN, { eyes: 'happy', tail: 0 }), 'inout'],
       ['loop', WN],
-      ['loop+30', P(WN, { hip: [0, -53], tilt: 5, hB: [6, -69] })]
+      ['loop+15', P(WN, { hip: [0, -53], lean: -1, tilt: 6, tail: 3, hF: [11, -65] }), 'inout'],
+      ['loop+30', P(WN, { tilt: 2, eyes: 'closed', tail: 0 }), 'inout'],
+      ['loop+45', P(WN, { hip: [0, -53], lean: -3, tilt: 5, tail: -3, hF: [10, -67] }), 'inout']
     ]
   });
-  var LS = P(S, { hip: [0, -53], lean: 6, bend: 4, tilt: 25, head: [1, 1], fF: [6, 0], fB: [-5, 0], hF: [10, -50], handF: 'relax', hB: [-3, -46], book: -80,
-    shr: -1, eyes: 'sad', mouth: 'frown' });
+  // lose: slumped, the book hugged to her chest with both arms, head hanging, hair falling forward
+  var LS = P(S, { bm: 'both', hip: [0, -51], lean: 12, bend: 8, tilt: 32, head: [1, 2], fF: [6, 0], fB: [-5, 0], hF: [8, -63], hB: [5, -62],
+    handF: 'grip', handB: 'grip', book: -80, z: { armB: 4.7 }, shr: -1, sq: 1, eyes: 'sad', mouth: 'frown', knF: -1, knB: -1 });
   def('lose', {
     segs: [['in', 30], ['loop', 60, true]], step: 3,
     keys: [
       ['in', P(S, { eyes: 'wide', mouth: 'o' })],
-      ['in+10', P(LS, { tilt: 10, eyes: 'wide', mouth: 'o' }), 'out'],
-      ['in+22', LS],
+      ['in+6', P(S, { eyes: 'wide', mouth: 'o', tilt: -4, shr: 1, hB: [-4, -56] }), 'out'],
+      ['in+15', P(LS, { tilt: 12, lean: 6, bend: 2, eyes: 'sad', mouth: 'o', hF: [10, -66], hB: [6, -65] }), 'inout'],
+      ['in+24', P(LS, { tilt: 36, sq: 2 }), 'in'],
       ['loop', LS],
-      ['loop+30', P(LS, { hip: [0, -52], tilt: 28, eyes: 'closed', sq: 1 })]
+      ['loop+30', P(LS, { hip: [0, -50], tilt: 35, eyes: 'closed', sq: 2, shr: -2, hF: [8, -62] }), 'inout']
     ]
   });
 })();
@@ -19268,14 +19394,28 @@
     k.forEach(function (q) { out.push([q[0] + 16, P(q[1]), q[2]]); });
     return out;
   }
+  // gait under the long skirt: heel strike = planted toe tipped up out of the hem, push-off toe down,
+  // hem lifted a little and swinging with the stepping leg, the tail counter-swaying, a small bounce
+  function gait(dir, sw, tl) {
+    return function (pose, k, ph) {
+      var a = k < 4 ? 'F' : 'B', o = a === 'F' ? 'B' : 'F', sg = (a === 'F' ? 1 : -1) * (1 - 2 * ph);
+      if (ph === 0) pose['fa' + a] = dir > 0 ? -22 : -12;          // heel strike: toe tips up past the hem
+      else if (ph === 0.25) pose['fa' + o] = 30;                   // push-off
+      else if (ph === 0.5) pose['fa' + o] = 12;
+      pose.tw = sw * Math.cos(Math.PI * ph) * (a === 'F' ? 1 : -1) + (dir > 0 ? 2 : -2);
+      pose.hem = ph === 0.5 ? -4 : -3;
+      pose.tail = (pose.tail || 0) - tl * sg;
+      pose.skirt = (pose.skirt || 0) + (ph === 0.5 ? 0.12 : 0.04);
+    };
+  }
   var WK = P(S, { lean: 7, bend: -2, hF: [17, -59], hB: [4, -56], skirt: 0.05 });
-  def('walkF', { segs: [['loop', 32, true]], step: 2, walk: 2.0, keys: walk2(WK, 2.0, { lift: 5, bob: 1.5, leg: 47, swingF: 2, swingB: 2 }) });
+  def('walkF', { segs: [['loop', 32, true]], step: 2, walk: 2.0, keys: walk2(WK, 2.0, { lift: 6, bob: 2, leg: 47, swingF: 3, swingB: 3, extra: gait(1, 7, 9) }) });
   var WKB = P(S, { lean: 0, bend: -3, hF: [15, -61], hB: [4, -57], tail: 8 });
-  def('walkB', { segs: [['loop', 32, true]], step: 2, walk: -1.5, keys: walk2(WKB, -1.5, { lift: 4, bob: 1, leg: 47, swingF: 1.5, swingB: 1.5 }) });
+  def('walkB', { segs: [['loop', 32, true]], step: 2, walk: -1.5, keys: walk2(WKB, -1.5, { lift: 5, bob: 1.5, leg: 47, swingF: 2, swingB: 2, extra: gait(-1, 5, 7) }) });
 
   // ---------------------------------------------------------------- crouch
   var CR = POSE.crouch = P(S, { hip: [1, -19], lean: 28, bend: 4, fF: [13, 0], fB: [-10, 0], faB: 25, hF: [27, -46], hB: [18, -40], head: [1, 0],
-    handF: 'open', handB: 'relax', tail: 10, arch: 18 });
+    handF: 'open', handB: 'relax', tail: 10, arch: 18, pool: 1, skirt: 0.3 });
   def('crouchIn', { segs: [['go', 4]], step: 1, keys: [[0, P(S, { hip: [0, -38], lean: 14 })], [2, P(CR, { hip: [1, -17], sq: 1 }), 'out'], [3, CR]] });
   def('crouch', {
     segs: [['loop', 64, true]], step: 2,
@@ -19343,12 +19483,16 @@
   // ---------------------------------------------------------------- launch / down / getup
   var LA = P(S, { hip: [0, -46], lean: -50, bend: -12, tilt: -40, fF: [12, -14], fB: [4, -6], faF: 40, faB: 30,
     hF: [-8, -74], hB: [-22, -62], handF: 'open', handB: 'open', eyes: 'shut', mouth: 'open', skirt: 0.15, tail: -30, arch: 8 });
+  // tumbling: the body rolls back, skirt, hair and tail trail and whip a beat behind
+  var LA2 = function (lean, tilt, hF, hB, fF, fB, sk, tail, pen) {
+    return P(LA, { lean: lean, tilt: tilt, hF: hF, hB: hB, fF: fF, fB: fB, skirt: sk, tail: tail, pen: pen, arch: 12, tsw: 2.2 });
+  };
   def('launch', {
     segs: [['loop', 24, true]], step: 3,
-    keys: [[0, LA],
-      [6, P(LA, { hB: [-26, -54], hF: [-12, -72], fF: [14, -8], fB: [2, -10], lean: -56, tilt: -45 })],
-      [12, P(LA, { hB: [-18, -68], hF: [-2, -76], fF: [8, -16], fB: [6, -4], lean: -44, tilt: -35 })],
-      [18, P(LA, { hB: [-24, -60], hF: [-8, -74], fF: [13, -10], fB: [3, -8], lean: -52 })]]
+    keys: [[0, LA2(-50, -40, [-8, -74], [-22, -62], [12, -14], [4, -6], 0.75, 30, 18)],
+      [6, LA2(-62, -50, [-14, -70], [-28, -52], [16, -6], [0, -12], 0.45, 55, -14), 'out'],
+      [12, LA2(-44, -32, [-2, -78], [-16, -70], [8, -18], [8, -4], 0.85, 22, 24), 'inout'],
+      [18, LA2(-58, -46, [-10, -72], [-26, -56], [15, -8], [2, -10], 0.5, 50, -10), 'out']]
   });
   var DN = P(S, { hip: [6, -6], lean: -90, bend: 0, tilt: -90, fF: [44, -3], fB: [41, -1], faF: -80, faB: -85, knF: -1, knB: -1,
     hF: [-8, -4], hB: [-30, -2], handF: 'open', handB: 'open', eyes: 'dizzy', mouth: 'hurt', tail: -65, arch: -6, skirt: 0 });
@@ -19359,13 +19503,18 @@
       ['impact+5', P(DN, { eyes: 'shut' }), 'in'], ['impact+7', P(DN, { root: [0, -1] })],
       ['lie', DN], ['lie+15', P(DN, { hip: [6, -7] })]]
   });
+  // getup: rolls onto her hands, pushes up with the tail braced on the floor, hops to her feet
   def('getup', {
     segs: [['rise', 24]], step: 2,
     keys: [[0, P(DN, { eyes: 'shut' })],
-      [5, P(S, { hip: [-2, -10], lean: -40, bend: 0, tilt: -20, fF: [26, -2], fB: [20, -1], faF: -40, faB: -40, hF: [-14, -6], hB: [-20, -4],
-        handF: 'flat', handB: 'flat', eyes: 'shut', mouth: 'hurt', tail: -30 }), 'out'],
-      [11, P(CR, { hip: [0, -18], lean: 20, eyes: 'focus', mouth: 'teeth' }), 'out'],
-      [17, P(S, { hip: [0, -40], lean: 14, eyes: 'focus' }), 'in'], [23, S]]
+      [4, P(S, { hip: [-4, -8], lean: -30, bend: 4, tilt: -10, fF: [18, -2], fB: [12, -1], faF: -30, faB: -30, hF: [-16, -2], hB: [-22, -2],
+        handF: 'flat', handB: 'flat', eyes: 'shut', mouth: 'hurt', tail: 30, arch: 2, tsw: 0.3, skirt: 0.2 }), 'out'],
+      [9, P(S, { hip: [-3, -22], lean: 40, bend: 6, tilt: -5, fF: [0, 0], fB: [-10, 0], faF: 50, faB: 70, hF: [16, -1], hB: [10, -1],
+        handF: 'flat', handB: 'flat', eyes: 'focus', mouth: 'teeth', tail: -10, arch: 4, tsw: 0.3, skirt: 0.1 }), 'inout'],
+      [13, P(S, { root: [0, -5], hip: [0, -44], lean: 8, bend: -4, fF: [7, -8], fB: [-7, -10], faF: 35, faB: 40, hF: [16, -64], hB: [-6, -66],
+        handF: 'open', handB: 'open', eyes: 'focus', mouth: 'grin', tail: -35, arch: 26, pen: 12, skirt: 0.7, tsw: 1.5, hs: 0.2 }), 'inout'],
+      [17, P(S, { hip: [0, -37], lean: 16, bend: 4, sq: 1, hF: [21, -48], hB: [9, -46], skirt: 0.35, tail: 10, eyes: 'focus', mouth: 'grin', hs: 0.15 }), 'in'],
+      [20, P(S, { hip: [0, -44], lean: 8, eyes: 'focus' }), 'out'], [23, S]]
   });
 
   // ---------------------------------------------------------------- throws
@@ -19376,57 +19525,74 @@
       ['active', P(TH, { hF: [34, -62], handF: 'fist', handB: 'fist' }), 'snap'],
       ['recovery+4', P(TH, { mouth: 'o', handF: 'open', eyes: 'wide' })], ['recovery+14', P(S, { lean: 10 })], ['recovery+21', S]]
   });
-  // grabs the collar, hauls her in, then heaves her away with a tail smack
+  // grabs the collar, heaves her up overhead (tail braced down as a counterweight), then slams her down
+  // forward while the tail flings up behind for balance
   var TG = P(S, { lean: 16, hip: [3, -44], hF: [28, -64], hB: [24, -66], handF: 'fist', handB: 'fist', grab: [30, -62], fF: [15, 0],
     eyes: 'focus', mouth: 'grin', z: { armB: 6 } });
+  var TU = P(TG, { lean: -12, bend: -8, tilt: -10, hip: [-3, -42], sq: 1, fF: [16, 0], fB: [-13, 0], hF: [12, -86], hB: [8, -88], grab: [12, -90],
+    tail: 32, arch: 1, tsw: 0.2, mouth: 'teeth', skirt: 0.2 });
+  var TS = P(TG, { lean: 36, bend: 10, tilt: 10, hip: [7, -37], fF: [21, 0], fB: [-12, 0], faB: 30, hF: [38, -40], hB: [33, -42], handF: 'open', handB: 'open',
+    grab: [44, -36], mouth: 'shout', tail: 85, arch: 10, tsw: 0.3, skirt: 0.45 });
   def('throwHit', {
     segs: [['hold', 16], ['toss', 14], ['recovery', 18]], step: 2,
     keys: [['hold', TG],
-      ['hold+8', P(TG, { lean: 4, hip: [0, -45], hF: [20, -68], hB: [16, -70], grab: [22, -66], tail: -20, arch: 26 }), 'out'],
-      ['hold+14', P(TG, { lean: -6, bend: -6, hip: [-2, -44], hF: [16, -72], hB: [12, -74], grab: [18, -70], tail: -30, arch: 30, mouth: 'teeth' })],
-      ['toss+3', P(TG, { lean: 30, bend: 8, hip: [6, -40], fF: [20, 0], hF: [38, -56], hB: [32, -58], handF: 'open', handB: 'open', grab: [42, -58],
-        mouth: 'shout', tail: 40, arch: 6, smear: { part: 'hF', from: 'hold+14', n: 4 } }), 'snap'],
-      ['toss+8', P(TG, { lean: 32, bend: 8, hip: [6, -40], fF: [20, 0], hF: [37, -55], hB: [31, -57], handF: 'open', handB: 'open', grab: [46, -54], mouth: 'grin', tail: 30 }), 'snap'],
-      ['recovery+6', P(S, { lean: 18, hip: [2, -43] }), 'out'], ['recovery+17', S]]
+      ['hold+5', P(TG, { lean: 4, hip: [0, -44], hF: [22, -70], hB: [18, -72], grab: [24, -70], tail: -20, arch: 14 }), 'out'],
+      ['hold+12', TU, 'inout'], ['hold+15', P(TU, { hip: [-3, -44], hF: [10, -88], grab: [10, -92], sq: 0 })],
+      ['toss+2', P(TS, { hs: 0.85, smear: { part: 'hF', from: 'hold+15', n: 4 } }), 'snap'],
+      ['toss+4', P(TS, { hip: [7, -36], sq: 1, mouth: 'grin', tail: 95, arch: 4, hs: 0.6 }), 'snap'],
+      ['toss+10', P(TS, { mouth: 'grin', tail: 70, arch: 12, eyes: 'happy' })],
+      ['recovery+6', P(S, { lean: 18, hip: [2, -43], tail: 20, mouth: 'grin' }), 'out'], ['recovery+17', S]]
   });
+  // thrown: held up by the collar, limp — arms and legs dangle, head lolls, tail hangs and swings
+  var TW = P(S, { root: [0, -4], hip: [-2, -48], lean: -6, bend: 4, tilt: 28, hF: [5, -36], hB: [-5, -35], handF: 'relax', handB: 'relax', elF: 1, elB: 1,
+    fF: [3, 0], fB: [-3, -1], faF: 55, faB: 60, eyes: 'dizzy', mouth: 'hurt', tail: -14, arch: 5, tsw: 0.4, skirt: -0.1 });
   def('thrown', {
     segs: [['loop', 20, true]], step: 4,
-    keys: [[0, P(S, { root: [0, -3], hip: [-2, -48], lean: -12, tilt: 15, hF: [6, -42], hB: [-6, -44], handF: 'open', handB: 'open', fF: [5, 1], fB: [-4, 0],
-      faF: 40, faB: 50, eyes: 'shut', mouth: 'hurt', tail: 20, arch: 6 })],
-      [10, P(S, { root: [0, -3], hip: [-2, -48], lean: -9, tilt: 20, hF: [5, -43], hB: [-7, -42], handF: 'open', handB: 'open', fF: [4, 1], fB: [-5, 0],
-        faF: 45, faB: 50, eyes: 'shut', mouth: 'hurt', tail: 25, arch: 4 })]]
+    keys: [[0, TW],
+      [6, P(TW, { lean: -2, tilt: 32, hF: [8, -36], hB: [-2, -35], fF: [5, 0], fB: [-1, -1], tail: -8 }), 'inout'],
+      [14, P(TW, { lean: -9, tilt: 24, hF: [3, -37], hB: [-7, -36], fF: [1, 0], fB: [-5, -1], tail: -20 }), 'inout']]
   });
 
-  // ---------------------------------------------------------------- intro: maid curtsy → yawn → snaps into stance
+  // ---------------------------------------------------------------- intro: maid curtsy → lazy stretch-yawn → eye rub → snaps into stance
   var ST = P(S, { hip: [0, -47], lean: 0, bend: 0, fF: [5, 0], fB: [-5, 0], hF: [10, -42], hB: [-7, -42], handF: 'relax', handB: 'relax' });
+  var CU = P(ST, { hip: [-3, -36], lean: 8, fB: [-17, 0], faB: 25, hF: [17, -40], hB: [-15, -40], handF: 'open', handB: 'open', skirt: 0.6,
+    head: [1, 2], tilt: 18, eyes: 'closed', mouth: 'smile', tail: 25, arch: 12, tsw: 0.5 });
+  var YW = P(ST, { hip: [0, -48], lean: -4, bend: -8, tilt: -16, fF: [5, 0], fB: [-5, 0], faF: 0, hF: [9, -91], hB: [3, -93], handF: 'fist', handB: 'fist',
+    eyes: 'closed', mouth: 'o', tail: 62, arch: 5, tsw: 0.3, skirt: 0.1 });
   def('intro', {
     segs: [['act', 100]], step: 2,
     keys: [[0, P(ST, { eyes: 'closed', mouth: 'smile', skirt: 0.2 })],
-      [10, P(ST, { hip: [-2, -41], lean: 6, fB: [-15, 0], hF: [12, -38], hB: [-10, -38], skirt: 0.45, eyes: 'closed', mouth: 'smile', head: [1, 1] }), 'inout'],
-      [26, P(ST, { hip: [-2, -41], lean: 8, fB: [-15, 0], hF: [12, -38], hB: [-10, -38], skirt: 0.45, eyes: 'closed', mouth: 'smile', head: [1, 1] })],
-      [36, P(ST, { eyes: 'happy', mouth: 'smile', skirt: 0.1 }), 'out'],
-      [48, P(ST, { hF: [14, -84], hB: [-2, -86], handF: 'fist', handB: 'fist', bend: -6, eyes: 'closed', mouth: 'o', tsw: 1.5 }), 'inout'],
-      [60, P(ST, { hF: [14, -84], hB: [-2, -86], handF: 'fist', handB: 'fist', bend: -7, eyes: 'closed', mouth: 'o', tsw: 1.5 })],
-      [68, P(S, { hip: [0, -40], lean: 18, eyes: 'focus', mouth: 'grin' }), 'out'],
-      [74, P(S, { eyes: 'focus', mouth: 'grin' }), 'out'], [86, bob(S, 0, 1)], [96, S]]
+      [8, CU, 'inout'], [20, P(CU, { hip: [-3, -35], tilt: 20 })],
+      [28, P(ST, { eyes: 'happy', mouth: 'smile', blush: 1, skirt: 0.25, tail: -5 }), 'out'],
+      [40, YW, 'inout'], [52, P(YW, { hip: [0, -49], bend: -10, tilt: -20, hF: [8, -92], hB: [2, -94] })],
+      [58, P(ST, { hF: [13, -80], hB: [-6, -48], handF: 'relax', tilt: 6, eyes: 'half', mouth: 'neutral', tail: 10, tsw: 1 }), 'out'],
+      [64, P(ST, { hF: [12, -78], hB: [-6, -48], handF: 'relax', tilt: 4, eyes: 'half', mouth: 'smile', tail: 5, tsw: 1 })],
+      [70, P(S, { hip: [0, -40], lean: 18, eyes: 'focus', mouth: 'grin', tail: -25, arch: 30 }), 'out'],
+      [76, P(S, { eyes: 'focus', mouth: 'grin', tail: 10 }), 'out'], [86, bob(S, 0, 1)], [96, S]]
   });
-  // ---------------------------------------------------------------- win: hop, cheer, then a smug wave with the tail wagging
-  var WN = P(ST, { hip: [0, -47], hF: [16, -88], hB: [-6, -50], handF: 'open', handB: 'relax', eyes: 'happy', mouth: 'grin', blush: 1, tsw: 2.6, tail: -10 });
+  // ---------------------------------------------------------------- win: crouch, happy hop, then bouncing on her toes waving, tail wagging
+  var WN = P(ST, { hip: [0, -47], hF: [16, -88], hB: [-6, -50], handF: 'open', handB: 'relax', eyes: 'happy', mouth: 'grin', blush: 1, tsw: 1.2, tail: -10 });
+  var wag = function (k) {
+    var r = k & 1 ? 1 : -1;
+    return P(WN, { hip: [0, k & 1 ? -46 : -48], hF: [18 + 5 * r, -96 + (k & 1)], tilt: 5 * r, tail: -10 + 22 * r, arch: 22 - 4 * r, sq: k & 1 });
+  };
   def('win', {
     segs: [['in', 30], ['loop', 60, true]], step: 2,
     keys: [['in', P(S, { eyes: 'closed' })],
-      ['in+6', P(S, { hip: [0, -38], lean: 18, eyes: 'closed', mouth: 'grin', skirt: 0.2 }), 'in'],
-      ['in+12', P(WN, { root: [0, -14], fF: [5, -8], fB: [-5, -4], faF: 30, faB: 30, hF: [14, -92], hB: [-2, -90], handB: 'fist', handF: 'fist', skirt: 0.7 }), 'out'],
-      ['in+20', P(WN, { root: [0, 0], hip: [0, -42], lean: 6, skirt: 0.3 }), 'in'], ['in+26', WN],
-      ['loop', WN], ['loop+15', P(WN, { hF: [20, -86] })], ['loop+30', WN], ['loop+45', P(WN, { hF: [20, -86], hip: [0, -46] })]]
+      ['in+6', P(S, { hip: [0, -38], lean: 18, eyes: 'closed', mouth: 'grin', skirt: 0.2, tail: 20 }), 'in'],
+      ['in+12', P(WN, { root: [0, -16], fF: [5, -9], fB: [-5, -5], faF: 30, faB: 30, hF: [14, -92], hB: [-2, -90], handB: 'fist', handF: 'fist', skirt: 0.75, tail: -40, arch: 26 }), 'out'],
+      ['in+20', P(WN, { root: [0, 0], hip: [0, -41], lean: 6, sq: 1, skirt: 0.35, tail: 15 }), 'in'], ['in+26', wag(0)],
+      ['loop', wag(0)], ['loop+8', wag(1)], ['loop+15', wag(2)], ['loop+23', wag(3)], ['loop+30', wag(4)], ['loop+38', wag(5)], ['loop+45', wag(6)], ['loop+53', wag(7)]]
   });
-  // ---------------------------------------------------------------- lose (time over): slump, tail droops
-  var LS = P(ST, { hip: [0, -46], lean: 8, bend: 8, head: [1, 1], hF: [7, -40], hB: [-7, -40], handF: 'relax', handB: 'relax', shr: -1,
-    eyes: 'sad', mouth: 'frown', tail: 25, arch: 6, tsw: 0.4 });
+  // ---------------------------------------------------------------- lose (time over): shock, then a sulk — arms folded, pout, foot scuffing, tail flat on the floor
+  var LS = P(ST, { hip: [0, -46], lean: 6, bend: 6, head: [1, 1], tilt: 14, hF: [9, -57], hB: [8, -60], handF: 'relax', handB: 'relax', shr: -1, z: { armB: 6 },
+    eyes: 'sad', mouth: 'frown', tail: -28, arch: 2, tsw: 0.15, skirt: -0.05 });
   def('lose', {
     segs: [['in', 30], ['loop', 60, true]], step: 3,
-    keys: [['in', P(S, { eyes: 'wide', mouth: 'o' })], ['in+10', P(LS, { eyes: 'wide', mouth: 'o', tail: 10 }), 'out'], ['in+22', LS],
-      ['loop', LS], ['loop+30', P(LS, { hip: [0, -45], eyes: 'closed', sq: 1 })]]
+    keys: [['in', P(S, { eyes: 'wide', mouth: 'o' })], ['in+6', P(S, { eyes: 'wide', mouth: 'o', hip: [-1, -47], lean: -4, tail: -40, arch: 30, tsw: 0 }), 'out'],
+      ['in+18', P(LS, { tail: -15 }), 'inout'], ['in+26', LS],
+      ['loop', LS], ['loop+15', P(LS, { fF: [13, -2], faF: 25, tilt: 16 })], ['loop+21', P(LS, { fF: [12, 0] })],
+      ['loop+36', P(LS, { hip: [0, -45], sq: 1, eyes: 'closed', tilt: 18 })], ['loop+48', P(LS, { eyes: 'closed', mouth: 'frown' })]]
   });
 })();
 
@@ -19451,8 +19617,10 @@
   var ATK = { eyes: 'focus', mouth: 'neutral' };
   var HIT = { eyes: 'focus', mouth: 'teeth', glow: 1 };
   var QON = { quill: true }, QOFF = { quill: false };
-  // front hand reaching to the book at the back hip (drawing the quill)
-  var DRAW = { hF: [0, -58], handF: 'grip', lean: 4, book: -70 };
+  // drawing the quill: the front hand crosses to the book at the back hip (it flicks open), then a short
+  // streak of light (ql < 1) is pulled out of it, trailing back toward the pages, before it unfurls
+  var DRAW = { hF: [-4, -53], handF: 'grip', lean: 5, bend: 2, book: -70, bko: 0.35, tilt: 6 };
+  function PULL(o) { return P({ quill: true, ql: 0.45, pen: -195, pg: 0.1, glow: 1, handF: 'grip', book: -80, bko: 0.2 }, o); }
 
   // ---------------------------------------------------------------- 5L: spine jab with the book (rear hand)
   var L0 = P(S, ATK, { hip: [-1, -53], lean: -2, hB: [-4, -70], book: -10, z: { armB: 6 }, hF: [12, -72], handF: 'fist' });
@@ -19491,7 +19659,8 @@
     segs: [['startup', 12], ['active', 5], ['recovery', 22]], step: 2,
     keys: [
       ['startup', P(S, ATK)], ['startup+2', P(S, ATK, DRAW), 'out'],
-      ['startup+4', P(S, ATK, QON, { hF: [2, -72], pen: -95, lean: -2 }), 'out'],
+      ['startup+4', P(S, ATK, PULL({ hF: [6, -60], lean: 1 })), 'out'],
+      ['startup+6', P(S, ATK, QON, { hF: [3, -76], pen: -105, lean: -4 }), 'out'],
       ['startup+8', H0, 'out'], ['startup+10', P(H0, { hF: [0, -88], pen: -155 }), 'snap'],
       ['active', P(H1, { smear: { part: 'quill', from: 'startup+10', n: 5 } }), 'snap'],
       ['active+2', H1, 'snap'],
@@ -19533,8 +19702,9 @@
   def('2H', {
     segs: [['startup', 11], ['active', 5], ['recovery', 24]], step: 2,
     keys: [
-      ['startup', c0], ['startup+2', P(c0, { hF: [-2, -32], handF: 'grip' }), 'out'],
-      ['startup+4', P(c0, QON, { hF: [2, -48], pen: -100 }), 'out'],
+      ['startup', c0], ['startup+2', P(c0, { hF: [-5, -30], handF: 'grip', bko: 0.35, book: -70 }), 'out'],
+      ['startup+4', P(c0, PULL({ hF: [6, -38] })), 'out'],
+      ['startup+5', P(c0, QON, { hF: [3, -52], pen: -110 }), 'out'],
       ['startup+7', CH0, 'out'], ['startup+9', P(CH0, { hF: [4, -66], pen: -140 }), 'snap'],
       ['active', P(CH1, { smear: { part: 'quill', from: 'startup+9', n: 5 } }), 'snap'],
       ['active+2', CH1, 'snap'],
@@ -19576,8 +19746,9 @@
   def('jH', {
     segs: [['startup', 10], ['active', 6], ['recovery', 12, true]], step: 2,
     keys: [
-      ['startup', j0], ['startup+2', P(j0, { hF: [2, -62], handF: 'grip', book: -60 }), 'out'],
-      ['startup+4', P(j0, QON, { hF: [4, -80], pen: -90 }), 'out'],
+      ['startup', j0], ['startup+2', P(j0, { hF: [-8, -60], handF: 'grip', book: -60, bko: 0.35 }), 'out'],
+      ['startup+4', P(j0, PULL({ hF: [4, -68] })), 'out'],
+      ['startup+5', P(j0, QON, { hF: [4, -84], pen: -105 }), 'out'],
       ['startup+6', JH0, 'out'], ['startup+8', P(JH0, { hF: [1, -99], pen: -135 }), 'snap'],
       ['active', P(JH1, { smear: { part: 'quill', from: 'startup+8', n: 5 } }), 'snap'],
       ['active+2', JH1, 'snap'], ['active+5', P(JH1, { glow: 0, hF: [32, -58], pen: 44 })],
@@ -19620,7 +19791,8 @@
   def('sonnet', {
     segs: [['startup', 5], ['rise', 14], ['fall', 12, true], ['land', 12]], step: 2,
     keys: [
-      ['startup', P(C, ATK, { hF: [4, -40], handF: 'grip' })], ['startup+3', P(C, ATK, QON, { hip: [0, -22], hF: [30, -34], pen: 30, lean: 30 })],
+      ['startup', P(C, ATK, { hF: [-5, -30], handF: 'grip', bko: 0.35, book: -70 })],
+      ['startup+2', P(C, ATK, PULL({ hF: [8, -36], pen: 165 }))], ['startup+3', P(C, ATK, QON, { hip: [0, -22], hF: [30, -34], pen: 30, lean: 30 })],
       ['rise', P(SN1, { smear: { part: 'quill', from: 'startup+3', n: 5 } }), 'snap'],
       ['rise+2', SN1, 'snap'], ['rise+8', P(SN1, { glow: 0, fB: [-4, -6], hF: [14, -104] })],
       ['fall', P(JF, ATK, QON, { hF: [18, -80], pen: -40 })], ['fall+6', P(JF, ATK, QOFF, { hF: [18, -76] })],
@@ -19636,7 +19808,8 @@
     segs: [['startup', 9], ['hit1', 3], ['gap1', 6], ['hit2', 3], ['gap2', 6], ['hit3', 4], ['recovery', 20]], step: 2,
     keys: [
       ['startup', P(S, ATK)], ['startup+2', P(S, ATK, DRAW), 'out'],
-      ['startup+5', P(S, ATK, QON, { hF: [8, -92], pen: -120, lean: -6 }), 'out'], ['startup+7', P(S, ATK, QON, { hF: [6, -93], pen: -125, lean: -7 }), 'snap'],
+      ['startup+4', P(S, ATK, PULL({ hF: [6, -62], lean: 1 })), 'out'],
+      ['startup+6', P(S, ATK, QON, { hF: [8, -92], pen: -120, lean: -6 }), 'out'], ['startup+7', P(S, ATK, QON, { hF: [6, -93], pen: -125, lean: -7 }), 'snap'],
       ['hit1', P(HK1, { smear: { part: 'quill', from: 'startup+7', n: 5 } }), 'snap'], ['hit1+2', HK1, 'snap'],
       ['gap1', P(HK1, { mouth: 'neutral', hF: [22, -46], pen: 120 }), 'out'], ['gap1+4', P(HK1, { mouth: 'neutral', hF: [18, -44], pen: 135 }), 'snap'],
       ['hit2', P(HK2, { smear: { part: 'quill', from: 'gap1+4', n: 5 } }), 'snap'], ['hit2+2', HK2, 'snap'],
@@ -19715,7 +19888,7 @@
   // ================================================================ NORMALS (V2)
   // 5L: snappy water-wrapped lead palm (reach 32)
   var L0 = P(S, ATK, { hip: [-2, -46], lean: 0, bend: -4, hF: [11, -63], hB: [5, -56], handF: 'flat' });
-  var L1 = P(S, HIT, { hip: [2, -46], lean: 12, bend: 2, hF: [29, -67], hB: [3, -58], handF: 'flat', handB: 'fist', fB: [-12, 0], weapon: 'hF', mouth: 'grin' });
+  var L1 = P(S, HIT, { hip: [2, -46], lean: 12, bend: 2, hF: [29, -67], hB: [3, -58], handF: 'flat', handB: 'fist', fB: [-12, 0], weapon: 'hF', mouth: 'grin', wg: 'F' });
   def('5L', {
     segs: sar(4, 3, 7), step: 1,
     keys: [['startup', P(S, ATK)], ['startup+2', L0, 'out'],
@@ -19752,7 +19925,7 @@
   // ---------------------------------------------------------------- crouching normals
   var c0 = P(C, ATK);
   // 2L: low palm jab (reach 34)
-  var CL = P(C, HIT, { hip: [3, -19], lean: 34, hF: [31, -34], hB: [16, -38], handF: 'flat', weapon: 'hF', mouth: 'grin' });
+  var CL = P(C, HIT, { hip: [3, -19], lean: 34, hF: [31, -34], hB: [16, -38], handF: 'flat', weapon: 'hF', mouth: 'grin', wg: 'F' });
   def('2L', {
     segs: sar(4, 3, 8), step: 1,
     keys: [['startup', c0], ['startup+2', P(c0, { hF: [17, -40], lean: 24 }), 'out'],
@@ -19848,8 +20021,8 @@
     keys: [['startup', P(C, ATK)], ['startup+3', BR0, 'snap'],
       ['rise', P(spin(BRa, -50), { smear: { part: 'tail', from: 'startup+3', n: 4 } }), 'snap'],
       ['rise+2', spin(BRa, -100), 'out'], ['rise+5', spin(P(BRa, { mouth: 'grin' }), -150)],
-      ['rise+8', spin(P(BRa, { tl: 0, z: {}, mouth: 'grin' }), -210)], ['rise+11', spin(P(JF, ATK, { tl: 0, skirt: 0.8 }), -290)],
-      ['fall', spin(P(JF, ATK, { skirt: 0.7, tail: -20 }), -360)], ['fall+6', spin(P(JF, ATK, { skirt: 0.6, hB: [-12, -63], tail: -20 }), -360)],
+      ['rise+8', spin(P(BRa, { tl: 0, z: {}, mouth: 'grin' }), -210)], ['rise+11', spin(P(JF, ATK, { tl: 0, skirt: 0.8, hs: 0.25 }), -290)],
+      ['fall', spin(P(JF, ATK, { skirt: 0.7, tail: -20, hs: 0.8 }), -360)], ['fall+6', spin(P(JF, ATK, { skirt: 0.6, hB: [-12, -63], tail: -20, hs: 0.15 }), -360)],
       ['land', P(S, { hip: [0, -36], lean: 18, bend: 4, sq: 1, hF: [21, -46], hB: [9, -44], skirt: 0.35, eyes: 'focus' }), 'snap'],
       ['land+3', P(S, ATK, { hip: [0, -40], lean: 14, skirt: 0.1 }), 'out'], ['land+13', S]]
   });
@@ -19857,7 +20030,7 @@
   // chain of thought rekka: 1 lunging water hook · 2 knee under the hem · 3 rising palm uppercut
   var C1a = P(S, ATK, { hip: [-3, -45], lean: 2, bend: -6, hB: [-8, -62], hF: [16, -66], handB: 'fist', z: { armB: 6 } });
   var C1 = P(S, HIT, { hip: [8, -43], lean: 26, bend: 6, fF: [22, 0], fB: [-10, 0], faB: 30, hF: [14, -60], hB: [40, -66], handB: 'fist', handF: 'open',
-    z: { armB: 6 }, weapon: 'hB', tail: -10 });
+    z: { armB: 6 }, weapon: 'hB', tail: -10, wg: 'B' });
   def('chain1', {
     segs: sar(9, 4, 18), step: 2,
     keys: [['startup', P(S, ATK)], ['startup+5', C1a, 'out'],
@@ -19873,7 +20046,7 @@
       ['recovery', P(C2, { mouth: 'grin' }), 'out'], ['recovery+8', P(S, ATK, { fF: [14, -6], hip: [3, -45] })], ['recovery+19', S]]
   });
   var C3 = P(S, HIT, { root: [0, -6], hip: [4, -50], lean: -8, bend: -6, tilt: -15, fF: [9, -2], fB: [-8, 0], faF: 40, faB: 30, hF: [18, -96], hB: [-4, -64],
-    handF: 'flat', handB: 'fist', weapon: 'hF', mouth: 'shout', skirt: 0.45, tail: -30, arch: 26 });
+    handF: 'flat', handB: 'fist', weapon: 'hF', mouth: 'shout', skirt: 0.45, tail: -30, arch: 26, wg: 'F' });
   def('chain3', {
     segs: sar(9, 5, 26), step: 2,
     keys: [['startup', P(C2, ATK)], ['startup+5', P(C, ATK, { hip: [2, -22], lean: 30, hF: [18, -32], hB: [10, -36], handF: 'flat' }), 'out'],
@@ -19908,18 +20081,24 @@
       ['land', P(S, { hip: [0, -36], lean: 18, sq: 1, hF: [21, -46], hB: [9, -44], skirt: 0.3, eyes: 'focus' }), 'snap'], ['land+5', P(S, ATK)], ['land+11', S]]
   });
 
-  // super 「深度思考·鲸落」: gathers water low, then both arms thrown up to call the whale, held; tail raised
-  var SU0 = P(C, ATK, { hip: [0, -20], lean: 30, hF: [24, -26], hB: [16, -24], handF: 'flat', handB: 'flat', eyes: 'closed', mouth: 'shout', tail: 0, arch: 30 });
-  var SU1 = P(S, HIT, { hip: [0, -47], lean: -8, bend: -8, tilt: -10, fF: [12, 0], fB: [-12, 0], hF: [20, -96], hB: [-4, -98], handF: 'open', handB: 'open',
-    mouth: 'grin', weapon: 'hF', skirt: 0.35, tail: -40, arch: 30, tsw: 1.6 });
+  // super 「深度思考·鲸落」: sinks into a pooled crouch cupping water between the palms, then snaps one finger
+  // to the sky (held through active: skirt, hair and tail flared), then a relaxed, pleased settle
+  var SU0 = P(C, ATK, { hip: [0, -22], lean: 26, bend: 4, hF: [22, -30], hB: [16, -32], handF: 'open', handB: 'open', eyes: 'closed', mouth: 'neutral',
+    tail: 6, arch: 30, tsw: 0.4, wg: 'FB', z: { armB: 6 } });
+  var SU0b = P(SU0, { hip: [0, -18], lean: 32, hF: [20, -24], hB: [15, -25], tail: 16, arch: 34, mouth: 'shout', skirt: 0.45 });
+  var SU1 = P(S, HIT, { hip: [0, -48], lean: -8, bend: -10, tilt: -14, fF: [12, 0], fB: [-12, 0], hF: [16, -100], hB: [-20, -72], handF: 'point', handB: 'open',
+    mouth: 'grin', weapon: 'hF', skirt: 0.75, tail: 72, arch: 9, pen: 6, tsw: 2.2, wg: 'F' });
+  var SUh = P(SU1, { hip: [0, -47], skirt: 0.6, tail: 64, arch: 12, pen: 2, hB: [-19, -70] });
   def('super', {
     segs: [['startup', 6], ['cast', 8], ['active', 44], ['recovery', 34]], step: 2,
-    keys: [['startup', P(S, ATK)], ['startup+5', SU0, 'out'],
-      ['cast', SU0], ['cast+5', P(SU0, { hip: [0, -18] }), 'snap'],
+    keys: [['startup', P(S, ATK)], ['startup+4', SU0, 'out'],
+      ['cast', SU0], ['cast+5', SU0b, 'out'],
       ['active', P(SU1, { smear: { part: 'hF', from: 'cast+5', n: 4 } }), 'snap'], ['active+3', SU1, 'snap'],
-      ['active+22', P(SU1, { hip: [0, -46], hF: [21, -95] })], ['active+42', SU1],
-      ['recovery', P(SU1, { mouth: 'smile', eyes: 'happy' }), 'snap'], ['recovery+10', P(SU1, { mouth: 'smile', eyes: 'happy', hF: [18, -80], hB: [0, -82] }), 'out'],
-      ['recovery+26', P(S, ATK)], ['recovery+33', S]]
+      ['active+12', SUh, 'inout'], ['active+22', P(SU1, { skirt: 0.7 }), 'inout'], ['active+32', SUh, 'inout'], ['active+42', SU1, 'inout'],
+      ['recovery', P(SU1, { mouth: 'smile', eyes: 'happy', skirt: 0.4, tsw: 1.2 }), 'snap'],
+      ['recovery+8', P(S, { hip: [0, -45], lean: -2, bend: -4, hF: [14, -60], hB: [-6, -56], handF: 'relax', handB: 'relax', eyes: 'happy', mouth: 'smile', skirt: 0.2, tail: 15, tsw: 1.4, hs: 0.15 }), 'out'],
+      ['recovery+20', P(S, { hip: [0, -46], eyes: 'closed', mouth: 'smile', tail: 0 }), 'inout'],
+      ['recovery+28', P(S, ATK)], ['recovery+33', S]]
   });
 })();
 
@@ -20064,7 +20243,7 @@
     THROW_PROT: 6,             // unthrowable frames after leaving hit/block stun
     WAKE_THROW_INV: 6,         // unthrowable after get-up
     THROW_DMG: 120,
-    KO_STOP: 42, KO_SLOW: 72,
+    KO_STOP: 42, KO_SLOW: 72, KO_BG_HOLD: 64, KO_BG_FADE: 12,
     FLASH: 44,                 // super flash freeze length
     IMPACT: 8,                 // screen.impact length (frames)
     LAND_LAG: 3,               // empty-jump landing frames (attacks may be buffered)
@@ -22943,14 +23122,22 @@
   function backdrop(m) {
     var K = m.koInfo;
     if (K && m.state === 'ko' && m.koFlash <= 24 - 5) {
-      var landed = true;
+      // full until KO_BG_HOLD ticks after the KO (freeze + the dramatic start of the slow-mo) or the body
+      // landing, then a stepped fade over the stage (KO_BG_FADE ticks); the stage is back well before the win pose.
+      var kt = m.tick - K.tick, landed = true;
       for (var i = 0; i < 2; i++) { var d = m.f[i]; if (d.ko && !(d.action === 'down' && d.af >= 6)) landed = false; }
-      if (!landed) {
+      if (m._koBg !== K) { m._koBg = K; m._koBgOut = 0; }   // render-only bookkeeping (not match state)
+      if (!m._koBgOut && (landed || kt >= T.KO_BG_HOLD)) m._koBgOut = Math.min(kt, T.KO_BG_HOLD) || 1;
+      var ft = m._koBgOut ? kt - m._koBgOut : -1;
+      if (ft < T.KO_BG_FADE) {
         var o = { cx: Math.round(K.x - m.camX), cy: Math.round(K.y) };
         var W = K.winner >= 0 ? m.f[K.winner] : null;
         if (W) { o['char'] = W.ch; o.palette = W.pal; }
-        return { name: K.kind === 'super' && W ? 'screen.superFinish' : 'screen.koBackdrop', t: m.tick - K.tick - 5, o: o, under: false };
+        var bd = { name: K.kind === 'super' && W ? 'screen.superFinish' : 'screen.koBackdrop', t: kt - 5, o: o, under: false };
+        if (ft >= 0) { bd.under = true; bd.front = true; bd.alpha = 1 - (Math.floor(ft * 4 / T.KO_BG_FADE) + 1) / 5; }   // .8 .6 .4 .2
+        return bd;
       }
+      return null;   // KO backdrop done: the stage, not a still-running super's backdrop
     }
     for (var j = 0; j < 2; j++) {
       var f = m.f[j], st = F.superT(f);
@@ -22987,7 +23174,10 @@
     // [A] stage or a full-screen backdrop
     var bg = backdrop(m);
     if (!bg || bg.under) drawStage(ctx, m, camX);
+    var a0 = ctx.globalAlpha;
+    if (bg && bg.alpha != null) ctx.globalAlpha = a0 * bg.alpha;
     if (bg && !F.sprite(ctx, bg.name, 0, 0, bg.t, bg.o) && !bg.under) { drawStage(ctx, m, camX); bg = null; }
+    ctx.globalAlpha = a0;
     // [B] super flash backdrop / heavy-hit impact
     if (m.flash) {
       var fl = m.flash;
@@ -23012,7 +23202,7 @@
     engineSprites(ctx, m, under, 'front'); engineSprites(ctx, m, top, 'front');
     drawProjs(ctx, m);
     fxDraw(ctx, m, 'front');
-    if (!bg && m.stage && m.stage.drawFront) { try { m.stage.drawFront(ctx, camX); } catch (e) { F.err('stage.drawFront', e); } }
+    if ((!bg || bg.front) && m.stage && m.stage.drawFront) { try { m.stage.drawFront(ctx, camX); } catch (e) { F.err('stage.drawFront', e); } }
     if ((m.forceBoxes || (m.training && m.training.hitboxes)) && F.drawBoxes) F.drawBoxes(ctx, m);
     ctx.restore();
     // [E] KO white-out -> bubbles -> HUD -> training panels -> cut-in -> banners
@@ -23043,7 +23233,7 @@
 
   var BAR_W = 140, BAR_H = 8, BAR_Y = 9, BAR_X0 = 30;     // P1 bar x range [30, 170]
   var MET_W = 92, MET_Y = 203;
-  var TAG_Y = 31, COMBO_Y = 50;          // V2: move-name tag under the names; combo counter on a plate
+  var TAG_Y = 32, COMBO_Y = 50;          // V2: move-name tag under the names; combo counter on a plate
   var FIN = { super: '超', special: '技', 'throw': '投', time: 'T', chip: '削', perfect: 'P', draw: '=', normal: null, ko: null };
 
   function rect(ctx, x, y, w, h, c) { if (w <= 0 || h <= 0) return; ctx.fillStyle = c; ctx.fillRect(x | 0, y | 0, w | 0, h | 0); }
@@ -23133,7 +23323,7 @@
       ctx.globalAlpha = F.clamp(a, 0, 1);
       // V2: directly under the name row with an opaque plate (stage signage sits behind y 38-60)
       var tw = F.measure(f.tag, { size: 10 }).w + 10, tx = side === 0 ? x0 : x0 + BAR_W - tw, ty = TAG_Y;
-      rect(ctx, tx - 1, ty - 1, tw + 2, 15, U.black); rect(ctx, tx, ty, tw, 13, 'rgba(11,10,20,0.92)'); rect(ctx, side === 0 ? tx : tx + tw - 2, ty, 2, 13, P.ui);
+      plate(ctx, tx, ty, tw, 13, side, P);
       F.text(ctx, f.tag, tx + 5 + (side === 0 ? 1 : -1), ty + 1, { size: 10, color: P.uiLight });
       ctx.globalAlpha = 1;
     }
@@ -23171,6 +23361,15 @@
     if (full && (m.tick % 40) < 20) rect(ctx, side === 0 ? x0 + w - 2 : x0 + MET_W - w, y - 1, 2, 7, '#ffffff');
   }
 
+  // fully opaque plate (fix: stage signage showed through): 1-px light border + black keyline outside,
+  // opaque fill, 2-px accent stripe on the screen-edge side. x,y,w,h = the inner area.
+  function plate(ctx, x, y, w, h, side, P) {
+    rect(ctx, x - 2, y - 2, w + 4, h + 4, U.black);
+    rect(ctx, x - 1, y - 1, w + 2, h + 2, U.line || '#3a3550');
+    rect(ctx, x, y, w, h, '#0b0a14');
+    rect(ctx, side === 0 ? x : x + w - 2, y, 2, h, P.ui);
+  }
+
   function combo(ctx, m, side) {
     var f = m.f[side], H = hudState(m);
     var n = f.comboShow;
@@ -23186,8 +23385,7 @@
     var dtxt = String(f.comboShowDmg) + ' DMG';
     var pw = Math.max(nw + 3 + F.measure('HITS', { size: 8 }).w, F.measure(dtxt, { size: 8 }).w) + 8;
     var plx = side === 0 ? x - 4 : x + 4 - pw;
-    ctx.globalAlpha = fade * 0.62; rect(ctx, plx, COMBO_Y - 3, pw, 41, U.bg0 || '#05040a'); ctx.globalAlpha = fade;
-    rect(ctx, side === 0 ? plx : plx + pw - 2, COMBO_Y - 3, 2, 41, P.ui);
+    plate(ctx, plx, COMBO_Y - 3, pw, 41, side, P);
     F.text(ctx, String(n), x, y, { size: 12, scale: 2, align: al, color: U.gold, outline: U.black });
     F.text(ctx, 'HITS', side === 0 ? x + nw + 3 : x - nw - 3, y + 11, { size: 8, align: al, color: U.text, outline: U.black });
     F.text(ctx, dtxt, x, y + 26, { size: 8, align: al, color: P.uiLight, outline: U.black });
@@ -23374,12 +23572,15 @@
   var F = LC.fight = LC.fight || {};
   var T = F.T;
 
+  // c* = Claude-only plan multipliers (balance, real modules): cJump jump-in weight, cHaiku raw haiku weight,
+  // cGuard guardrail base, cSpark zoning spark, cPun whiff/block-punish chance (overrides punish),
+  // cMash / cThrow (L1: her mashed reach + throws over-performed). dChain = DeepSeek rekka plan weight (L2).
   var LV = [
-    { react: 28, block: 0.12, guess: 0.5, aa: 0.04, punish: 0.06, depth: 0, confirm: 30, tech: 0.03, sup: 0.15, think: 16, aggr: 0.45, jump: 0.10, mash: 0.35 },
-    { react: 22, block: 0.32, guess: 0.55, aa: 0.18, punish: 0.25, depth: 1, confirm: 16, tech: 0.10, sup: 0.35, think: 11, aggr: 0.50, jump: 0.09, mash: 0.15 },
-    { react: 17, block: 0.58, guess: 0.64, aa: 0.42, punish: 0.5, depth: 2, confirm: 10, tech: 0.25, sup: 0.65, think: 8, aggr: 0.55, jump: 0.08, mash: 0.05 },
-    { react: 13, block: 0.76, guess: 0.72, aa: 0.62, punish: 0.72, depth: 3, confirm: 7, tech: 0.40, sup: 0.85, think: 6, aggr: 0.6, jump: 0.07, mash: 0 },
-    { react: 10, block: 0.88, guess: 0.8, aa: 0.78, punish: 0.86, depth: 3, confirm: 5, tech: 0.55, sup: 1.0, think: 4, aggr: 0.62, jump: 0.06, mash: 0 }
+    { react: 28, block: 0.12, guess: 0.5, aa: 0.04, punish: 0.06, depth: 0, confirm: 30, tech: 0.03, sup: 0.15, think: 16, aggr: 0.45, jump: 0.10, mash: 0.35, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 0.6, cMash: 0.4, cThrow: 0.6 },
+    { react: 22, block: 0.32, guess: 0.55, aa: 0.18, punish: 0.25, depth: 1, confirm: 16, tech: 0.10, sup: 0.35, think: 11, aggr: 0.50, jump: 0.09, mash: 0.15, cJump: 0.3, cHaiku: 0.04, cGuard: 0.12, cSpark: 1.4, cPun: 0.5, cThrow: 0.4, cMash: 2, dChain: 0.4 },
+    { react: 17, block: 0.58, guess: 0.64, aa: 0.42, punish: 0.5, depth: 2, confirm: 10, tech: 0.25, sup: 0.65, think: 8, aggr: 0.55, jump: 0.08, mash: 0.05, cJump: 0.3, cHaiku: 0.02, cGuard: 0.12, cSpark: 1.5, cPun: 0.8 },
+    { react: 13, block: 0.76, guess: 0.72, aa: 0.62, punish: 0.72, depth: 3, confirm: 7, tech: 0.40, sup: 0.85, think: 6, aggr: 0.6, jump: 0.07, mash: 0, cJump: 0.3, cHaiku: 0.03, cGuard: 0.12, cSpark: 1.5, cPun: 0.95 },
+    { react: 10, block: 0.88, guess: 0.8, aa: 0.78, punish: 0.86, depth: 3, confirm: 5, tech: 0.55, sup: 1.0, think: 4, aggr: 0.62, jump: 0.06, mash: 0, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 1 }
   ];
 
   function AI(m, side, level, seed) {
@@ -23551,7 +23752,7 @@
     // whiff / block punish
     if (pv && pv.act === 'attack' && pv.ph === 'recovery' && pv.hit !== 'hit' && this.punRolled !== pv.mv + pv.x) {
       this.punRolled = pv.mv + pv.x;
-      if (this.chance(P.punish)) { var pp = this.punisher(me, dx); if (pp) { this.push(pp, 'punish'); this.comboStep = 0; return this.emit(); } }
+      if (this.chance(C === 'claude' && P.cPun ? P.cPun : P.punish)) { var pp = this.punisher(me, dx); if (pp) { this.push(pp, 'punish'); this.comboStep = 0; return this.emit(); } }
     }
     // opponent knocked down: approach or set up
     if (o.action === 'down' || o.action === 'getup') {
@@ -23619,25 +23820,25 @@
     if (dx > D(70)) add('dashF', 0.25 + ag * 0.4 * (C === 'deepseek' ? 0.9 : 0.8), [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 1 }]);
     if (dx < D(70) && me.x > T.WALL + 60 && me.x < LC.STAGE_W - T.WALL - 60) add('dashB', 0.15, [{ d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }]);
     var jr = C === 'claude' ? [D(70), D(130)] : [D(70), D(150)];
-    if (dx > jr[0] && dx < jr[1]) add('jumpIn', P.jump * 4 * (0.6 + ag) * (C === 'claude' ? 0.55 : 1), [{ d: 9, n: 3 }]);   // V2: DeepSeek's breach box anti-airs Claude's jump-ins well
-    if (dx < D(70)) add('jumpN', P.jump, [{ d: 8, n: 3 }]);
+    if (dx > jr[0] && dx < jr[1]) add('jumpIn', P.jump * 4 * (0.6 + ag) * (C === 'claude' ? P.cJump : 1), [{ d: 9, n: 3 }]);   // V2: DeepSeek's breach box anti-airs Claude's jump-ins well
+    if (dx < D(70)) add('jumpN', P.jump * (C === 'claude' ? P.cJump / 0.55 : 1), [{ d: 8, n: 3 }]);
     // pokes at range
     if (dx <= r('5L')) { add('5L', 0.7, this.press('L')); add('2L', 0.7, this.press('L', 2)); }
     if (dx <= r('5M') && dx > r('5L') - 10) add('5M', 0.8, this.press('M'));
     if (dx <= r('2M') && dx > r('2L') - 10) add('2M', 0.8, this.press('M', 2));
     if (dx <= r('5H') && dx > r('5M') - 8) add('5H', 0.35, this.press('H'));
     if (dx <= r('2H') && dx > r('2M') - 8) add('2H', 0.3, this.press('H', 3));
-    if (dx < me.C.throwRange - 2 && o.action !== 'blockstun') add('throw', 0.55 + ag * 0.3, [{ d: this.chance(0.3) ? 4 : 6, b: 'LM', n: 2 }, { d: 5, n: 1 }]);
-    if (P.mash > 0 && dx < D(80)) add('mash', P.mash * 2, this.press(this.pick(['L', 'M', 'H', 'S']), this.pick([5, 2, 6])));
+    if (dx < me.C.throwRange - 2 && o.action !== 'blockstun') add('throw', (0.55 + ag * 0.3) * (C === 'claude' && P.cThrow != null ? P.cThrow : 1), [{ d: this.chance(0.3) ? 4 : 6, b: 'LM', n: 2 }, { d: 5, n: 1 }]);
+    if (P.mash > 0 && dx < D(80)) add('mash', P.mash * 2 * (C === 'claude' && P.cMash != null ? P.cMash : 1), this.press(this.pick(['L', 'M', 'H', 'S']), this.pick([5, 2, 6])));
     if (full && dx < (C === 'claude' ? D(200) : D(120)) && this.chance(P.sup * 0.15)) add('superRaw', 0.8, this.special('super', 'H'));
     if (C === 'claude') {
-      if (me.proj === 0 && dx > D(120)) add('spark', 0.9 + (dx > D(200) ? 0.8 : 0), this.special('spark', dx > D(220) ? 'L' : this.pick(['M', 'H'])));
+      if (me.proj === 0 && dx > D(120)) add('spark', (0.9 + (dx > D(200) ? 0.8 : 0)) * P.cSpark, this.special('spark', dx > D(220) ? 'L' : this.pick(['M', 'H'])));
       if (me.proj === 0 && dx > D(70) && dx <= D(120)) add('spark', 0.35, this.special('spark', 'H'));
-      if (dx < D(80) && dx > D(30)) add('haiku', 0.1, this.special('haiku', this.pick(['L', 'M'])));   // unsafe raw; mostly a combo ender
-      if (dx < D(70) && this.level >= 3) add('guardrail', 0.12 + (o.action === 'attack' ? 0.1 : 0), this.special('guardrail', this.pick(['L', 'M'])));
+      if (dx < D(80) && dx > D(30)) add('haiku', P.cHaiku, this.special('haiku', this.pick(['L', 'M'])));   // unsafe raw; mostly a combo ender
+      if (dx < D(70) && this.level >= 3) add('guardrail', P.cGuard + (o.action === 'attack' ? 0.1 : 0), this.special('guardrail', this.pick(['L', 'M'])));
     } else {
       if (me.proj === 0 && dx > D(110)) add('wave', 0.7 + (dx > D(200) ? 0.4 : 0), this.special('wave', dx > D(200) ? 'H' : 'M'));
-      if (dx > D(50) && dx < D(110)) add('chain', 0.5 + ag * 0.25, this.special('chain', dx > D(90) ? 'H' : 'M'));
+      if (dx > D(50) && dx < D(110)) add('chain', (0.5 + ag * 0.25) * (P.dChain || 1), this.special('chain', dx > D(90) ? 'H' : 'M'));
       if (dx > D(90) && dx < D(240) && this.level >= 2) add('diveM', 0.07 + ag * 0.05, this.special('dive', 'M'));
       if (dx > D(60) && dx < D(200) && this.level >= 3) add('diveH', 0.07 + ag * 0.05, this.special('dive', 'H'));
       if (dx > D(90) && dx < D(170)) add('jumpKick', P.jump * 3, [{ d: 9, n: 3 }]);
@@ -23705,7 +23906,7 @@
       if (hit && full && P.depth >= 2 && this.chance(P.sup * 0.4)) { this.q.length = 0; this.push(this.special('super', 'H'), 'superCombo'); return {}; }
       if (mv.follow) {   // rekka: continue on hit; mix up on block
         this.lastInst = -1;
-        if (hit || (blk && this.chance(this.level >= 4 ? 0.25 : this.level >= 3 ? 0.45 : 0.75))) { this.q.length = 0; this.push([{ d: 5, n: 2 + this.rng.int(3) }, { d: 5, b: 'M', n: 2 }, { d: 5, n: 1 }]); }
+        if (hit || (blk && this.chance(this.level >= 4 ? 0.25 : this.level >= 3 ? 0.45 : this.level === 2 ? 0.5 : 0.75))) { this.q.length = 0; this.push([{ d: 5, n: 2 + this.rng.int(3) }, { d: 5, b: 'M', n: 2 }, { d: 5, n: 1 }]); }
       }
     }
     return {};
