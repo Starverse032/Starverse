@@ -114,16 +114,18 @@
   }
   // curved, ribbed dragon horn in the scale ramp; spine from base to tip
   function horn(P, pts, w, ridges) {
-    var m = P.sr(pts, w, 0.6, w * 0.72);
-    P.part(m, S.x1, S.xl);
+    var m = P.sr(pts, w, 0.8, w * 0.7), nr = ridges || 5;
+    P.part(m, S.x1, S.x3);
     P.recol(m.band(3, -1), [S.x1], S.x2);
     P.recol(m.band(-1, 2), [S.x1], S.x0);
-    for (var k = 1; k <= (ridges || 5); k++) {
-      var t = k / ((ridges || 5) + 1.4), a = along(pts, t), hw = (w * (1 - t) * (1 - t) + 2 * w * 0.72 * t * (1 - t) + 0.6 * t * t) / 2 + 1;
-      var nx = -a.ty, ny = a.tx;
-      var r = P.poly([a.x + nx * hw, a.y + ny * hw, a.x - nx * hw + a.tx * 0.8, a.y - ny * hw + a.ty * 0.8,
-        a.x - nx * hw + a.tx * 1.8, a.y - ny * hw + a.ty * 1.8, a.x + nx * hw + a.tx * 1, a.y + ny * hw + a.ty * 1]).and(m);
-      P.recol(r, [S.x1, S.x0], S.x2); P.recol(r, [S.x2], S.x2);
+    P.recol(m.edge().and(m.band(2, -1)), [S.x3], S.xl);
+    for (var k = 1; k <= nr; k++) {
+      var t = k / (nr + 1.2), a = along(pts, t), hw = (w * (1 - t) * (1 - t) + 2 * w * 0.7 * t * (1 - t) + 0.8 * t * t) / 2 + 1;
+      var nx = -a.ty, ny = a.tx, q = P.s < 1.5 ? 0.9 : 0.5;
+      var r = P.poly([a.x + nx * hw, a.y + ny * hw, a.x - nx * hw + a.tx * 0.6, a.y - ny * hw + a.ty * 0.6,
+        a.x - nx * hw + a.tx * (0.6 + q), a.y - ny * hw + a.ty * (0.6 + q), a.x + nx * hw + a.tx * q, a.y + ny * hw + a.ty * q]).and(K.inner(m));
+      P.recol(r, [S.x1, S.x0], S.x2);
+      P.recol(r.shift(Math.round(a.tx), Math.round(a.ty)).and(K.inner(m)).sub(r), [S.x1], S.x0);
     }
     return m;
   }
@@ -166,7 +168,8 @@
     return all;
   }
   I.gptEmblem = function (P, size) {
-    knot(P, size / 2, size / 2, size * 0.47, size >= 32 ? 6 : 5, -Math.PI / 2, { small: size < 32 });
+    if (size >= 32) knot(P, 16, 16, 15, 5, -Math.PI / 2, {});
+    else knot(P, size / 2, size / 2, size * 0.475, 5, -Math.PI / 2, { small: 1, d: 0.5, ro: 0.5, hole: 1.3, core: 0.3 });
     P.outer(S.ol);
   };
   I.knot = knot;
@@ -175,17 +178,20 @@
   function wing(P, droop) {
     var bx = 26, by = 102, a = droop || 0, ca = Math.cos(a), sa = Math.sin(a);
     function R(pts) { var o = []; for (var i = 0; i < pts.length; i += 2) { var x = pts[i] - bx, y = pts[i + 1] - by; o.push(bx + x * ca - y * sa, by + x * sa + y * ca); } return o; }
-    var mem = P.poly(R([26, 100, 12, 40, -6, 20, -10, 44, -5, 58, 2, 60, 6, 68, 4, 84, 10, 83, 15, 90, 22, 98]));
+    var mem = P.poly(R([28, 100, 9, 36, -6, 18, -10, 44, -4, 56, 1, 57, 5, 64, 5, 80, 10, 79, 14, 86, 22, 96]));
     P.part(mem, S.u1, S.ul);
     P.recol(mem.band(3, -1), [S.u1], S.u2);
+    P.recol(mem.band(2, -1), [S.u2], S.u3);
     P.recol(mem.band(-1, 2), [S.u1], S.u0);
-    P.line(R([12, 42, 6, 54, 4, 60]), S.u2, true, true);
-    P.line(R([13, 44, 12, 62, 9, 78]), S.u2, true, true);
-    var bones = P.sr(R([26, 104, 20, 76, 12, 40]), 5, 3).or(P.sr(R([12, 40, 4, 30, -6, 20]), 2.8, 1.2))
-      .or(P.sr(R([12, 40, 2, 50, -5, 58]), 2.6, 1.2)).or(P.sr(R([12, 40, 9, 62, 4, 84]), 2.6, 1.2));
+    P.line(R([9, 40, 5, 48, 1, 56]), S.u2, true, true);
+    P.line(R([10, 42, 10, 58, 7, 76]), S.u2, true, true);
+    P.line(R([12, 46, 15, 66, 14, 84]), S.u2, true, true);
+    var bones = P.sr(R([28, 104, 19, 72, 9, 36]), 5, 3).or(P.sr(R([9, 36, 2, 26, -6, 18]), 3, 1.2))
+      .or(P.sr(R([9, 36, 1, 46, -4, 56]), 2.6, 1.2)).or(P.sr(R([9, 36, 8, 58, 5, 80]), 2.6, 1.2));
     P.part(bones, S.x1, S.xl);
     P.recol(bones.band(-1, 1), [S.x1], S.x0);
-    var claw = P.sr(R([12, 40, 14, 34, 12, 30]), 3.2, 0.6);
+    P.recol(bones.band(2, -1), [S.x1], S.x2);
+    var claw = P.sr(R([9, 36, 12, 30, 10, 25]), 3.4, 0.6);
     P.part(claw, S.x0, S.xl);
   }
 
@@ -218,7 +224,7 @@
     wing(P, lose ? -0.32 : 0);
 
     // ---- back hair: long, voluminous, wavy curtain
-    var back = P.spoly([54, 12, 38, 14, 28, 22, 22, 34, 19, 48, 15, 58, 17, 68, 12, 78, 14, 88, 9 + sw, 100, 11 + sw, 110, 6 + sw * 2, 122, 5 + sw * 2, 132,
+    var back = P.spoly([54, 12, 38, 14, 29, 22, 24, 34, 21, 48, 18, 58, 19, 68, 14, 78, 15, 88, 9 + sw, 100, 11 + sw, 110, 6 + sw * 2, 122, 5 + sw * 2, 132,
       108 + sw * 2, 132, 107 + sw * 2, 122, 102 + sw, 110, 104 + sw, 100, 98, 88, 100, 78, 94, 66, 96, 56, 92, 46, 88, 34, 82, 22, 70, 14]);
     P.part(back, S.h2, S.hl);
     P.recol(back.band(4, -1), [S.h2], S.h3);
@@ -324,7 +330,7 @@
     var tas = P.sr([80, 28, 81, 33, 80.5, 39], 1.8, 3);
     P.part(tas, S.c1, S.cl); P.recol(tas.band(1, 0), [S.c1], S.c2);
     P.part(P.rect(79, 28, 3, 2), S.m1, S.ml);
-    knot(P, 77, 23, 7, 5, -0.3, { small: true });
+    knot(P, 77, 23, 7, 5, -0.3, { small: 1, d: 0.5, ro: 0.5, hole: 1.1, core: 0.3 });
 
     // ---- ahoge
     var aho = lose ? P.sr([50, 12, 48, 7, 44, 5, 41, 7], 3, 1) : P.sr([50, 12, 49, 6, 46, 3, 42, 2, 39, 4], 3.2, 1);
@@ -360,39 +366,44 @@
     P.recol(m.band(-1, 2), [S.c1], S.c0);
     return m;
   }
-  function drawHand(P, o) {
-    var s = sleeve(P, [84, 132, 82, 116, 86, 104, 94, 100, 104, 100, 112, 104, 114, 132]);
-    P.line([90, 108, 88, 132], S.c2, true, true); P.line([98, 110, 99, 132], S.c2, true, true); P.line([106, 108, 108, 132], S.c2, true, true);
-    // ruffled opening
+  // hanging frilled detached sleeve (far arm): band on the upper arm, folds, ruffled outer edge
+  function farSleeve(P) {
+    var m = sleeve(P, [82, 132, 81, 116, 85, 104, 92, 99, 100, 98, 106, 101, 111, 108, 114, 120, 114, 132]);
+    [[88, 108, 86, 132], [94, 106, 93, 120, 94, 132], [102, 106, 104, 132]].forEach(function (l) { P.line(l, S.c2, true, true); });
     var ruf = P.mask();
-    for (var k = 0; k < 7; k++) ruf = ruf.or(P.ell(88 + k * 3.6, 102 + (k & 1), 2.6, 2.4));
+    for (var k = 0; k < 8; k++) ruf = ruf.or(P.ell(106 + k * 1.1, 101 + k * 4, 2.6, 2.3));
     P.part(ruf, S.c0, S.cl); P.recol(ruf.band(2, -1), [S.c0], S.c2);
-    // forearm
-    var fa = P.sr([101, 106, 100, 96, 100, 88], 7, 6);
+    var band = P.sr([84, 105, 90, 100.5, 98, 99, 105, 100.5], 3.2, 3.2);
+    P.part(band, S.d1, S.dl); P.recol(band.band(0, 1), [S.d1], S.d0);
+    [[89, 102], [96, 100]].forEach(function (p) { P.px(p[0], p[1], S.m0); });
+    return m;
+  }
+  function drawHand(P, o) {
+    farSleeve(P);
+    // forearm rising out of the sleeve
+    var fa = P.sr([99, 112, 99.5, 100, 100, 90], 8.4, 7);
     P.part(fa, S.s1, S.sl); P.recol(fa.band(3, 0), [S.s1], S.s2); P.recol(fa.band(-1, 0), [S.s1], S.s0);
-    // platinum bracelet
-    var br = P.sr([96, 89, 100, 90, 104, 89], 3.2, 3.2);
+    // platinum bracelet with a teal stone
+    var br = P.sr([95.5, 90.5, 100, 91.5, 104.5, 90.5], 3.4, 3.4);
     P.part(br, S.m1, S.ml); P.recol(br.band(0, 1), [S.m1], S.m0); P.recol(br.band(0, -1), [S.m1], S.m2);
-    P.px(100, 91, S.a1);
-    // beckoning hand: palm toward us, index finger raised and curling, the others folded
-    var palm = P.spoly([95, 87, 94, 82, 96, 77, 102, 76, 106, 79, 106, 85, 102, 88]);
-    var idx = P.sr([103, 78, 106, 72, 107, 67, 105, 64], 3.2, 2.4);
-    var mid = P.sr([100, 78, 101, 73, 100, 70], 3.2, 2.8);
-    var thumb = P.sr([96, 84, 92, 81, 90, 78], 3.4, 2.4);
-    var curl = P.ell(97, 79, 2, 2).or(P.ell(95.5, 81.5, 1.8, 1.8));
-    var hand = palm.or(idx).or(mid).or(thumb).or(curl);
+    P.px(100, 91, S.a1); P.px(101, 91, S.a0);
+    // beckoning hand: palm toward us, index finger raised and crooking toward her, the rest folded
+    var palm = P.spoly([95, 89, 94, 84, 95.5, 79, 100, 77, 104.5, 78, 106.5, 82, 106, 87, 102, 90]);
+    var thumb = P.sr([96, 86, 92.5, 83, 90.5, 79.5], 3.8, 2.8);
+    var idx = P.sr([98, 79, 97.5, 72, 98, 67.5, 96.5, 64.5, 94.5, 64.5], 3.6, 2.6);
+    var mid = P.sr([101.2, 78.5, 101.8, 73, 101.2, 70], 3.6, 3.2);
+    var curl = P.ell(104, 79, 2, 2.2).or(P.ell(106, 82, 1.7, 1.9));
+    var hand = palm.or(thumb).or(idx).or(mid).or(curl);
     P.part(hand, S.s1, S.sl);
     P.recol(hand.band(2, -1), [S.s1], S.s2);
     P.recol(hand.band(-1, 1), [S.s1], S.s0);
-    P.line([102, 79, 103, 75], S.s2); P.line([98, 80, 97, 77], S.s2);
-    P.line([96, 85, 99, 86, 102, 85], S.s2, true);
-    P.px(105, 64, S.bl);
+    P.line([99.6, 79, 99.6, 74], S.s2);
+    P.line([103, 80, 104.5, 81.5], S.s2);
+    P.line([96, 86, 99, 87.5, 103, 86.5], S.s2, true);
+    P.px(95, 65, S.bl);
   }
   function drawLowArm(P) {
-    sleeve(P, [84, 132, 82, 112, 88, 102, 98, 100, 108, 104, 113, 112, 114, 132]);
-    P.line([90, 108, 88, 132], S.c2, true, true); P.line([100, 110, 101, 132], S.c2, true, true);
-    var bandF = P.sr([84, 108, 92, 103, 102, 102, 110, 106], 3, 3);
-    P.part(bandF, S.d1, S.dl); P.recol(bandF.band(0, 1), [S.d1], S.d0);
+    farSleeve(P);
   }
 
   // ---------------------------------------------------------------- face icon 24x24 (placeholder until drawn)

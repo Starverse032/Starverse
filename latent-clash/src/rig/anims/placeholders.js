@@ -55,6 +55,17 @@
       diveIn: [g('startup', 6), g('sink', 6)],
       diveOut: sar(6, 5, 22),
       diveKick: [g('startup', 8), g('active', 10, true), g('land', 12)]
+    }),
+    gpt: Object.assign({}, COMMON, {
+      dashF: [g('go', 20)], dashB: [g('go', 22)],
+      super: [g('startup', 6), g('cast', 12), g('active', 50), g('recovery', 30)],
+      '5L': sar(6, 3, 9), '5M': sar(9, 4, 15), '5H': sar(13, 5, 24),
+      '2L': sar(6, 3, 10), '2M': sar(9, 4, 16), '2H': sar(12, 5, 25),
+      jL: jsar(5, 6), jM: jsar(8, 6), jH: jsar(11, 6),
+      breath: sar(12, 16, 22), airBreath: [g('startup', 10), g('active', 12), g('recovery', 12, true)],
+      dragonRise: [g('startup', 5), g('rise', 14), g('fall', 12, true), g('land', 14)],
+      call: sar(7, 3, 30), callHit: [g('hold', 14), g('rise', 16), g('slam', 12), g('recovery', 22)],
+      roar: sar(9, 6, 24)
     })
   };
 
@@ -68,6 +79,10 @@
       '5M': '5L', '2L': '5L', '2M': '5L', '2H': '5H', jL: 'jumpFall', jM: 'jumpFall', jH: 'jumpFall',
       wave: '5H', chain1: '5L', chain2: '5H', chain3: 'breach', diveIn: 'crouchIn', diveOut: 'breach',
       diveKick: 'jumpFall', super: '5H'
+    },
+    gpt: {
+      '5M': '5L', '2L': '5L', '2M': '5L', '2H': '5H', jL: 'jumpFall', jM: 'jumpFall', jH: 'jumpFall',
+      breath: '5L', airBreath: 'jumpFall', dragonRise: '5H', call: 'throw', callHit: 'throwHit', roar: '5H', super: '5H'
     }
   };
   var FALLBACK = ['idle'];

@@ -8,6 +8,7 @@
   calls = 34 live graphs) — now dropped at once, stopped tracks freed 0.1 s after their fade;
   music bus −2.5 dB (`K.MUSIC_TRIM`) so music sits under SFX at equal sliders; `ui.start`/`ui.lock`
   trimmed −2 dB to stay under `hit.light`.
+- 2026-11-15: GPT 娘 added (6 `gpt.*` SFX, `voice('gpt', …)`, `list().voice.chars` now from voice.js); smoke ALL OK, 0 clips.
 - Next (optional): see "Known weaknesses".
 
 Everything is synthesized at runtime — no audio files. Dev pages: `dev/audio-test.html` (button per
@@ -99,8 +100,13 @@ Additions: `setMuted(bool)`, `isMuted()`, `isUnlocked()`, `state()` ('locked'|'r
 | deepseek.chain | snappy wet punch | each Chain step; `pitch` 1, 1.12, 1.3 |
 | deepseek.diveKick | descending whoosh, water trail | Dive Kick descent |
 | deepseek.whale | ~1.5 s whale call gliding up, then colossal splash | Whale Fall: R1 breaches |
+| gpt.breath | 0.5 s airy teal fire roar + crackle + icy glints | dragon-fire breath first active frame |
+| gpt.rise | upward whoosh + claw ring + wing flap | rising claw start-up → rise |
+| gpt.call / gpt.callSlam | snatch + wing-beat lift / heavy floor impact + rumble | command grab connects / victim hits floor |
+| gpt.roar | growling formant sweep + pressure thump | roar move |
+| gpt.super | ~1.5 s: three lock-on tones (L/R/C), converging beam blast, icy tail | GPT super: heads appear (after super flash) |
 
-Voices: `voice('claude'|'deepseek', kind)`, kinds `light medium heavy special super hurt ko win intro`.
+Voices: `voice('claude'|'deepseek'|'gpt', kind)` (gpt: lowest, darkest, slower/flatter = regal), kinds `light medium heavy special super hurt ko win intro`.
 Suggested: light/medium/heavy on ~1/3 of normals (not every hit), special on specials, super with
 the super flash, hurt on heavy/counter hits taken, ko on KO, win on the win pose, intro at entrance.
 
@@ -154,7 +160,7 @@ bass root on downbeats/chord changes, and m2/M7 clashes between melody and count
 | big | ko -0.5/-8.1 · super.flash -0.5/-10.3 · super.charge -9.0/-16.1 · claude.beam -1.1/-7.8 · deepseek.whale -0.9/-7.2 |
 | system | meter.full -9.8/-17.0 · counter.catch -2.2/-16.8 · timer.tick -1.9/-23.6 · ann.* -0.5…-4.0 / -11.1…-12.0 |
 | UI | move -7.5/-26.1 · confirm -10.5/-21.1 · cancel -12.2/-21.0 · start -12.4/-20.0 · error -9.8/-21.1 · pause -9.9/-21.0 · lock -5.3/-20.1 · text.blip -5.7/-28.2 |
-| characters | specials -1.0…-7.7 / -16.0…-19.6 (chain/haiku hits ≈ -19) |
+| characters | specials -1.0…-7.7 / -16.0…-19.6 (chain/haiku hits ≈ -19) · gpt breath -8.4/-16.0 · rise -3.6/-16.0 · call -3.1/-18.1 · callSlam -3.5/-12.9 · roar -2.8/-14.9 · super -0.7/-7.4 |
 | voices | peak -7…-13, LUFS-M -16 (super) … -22 (light) |
 | music (20 s, after trim) | loops -14.6…-15.7 LUFS-I (peak ≤ -1.7); stings vs -13.2, victory -12.5 |
 Game defaults (master .8, music .6, sfx .9): combat mix -17.1 LUFS-I, music alone -28.2 → music ≈ 11 LU under.
