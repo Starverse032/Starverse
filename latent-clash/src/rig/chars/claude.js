@@ -233,6 +233,8 @@
     var ft = s === 'F' ? sk.ftF : sk.ftB, fa = s === 'F' ? sk.faF : sk.faB, lo = s === 'F' ? D.lock.F : D.lock.B;
     if (ft[1] < -2.5) return;                        // lifted: stays under the skirt
     ft = [ft[0] + (lo || 0), ft[1]];
+    var a0 = fr(ft, fa, 1.2, -3.5), a1 = fr(ft, fa, 0.6, -7);
+    p.cap(a1[0], a1[1], a0[0], a0[1], 1.6, 2.0, M.legs, SH.limbL, 1);      // tights at the instep
     var pts = [];
     for (var i = 0; i < TIP.length; i++) { var q = fr(ft, fa, TIP[i][0], TIP[i][1]); pts.push(q[0], q[1]); }
     p.poly(pts, M.shoe, SH.limbL, 1);
@@ -368,7 +370,8 @@
     if (peek) aB = Math.min(aB, 98 + tr * 0.6);
     var rf = rib(rootF, aF, Lf, Math.min(Lf * 0.55, kneeF)), rb = rib(rootB, aB, Lb, Math.min(Lb * 0.55, kneeB));
     if (peek) {
-      rf.e = [Math.min(rf.e[0], rf.m[0] + 3), -4.5 - (sk.hem || 0) * 0.5]; rb.e = [Math.max(rb.e[0], rb.m[0] - 3), -4];
+      var tF = toe(sk, 'F'), tB = toe(sk, 'B'), tx = Math.max(tF[0], tB[0]);
+      rf.e = [Math.min(rf.e[0], rf.m[0] + 3, Math.max(tx - 4, rf.m[0] - 2)), -4.5 - (sk.hem || 0) * 0.5]; rb.e = [Math.max(rb.e[0], rb.m[0] - 3), -4];
     }
     var floor = sk.ds && sk.ds.air ? 999 : -1;
     if (sk.ds && sk.ds.drape && kL < 0.85) {
