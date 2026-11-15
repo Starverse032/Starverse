@@ -14,6 +14,9 @@
   var F = LC.fight = LC.fight || {};
   var T = F.T;
 
+  // c* = Claude-only plan multipliers (balance, real modules): cJump jump-in weight, cHaiku raw haiku weight,
+  // cGuard guardrail base, cSpark zoning spark, cPun whiff/block-punish chance (overrides punish),
+  // cMash / cThrow (L1: her mashed reach + throws over-performed).
   var LV = [
     { react: 28, block: 0.12, guess: 0.5, aa: 0.04, punish: 0.06, depth: 0, confirm: 30, tech: 0.03, sup: 0.15, think: 16, aggr: 0.45, jump: 0.10, mash: 0.35, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 0.6, cMash: 0.4, cThrow: 0.6 },
     { react: 22, block: 0.32, guess: 0.55, aa: 0.18, punish: 0.25, depth: 1, confirm: 16, tech: 0.10, sup: 0.35, think: 11, aggr: 0.50, jump: 0.09, mash: 0.15, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 1 },
