@@ -1,4 +1,4 @@
-/* LATENT CLASH — how to play: controls diagram, system pages, both move lists (PLATFORM).
+/* LATENT CLASH — how to play: controls diagram, system pages, one move list per fighter in LC.CHARS (PLATFORM).
  * Also provides LC.ui.drawMoveList (used by the pause menu) and LC.ui.keycap. */
 (function () {
   'use strict';
@@ -24,9 +24,10 @@
     if (LC.fight && LC.fight.getMoveList) {
       try { list = LC.fight.getMoveList(ch); } catch (e) { console.error('[platform] fight.getMoveList', e); }
     }
-    if (!list || !list.length) {
+    var fromFight = !!(list && list.length);
+    if (!fromFight) {
       list = [];
-      var M = LORE.moves[ch];
+      var M = LORE.moves[ch] || {};
       Object.keys(M).forEach(function (id) {
         var m = M[id];
         list.push({ id: id, name: m.zh, nameEn: m.en, input: m.input + (m.input.indexOf('j.') === 0 ? '' : ''), simple: m.simple, type: id === 'super' ? 'super' : 'special', desc: m.desc });
@@ -35,7 +36,8 @@
       list.push({ id: 'dash', name: '冲刺 / 后撤步', nameEn: 'DASH', input: '66', simple: '44', type: 'system', desc: '快速接近；后撤步在开始时短暂无敌。' });
       list.push({ id: 'guard', name: '防御', nameEn: 'GUARD', input: '4', simple: '1', type: 'system', desc: '站立防御挡中上段与跳攻，蹲防挡下段。' });
     }
-    return (listCache[ch] = list);
+    if (fromFight) listCache[ch] = list;   // LORE fallback is rebuilt so FIGHT data is picked up once it knows ch
+    return list;
   }
   var TYPE_NAME = { special: '必杀技', super: '超必杀技', throw: '投技', system: '系统', normal: '通常技' };
   var TYPE_COL = { special: U.meter, super: U.meterFull, throw: '#c9b6ff', system: U.green, normal: U.dim };
@@ -47,7 +49,7 @@
   }
 
   ui.drawMoveList = function (c, ch, x, y, w, h, scroll, t) {
-    var L = LORE.chars[ch], col = ui.charCol(ch, 0);
+    var L = LORE.chars[ch] || { nameZh: ch }, col = ui.charCol(ch, 0);
     ui.panel(c, x, y, w, h, { accent: col.ui, accentW: 40, fill: 'rgba(15,13,32,0.94)' });
     var em = ui.icon('emblem.' + ch);
     var hx = x + 8;
