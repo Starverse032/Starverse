@@ -34,7 +34,7 @@
 
   // ---------------------------------------------------------------- crouch
   var CR = POSE.crouch = P(S, { hip: [1, -19], lean: 28, bend: 4, fF: [13, 0], fB: [-10, 0], faB: 25, hF: [27, -46], hB: [18, -40], head: [1, 0],
-    handF: 'open', handB: 'relax', tail: 10, arch: 18 });
+    handF: 'open', handB: 'relax', tail: 10, arch: 18, pool: 1, skirt: 0.3 });
   def('crouchIn', { segs: [['go', 4]], step: 1, keys: [[0, P(S, { hip: [0, -38], lean: 14 })], [2, P(CR, { hip: [1, -17], sq: 1 }), 'out'], [3, CR]] });
   def('crouch', {
     segs: [['loop', 64, true]], step: 2,

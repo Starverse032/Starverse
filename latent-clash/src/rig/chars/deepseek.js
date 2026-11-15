@@ -100,10 +100,12 @@
     var h = s === 'F' ? d.hipF : d.hipB, k = s === 'F' ? d.knF : d.knB, dx = k[0] - h[0], dy = k[1] - h[1], l = Math.sqrt(dx * dx + dy * dy) || 1;
     var nx = dy / l, ny = -dx / l;              // normal on the upper side of the thigh (facing +x)
     if (ny > 0) { nx = -nx; ny = -ny; }
-    var T = [h[0] + dx * 0.6 + nx * 3.5, h[1] + dy * 0.6 + ny * 3.5];
+    // pool (crouch): the hem runs over the knee cap and spills to the floor in front of the shin
+    var pl = (d.ds && d.ds.pool) || 0, fT = 0.6 + 0.52 * pl, nT = 3.5 + 1.5 * pl;
+    var T = [h[0] + dx * fT + nx * nT, h[1] + dy * fT + ny * nT];
     var used = Math.sqrt((T[0] - c0[0]) * (T[0] - c0[0]) + (T[1] - c0[1]) * (T[1] - c0[1]));
     var hang = Math.max(5, 40 - used), sg = s === 'F' ? 1 : -1;
-    var B = [T[0] + sg * 3, Math.min(0, T[1] + hang)];
+    var B = [T[0] + sg * (3 + 3 * pl), pl ? 0 : Math.min(0, T[1] + hang)];
     return [lerp(c1, T, r), lerp(c2, B, r)];
   }
   var TAIL_LEN = [6, 6, 6, 6, 5, 5, 5, 4];
