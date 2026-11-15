@@ -335,7 +335,7 @@
     }
     function rib(root, a, len, s1) {
       var kk = (a < 60 ? Math.min(1, (60 - a) / 50) : (a > 120 ? Math.min(1, (a - 120) / 50) : 0)) * (1 - kL);
-      var b = a + ((a < 90 ? 96 : 84) - a) * kk;
+      var b = a + ((a < 90 ? 96 : 84) - a) * kk + tr * 0.7 + bl * 8;
       var r1 = Math.PI * a / 180, r2 = Math.PI * b / 180;
       var m = [root[0] + Math.cos(r1) * s1, root[1] + Math.sin(r1) * s1];
       var e = [m[0] + Math.cos(r2) * (len - s1), m[1] + Math.sin(r2) * (len - s1)];
@@ -360,7 +360,8 @@
     var hem = [];
     for (k = 0; k <= 10; k++) {
       var t = k / 10, it = 1 - t;
-      hem.push([it * it * rb.e[0] + 2 * it * t * ctrl[0] + t * t * rf.e[0], it * it * rb.e[1] + 2 * it * t * ctrl[1] + t * t * rf.e[1]]);
+      var rp = bl ? Math.sin(k * 2.2 + tr * 0.17) * 2.4 * bl * Math.sin(Math.PI * t) : 0;   // billow ripple
+      hem.push([it * it * rb.e[0] + 2 * it * t * ctrl[0] + t * t * rf.e[0] + rp * 0.5, it * it * rb.e[1] + 2 * it * t * ctrl[1] + t * t * rf.e[1] + rp]);
     }
     var roots = [];
     for (k = 0; k <= 10; k++) roots.push(lerp(rootB, rootF, k / 10));
