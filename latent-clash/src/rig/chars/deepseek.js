@@ -78,6 +78,10 @@
   function raised(d, s) {
     var h = s === 'F' ? d.hipF : d.hipB, k = s === 'F' ? d.knF : d.knB;
     var r = (h[1] + 19 - k[1]) / 10, f = d.ds && d.ds.drape;
+    // a thigh raised toward the OTHER side of the skirt (back knee forward in a crouch, front knee back) is
+    // covered by the opposite contour: draping this one over it would twist the skirt inside out
+    var across = (s === 'F' ? h[0] - k[0] : k[0] - h[0]);
+    if (across > 2) r *= Math.max(0, 1 - (across - 2) / 4);
     if (f && f[s] != null && f[s] > r) r = f[s];
     return r < 0 ? 0 : (r > 1 ? 1 : r);
   }
