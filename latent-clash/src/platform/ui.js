@@ -28,8 +28,8 @@
     return '#' + ((1 << 24) | (r(0) << 16) | (r(1) << 8) | r(2)).toString(16).slice(1);
   };
   ui.charCol = function (ch, pal) {
-    var p = (LC.PAL[ch] || LC.PAL.claude)[pal || 0] || LC.PAL[ch][0];
-    return { ui: p.ui, light: p.uiLight, dark: p.uiDark, accent: p.accent[1], hair: p.hair[1] };
+    var A = LC.PAL[ch] || LC.PAL[LC.CHARS[0]], p = A[pal || 0] || A[0];
+    return { ui: p.ui, light: p.uiLight || p.ui, dark: p.uiDark || p.ui, accent: p.accent[1], hair: p.hair[1] };
   };
 
   // ---------------------------------------------------------------- primitives

@@ -90,12 +90,15 @@ Next / known weaknesses:
   new 100 px rig sprites.
 
 ## GPT progress / next steps (truthful, updated as work lands)
-- [ ] 1. `char:'gpt'` colour scheme in core + generic tinted effects (hits, rings, charge, screen.*)
+- [x] 1. `char:'gpt'` colour scheme: `core.js` `schemeFor('gpt')` (`light`/`glow`/`gold`=platinum/`scale`/`wing`/
+  `night`/`deep`), plus generic roles on every scheme (`main` = claude.light | deepseek.water | gpt.light,
+  `twk` = twinkle ramp), `I.CHS`, `I.hasChar`. generic2 (ring, ring.ground, sparkle, meter.full,
+  super.charge), hits (hit.special) and screen (burstCols, superBg, superFinish, koBackdrop, impact) now
+  bake/tint per `I.CHS`. Checked in strips: claude/deepseek output unchanged; gpt teal on dark/warm/light.
 - [ ] 2. super: `screen.superBackdrop` gpt (night sky + attention grids), `gpt.attention`
 - [ ] 3. specials: `gpt.breath` sprite + `breathCast/riseTrail/callSlam/roarRing/clawHit/scales`
 - [ ] 4. strips / review / viewer / bench
 - [ ] 5. "GPT integration" section below
-Started: nothing written yet beyond this list.
 
 ## V2 integration (for FIGHT)
 Coordinates: `spawn` uses world coordinates, `drawSprite` uses screen coordinates

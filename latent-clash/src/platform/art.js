@@ -9,13 +9,13 @@
   var ui = LC.ui, U = LC.UI;
   var cache = {};
 
-  function pal(ch, p) { return (LC.PAL[ch] || LC.PAL.claude)[p || 0] || LC.PAL[ch][0]; }
+  function pal(ch, p) { var A = LC.PAL[ch] || LC.PAL[LC.CHARS[0]]; return A[p || 0] || A[0]; }
 
   // ---------------------------------------------------------------- fallback bust (112×128)
   function fallbackBust(ch, kind, p) {
     var P = pal(ch, p), cv = ui.canvas(112, 128), c = cv.getContext('2d');
     var O = P.outline;
-    var cl = ch === 'claude';
+    var cl = ch === 'claude', ds = ch === 'deepseek', longHair = !ds;
     // shoulders / outfit
     var body = function (x, y, w, h, col) { c.fillStyle = O; c.fillRect(x - 1, y - 1, w + 2, h + 2); c.fillStyle = col; c.fillRect(x, y, w, h); };
     ui.disc(c, 56, 150, 54, O); ui.disc(c, 56, 150, 53, P.cloth1[1]);
@@ -25,7 +25,7 @@
     // neck
     body(49, 82, 14, 18, P.skin[2]);
     // back hair
-    if (cl) { ui.disc(c, 56, 62, 36, O); ui.disc(c, 56, 62, 35, P.hair[2]); body(20, 60, 72, 60, P.hair[2]); ui.box(c, 20, 104, 72, 16, P.hairTip[1]); }
+    if (longHair) { ui.disc(c, 56, 62, 36, O); ui.disc(c, 56, 62, 35, P.hair[2]); body(20, 60, 72, 60, P.hair[2]); ui.box(c, 20, 104, 72, 16, (P.hairTip || P.hair)[1]); }
     else { ui.disc(c, 56, 56, 33, O); ui.disc(c, 56, 56, 32, P.hair[2]); }
     // face
     ui.disc(c, 56, 60, 25, O); ui.disc(c, 56, 60, 24, P.skin[1]);
@@ -56,6 +56,13 @@
       var sx = 80, sy = 38;
       ui.box(c, sx - 1, sy - 5, 3, 11, O); ui.box(c, sx - 5, sy - 1, 11, 3, O);
       ui.box(c, sx, sy - 4, 1, 9, P.accent[1]); ui.box(c, sx - 4, sy, 9, 1, P.accent[1]); ui.box(c, sx - 1, sy - 1, 3, 3, P.accent[0]);
+      ui.box(c, 26, 56, 6, 40, P.hair[1]); ui.box(c, 80, 56, 6, 40, P.hair[1]);
+    } else if (!ds) {
+      // generic third+ fighter (GPT: dragon horns)
+      var hc = P.scale || P.metal || P.hair;
+      [[34, -1], [78, 1]].forEach(function (h) {
+        for (var k = 0; k < 12; k++) { ui.box(c, h[0] + h[1] * Math.round(k / 3) - 2, 26 - k, 5, 2, O); ui.box(c, h[0] + h[1] * Math.round(k / 3) - 1, 26 - k, 3, 1, hc[1]); }
+      });
       ui.box(c, 26, 56, 6, 40, P.hair[1]); ui.box(c, 80, 56, 6, 40, P.hair[1]);
     } else {
       [[20, 24, -1], [92, 24, 1]].forEach(function (f) {
