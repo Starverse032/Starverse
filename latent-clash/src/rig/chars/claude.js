@@ -226,6 +226,22 @@
     ln(p, s0, s1, col(M.shoe, 2), true);
   }
 
+  // walk: the toe of the leading boot drawn over the hem (it steps out from under the dress)
+  var TIP = [[1.4, 0], [3.5, 0], [7.8, 0], [8.4, -1.2], [7.4, -2.6], [3.6, -4], [1.4, -4.3]];
+  function drawBootTip(p, sk, D) {
+    var s = sk.ftF[0] + D.lock.F >= sk.ftB[0] + D.lock.B ? 'F' : 'B';
+    var ft = s === 'F' ? sk.ftF : sk.ftB, fa = s === 'F' ? sk.faF : sk.faB, lo = s === 'F' ? D.lock.F : D.lock.B;
+    if (ft[1] < -2.5) return;                        // lifted: stays under the skirt
+    ft = [ft[0] + (lo || 0), ft[1]];
+    var pts = [];
+    for (var i = 0; i < TIP.length; i++) { var q = fr(ft, fa, TIP[i][0], TIP[i][1]); pts.push(q[0], q[1]); }
+    p.poly(pts, M.shoe, SH.limbL, 1);
+    var s0 = fr(ft, fa, 3.5, 0), s1 = fr(ft, fa, 7.6, 0);
+    ln(p, s0, s1, col(M.shoe, 2), true);
+    var l0 = fr(ft, fa, 3, -3.4); p.pxOn(l0[0], l0[1], col(M.shoe, 3));
+    p.end();
+  }
+
   // ------------------------------------------------------------ arms (puffed sleeves, frilled cuffs)
   var HANDS = null;
   function drawArm(p, sk, s, ds) {
@@ -549,7 +565,7 @@
       [-1.5, function () { if (bm === 'B') { drawBook(p, sk, ds); p.end(); } }],
       [-4, function () { drawLeg(p, sk, 'B', D.lock.B); p.end(); }],
       [-3, function () { drawLeg(p, sk, 'F', D.lock.F); p.end(); }],
-      [-2, function () { drawSkirt(p, sk, sec, ds); p.end(); drawHipBow(p, sk, sec); p.end(); }],
+      [-2, function () { drawSkirt(p, sk, sec, ds); p.end(); drawHipBow(p, sk, sec); p.end(); if (ds.peek) drawBootTip(p, sk, D); }],
       [0, function () { drawTorso(p, sk, sec, ds); }],
       [0.5, function () { drawSash(p, sk, sec); p.end(); }],
       [1, function () { drawLock(p, sec.lockF, null, 1.6); p.end(); }],
