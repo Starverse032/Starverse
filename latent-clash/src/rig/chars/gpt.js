@@ -109,15 +109,15 @@
   var TAIL_R = [5.6, 5.4, 5.1, 4.7, 4.3, 3.8, 3.3, 2.8, 2.2, 1.6, 0.9];
   C.chains = [
     { id: 'tail', n: TAIL_N, len: TAIL_LEN, rest: [92, 98, 106, 118, 136, 158, 178, 198, 222, 250], stiff: 0.5, damp: 0.74, grav: 0.03, drag: 0.2, hys: 0.6 },
-    { id: 'hairA', n: 5, len: [10, 10, 10, 10, 9], rest: [104, 96, 92, 90, 89], stiff: [0.36, 0.3, 0.24, 0.2, 0.16], damp: 0.84, grav: 0.24, drag: 0.3, cvel: 0.6 },
-    { id: 'hairB', n: 4, len: [10, 10, 10, 9], rest: [98, 93, 90, 88], stiff: [0.38, 0.3, 0.24, 0.2], damp: 0.83, grav: 0.24, drag: 0.3, cvel: 0.6 },
+    { id: 'hairA', n: 6, len: [10, 10, 10, 10, 9, 9], rest: [104, 96, 92, 90, 89, 88], stiff: [0.36, 0.3, 0.24, 0.2, 0.16, 0.14], damp: 0.84, grav: 0.24, drag: 0.3, cvel: 0.6 },
+    { id: 'hairB', n: 5, len: [10, 10, 10, 9, 8], rest: [98, 93, 90, 88, 86], stiff: [0.38, 0.3, 0.24, 0.2, 0.16], damp: 0.83, grav: 0.24, drag: 0.3, cvel: 0.6 },
     { id: 'lockN', n: 4, len: [7, 8, 8, 7], rest: [84, 88, 91, 93], stiff: 0.32, damp: 0.8, grav: 0.22, drag: 0.25, cvel: 0.5 },
     { id: 'lockF', n: 3, len: [6, 6, 6], rest: [86, 90, 93], stiff: 0.34, damp: 0.8, grav: 0.22, drag: 0.25, cvel: 0.5 },
     { id: 'ahoge', n: 3, len: [4, 4, 3], rest: [-100, -45, 15], stiff: 0.5, damp: 0.72, grav: 0.03, drag: 0.12 },
-    { id: 'sFa', n: 3, len: [12, 12, 11], rest: [100, 96, 93], stiff: [0.3, 0.24, 0.2], damp: 0.85, grav: 0.24, drag: 0.42, cvel: 0.5 },
-    { id: 'sFe', n: 3, len: [12, 12, 11], rest: [78, 83, 87], stiff: [0.3, 0.24, 0.2], damp: 0.85, grav: 0.24, drag: 0.42, cvel: 0.5 },
-    { id: 'sBa', n: 3, len: [12, 12, 11], rest: [100, 96, 93], stiff: [0.3, 0.24, 0.2], damp: 0.85, grav: 0.24, drag: 0.42, cvel: 0.5 },
-    { id: 'sBe', n: 3, len: [12, 12, 11], rest: [78, 83, 87], stiff: [0.3, 0.24, 0.2], damp: 0.85, grav: 0.24, drag: 0.42, cvel: 0.5 },
+    { id: 'sFa', n: 3, len: [10, 10, 10], rest: [100, 96, 93], stiff: [0.3, 0.24, 0.2], damp: 0.85, grav: 0.24, drag: 0.42, cvel: 0.5 },
+    { id: 'sFe', n: 3, len: [10, 10, 10], rest: [78, 83, 87], stiff: [0.3, 0.24, 0.2], damp: 0.85, grav: 0.24, drag: 0.42, cvel: 0.5 },
+    { id: 'sBa', n: 3, len: [10, 10, 10], rest: [100, 96, 93], stiff: [0.3, 0.24, 0.2], damp: 0.85, grav: 0.24, drag: 0.42, cvel: 0.5 },
+    { id: 'sBe', n: 3, len: [10, 10, 10], rest: [78, 83, 87], stiff: [0.3, 0.24, 0.2], damp: 0.85, grav: 0.24, drag: 0.42, cvel: 0.5 },
     { id: 'hemF', n: 2, len: [26, 26], rest: [80, 86], stiff: [0.4, 0.34], damp: 0.8, grav: 0.2, drag: 0.32, limit: limF },
     { id: 'hemB', n: 2, len: [26, 26], rest: [104, 97], stiff: [0.4, 0.34], damp: 0.8, grav: 0.2, drag: 0.32, limit: limB },
     { id: 'tas', n: 2, len: [5, 5], rest: [90, 90], stiff: 0.25, damp: 0.8, grav: 0.25, drag: 0.3 },
@@ -146,8 +146,8 @@
     return pts;
   }
   // wings: half-folded (spread 0) → fully spread (1); frame angle = raise + lean
-  var WF = { w: [-12, -9], t: [[-24, 12], [-17, 20], [-8, 21]] };          // half-folded: points out and down behind the hips
-  var WS = { w: [-15, -30], t: [[-48, -14], [-44, 8], [-27, 22]] };       // spread: huge, up and back
+  var WF = { w: [-15, -9], t: [[-17, 9], [-13, 22], [-2, 27]] };          // half-folded: points out and down behind the hips
+  var WS = { w: [-17, -30], t: [[-36, -10], [-34, 12], [-16, 30]] };      // spread: huge, up and back
   function wingGeo(d, far) {
     var s = Math.max(0, Math.min(1.15, d.book || 0)), ang = (d.bko || 0) + d.lean * 0.6 + (far ? -14 : 0);
     var root = fr(d.waist, d.lean, far ? -2 : -4, far ? 0 : 3);
@@ -159,7 +159,7 @@
   }
   function blobTarget(d) {
     var b = d.bk || [0, 0];
-    return [Math.round(d.neck[0] - 17 + b[0]), Math.round(d.neck[1] - 10 + b[1])];
+    return [Math.round(d.neck[0] - 29 + b[0]), Math.round(d.neck[1] - 8 + b[1])];
   }
 
   // ------------------------------------------------------------------ flip (spins)
@@ -262,7 +262,7 @@
     }
     // hair
     var hA = headPt(d, 6, 18), hB = headPt(d, 9, 21), lk = headPt(d, 14, 24), lf = headPt(d, 27, 21), ah = headPt(d, 15, 11);
-    sec.attach('hairA', hA[0], hA[1], a * 0.4 + (sk.tail && ds.air ? 0 : 0));
+    sec.attach('hairA', hA[0], hA[1], a * 0.4);
     sec.attach('hairB', hB[0], hB[1], a * 0.4);
     sec.attach('lockN', lk[0], lk[1], a * 0.35);
     sec.attach('lockF', lf[0], lf[1], a * 0.35);
@@ -444,15 +444,15 @@
     var r = g.root, t = far ? 1 : 0;
     // membrane: root → wrist → tip0 ⌒ tip1 ⌒ tip2 → back to the root, scalloped between the fingers
     function scal(a, b, k) { var m = lerp(a, b, 0.5); return lerp(m, w, k); }
-    var mem = [r, w, tips[0], scal(tips[0], tips[1], 0.28), tips[1], scal(tips[1], tips[2], 0.3), tips[2], lerp(tips[2], r, 0.55), [r[0] - 1, r[1] + 4]];
+    var mem = [r, w, tips[0], scal(tips[0], tips[1], 0.36), tips[1], scal(tips[1], tips[2], 0.38), tips[2], scal(tips[2], [r[0] + 1, r[1] + 5], 0.25), [r[0] + 1, r[1] + 5]];
     p.poly(H.flat(mem), MW, SH.soft, 1 + t);
     // darker inner panels near the body
     p.poly(H.flat([r, w, scal(tips[1], tips[2], 0.55), lerp(tips[2], r, 0.6)]), MW, null, 2 + t);
     // bones: arm (thick) + three fingers, wrist claw
     p.cap(r[0], r[1], w[0], w[1], 1.6, 1.2, MS, SH.limb, 1 + t);
     for (var k = 0; k < 3; k++) {
-      var bt = lerp(w, tips[k], 0.94);
-      ln(p, w, bt, col(MS, 1 + t));
+      var bt = lerp(w, tips[k], 0.96);
+      p.cap(w[0], w[1], bt[0], bt[1], 0.9, 0.5, MS, null, 1 + t);
     }
     var cl = fr(w, angOf(r[0], r[1], w[0], w[1]) - 40, 2.5, 0);
     ln(p, w, cl, col(MS, 0 + t));
@@ -708,12 +708,12 @@
     var S = skirtSurf(d, sec, -Math.round(sk0.hemS != null ? sk0.hemS : (sk0.hem || 0)));
     var lockF = sk0.flip ? 0 : D.lock.F, lockB = sk0.flip ? 0 : D.lock.B;
     var steps = [
-      [z.blob != null ? z.blob : -12, function () { drawBlob(p, d, sec, ds); p.end(); }],
+      [z.blob != null ? z.blob : -8.8, function () { drawBlob(p, d, sec, ds); p.end(); }],
       [-11, function () { drawWing(p, d, sec, true); p.end(); }],
       [z.tail != null ? z.tail : -10, function () { drawTail(p, d, sec, ds); p.end(); }],
       [z.hair != null ? z.hair : -9, function () {
-        drawHairLock(p, sec.hairA, [8, 4, 3], 1.6, 0.3, [0.3, 0.55, 0.8], M.tip); p.end();
-        drawHairLock(p, sec.hairB, [6, 3, 2], 1.4, 1.9, [0.4, 0.72], M.tip); p.end();
+        drawHairLock(p, sec.hairA, [8.5, 4.5, 3], 2.2, 0.3, [0.3, 0.55, 0.8], M.tip); p.end();
+        drawHairLock(p, sec.hairB, [6, 3, 2], 2, 1.9, [0.4, 0.72], M.tip); p.end();
       }],
       [-7.5, function () { drawSleeve(p, d, sec, 'B'); p.end(); }],
       [z.armB != null ? z.armB : -6, function () { drawArm(p, d, 'B', ds); p.end(); }],

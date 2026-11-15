@@ -28,35 +28,34 @@
 
   // pivot (under the jaw) = column 19, row 26. Crown row 10 (16 above the pivot), horn tips row 2, chin row 27.
   var HEAD = [
-    //012345678901234567890123456789
-    '..............................',  // 0
-    '..............................',  // 1
-    '...J..........................',  // 2
-    '...jL.........................',  // 3
-    '...JjL........................',  // 4
-    '....jlL.......j...............',  // 5
-    '....JjlL......jL..............',  // 6
-    '.....jjlL......jlL............',  // 7
-    '.....JjjlL.....JjlL...........',  // 8
-    '......jjjlL.....jjlL..........',  // 9
-    '.......JjjlhhhhhJjjl..........',  // 10
-    '.......shhhhhhhHHHhhhhhs......',  // 11
-    '......shhhhhHHHHhhhhHHhhs.....',  // 12
-    '.....svWvhhhhhhhhhhhhhhhhs....',  // 13
-    '....svWcWvhhhhhhhhhhhhhhhhs...',  // 14
-    '...shWvoWvhhhhhhhhhhhhhhhhhs..',  // 15
-    '...shvWcWvhhhhhhhhhhshhhhhhhs.',  // 16
-    '..shhhvWvhhhhhhhhhshhhhshhhhs.',  // 17
-    '..shhhhmhhoKhhhhsdkkhhhsdkkhhs',  // 18
-    '..shhhhmhhokKhhqkkkkkkkkkkkhhs',  // 19
-    '..shhhhghhhokkqqkkkkkkkkkkkhhs',  // 20
-    '.shhhhhhhhhhokqqkkkkkkkkkkkhhs',  // 21
-    '.shhhhhhhhhhhoqqkkkkkkkkkkqhhs',  // 22
-    '.shhshhhhhhhhhMqkkkkkkkkkkkhs.',  // 23
-    '.shhshhhhhhhhhm.qkkkkkkkkkks..',  // 24
-    '.shhhshhhhhhhha..qqkkkkkkkq...',  // 25
-    '.sshhshhhhhhhs.....qqkkkkq....',  // 26
-    '..sshhhhhhhs.........qqqq.....'   // 27
+    '..............................',
+    '..............................',
+    'jL............................',
+    '.JlL......jl..................',
+    '...jllL....JlL................',
+    '.....JllL...jjlL..............',
+    '.......jlL....JlL.............',
+    '........JlL....jlL............',
+    '.........jlL....JlL...........',
+    '.........JllL...jjl...........',
+    '..........jjlLHhhJjl..........',
+    '.......shhjjlhHHHHHhjjhhs.....',
+    '......shhhhhHHhhhhhhHHHhhs....',
+    '.....svWvhhhhhshhhhhhhhhhhs...',
+    '....svWcWvhhhhshhhhhshhhhhhs..',
+    '...shWvoWvhhhshhhhhshhhhhhhhs.',
+    '..shhvWcWvhhshhhhhshhhhshhhhs.',
+    '..shhhvWvhQhshhhhshhhhdhhhhhs.',
+    '..shhhhmhhQKhhhsdkkhhsdkkkhhs.',
+    '..shhhhmhhQkKkhqkkkkkkkkkkkhhs',
+    '..shhhhghhhQkkqqkkkkkkkkkkkhhs',
+    '.shhhhhhhhhhQqqqkkkkkkkkkkkhhs',
+    '.shhhhhhhhhhhmQqkkkkkkkkkkqhhs',
+    '.shhshhhhhhhhMqkkkkkkkkkkkkhs.',
+    '.shhshhhhhhhha.qkkkkkkkkkkks..',
+    '.shhhshhhhhhhs...qqkkkkkkkq...',
+    '.sshhhshhhhhs......qqkkkkq....',
+    '..sshhhshhs..........qqqq.....'
   ];
 
   // eye overlay: near eye cols 0-3, far eye cols 7-9 (placed at eyeAt). 'open' = her cool half-lidded gaze.
