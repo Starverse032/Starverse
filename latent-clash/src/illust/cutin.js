@@ -106,11 +106,12 @@
   var CFG = { claude: { seed: 17 }, deepseek: { seed: 29 } };
 
   I.cutin = function (charId) {
-    var cfg = CFG[charId] || CFG.claude, r = K.rng(cfg.seed), x, y, i;
+    var A = I.ART[charId] || {}, cfg = CFG[charId] || A.cutinCfg || CFG.claude, r = K.rng(cfg.seed), x, y, i;
     var P = K.painter(240, 72);
     P.fill(P.rect(0, 0, 240, 72), S.a3);
     // motif behind the face
-    if (charId === 'claude') {
+    if (A.cutinMotif) A.cutinMotif(P);
+    else if (charId === 'claude') {
       for (i = 0; i < 24; i += 2) {
         var a0 = i * Math.PI / 12 + 0.1, a1 = a0 + Math.PI / 12;
         P.fill(P.poly([150, 30, 150 + Math.cos(a0) * 260, 30 + Math.sin(a0) * 260, 150 + Math.cos(a1) * 260, 30 + Math.sin(a1) * 260]), S.a2);
@@ -128,7 +129,7 @@
     // the face, drawn at x2.8 in bust coordinates, cut on a slant
     var Q = K.painter(240, 72);
     Q.s = 2.8; Q.ox = -4; Q.oy = -103.6;
-    (DRAW[charId] || DRAW.claude)(Q);
+    (DRAW[charId] || A.cutinFace || DRAW.claude)(Q);
     Q.s = 1; Q.ox = 0; Q.oy = 0;
     Q.outer(S.ol);
     for (y = 0; y < 72; y++) {
@@ -137,6 +138,7 @@
       P.px(cut - 1, y, S.W); P.px(cut - 2, y, S.a0); P.px(cut, y, S.ol);
     }
     for (x = 0; x < 240; x++) { P.px(x, 0, S.a0); P.px(x, 71, S.a0); P.px(x, 1, S.ol); P.px(x, 70, S.ol); }
+    if (A.cutinOver) A.cutinOver(P);
     return P;
   };
 })();

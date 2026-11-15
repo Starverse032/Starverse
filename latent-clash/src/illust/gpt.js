@@ -438,13 +438,67 @@
     s: S.e2, B: S.e1, W: S.W, w: S.ew, b: S.bl, m: S.mo, C: S.c1, c: S.c2, d: S.d1, M: S.m1, A: S.a1, l: S.sl };
   function face(P) { P.map(0, 0, FACE, FL); }
 
+  // ---------------------------------------------------------------- cut-in hooks (see cutin.js)
+  // Q = the ×2.8 painter in bust coordinates; visible window ≈ x 1–87, y 37–63
+  function cutinFace(Q) {
+    var H = I.H;
+    Q.part(Q.rect(4, 20, 104, 60), S.h2, S.hl);
+    Q.recol(Q.rect(4, 20, 104, 60).band(-6, 0), [S.h2], S.h3);
+    H.strands(Q, [[86, 30, 90, 44, 87, 56, 91, 70], [93, 30, 97, 46, 94, 58, 98, 70], [22, 30, 17, 44, 21, 56, 16, 70]], S.h3);
+    Q.part(Q.ell(53, 37, 25, 26).or(Q.ell(47, 42, 21, 23)), S.h1, S.hl);
+    var f = Q.spoly(FACEPTS);
+    Q.part(f, S.s1, S.sl); Q.recol(f.band(4, 0), [S.s1], S.s2); Q.recol(f.band(-2, 0), [S.s1], S.s0);
+    I.bigEye(Q, { x: 46, y: 48.5, w: 12, h: 9.6 }, true, { lid: 0.34, fierce: true });
+    I.bigEye(Q, { x: 66, y: 48.5, w: 8.4, h: 9.6 }, false, { lid: 0.34, fierce: true });
+    // glow: bright lower iris + glint streaks trailing from the outer corners
+    [[46 + 12 * 0.08, 49.4, 12 * 0.3], [66 + 8.4 * 0.08, 49.4, 8.4 * 0.34]].forEach(function (e) {
+      Q.recol(Q.ell(e[0], e[1] + 2.2, e[2] * 0.7, 1.6), [S.e1, S.e2], S.e0);
+    });
+    Q.fill(Q.sr([39.6, 47.2, 35, 46.4, 29, 46.2], 0.9, 0.3), S.e0);
+    Q.fill(Q.sr([70.6, 47.2, 74, 46.2, 78, 45.8], 0.8, 0.3), S.e0);
+    Q.fill(Q.sr([40.2, 40.6, 46, 41.8, 51.8, 44.2], 1.1, 1.5, 1.5), S.hl);
+    Q.fill(Q.sr([62.4, 44.2, 66, 42, 69.6, 41], 1.4, 0.9, 1.3), S.hl);
+    Q.line([71, 57, 71.4, 58.2], S.s2); Q.px(Q.tx(71.2), Q.ty(58.6), S.sl);
+    [[43, 56.5], [45, 56.5], [67, 56.5]].forEach(function (p) { Q.line([p[0], p[1], p[0] - 1.2, p[1] + 1.6], S.bl); });
+    var fr = Q.mask();
+    FR.forEach(function (c) { fr = fr.or(Q.sr(c[0], c[1], c[2], c[3])); });
+    Q.recol(fr.shift(-2, 6).or(fr.shift(0, 6)), [S.s1, S.s0], S.s2);
+    FR.forEach(function (c) { H.hairClump(Q, c, S.h1); });
+    H.hairClump(Q, [[34, 40, 29, 54, 31, 66, 26, 78], 10, 6, 11, 0, [0.1, 0.6]], S.h1);
+    H.hairClump(Q, [[76, 30, 80, 44, 79, 56, 83, 68], 9, 6, 10, 0, [0.1, 0.6]], S.h1);
+    // horns slicing up through the top of the frame
+    horn(Q, [33, 52, 28, 45.5, 23, 41, 17, 37.5, 11, 35.5], 9, 4);
+    horn(Q, [76, 46, 80.5, 42, 83, 38.5, 84, 35], 7, 3);
+  }
+  // band motif: dragon-scale crescents + teal flame tongues along the bottom (px coords)
+  function cutinMotif(P) {
+    for (var j = 0; j < 7; j++) for (var i = -1; i < 18; i++) {
+      var x = i * 15 + (j & 1) * 7.5, y = j * 11 + 2;
+      P.fill(P.ell(x, y, 8, 7.5), S.a2); P.fill(P.ell(x, y - 1.6, 6.8, 6.2), S.a3);
+    }
+    var r = K.rng(7);
+    for (var k = 0; k < 9; k++) {
+      var fx = 70 + k * 19 + r() * 8, fh = 10 + r() * 14, fw = 5 + r() * 4;
+      var fl = P.poly([fx - fw, 72, fx - fw * 0.4, 72 - fh * 0.5, fx - fw * 1.1, 72 - fh, fx + fw * 0.3, 72 - fh * 0.55, fx + fw, 72]);
+      P.fill(fl, S.a1); P.fill(fl.and(fl.shift(0, -3)).and(fl.shift(2, 0)).and(fl.shift(-2, 0)), S.a0);
+    }
+  }
+  // drawn over the finished band: drifting scale shards / sparks at the left
+  function cutinOver(P) {
+    [[22, 14], [48, 56], [12, 44], [60, 20], [36, 30]].forEach(function (p, i) {
+      P.px(p[0], p[1], S.W); P.px(p[0] - 1, p[1], S.a0); P.px(p[0] + 1, p[1], S.a0); P.px(p[0], p[1] - 1, S.a0); P.px(p[0], p[1] + 1, S.a0);
+      if (i & 1) { P.px(p[0] - 2, p[1], S.a1); P.px(p[0] + 2, p[1], S.a1); }
+    });
+  }
+
   I.ART.gpt = {
     bust: function () { var P = K.painter(112, 128); drawBust(P, {}); return P; },
     bustWin: function () { var P = K.painter(112, 128); drawBust(P, { expr: 'win' }); return P; },
     bustLose: function () { var P = K.painter(112, 128); drawBust(P, { expr: 'lose' }); return P; },
     titleFrame: function (o) { var P = K.painter(112, 128); drawBust(P, o); return P; },
     cutin: function () { return I.cutin ? I.cutin('gpt') : K.painter(240, 72); },
-    face: function () { var P = K.painter(24, 24); face(P); return P; }
+    face: function () { var P = K.painter(24, 24); face(P); return P; },
+    cutinFace: cutinFace, cutinMotif: cutinMotif, cutinOver: cutinOver, cutinCfg: { seed: 41 }
   };
   I.drawGptBust = drawBust;
   I.ART.gpt.head = { FR: FR, face: FACEPTS, skull: SKULL };
