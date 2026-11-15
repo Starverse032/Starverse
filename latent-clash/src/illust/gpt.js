@@ -135,12 +135,12 @@
     var L = o.line || S.d2, rg = [], all = P.mask(), i, d = r * (o.d || 0.42), ro = r * (o.ro || 0.56), t = o.t || Math.max(2, r * 0.22);
     for (i = 0; i < n; i++) {
       var a = rot + i * Math.PI * 2 / n, px = cx + Math.cos(a) * d, py = cy + Math.sin(a) * d;
-      var O = P.ell(px, py, ro, ro), Hh = P.ell(px, py, ro - t, ro - t);
+      var O = P.ell(px, py, ro, ro), Hh = o.small ? P.ell(px + Math.cos(a) * 0.4, py + Math.sin(a) * 0.4, o.hole || 0.9, o.hole || 0.9) : P.ell(px, py, ro - t, ro - t);
       rg.push({ O: O, H: Hh }); all = all.or(O);
     }
-    P.fill(all, S.c3);
+    P.fill(all, o.small ? L : S.c3);
     function ring(p, clip) {
-      var cord = p.O.sub(p.H), e = p.O.edge().or(p.H.grow(1).and(p.O).sub(p.H));
+      var cord = p.O.sub(p.H), e = o.small ? p.O.edge() : p.O.edge().or(p.H.grow(1).and(p.O).sub(p.H));
       if (clip) { cord = cord.and(clip); e = e.and(clip); }
       P.fill(cord, S.c0); P.fill(e, L);
     }
