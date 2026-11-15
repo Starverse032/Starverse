@@ -271,6 +271,22 @@
         seal: ramp(pi === 0 ? ['#fff3df', '#e8482e', '#a8241c', '#5e1414'] : ['#fffbe6', '#e6a020', '#9c5e10', '#4e2c08'])
       };
     }
+    if (ch === 'gpt') {   // GPT 娘: teal-green magic (pal 1: violet), platinum metal, dragon scales
+      var Ag = P.accent, Mg = P.metal, Sg = P.scale, Og = P.outline;
+      var dk = I.mix(Ag[3], Og, 0.55);
+      return {
+        id: ch + pi, ch: ch, pal: pi, outline: Og,
+        // light: white-hot -> accent -> deep (flame, beams, claws); same shape as claude.light
+        light: ramp(['#ffffff', Ag[0], Ag[1], Ag[2], Ag[3], dk]),
+        glow: ramp(['#ffffff', Ag[0], Ag[1], Ag[2]]),
+        gold: ramp(['#ffffff', Mg[0], Mg[1], Mg[2], Mg[3]]),
+        scale: ramp(Sg.slice()),
+        wing: ramp(P.wing.slice()),
+        // night: deep sky for the super backdrop (dark indigo tinted toward the magic colour)
+        night: ramp([I.mix(Ag[3], Og, 0.35), I.mix(Ag[3], Og, 0.7), I.mix(Og, '#000000', 0.15), I.mix(Og, '#000000', 0.45), I.mix(Og, '#000000', 0.7)]),
+        deep: dk
+      };
+    }
     var Ac = P.accent, Wc = P.cloth1, Bc = P.cloth2;
     var deep = pi === 0 ? Bc[3] : Wc[3];
     return {
@@ -283,7 +299,14 @@
       deep: deep
     };
   }
-  I.SC = { claude: [schemeFor('claude', 0), schemeFor('claude', 1)], deepseek: [schemeFor('deepseek', 0), schemeFor('deepseek', 1)] };
+  I.SC = { claude: [schemeFor('claude', 0), schemeFor('claude', 1)], deepseek: [schemeFor('deepseek', 0), schemeFor('deepseek', 1)], gpt: [schemeFor('gpt', 0), schemeFor('gpt', 1)] };
+  // generic per-char roles: main = the character's magic ramp (6), twk = twinkle / glint ramp
+  ['claude', 'deepseek', 'gpt'].forEach(function (ch) {
+    I.SC[ch].forEach(function (s) { s.main = ch === 'deepseek' ? s.water : s.light; s.twk = ch === 'claude' ? s.gold : s.glow; });
+  });
+  /** Characters with FX colour schemes (generic effects bake one tinted variant per char x palette). */
+  I.CHS = ['claude', 'deepseek', 'gpt'];
+  I.hasChar = function (ch) { return !!(ch && I.SC[ch]); };
   I.scheme = function (ch, pal) { return (I.SC[ch] || I.SC.claude)[pal === 1 ? 1 : 0]; };
 
   // ---- basic kinds -------------------------------------------------------------
