@@ -75,9 +75,9 @@
     HB.heavy = burst(84, 76, 16, 811, 12, 30, Ho, {});
     HB.counter = burst(100, 92, 22, 823, 16, 38, [Rd[0], Rd[1], Rd[2], Rd[3], Rd[4], Rd[5], Rd[6]], { crackle: true, ring2: true, inv: Rd[6] });
     HB.special = { generic: burst(88, 80, 18, 833, 8, 30, Go, { diamond: true, fwd: 4 }) };
-    ['claude', 'deepseek'].forEach(function (ch) {
+    I.CHS.forEach(function (ch) {
       [0, 1].forEach(function (pal) {
-        var sc = I.scheme(ch, pal), r = ch === 'claude' ? sc.light.u : sc.water.u;
+        var sc = I.scheme(ch, pal), r = sc.main.u;
         HB.special[ch + pal] = burst(88, 80, 18, 833, 8, 30, r, { diamond: true, fwd: 4 });
       });
     });
@@ -108,7 +108,7 @@
 
   I.def('hit.special', function (x, y, O) {
     var key = O.char ? O.char + O.pal : 'generic', Aa = HB.special[key] || HB.special.generic;
-    var rc = O.char === 'claude' ? I.scheme('claude', O.pal).light.css : O.char === 'deepseek' ? I.scheme('deepseek', O.pal).water.css : I.N.gold.css;
+    var rc = I.hasChar(O.char) ? I.scheme(O.char, O.pal).main.css : I.N.gold.css;
     I.anim1(Aa, x, y, O.facing, I.lay(O, I.FRONT));
     I.sparksFan(x, y, O, nOf(9, O), 1.2, 3.2, 6, 9, 14, rc, { max: 10 });
     speedLines(x, y, O, nOf(3, O), 10, rc);

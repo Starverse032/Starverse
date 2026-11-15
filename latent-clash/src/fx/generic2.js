@@ -66,9 +66,9 @@
     A.ringW = [ringAnim(14, 9, [Wh[0], G[1], G[2], G[3], G[4]]), ringAnim(26, 11, [Wh[0], G[1], G[2], G[3], G[4]]), ringAnim(42, 13, [Wh[0], G[1], G[3], G[4], G[5]], false, 4)];
     A.ringG = [ringAnim(22, 10, [D[0], D[1], D[2], D[3]], true), ringAnim(40, 12, [Wh[0], D[0], D[1], D[2], D[3]], true, 4)];
     A.ringC = {}; A.ringGC = {};
-    ['claude', 'deepseek'].forEach(function (ch) {
+    I.CHS.forEach(function (ch) {
       [0, 1].forEach(function (p) {
-        var sc = I.scheme(ch, p), r = ch === 'claude' ? sc.light.u : sc.water.u;
+        var sc = I.scheme(ch, p), r = sc.main.u;
         var rr = [r[0], r[1], r[2], r[3], r[4]];
         A.ringC[ch + p] = [ringAnim(14, 9, rr), ringAnim(26, 11, rr), ringAnim(42, 13, rr, false, 4)];
         A.ringGC[ch + p] = [ringAnim(22, 10, rr, true), ringAnim(40, 12, rr, true, 4)];
@@ -178,7 +178,8 @@
     A.orb = orb([Wh[0], G[1], G[3], G[4]]);
     A.orbC = {
       claude0: orb(sl(I.scheme('claude', 0).light.u)), claude1: orb(sl(I.scheme('claude', 1).light.u)),
-      deepseek0: orb(sl(I.scheme('deepseek', 0).water.u)), deepseek1: orb(sl(I.scheme('deepseek', 1).water.u))
+      deepseek0: orb(sl(I.scheme('deepseek', 0).water.u)), deepseek1: orb(sl(I.scheme('deepseek', 1).water.u)),
+      gpt0: orb(sl(I.scheme('gpt', 0).light.u)), gpt1: orb(sl(I.scheme('gpt', 1).light.u))
     };
     function sl(u) { return [u[0], u[1], u[2], u[4]]; }
   }
@@ -198,7 +199,7 @@
       p.vx = I.RS() * 1.2; p.vy = -I.RR(0.6, 1.8); p.g = 0.06; p.drag = 0.95; p.life = life + I.RI(-3, 4); p.ramp = rampCss; p.size = 1; p.c = 1;
     }
   }
-  function charRing(O) { return O.char ? A.ringC[O.char + O.pal] : A.ringW; }
+  function charRing(O) { return I.hasChar(O.char) ? A.ringC[O.char + O.pal] : A.ringW; }
 
   I.def('dust.jump', function (x, y, O) {
     var L = lay(O, I.FRONT);
@@ -248,12 +249,12 @@
   }, { desc: 'Expanding shockwave ring; power picks size (14/26/42 px); opts.char tints it.', use: 'Generic accent: clashes, bounces, super start.' });
 
   I.def('ring.ground', function (x, y, O) {
-    var set = O.char ? A.ringGC[O.char + O.pal] : A.ringG, i = O.power <= 0.6 ? 0 : 1;
+    var set = I.hasChar(O.char) ? A.ringGC[O.char + O.pal] : A.ringG, i = O.power <= 0.6 ? 0 : 1;
     I.anim1(set[i], x, y, 1, lay(O, I.BACK), 1);
   }, { desc: 'Flat elliptical ring along the floor (extra).', use: 'Heavy landings, wall/ground bounces, super landing.' });
 
   I.def('sparkle', function (x, y, O) {
-    var rc = O.char === 'claude' ? I.scheme('claude', O.pal).gold.css : O.char === 'deepseek' ? I.scheme('deepseek', O.pal).glow.css : I.N.gold.css;
+    var rc = I.hasChar(O.char) ? I.scheme(O.char, O.pal).twk.css : I.N.gold.css;
     I.twinkle(x, y, 3 + Math.round(O.power * 2), 14, rc, lay(O, I.FRONT));
   }, { desc: 'Single 4-point twinkle (extra).', use: 'Glints: pen nib, menu-ish accents, perfect round.' });
 
@@ -301,7 +302,7 @@
   }, { desc: 'Huge white burst, red inversion, 3 rings, screen-wide flash lines, embers & twinkles, ~52f.', use: 'At the final hit’s contact point on the KO frame (plays fine under KO slow-mo).' });
 
   I.def('meter.full', function (x, y, O) {
-    var rc = O.char ? (O.char === 'claude' ? I.scheme('claude', O.pal).gold.css : I.scheme('deepseek', O.pal).glow.css) : I.N.gold.css;
+    var rc = I.hasChar(O.char) ? I.scheme(O.char, O.pal).twk.css : I.N.gold.css;
     I.anim1(A.ringW[1], x, y, 1, I.FRONT, 1);
     for (var i = 0; i < nOf(9, O); i++) {
       var p = I.twinkle(x + I.RS() * 18, y + I.RS() * 30, I.RI(2, 4), I.RI(12, 18), rc, I.FRONT, I.RI(0, 18));
@@ -314,8 +315,8 @@
   }, { desc: 'Gold ring pulse + twinkles and rising motes over the body, ~36f.', use: 'At the fighter’s `center` anchor when the gauge reaches 100.' });
 
   I.def('super.charge', function (x, y, O) {
-    var sc = O.char ? I.scheme(O.char, O.pal) : null;
-    var rc = sc ? (O.char === 'claude' ? sc.light.css : sc.water.css) : I.N.gold.css;
+    var sc = I.hasChar(O.char) ? I.scheme(O.char, O.pal) : null;
+    var rc = sc ? sc.main.css : I.N.gold.css;
     var orb = sc ? A.orbC[O.char + O.pal] : A.orb;
     I.anim1(orb, x, y, 1, I.FRONT, 1);
     var e = I.emitter(function (p) {
