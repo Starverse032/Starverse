@@ -36,10 +36,27 @@
 - Reach (weapon anchor, px) 5L 41 · 5M 60 · 5H 72 · 2L 42 · 2M 62 · 2H 70 · jL 37 · jM 46 · jH 59 (targets met ±1);
   spark muzzle (40,-78), airSpark (36,-56), haiku 58/54/70, guardrailHit 44, super muzzle = book centre (34,-82).
 - Perf: worst-case draw (re-render every frame) ≈ 1.0 ms; anchors ≈ 4 µs; init ≈ 1.2 ms.
-- Rough / next: getup f6–f10 (sit-up: skirt nearly vanishes over the bent knees), launch skirt is a stiff wedge,
-  hair is slow to fall after lying (looks wind-blown for ~10 f), walk reads as a glide (legs hidden by the dress),
-  intro/win/lose are simple (book reading → close → stance; book to chest; head down), quill draw-from-book is
-  implied (hand to hip, quill appears) rather than shown.
+- Polish pass (2026-11-15), all reviewed in sheets (Claude-only files touched):
+  - getup: pose flag `drape: true` (keys 6, 12) → `skirtGeo` drapes the front over the highest knee down to the
+    floor in front of the ankles and pools the back behind her; f12 hip raised so the back boot stays above the floor.
+  - launch: `tail` (deg, skirt + hair trail angle; hair gets ×1.3 in `air` poses, ×0.4 otherwise) and `arch`
+    (0..1 billow: bell opens, ribs shorten and curl, hem lifts with a ripple) — Claude now uses these two existing
+    numeric channels; keyed per launch key so the skirt/hair billow and trail with the tumble.
+  - down: hair `limit` — when lying face up (lean < -60, pelvis near the floor) the hair is pulled onto the floor,
+    fanned out past the head; settles in ~2 f even after an airborne launch (cvel keeps it from whipping).
+  - walkF/walkB: `gait()` extra in `G.walk` (speeds/feet/foot lock unchanged): pose flag `peek` → narrower back
+    bell, hem raised ~4 px with its front edge kept ~4 px behind the leading toe, and the leading planted boot's
+    toe drawn over the hem (`drawBootTip`); `tail` hem swing against the stride, bob 1.8/1.5, lean + head
+    counter-sway, shoulder lift on the passing frame, bigger arm swing; hair does not stream while walking.
+  - quill start-ups (5H 2H jH haiku sonnet): hand crosses to the book (it flicks open, bko 0.35), then a short
+    streak of light (`ql: 0.45` = drawn-out length, drawn as a bare glowing streak trailing back to the book) is
+    pulled out, then the full quill unfurls into the wind-up. Active frames / reach unchanged.
+  - intro: reads → glances up → snaps the book shut (shoulder jolt, skirt kick, hair flick) → hands carry it to
+    the back hip → small smile → stance. win: book to chest, front hand straightens the hair flower, happy eyes,
+    swaying loop (capelet/hair follow). lose: slumped, book hugged in both arms, head hanging, slow sigh loop.
+- Rough / next: crouch-based poses (2H, sonnet start-up) show a thin skirt plate on the floor behind her (back rib
+  clamped flat); the back-hip book handover in the intro still pops a few px; walk boot tips are cream-on-cream
+  (readable but subtle).
 
 ## Progress / next steps (V1, historical)
 
