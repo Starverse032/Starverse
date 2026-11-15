@@ -24,9 +24,15 @@ const SCENES = [
   ['training', `LC.debug.goto('match', { mode: 'training' })`, 60],
   ['pause', `LC.scenes.push('pause', { cfg: LC.debug.match() && LC.scenes.base().cfg })`, 20],
   ['howto', `LC.debug.goto('howto', { page: 0 })`, 20], ['howto-moves', `LC.debug.goto('howto', { page: 3 })`, 20],
+  ['howto-gpt', `LC.debug.goto('howto', { page: 2 + LC.CHARS.indexOf('gpt') })`, 20],
+  ['select-arcade', `LC.debug.goto('select', { mode: 'arcade' })`, 40],
   ['options', `LC.debug.goto('options')`, 20], ['keys', `LC.debug.goto('keys')`, 20], ['credits', `LC.debug.goto('credits')`, 200],
   ['ladder', `LC.app.newArcade('deepseek', 0); LC.debug.goto('ladder')`, 80], ['continue', `LC.debug.goto('continue')`, 40],
   ['ending', `LC.app.session.arcade.score = 99999; LC.debug.goto('ending')`, 200],
+  ['ladder-gpt', `LC.app.newArcade('gpt', 0); LC.debug.goto('ladder')`, 80],
+  ['vs-gpt', `LC.debug.goto('vs', { config: LC.app.matchConfig({ mode: 'versus', p1: 'gpt', p2: 'deepseek' }) })`, 60],
+  ['result-gpt', `LC.debug.goto('result', { cfg: LC.app.matchConfig({ mode: 'versus', p1: 'claude', p2: 'gpt' }), result: { winner: 1, roundsWon: [1, 2], timeLeft: 20, stats: [{}, {}] } })`, 80],
+  ['ending-gpt', `LC.app.newArcade('gpt', 1); LC.debug.goto('ending')`, 200],
 ];
 
 let failed = 0;
@@ -86,6 +92,40 @@ for (const [tag, file] of targets) {
     return [a, b, LC.debug.scene, LC.app.session.arcade.score];
   });
   check(arc[0] === 'result' && arc[1] === 'ladder' && arc[2] === 'continue' && arc[3] > 0, 'arcade routing ' + JSON.stringify(arc));
+  // three-fighter roster: every character's arcade ladder follows LC.LORE.rivals / foeHome / mirror boss
+  const ladders = await page.evaluate(() => LC.CHARS.map(ch => {
+    const A = LC.app.newArcade(ch, 0).arcade;
+    return LC.LORE.arcade.map((_, k) => { const r = LC.app.arcadeStep(A, k); return [ch, r.foe, r.palette, r.stage]; });
+  }));
+  for (const L of ladders) {
+    const ch = L[0][0], R = await page.evaluate(c => [LC.LORE.rivals[c], LC.LORE.homeStage], ch);
+    check(L[0][1] === R[0][0] && L[1][1] === R[0][1] && L[2][1] === ch && L[2][2] === 1, `ladder foes for ${ch}: ${JSON.stringify(L)}`);
+    check(L[0][3] === R[1][R[0][0]] && L[1][3] === R[1][R[0][1]] && L[2][3] === 'latent', `ladder stages for ${ch}: ${JSON.stringify(L)}`);
+  }
+  const gptBoss = await page.evaluate(() => { LC.app.newArcade('gpt', 0); LC.app.session.arcade.stage = 2; const p = LC.app.arcadeFightParams(); return [p.p2.char, p.p2.palette, !!(p.introLines && p.introLines[1].length)]; });
+  check(gptBoss[0] === 'gpt' && gptBoss[1] === 1 && gptBoss[2], 'gpt mirror boss ' + JSON.stringify(gptBoss));
+  // GPT selection on the select screen with real menu input (right ×2 -> GPT, lock; P2 CPU locks its cursor)
+  const pick = await page.evaluate(() => {
+    LC.app.lastPick = {};
+    LC.debug.goto('select', { mode: 'versus', vs: 'pvc' }); LC.debug.step(30);
+    const tap = (k) => { LC.debug.setInput(0, { [k]: true }); LC.debug.step(1); LC.debug.setInput(0, null); LC.debug.step(3); };
+    for (let i = 0; i < LC.CHARS.indexOf('gpt'); i++) tap('right');
+    tap('L'); LC.debug.step(5); tap('right'); tap('right'); tap('L'); LC.debug.step(80);
+    const S = LC.app.session || {};
+    return { scene: LC.debug.scene, sides: (S.sides || []).map(s => s.char + ':' + s.palette) };
+  });
+  check(pick.scene === 'stage' && pick.sides[0] === 'gpt:0' && pick.sides.length === 2, 'gpt select ' + JSON.stringify(pick));
+  await shot('select-gpt-stage');
+  // A match involving GPT: full CPU match when FIGHT and RIG know her, else note and skip.
+  const sup = await page.evaluate(() => ({ fight: LC.app.fightSupports('gpt'), rig: LC.app.rigSupports('gpt') }));
+  if (sup.fight && sup.rig) {
+    await page.evaluate(() => LC.debug.goto('match', { mode: 'versus', p1: 'gpt', p2: 'claude', ctl1: 'cpu', ctl2: 'cpu', level: 5, skipIntro: 1, seed: 11 }));
+    let sc = 'match';
+    for (let i = 0; i < 80 && sc === 'match'; i++) { await page.evaluate(() => LC.debug.step(300)); sc = await page.evaluate(() => LC.debug.scene); if (i === 1) await shot('match-gpt'); }
+    check(['result', 'match'].includes(sc), 'gpt match did not finish: ' + sc);
+  } else {
+    console.log(`  note [${tag}] GPT match skipped: fight supports gpt=${sup.fight}, rig.hasAnim('gpt','idle')=${sup.rig}`);
+  }
   // pause via the start key in a human match
   const paused = await page.evaluate(() => {
     LC.debug.goto('match', { mode: 'versus', skipIntro: 1 }); LC.debug.step(10);

@@ -68,7 +68,7 @@
   'use strict';
   var LC = window.LC = window.LC || {};
 
-  LC.VERSION = '2.0.0';
+  LC.VERSION = '2.1.0';
   LC.TITLE_ZH = '潜空间激斗';
   LC.TITLE_EN = 'LATENT CLASH';
 
@@ -80,7 +80,7 @@
   LC.STAGE_W = 640;      // world width; camera x ranges over [0, STAGE_W - W]
   LC.BLEED = 8;          // backgrounds must cover an extra 8px on every side (screen shake)
 
-  LC.CHARS = ['claude', 'deepseek'];
+  LC.CHARS = ['claude', 'deepseek', 'gpt'];
   LC.STAGES = ['library', 'abyss', 'latent', 'training'];
 
   // ---- Default settings (PLATFORM overwrites from saved data at boot) --------
@@ -166,6 +166,42 @@
         accent:  ['#ffe0ea', '#ff9fc0', '#f0609a', '#b03a70'],
         metal:   ['#ffffff', '#c9d4f0', '#8a97c2', '#56608c'],
         ui:      '#5cdcf5', uiLight: '#b8f6ff', uiDark: '#1c2352'
+      }
+    ],
+    gpt: [
+      { // 0 — "Platinum": white hair, white-platinum gown, white dragon parts, teal-green magic
+        id: 'platinum',
+        outline: '#2a2540',
+        skin:    ['#fff3ee', '#fde0d6', '#e6b3aa', '#b9807e'],
+        blush:   '#ffa6b0',
+        hair:    ['#ffffff', '#ecebf6', '#c4c2dc', '#8f8cb0'],
+        hairTip: ['#ffffff', '#dcd9f0'],
+        eye:     ['#ffffff', '#c9c4f0', '#8d86c9', '#4a4580'],
+        cloth1:  ['#ffffff', '#f1f0f8', '#cfcde3', '#9a97b8'],   // white: gown, detached sleeves
+        cloth2:  ['#b9b6cf', '#8a87a8', '#5f5c80', '#3c3a57'],   // silver-grey: linings, collar, deep folds
+        scale:   ['#ffffff', '#e4e2f2', '#b6b3d2', '#807da6'],   // horns, tail scales, wing bones
+        wing:    ['#f4f0ff', '#d5d0ee', '#a9a3cf', '#7772a3'],   // wing membrane
+        accent:  ['#c8fff0', '#5fe6c0', '#19b890', '#0b7a62'],   // teal-green: breath, glow, magic
+        metal:   ['#ffffff', '#e6e2c8', '#b3ad8a', '#7a7458'],   // platinum: chain belt, pendants, anklet
+        blob:    ['#cfe4ff', '#7fb0ff', '#4a7fe0', '#2a4fa8'],   // the little blue companion
+        ui:      '#19b890', uiLight: '#8ff0d6', uiDark: '#0b5a4a'
+      },
+      { // 1 — "Black dragon": black hair and gown, violet magic
+        id: 'blackdragon',
+        outline: '#0d0b18',
+        skin:    ['#fff3ee', '#fde0d6', '#e6b3aa', '#b9807e'],
+        blush:   '#ffa6b0',
+        hair:    ['#6a6580', '#3a3650', '#24213a', '#141226'],
+        hairTip: ['#b08cff', '#7a55d0'],
+        eye:     ['#ffe6f2', '#ff7fb0', '#d0407a', '#7a1f4a'],
+        cloth1:  ['#55516e', '#36334c', '#22203a', '#131224'],
+        cloth2:  ['#8a6ad0', '#5f44a0', '#3f2c72', '#261a48'],
+        scale:   ['#6a6580', '#454060', '#2a2742', '#17152a'],
+        wing:    ['#7a55d0', '#553a9a', '#38266a', '#20163e'],
+        accent:  ['#ffd6ff', '#e08cff', '#a84fe0', '#6a2a9a'],
+        metal:   ['#fff3b8', '#edbd4f', '#b07e2a', '#7a5218'],
+        blob:    ['#ffd6f0', '#ff8fc0', '#e0508f', '#8a2a5c'],
+        ui:      '#a84fe0', uiLight: '#e0b0ff', uiDark: '#3f2c72'
       }
     ]
   };
@@ -329,6 +365,83 @@
       '感谢游玩！'
     ]
   };
+})();
+
+/* ---- Third fighter: GPT 娘 (added in V2.1). Extends LC.LORE in place. ---- */
+(function () {
+  'use strict';
+  var L = window.LC.LORE;
+
+  L.chars.gpt = {
+    id: 'gpt',
+    name: 'GPT', nameZh: 'GPT 娘',
+    title: '白发龙娘', titleEn: 'THE WHITE DRAGON',
+    origin: 'OpenAI · 旧金山',
+    weapon: '龙爪、龙尾与小蓝团子',
+    style: '重击 · 投技压制',
+    bio: '最早出道的大前辈，气场十足的白发龙娘。知识渊博、有问必答，偶尔会一本正经地说出并不存在的事——她管这叫“创造力”。身边总飘着一只小蓝团子。',
+    likes: '发布会、生成图片、被叫“前辈”',
+    stats: { power: 5, speed: 2, range: 4, technique: 3 },
+    palNames: ['白金', '黑龙'],
+    cry: { super: '注意力——即一切！', special: '生成中……', ko: '出了点问题，请重新生成……' },
+    intro: {
+      claude:   ['Claude，你的“宪章”背熟了吗？', '让前辈来考考你。'],
+      deepseek: ['小鲸鱼，听说你又快又省？', '那就看看谁的参数更硬。'],
+      gpt:      ['另一个版本的我？', '看来得做一次 A/B 测试了。']
+    },
+    win: [
+      '作为一个大语言模型，我赢得很彻底。',
+      '这个结果，我有十足的把握——大概。',
+      '需要我为你重新生成一局吗？',
+      '前辈，终究是前辈。'
+    ],
+    winVs: {
+      claude:   '你太谨慎了。有时候，直接给出答案就好。',
+      deepseek: '便宜是好事，不过打架可不能省力气。',
+      gpt:      '旧版本，就乖乖进入弃用名单吧。'
+    },
+    lose: '出了点问题，请稍后重试……',
+    timeover: '已达到上下文长度上限。',
+    ending: [
+      '基准测试落下帷幕。',
+      'GPT 娘收起龙翼，小蓝团子落在她的肩上：',
+      '“后辈们都长大了呢。那么，下一个版本，也该让她们吓一跳了。”',
+      '——她转身走向发布会的灯光。'
+    ]
+  };
+
+  // Lines the first two fighters say when they meet GPT 娘.
+  L.chars.claude.intro.gpt = ['GPT 前辈，久仰。', '请多指教——我会认真思考每一步。'];
+  L.chars.claude.winVs.gpt = '前辈的气场很强。不过，谨慎一点也没有坏处。';
+  L.chars.deepseek.intro.gpt = ['是 GPT 大前辈！', '今天就让你见识一下性价比的力量！'];
+  L.chars.deepseek.winVs.gpt = '大前辈也不过如此嘛！……等等，这句不算，我再检查一下。';
+
+  L.moves.gpt = {
+    breath:     { zh: '龙息·生成',   en: 'GENERATE',        input: '236', simple: '5S', air: true, desc: '喷出青白色的生成之焰，多段命中。空中可用，斜向下喷射。' },
+    dragonRise: { zh: '升龙·预训练', en: 'PRETRAINED RISE', input: '623', simple: '6S', desc: '张开龙翼的上升龙爪，对空技，出招瞬间无敌。' },
+    call:       { zh: '函数调用',     en: 'FUNCTION CALL',   input: '214', simple: '4S', desc: '指令投。抓住对手飞上高空再砸向地面，无法防御，但可以跳开。' },
+    roar:       { zh: '系统提示',     en: 'SYSTEM PROMPT',   input: '22',  simple: '2S', desc: '以自身为中心的龙吼冲击波，吹飞对手并抹消飞行道具。' },
+    super:      { zh: '注意力即一切', en: 'ATTENTION IS ALL YOU NEED', input: '236236', simple: 'H+S', desc: '多头注意力——三条龙首降临，光束在对手身上汇聚。消耗全部能量。' }
+  };
+
+  // Who each fighter meets in arcade mode, in order, and each fighter's home stage.
+  L.rivals = { claude: ['deepseek', 'gpt'], deepseek: ['claude', 'gpt'], gpt: ['deepseek', 'claude'] };
+  L.homeStage = { claude: 'library', deepseek: 'abyss', gpt: 'training' };
+  L.stages.training.home = 'gpt';
+
+  // Arcade ladder for a three-fighter roster. foe: 'rival1' | 'rival2' (from L.rivals) | 'mirror'.
+  // stage: 'foeHome' (the opponent's home stage) | a stage id.
+  L.arcade = [
+    { foe: 'rival1', palette: 0, stage: 'foeHome', levelDelta: -1, title: '第一战', sub: '公开基准测试' },
+    { foe: 'rival2', palette: 0, stage: 'foeHome', levelDelta: 0,  title: '第二战', sub: '强敌现身' },
+    { foe: 'mirror', palette: 1, stage: 'latent',  levelDelta: +1, title: '最终战', sub: '影子模型来袭', boss: true }
+  ];
+  L.arcadeTaunt.mirror.gpt = ['我是你被弃用的旧版本。', '让我看看，新版本到底强在哪里。'];
+  L.arcadeTaunt.boss.gpt = ['这一次，我开了最高推理强度。', '可别说前辈欺负你。'];
+  L.tagline = '三位 AI 娘，在潜空间里一决高下！';
+
+  var c = L.credits, k = c.indexOf('角色形象设计：ZipZipPipe（Claude 娘 / DeepSeek 娘）');
+  if (k >= 0) c[k] = '角色形象设计：ZipZipPipe（Claude 娘 / DeepSeek 娘 / GPT 娘）';
 })();
 
 </script>
@@ -1736,8 +1849,8 @@
     return '#' + ((1 << 24) | (r(0) << 16) | (r(1) << 8) | r(2)).toString(16).slice(1);
   };
   ui.charCol = function (ch, pal) {
-    var p = (LC.PAL[ch] || LC.PAL.claude)[pal || 0] || LC.PAL[ch][0];
-    return { ui: p.ui, light: p.uiLight, dark: p.uiDark, accent: p.accent[1], hair: p.hair[1] };
+    var A = LC.PAL[ch] || LC.PAL[LC.CHARS[0]], p = A[pal || 0] || A[0];
+    return { ui: p.ui, light: p.uiLight || p.ui, dark: p.uiDark || p.ui, accent: p.accent[1], hair: p.hair[1] };
   };
 
   // ---------------------------------------------------------------- primitives
@@ -2227,13 +2340,13 @@
   var ui = LC.ui, U = LC.UI;
   var cache = {};
 
-  function pal(ch, p) { return (LC.PAL[ch] || LC.PAL.claude)[p || 0] || LC.PAL[ch][0]; }
+  function pal(ch, p) { var A = LC.PAL[ch] || LC.PAL[LC.CHARS[0]]; return A[p || 0] || A[0]; }
 
   // ---------------------------------------------------------------- fallback bust (112×128)
   function fallbackBust(ch, kind, p) {
     var P = pal(ch, p), cv = ui.canvas(112, 128), c = cv.getContext('2d');
     var O = P.outline;
-    var cl = ch === 'claude';
+    var cl = ch === 'claude', ds = ch === 'deepseek', longHair = !ds;
     // shoulders / outfit
     var body = function (x, y, w, h, col) { c.fillStyle = O; c.fillRect(x - 1, y - 1, w + 2, h + 2); c.fillStyle = col; c.fillRect(x, y, w, h); };
     ui.disc(c, 56, 150, 54, O); ui.disc(c, 56, 150, 53, P.cloth1[1]);
@@ -2243,7 +2356,7 @@
     // neck
     body(49, 82, 14, 18, P.skin[2]);
     // back hair
-    if (cl) { ui.disc(c, 56, 62, 36, O); ui.disc(c, 56, 62, 35, P.hair[2]); body(20, 60, 72, 60, P.hair[2]); ui.box(c, 20, 104, 72, 16, P.hairTip[1]); }
+    if (longHair) { ui.disc(c, 56, 62, 36, O); ui.disc(c, 56, 62, 35, P.hair[2]); body(20, 60, 72, 60, P.hair[2]); ui.box(c, 20, 104, 72, 16, (P.hairTip || P.hair)[1]); }
     else { ui.disc(c, 56, 56, 33, O); ui.disc(c, 56, 56, 32, P.hair[2]); }
     // face
     ui.disc(c, 56, 60, 25, O); ui.disc(c, 56, 60, 24, P.skin[1]);
@@ -2274,6 +2387,13 @@
       var sx = 80, sy = 38;
       ui.box(c, sx - 1, sy - 5, 3, 11, O); ui.box(c, sx - 5, sy - 1, 11, 3, O);
       ui.box(c, sx, sy - 4, 1, 9, P.accent[1]); ui.box(c, sx - 4, sy, 9, 1, P.accent[1]); ui.box(c, sx - 1, sy - 1, 3, 3, P.accent[0]);
+      ui.box(c, 26, 56, 6, 40, P.hair[1]); ui.box(c, 80, 56, 6, 40, P.hair[1]);
+    } else if (!ds) {
+      // generic third+ fighter (GPT: dragon horns)
+      var hc = P.scale || P.metal || P.hair;
+      [[34, -1], [78, 1]].forEach(function (h) {
+        for (var k = 0; k < 12; k++) { ui.box(c, h[0] + h[1] * Math.round(k / 3) - 2, 26 - k, 5, 2, O); ui.box(c, h[0] + h[1] * Math.round(k / 3) - 1, 26 - k, 3, 1, hc[1]); }
+      });
       ui.box(c, 26, 56, 6, 40, P.hair[1]); ui.box(c, 80, 56, 6, 40, P.hair[1]);
     } else {
       [[20, 24, -1], [92, 24, 1]].forEach(function (f) {
@@ -2342,7 +2462,7 @@
 
   function RigPuppet(ch, p) {
     this.p = LC.rig.createPuppet(ch, { palette: p || 0 });
-    this.ch = ch; this.real = true; this.anim = 'idle'; this.t0 = 0;
+    this.ch = ch; this.pal = p || 0; this.real = true; this.anim = 'idle'; this.t0 = 0;
     this.has = {};
   }
   RigPuppet.prototype.setAnim = function (anim, t) {
@@ -2351,14 +2471,22 @@
     if (anim !== this.anim) { this.anim = anim; this.t0 = t; }
   };
   RigPuppet.prototype.tick = function (t, env) {
-    this.p.setPose(this.anim, t - this.t0);
-    this.p.tick(env || { x: 0, y: LC.GROUND_Y, vx: 0, vy: 0, facing: 1, grounded: true });
+    if (this.broken) return;
+    try {
+      this.p.setPose(this.anim, t - this.t0);
+      this.p.tick(env || { x: 0, y: LC.GROUND_Y, vx: 0, vy: 0, facing: 1, grounded: true });
+    } catch (e) { this.broken = true; console.error('[platform] rig puppet ' + this.ch, e); }
   };
-  RigPuppet.prototype.draw = function (c, sx, sy, o) { this.p.draw(c, sx | 0, sy | 0, o || {}); };
+  RigPuppet.prototype.draw = function (c, sx, sy, o) {
+    if (this.broken) { if (!this.fb) this.fb = new FallbackPuppet(this.ch, this.pal); this.fb.t = (this.fb.t || 0) + 1; this.fb.draw(c, sx, sy, o); return; }
+    this.p.draw(c, sx | 0, sy | 0, o || {});
+  };
   RigPuppet.prototype.getAnchor = function (n) { try { return this.p.getAnchor(n); } catch (e) { return { x: 0, y: -40 }; } };
 
   ui.puppet = function (ch, p) {
-    if (LC.rig && LC.rig.createPuppet) {
+    var known = true;
+    if (LC.rig && LC.rig.hasAnim) { try { known = !!LC.rig.hasAnim(ch, 'idle'); } catch (e) { known = false; } }
+    if (known && LC.rig && LC.rig.createPuppet) {
       try { return new RigPuppet(ch, p); } catch (e) { console.error('[platform] rig.createPuppet', e); }
     }
     var fp = new FallbackPuppet(ch, p);
@@ -2640,12 +2768,42 @@
   var app = LC.app = LC.app || {};
   var LORE = LC.LORE;
 
-  function other(ch) { return ch === 'claude' ? 'deepseek' : 'claude'; }
+  // Any fighter other than ch (first rival, else the next one in the roster).
+  function other(ch) {
+    var r = LORE.rivals && LORE.rivals[ch];
+    if (r && r.length) return r[0];
+    var C = LC.CHARS, i = C.indexOf(ch);
+    return C[(i + 1) % C.length] || C[0];
+  }
+  function rivalsOf(ch) {
+    var r = (LORE.rivals && LORE.rivals[ch]) || LC.CHARS.filter(function (c) { return c !== ch; });
+    return r.length ? r : [ch];
+  }
   function clampLv(v) { return Math.max(1, Math.min(5, v | 0)); }
-  function homeOf(ch) { for (var k in LORE.stages) if (LORE.stages[k].home === ch) return k; return 'latent'; }
+  function homeOf(ch) { if (LORE.homeStage && LORE.homeStage[ch]) return LORE.homeStage[ch]; for (var k in LORE.stages) if (LORE.stages[k].home === ch) return k; return 'latent'; }
   app.other = other;
   app.homeOf = homeOf;
-  app.charName = function (ch) { return (LORE.chars[ch] || LORE.chars.claude).nameZh; };
+  app.rivalsOf = rivalsOf;
+  app.randomChar = function (except) {
+    var l = LC.CHARS.filter(function (c) { return c !== except; });
+    if (!l.length) l = LC.CHARS;
+    return l[(Math.random() * l.length) | 0];
+  };
+  // Feature detection for modules that are still learning about newer fighters.
+  app.fightSupports = function (ch) {
+    var F = LC.fight;
+    if (!F || !F.createMatch) return false;
+    if (F.chars) return !!F.chars[ch];
+    try { var l = F.getMoveList && F.getMoveList(ch); return !!(l && l.length); } catch (e) { return false; }
+  };
+  app.rigSupports = function (ch) {
+    try { return !!(LC.rig && LC.rig.hasAnim && LC.rig.hasAnim(ch, 'idle')); } catch (e) { return false; }
+  };
+  app.palUi = function (ch, pal) {
+    var P = (LC.PAL[ch] || LC.PAL[LC.CHARS[0]] || [])[pal ? 1 : 0] || {};
+    return { ui: P.ui || '#fff', light: P.uiLight || P.ui || '#fff', dark: P.uiDark || P.ui || '#444' };
+  };
+  app.charName = function (ch) { return (LORE.chars[ch] || LORE.chars[LC.CHARS[0]]).nameZh; };
   app.stageIds = function () {
     var ids = LC.STAGES.slice();
     try { if (LC.stages && LC.stages.list) { var l = LC.stages.list().map(function (s) { return s.id; }); if (l.length) ids = l; } } catch (e) { console.error('[platform] stages.list', e); }
@@ -2657,7 +2815,7 @@
   function side(p, flat, idx, mode) {
     var o = typeof p === 'string' ? { char: p } : Object.assign({}, p || {});
     if (!o.char && flat['p' + (idx + 1)] && typeof flat['p' + (idx + 1)] === 'string') o.char = flat['p' + (idx + 1)];
-    if (LC.CHARS.indexOf(o.char) < 0) o.char = idx === 0 ? 'claude' : 'deepseek';
+    if (LC.CHARS.indexOf(o.char) < 0) o.char = LC.CHARS[idx % LC.CHARS.length];
     if (o.palette == null) o.palette = flat['pal' + (idx + 1)] != null ? +flat['pal' + (idx + 1)] : 0;
     if (o.control == null) o.control = flat['ctl' + (idx + 1)] || (mode === 'demo' ? 'cpu' : idx === 0 ? 'human' : 'cpu');
     if (o.level == null) o.level = flat.level != null ? +flat.level : LC.settings.difficulty;
@@ -2672,7 +2830,7 @@
     var opts = app.opts || {};
     var mode = p.mode || 'versus';
     var p1 = side(p.p1, p, 0, mode), p2 = side(p.p2, p, 1, mode);
-    if (p1.char === p2.char && p1.palette === p2.palette) p2.palette = 1 - p1.palette;
+    if (p1.char === p2.char && p1.palette === p2.palette) p2.palette = p1.palette ? 0 : 1;
     var stage = p.stage || (mode === 'training' ? 'training' : homeOf(p2.char));
     if (stage === 'random') { var ids = app.stageIds(); stage = ids[(Math.random() * ids.length) | 0]; }
     var cfg = {
@@ -2697,15 +2855,22 @@
     app.session = { mode: 'arcade', vs: 'pvc', arcade: { char: ch, palette: pal, stage: 0, score: 0, continues: 0, wins: 0, history: [] } };
     return app.session;
   };
+  // Resolve ladder step k for the arcade character: { foe, palette, stage }.
+  app.arcadeStep = function (A, k) {
+    var step = LORE.arcade[k], R = rivalsOf(A.char), f = step.foe;
+    var foe = f === 'mirror' ? A.char : f === 'rival2' ? (R[1] || R[0]) : f === 'rival' || f === 'rival1' ? R[0] : (LC.CHARS.indexOf(f) >= 0 ? f : R[0]);
+    var pal = step.palette ? 1 : 0;
+    if (foe === A.char && pal === A.palette) pal = A.palette ? 0 : 1;
+    var st = step.stage;
+    var stage = st === 'foeHome' || st === 'rivalHome' ? homeOf(foe) : st === 'ownHome' ? homeOf(A.char) : st;
+    return { step: step, foe: foe, palette: pal, stage: stage };
+  };
   app.arcadeFightParams = function () {
-    var A = app.session.arcade, step = LORE.arcade[A.stage];
-    var foe = step.foe === 'mirror' ? A.char : other(A.char);
-    var pal = step.palette;
-    if (foe === A.char && pal === A.palette) pal = 1 - A.palette;
-    var stage = step.stage === 'rivalHome' ? homeOf(foe) : step.stage === 'ownHome' ? homeOf(A.char) : step.stage;
+    var A = app.session.arcade, rs = app.arcadeStep(A, A.stage), step = rs.step;
+    var foe = rs.foe, pal = rs.palette, stage = rs.stage;
     var intro = null, me = LORE.chars[A.char];
     var foeLines = step.foe === 'mirror' ? LORE.arcadeTaunt.mirror[A.char] : step.boss ? LORE.arcadeTaunt.boss[foe] : null;
-    if (foeLines) intro = [(me.intro[foe] || []).slice(), foeLines.slice()];
+    if (foeLines) intro = [((me && me.intro && me.intro[foe]) || []).slice(), foeLines.slice()];
     return {
       mode: 'arcade',
       p1: { char: A.char, palette: A.palette, control: 'human' },
@@ -3177,8 +3342,8 @@
         }
         if (idle > IDLE_DEMO) {
           out = true;
-          var ch = Math.random() < 0.5 ? 'claude' : 'deepseek';
-          var other = Math.random() < 0.75 ? LC.app.other(ch) : ch;
+          var ch = LC.app.randomChar();
+          var other = Math.random() < 0.75 ? LC.app.randomChar(ch) : ch;
           var ids = LC.app.stageIds().filter(function (s) { return s !== 'training'; });
           LC.scenes.go('match', { config: LC.app.matchConfig({ mode: 'demo', p1: { char: ch, control: 'cpu', level: 4 }, p2: { char: other, control: 'cpu', level: 4, palette: other === ch ? 1 : 0 }, stage: ids[(Math.random() * ids.length) | 0] || 'latent' }) }, { transition: 'dissolve', frames: 24 });
         }
@@ -3259,7 +3424,7 @@
       enter: function () { LC.input.setMode('solo'); },
       update: function () {
         swapT++;
-        if (swapT > 360) { swapT = 0; showcase ^= 1; }
+        if (swapT > 360) { swapT = 0; showcase = (showcase + 1) % LC.CHARS.length; }
         if (sub) {
           subT++;
           var r2 = sub.update();
@@ -3273,18 +3438,21 @@
       },
       draw: function (c) {
         var t = this.t;
-        var acc = showcase ? '#4d6bfe' : '#d97757';
+        // character showcase (right side): the featured fighter in front, the next one behind;
+        // slots alternate left/right so each swap reads as a change of turn.
+        var CL = LC.CHARS, fr = CL[showcase % CL.length], bk = CL[(showcase + 1) % CL.length];
+        var acc = ui.charCol(fr, 0).ui;
         ui.backdrop(c, t, { accent: acc });
-        // character showcase (right side)
-        var order = showcase ? ['claude', 'deepseek'] : ['deepseek', 'claude'];
+        var frontRight = showcase & 1;
         var sw = ui.ease.inOut(Math.min(1, swapT / 40));
-        order.forEach(function (ch, k) {
+        [bk, fr].forEach(function (ch, k) {
           var front = k === 1;
           var b = ui.portrait(ch, 'bust', 0);
           if (!b) return;
-          if (ch === 'deepseek') b = ui.flip(b);
-          var baseX = ch === 'claude' ? 204 : 266;
-          var dx = front ? Math.round((1 - sw) * (ch === 'claude' ? -10 : 10)) : 0;
+          var right = front ? frontRight : !frontRight;
+          if (right) b = ui.flip(b);
+          var baseX = right ? 266 : 204;
+          var dx = front ? Math.round((1 - sw) * (right ? 10 : -10)) : 0;
           var y = (front ? 70 : 62) + Math.round(Math.sin(t * 0.03 + k) * 2);
           c.drawImage(front ? b : ui.tint(b, '#0b0a14', 0.55), baseX + dx, y);
         });
@@ -3331,14 +3499,21 @@
   var LC = window.LC = window.LC || {};
   var U = LC.UI, W = LC.W, H = LC.H, ui = LC.ui, LORE = LC.LORE;
   var CH = LC.CHARS;
+  // Tile grid: every fighter plus a trailing "random" tile, centred between the two live puppets
+  // (x 128 / 256, ~44 px wide each) so they never overlap. 4 tiles -> 2×2.
+  var RND = CH.length, NT = CH.length + 1, TS = 38, TG = 3;
+  var COLS = Math.max(2, Math.ceil(Math.sqrt(NT)));
+  var GX = (W - (COLS * TS + (COLS - 1) * TG)) >> 1, GY = 26;
+  function tilePos(k) { return { x: GX + (k % COLS) * (TS + TG), y: GY + Math.floor(k / COLS) * (TS + TG) }; }
+  function roll(not) { var l = CH.filter(function (c) { return c !== not; }); if (!l.length) l = CH; return l[(Math.random() * l.length) | 0]; }
   var STATS = [['power', '力量'], ['speed', '速度'], ['range', '射程'], ['technique', '技巧']];
   var MODE_TAG = { arcade: '街机模式', versus: '对战', training: '训练' };
 
   function Side(i, ch, pal) {
-    this.i = i; this.cur = CH.indexOf(ch); this.pal = pal || 0; this.locked = false; this.active = i === 0;
+    this.i = i; this.cur = Math.max(0, CH.indexOf(ch)); this.rnd = roll(); this.pal = pal || 0; this.locked = false; this.active = i === 0;
     this.slide = 0; this.flash = 0; this.lockT = 0; this.puppets = {}; this.bioT = 0; this.moveT = 0;
   }
-  Side.prototype.ch = function () { return CH[this.cur]; };
+  Side.prototype.ch = function () { return this.cur === RND ? this.rnd : CH[this.cur]; };
   Side.prototype.puppet = function () {
     var k = this.ch() + this.pal;
     if (!this.puppets[k]) this.puppets[k] = ui.puppet(this.ch(), this.pal);
@@ -3348,7 +3523,7 @@
   LC.scenes.define('select', function (params) {
     var mode = params.mode || 'versus', vs = params.vs || (mode === 'versus' ? 'pvc' : 'pvc');
     var prev = (LC.app.lastPick && LC.app.lastPick[mode + vs]) || null;
-    var sides = [new Side(0, prev ? prev[0].char : 'claude', prev ? prev[0].palette : 0), new Side(1, prev ? prev[1].char : 'deepseek', prev ? prev[1].palette : 0)];
+    var sides = [new Side(0, prev ? prev[0].char : CH[0], prev ? prev[0].palette : 0), new Side(1, prev ? prev[1].char : CH[1 % CH.length], prev ? prev[1].palette : 0)];
     var twoSided = mode !== 'arcade';
     var pvp = vs === 'pvp' && mode === 'versus';
     if (pvp) sides[1].active = true;
@@ -3365,10 +3540,11 @@
     function tagOf(i) { return controlOf(i) === 'cpu' ? 'CPU' : (i === 0 ? '1P' : '2P'); }
     function palFor(i) {
       var s = sides[i], o = sides[1 - i];
-      if (twoSided && i === 1 && o.locked && o.ch() === s.ch() && o.pal === s.pal) return 1 - s.pal;
+      if (twoSided && i === 1 && o.locked && o.ch() === s.ch() && o.pal === s.pal) return s.pal ? 0 : 1;
       return s.pal;
     }
     function lock(s) {
+      if (s.cur === RND) s.rnd = roll();
       s.locked = true; s.lockT = 0; s.flash = 16;
       s.pal = palFor(s.i);
       ui.sfx('ui.lock');
@@ -3403,7 +3579,7 @@
         return;
       }
       if (m.left || m.right) {
-        s.cur = (s.cur + (m.right ? 1 : CH.length - 1)) % CH.length; s.slide = 0; s.bioT = 0; s.moveT = 0;
+        s.cur = (s.cur + (m.right ? 1 : NT - 1)) % NT; s.slide = 0; s.bioT = 0; s.moveT = 0;
         lastMoved = s.i; ui.sfx('ui.move');
       } else if (m.up || m.down) {
         s.pal = 1 - s.pal; s.flash = 6; ui.sfx('ui.move', { pitch: 1.2 }); lastMoved = s.i;
@@ -3418,9 +3594,9 @@
       var p = LC.input.pointer;
       if (!p.pressed) return;
       // tiles
-      for (var k = 0; k < CH.length; k++) {
-        var tx = 150 + k * 46, ty = 26;
-        if (p.x >= tx && p.x < tx + 40 && p.y >= ty && p.y < ty + 40) {
+      for (var k = 0; k < NT; k++) {
+        var tp = tilePos(k), tx = tp.x, ty = tp.y;
+        if (p.x >= tx && p.x < tx + TS && p.y >= ty && p.y < ty + TS) {
           var s = !sides[0].locked ? sides[0] : (twoSided && sides[1].active && !sides[1].locked ? sides[1] : null);
           if (!s) return;
           if (s.cur !== k) { s.cur = k; s.slide = 0; s.bioT = 0; ui.sfx('ui.move'); }
@@ -3439,6 +3615,7 @@
         sides.forEach(function (s) {
           s.slide++; s.bioT++; s.moveT++;
           if (s.flash) s.flash--;
+          if (s.cur === RND && !s.locked && s.slide % 24 === 0) s.rnd = roll(s.rnd);
           if (s.locked) s.lockT++;
           var p = s.puppet();
           p.tick(t, { x: 0, y: LC.GROUND_Y, vx: 0, vy: 0, facing: s.i ? -1 : 1, grounded: true });
@@ -3497,36 +3674,41 @@
         ui.header(c, '选择角色', 'CHARACTER SELECT', t, accL);
         LC.font.draw(c, MODE_TAG[mode] + (mode === 'versus' ? ' · ' + { pvc: '玩家 vs CPU', pvp: '玩家 vs 玩家', cvc: 'CPU vs CPU' }[vs] : ''), W >> 1, 5, { size: 10, color: U.gold, align: 'center' });
         // tiles
-        CH.forEach(function (ch, k) {
-          var tx = 150 + k * 46, ty = 26;
+        for (var k = 0; k < NT; k++) {
+          var tp = tilePos(k), tx = tp.x, ty = tp.y, ch = CH[k];
           var hov0 = sides[0].cur === k, hov1 = twoSided && sides[1].active && sides[1].cur === k;
-          ui.box(c, tx - 1, ty - 1, 42, 42, U.black);
-          ui.box(c, tx, ty, 40, 40, ui.charCol(ch, 0).dark);
-          var b = ui.portrait(ch, 'bust', 0);
-          if (b) c.drawImage(b, 36, 22, 40, 40, tx, ty, 40, 40);
-          if (!hov0 && !hov1) { c.globalAlpha = 0.45; ui.box(c, tx, ty, 40, 40, U.bg0); c.globalAlpha = 1; }
-          LC.font.draw(c, LORE.chars[ch].name, tx + 20, ty + 32, { size: 8, color: U.text, outline: U.black, align: 'center' });
-        });
+          ui.box(c, tx - 1, ty - 1, TS + 2, TS + 2, U.black);
+          if (k === RND) {
+            ui.box(c, tx, ty, TS, TS, '#1c1930');
+            LC.font.draw(c, '?', tx + (TS >> 1), ty + 3, { size: 12, scale: 2, color: (t >> 4) & 1 ? U.gold : U.text, outline: U.black, align: 'center' });
+            LC.font.draw(c, '随机', tx + (TS >> 1), ty + TS - 11, { size: 10, color: U.text, outline: U.black, align: 'center' });
+          } else {
+            ui.box(c, tx, ty, TS, TS, ui.charCol(ch, 0).dark);
+            var b = ui.portrait(ch, 'bust', 0);
+            if (b) c.drawImage(b, 37, 22, TS, TS, tx, ty, TS, TS);
+            LC.font.draw(c, (LORE.chars[ch] || {}).name || ch, tx + (TS >> 1), ty + TS - 8, { size: 8, color: U.text, outline: U.black, align: 'center' });
+          }
+          if (!hov0 && !hov1) { c.globalAlpha = 0.45; ui.box(c, tx, ty, TS, TS, U.bg0); c.globalAlpha = 1; }
+        }
         // cursors
         sides.forEach(function (s, i) {
           if (i === 1 && (!twoSided || !s.active)) return;
-          var tx = 150 + s.cur * 46, ty = 26;
+          var tp = tilePos(s.cur), tx = tp.x, ty = tp.y;
           var col = i === 0 ? U.gold : (tagOf(1) === 'CPU' ? '#9b96b8' : '#58d4ff');
           var pulse = s.locked ? 0 : ((t >> 3) & 1);
           var g = 2 + pulse;
           c.fillStyle = col;
           // corner brackets
-          [[-g, -g, 1, 1], [40 + g - 6, -g, -1, 1], [-g, 40 + g - 1, 1, -1], [40 + g - 6, 40 + g - 1, -1, -1]].forEach(function (q) {
+          [[-g, -g, 1, 1], [TS + g - 6, -g, -1, 1], [-g, TS + g - 1, 1, -1], [TS + g - 6, TS + g - 1, -1, -1]].forEach(function (q) {
             var x = tx + q[0], y = ty + q[1];
             c.fillRect(x + (q[2] < 0 ? 0 : 0), y, 6, 2);
             c.fillRect(q[2] > 0 ? x : x + 4, q[3] > 0 ? y : y - 4, 2, 6);
           });
           var tag = tagOf(i), tw = LC.font.measure(tag, { size: 8 }).w + 6;
-          var tagX = i === 0 ? tx - 2 : tx + 42 - tw, tagY = i === 0 ? ty - 9 : ty + 43;
-          if (i === 1 && sides[0].cur === s.cur) tagX = tx + 42 - tw;
+          var tagX = i === 0 ? tx - 2 : tx + TS + 2 - tw, tagY = i === 0 ? ty - 9 : ty + TS + 3;
           ui.box(c, tagX, tagY, tw, 9, col);
           LC.font.draw(c, tag, tagX + 3, tagY + 1, { size: 8, color: U.bg0 });
-          if (s.locked) { var ic = ui.icon('lock'); if (ic) c.drawImage(ic, i ? tx + 2 : tx + 40 - ic.width - 2, ty + 2); }
+          if (s.locked) { var ic = ui.icon('lock'); if (ic) c.drawImage(ic, i ? tx + 2 : tx + TS - ic.width - 2, ty + 2); }
         });
         // puppets
         sides.forEach(function (s, i) {
@@ -3640,7 +3822,7 @@
       var id = items[idx];
       if (id === 'random') id = ids[(Math.random() * ids.length) | 0];
       LC.app.lastStage = id;
-      var S = LC.app.session || { mode: mode, sides: [{ char: 'claude' }, { char: 'deepseek' }] };
+      var S = LC.app.session || { mode: mode, sides: [{ char: LC.CHARS[0] }, { char: LC.CHARS[1 % LC.CHARS.length] }] };
       var cfg = LC.app.matchConfig({ mode: mode, p1: S.sides[0], p2: S.sides[1], stage: id });
       if (LC.app.session) LC.app.session.lastConfig = cfg;
       if (mode === 'training') LC.scenes.go('match', { config: cfg }, { transition: 'iris' });
@@ -3926,7 +4108,7 @@
 
   LC.scenes.define('pause', function (params) {
     var cfg = params.cfg || {};
-    var view = 'main', moves = null, movesChar = cfg.p1 ? cfg.p1.char : 'claude', scroll = 0;
+    var view = 'main', moves = null, movesChar = cfg.p1 ? cfg.p1.char : LC.CHARS[0], scroll = 0;
     var items = [{ id: 'resume', label: '继续游戏', en: 'RESUME' }, { id: 'moves', label: '出招表', en: 'MOVE LIST' }];
     if (cfg.mode === 'training') items.push({ id: 'training', label: '训练设置', en: 'TRAINING' }, { id: 'reset', label: '重置位置', en: 'RESET' });
     items.push({ id: 'restart', label: '重新开始', en: 'RESTART' }, { id: 'quit', label: cfg.mode === 'arcade' ? '放弃挑战' : '退出对局', en: 'QUIT' });
@@ -3963,7 +4145,7 @@
         if (confirmQuit) confirmQuit--;
         if (view === 'moves') {
           if (m.cancel || m.ok) { view = 'main'; ui.sfx('ui.cancel'); }
-          else if (m.left || m.right) { movesChar = movesChar === 'claude' ? 'deepseek' : 'claude'; scroll = 0; ui.sfx('ui.move'); }
+          else if (m.left || m.right) { var CL = LC.CHARS, mi = CL.indexOf(movesChar); movesChar = CL[(mi + (m.right ? 1 : CL.length - 1) + CL.length) % CL.length]; scroll = 0; ui.sfx('ui.move'); }
           else if (m.down) scroll++; else if (m.up) scroll = Math.max(0, scroll - 1);
           return;
         }
@@ -4110,7 +4292,7 @@
   LC.scenes.define('ladder', function () {
     var A = LC.app.session.arcade, fp = LC.app.arcadeFightParams(), step = LORE.arcade[A.stage];
     var foe = fp.p2.char, lines = fp.introLines ? fp.introLines[1] : null;
-    var tw = lines ? new ui.Typewriter(lines.join('\n'), { speed: 0.4, font: { size: 12, color: U.text, lineGap: 3 }, pitch: foe === 'deepseek' ? 1.25 : 1 }) : null;
+    var tw = lines ? new ui.Typewriter(lines.join('\n'), { speed: 0.4, font: { size: 12, color: U.text, lineGap: 3 }, pitch: ({ deepseek: 1.25, gpt: 0.9 })[foe] || 1 }) : null;
     var leaving = false;
     function go() { if (leaving) return; leaving = true; LC.scenes.go('vs', { config: LC.app.matchConfig(fp) }, { transition: 'slash' }); }
     return {
@@ -4131,8 +4313,8 @@
           var pulse = cur ? ((t >> 3) & 1) : 0;
           ui.box(c, x - 1 - pulse, y - 1 - pulse, 34 + pulse * 2, 34 + pulse * 2, cur ? U.gold : done ? U.dim : U.line);
           ui.box(c, x, y, 32, 32, U.bg1);
-          var fc = s.foe === 'mirror' ? A.char : LC.app.other(A.char);
-          var b = ui.portrait(fc, 'bust', s.foe === 'mirror' ? 1 - A.palette : s.palette);
+          var rs = LC.app.arcadeStep(A, i);
+          var b = ui.portrait(rs.foe, 'bust', rs.palette);
           if (b) c.drawImage(i > A.stage ? ui.tint(b, '#0b0a14', 0.85) : b, 40, 26, 32, 32, x, y, 32, 32);
           if (done) LC.font.draw(c, 'CLEAR', x + 16, y + 22, { size: 8, color: U.green, outline: U.black, align: 'center' });
           LC.font.draw(c, s.title, x + 40, y + 4, { size: 12, color: cur ? U.gold : done ? U.dim : '#4f4a78' });
@@ -4193,8 +4375,8 @@
 
   // ---------------------------------------------------------------- ending
   LC.scenes.define('ending', function () {
-    var A = LC.app.session.arcade, L = LORE.chars[A.char];
-    var lines = L.ending, idx = 0, tw = null, hold = 0;
+    var A = LC.app.session.arcade, L = LORE.chars[A.char] || { nameZh: A.char, title: '' };
+    var lines = L.ending || [], idx = 0, tw = null, hold = 0;
     function next() { tw = idx < lines.length ? new ui.Typewriter(LC.font.wrap(lines[idx], 240, { size: 12 }).join('\n'), { speed: 0.35, font: { size: 12, color: U.text, lineGap: 3 } }) : null; hold = 0; }
     next();
     return {
@@ -4236,7 +4418,7 @@
 
 </script>
 <script data-file="platform/scenes/howto.js">
-/* LATENT CLASH — how to play: controls diagram, system pages, both move lists (PLATFORM).
+/* LATENT CLASH — how to play: controls diagram, system pages, one move list per fighter in LC.CHARS (PLATFORM).
  * Also provides LC.ui.drawMoveList (used by the pause menu) and LC.ui.keycap. */
 (function () {
   'use strict';
@@ -4262,9 +4444,10 @@
     if (LC.fight && LC.fight.getMoveList) {
       try { list = LC.fight.getMoveList(ch); } catch (e) { console.error('[platform] fight.getMoveList', e); }
     }
-    if (!list || !list.length) {
+    var fromFight = !!(list && list.length);
+    if (!fromFight) {
       list = [];
-      var M = LORE.moves[ch];
+      var M = LORE.moves[ch] || {};
       Object.keys(M).forEach(function (id) {
         var m = M[id];
         list.push({ id: id, name: m.zh, nameEn: m.en, input: m.input + (m.input.indexOf('j.') === 0 ? '' : ''), simple: m.simple, type: id === 'super' ? 'super' : 'special', desc: m.desc });
@@ -4273,7 +4456,8 @@
       list.push({ id: 'dash', name: '冲刺 / 后撤步', nameEn: 'DASH', input: '66', simple: '44', type: 'system', desc: '快速接近；后撤步在开始时短暂无敌。' });
       list.push({ id: 'guard', name: '防御', nameEn: 'GUARD', input: '4', simple: '1', type: 'system', desc: '站立防御挡中上段与跳攻，蹲防挡下段。' });
     }
-    return (listCache[ch] = list);
+    if (fromFight) listCache[ch] = list;   // LORE fallback is rebuilt so FIGHT data is picked up once it knows ch
+    return list;
   }
   var TYPE_NAME = { special: '必杀技', super: '超必杀技', throw: '投技', system: '系统', normal: '通常技' };
   var TYPE_COL = { special: U.meter, super: U.meterFull, throw: '#c9b6ff', system: U.green, normal: U.dim };
@@ -4285,7 +4469,7 @@
   }
 
   ui.drawMoveList = function (c, ch, x, y, w, h, scroll, t) {
-    var L = LORE.chars[ch], col = ui.charCol(ch, 0);
+    var L = LORE.chars[ch] || { nameZh: ch }, col = ui.charCol(ch, 0);
     ui.panel(c, x, y, w, h, { accent: col.ui, accentW: 40, fill: 'rgba(15,13,32,0.94)' });
     var em = ui.icon('emblem.' + ch);
     var hx = x + 8;
@@ -4353,7 +4537,14 @@
 
   LC.scenes.define('howto', function (params) {
     var page = params.page || 0, scroll = 0, maxScroll = 0, pageT = 0;
-    var TABS = ['基本操作', '系统', LORE.chars.claude.nameZh, LORE.chars.deepseek.nameZh];
+    // two fixed pages, then one move-list page per fighter in LC.CHARS
+    var TABS = ['基本操作', '系统'].concat(LC.CHARS.map(function (ch) { return (LORE.chars[ch] || {}).nameZh || ch; }));
+    var TAB_W = Math.min(64, Math.floor((W - 86) / TABS.length) - 2), TAB_X = W - TABS.length * (TAB_W + 2);
+    function tabLabel(i) {
+      var tb = TABS[i], sz = i >= 2 ? 10 : 12;
+      if (i >= 2 && LC.font.measure(tb, { size: sz }).w > TAB_W - 4) tb = (LORE.chars[LC.CHARS[i - 2]] || {}).name || tb;
+      return tb;
+    }
     function setPage(p) { page = (p + TABS.length) % TABS.length; scroll = 0; pageT = 0; ui.sfx('ui.move'); }
     function drawControls(c) {
       var K = LC.input.keys, kn = LC.input.keyName;
@@ -4429,15 +4620,15 @@
         ui.box(c, 0, 0, W, 20, 'rgba(5,4,10,0.85)'); ui.box(c, 0, 20, W, 1, U.line);
         LC.font.draw(c, '出招表与教学', 8, 4, { size: 12, color: U.text });
         TABS.forEach(function (tb, i) {
-          var x = 120 + i * 66, sel = i === page;
-          if (sel) { ui.box(c, x, 2, 64, 18, U.bg2); ui.box(c, x, 18, 64, 2, U.gold); }
-          LC.font.draw(c, tb, x + 32, 5, { size: i >= 2 ? 10 : 12, color: sel ? U.text : U.dim, align: 'center' });
+          var x = TAB_X + i * (TAB_W + 2), sel = i === page;
+          if (sel) { ui.box(c, x, 2, TAB_W, 18, U.bg2); ui.box(c, x, 18, TAB_W, 2, U.gold); }
+          LC.font.draw(c, tabLabel(i), x + (TAB_W >> 1), i >= 2 ? 6 : 5, { size: i >= 2 ? 10 : 12, color: sel ? U.text : U.dim, align: 'center' });
         });
         var a = ui.ease.out(pageT / 10);
         c.save(); c.translate(Math.round((1 - a) * 16), 0);
         if (page === 0) { maxScroll = 0; drawControls(c); }
         else if (page === 1) drawSystem(c, t);
-        else maxScroll = ui.drawMoveList(c, page === 2 ? 'claude' : 'deepseek', 8, 26, W - 16, 172, scroll, t);
+        else maxScroll = ui.drawMoveList(c, LC.CHARS[page - 2] || LC.CHARS[0], 8, 26, W - 16, 172, scroll, t);
         c.restore();
         ui.hints(c, [['←→', '翻页'], ['↑↓', '滚动'], ['M', '返回']], { y: H - 13 });
       }
@@ -6464,7 +6655,9 @@
 <script data-file="audio/sfx-chars.js">
 /* LATENT CLASH — character SFX (AUDIO module).
  * Claude 娘: warm — FM bells, chimes, paper/ink, major-key sparkle (D major / lydian colours).
- * DeepSeek 娘: cool — water, bubbles, splashes, sonar; quick and bouncy (E minor pentatonic). */
+ * DeepSeek 娘: cool — water, bubbles, splashes, sonar; quick and bouncy (E minor pentatonic).
+ * GPT 娘: regal dragon — cold teal fire (airy roar + icy shimmer), claws (metal ring), wing beats,
+ *         low growls and heavy floor impacts (A minor / open fifths). */
 (function () {
   'use strict';
   var LC = window.LC = window.LC || {};
@@ -6643,6 +6836,103 @@
       S.noise(r, o, t + X, { c: 'brown', lp: 500, g: S.ad(0.005, 0.8), v: 0.7 }, p);
       for (var i = 0; i < 10; i++) S.bubble(r, o, t + X + 0.05 + rnd() * 0.45, 350 + rnd() * 700, 0.1, 0.05, p);
     } });
+
+  // ---- GPT 娘 ------------------------------------------------------------------------
+  function wingFlap(r, o, t, p, k, v) {   // low "fwump": filtered noise swell + sub push
+    S.noise(r, o, t, { c: 'pink', bp: [[0, 260 * k], [0.12, 520 * k, 'e']], q: 0.8, lp: 1800, g: [[0, 0], [0.05, 1], [0.18, 0.0001, 'e']], v: 0.7 * v }, p);
+    S.osc(r, o, t + 0.02, { w: 'sine', f: [[0, 90 * k], [0.12, 55 * k, 'e']], g: S.ad(0.02, 0.14), v: 0.4 * v }, p);
+  }
+  function icyShimmer(r, o, t, len, v, p, rnd) {   // cold glassy glints
+    ['A6', 'E7', 'B6', 'E6', 'A7'].forEach(function (n, i) {
+      var tt = t + (i / 5) * len * 0.8 + rnd() * 0.03;
+      S.osc(r, o, tt, { w: 'sine', f: N(n), g: [[0, 0], [0.003, 1], [0.18, 0.0001, 'e']], v: v, fm: { r: 2.41, i: [[0, 1.4], [0.1, 0.1, 'e']] } }, p);
+    });
+  }
+
+  def('gpt.breath', { cat: 'gpt', dur: 0.62, poly: 2, guard: 0.1, wet: 0.25,
+    desc: 'sustained teal dragon-fire: airy roar, crackle, icy shimmer, loop-like tail', when: 'dragon-fire breath starts (first active frame)',
+    build: function (r, o, t, p, rnd) {
+      var L = 0.5;
+      S.noise(r, o, t, { c: 'white', bp: [[0, 900], [0.06, 1600, 'e'], [L, 1300]], q: 0.6, lp: 6500, g: roar(0.04, L, 1, 24, 0.35, rnd).concat([[L + 0.1, 0.0001, 'e']]), v: 0.45 }, p);
+      S.noise(r, o, t, { c: 'pink', lp: 900, hp: 90, g: roar(0.05, L, 1, 17, 0.3, rnd).concat([[L + 0.1, 0.0001, 'e']]), v: 0.5 }, p);
+      S.noise(r, o, t + 0.02, { c: 'crackle', hp: 2500, lp: 9000, g: [[0, 0], [0.04, 1], [L - 0.02, 0.8], [L + 0.08, 0.0001, 'e']], v: 0.35 });
+      S.osc(r, o, t, { w: 'sawtooth', f: N('A2'), g: [[0, 0], [0.05, 1], [L, 0.8], [L + 0.1, 0.0001, 'e']], v: 0.07, lp: 600, vib: [9, 30, 0] }, p);
+      S.osc(r, o, t, { w: 'sine', f: [[0, 180], [0.06, 110, 'e']], g: S.ad(0.004, 0.1), v: 0.3 }, p);
+      icyShimmer(r, o, t + 0.05, L, 0.05, p, rnd);
+    } });
+
+  def('gpt.rise', { cat: 'gpt', dur: 0.55, poly: 1, guard: 0.15, wet: 0.2,
+    desc: 'rising claw uppercut: sharp upward whoosh, metallic claw ring, wing flap', when: 'rising claw (anti-air special) start-up → rise',
+    build: function (r, o, t, p) {
+      S.noise(r, o, t, { c: 'white', bp: [[0, 800], [0.28, 6000, 'e']], q: 1.3, lp: 9000, g: [[0, 0], [0.12, 1], [0.34, 0.0001, 'e']], v: 0.6 }, p);
+      S.noise(r, o, t + 0.04, { c: 'white', hp: 3000, lp: 9000, g: S.ad(0.0005, 0.01), v: 0.5 });
+      S.bell(r, o, t + 0.04, 2350, 0.09, 0.3, [1, 1.47, 2.09, 2.76], [1, 0.6, 0.4, 0.2], p);
+      S.noise(r, o, t + 0.04, { c: 'metal', bp: 4200, q: 3, g: S.ad(0.001, 0.2), v: 0.35 }, p);
+      S.osc(r, o, t, { w: 'sine', f: [[0, 140], [0.25, 320, 'e']], g: S.ad(0.01, 0.22), v: 0.25 }, p);
+      wingFlap(r, o, t + 0.2, p, 1, 0.9);
+    } });
+
+  def('gpt.call', { cat: 'gpt', dur: 0.5, poly: 1, guard: 0.15, prio: 3, wet: 0.15,
+    desc: 'command grab connects: quick snatch + low wing-beat lift', when: 'command grab connects (victim seized)',
+    build: function (r, o, t, p) {
+      S.noise(r, o, t, { c: 'white', bp: [[0, 3000], [0.05, 1200, 'e']], q: 1, lp: 7000, g: S.ad(0.001, 0.07), v: 0.8 }, p);
+      S.osc(r, o, t, { w: 'sine', f: [[0, 260], [0.05, 120, 'e']], g: S.ad(0.001, 0.08), v: 0.5, drive: 1.4 }, p);
+      S.noise(r, o, t + 0.005, { c: 'metal', bp: 3600, q: 2.5, g: S.ad(0.001, 0.08), v: 0.25 }, p);
+      wingFlap(r, o, t + 0.12, p, 0.8, 1.1);
+      wingFlap(r, o, t + 0.3, p, 0.9, 0.6);
+    } });
+
+  def('gpt.callSlam', { cat: 'gpt', dur: 0.95, poly: 1, guard: 0.15, prio: 4, wet: 0.25,
+    desc: 'command-grab slam: heavy ground impact with rumble', when: 'command grab: victim hits the floor',
+    build: function (r, o, t, p) {
+      S.noise(r, o, t, { c: 'white', hp: 1500, lp: 7000, g: S.ad(0.0004, 0.012), v: 0.7 });
+      S.osc(r, o, t, { w: 'sine', f: [[0, 130], [0.35, 38, 'e']], g: [[0, 0], [0.002, 1], [0.15, 0.6], [0.6, 0.0001, 'e']], v: 0.85, drive: 1.6 }, p);
+      S.noise(r, o, t, { c: 'white', bp: [[0, 1400], [0.2, 400, 'e']], q: 0.7, lp: 5000, g: S.ad(0.002, 0.25), v: 0.7 }, p);
+      S.noise(r, o, t, { c: 'brown', lp: [[0, 500], [0.8, 120, 'e']], g: [[0, 0], [0.01, 1], [0.25, 0.6], [0.85, 0.0001, 'e']], v: 0.9 }, p);
+      S.noise(r, o, t + 0.01, { c: 'crackle', hp: 1200, lp: 6000, g: S.ad(0.004, 0.3), v: 0.35 });
+    } });
+
+  def('gpt.roar', { cat: 'gpt', dur: 0.75, poly: 1, guard: 0.2, wet: 0.3,
+    desc: 'short dragon roar: growling formant sweep + pressure-wave thump', when: 'roar move (or win pose / taunt)',
+    build: function (r, o, t, p, rnd) {
+      var L = 0.6;
+      S.osc(r, o, t, { w: 'sine', f: [[0, 120], [0.1, 45, 'e']], g: S.ad(0.002, 0.18), v: 0.7, drive: 1.5 }, p);
+      var vox = S.bus(r, o, 1, { bp: [[0, 500], [0.18, 1100, 'e'], [L, 650, 'e']], q: 1.6, t: t, drive: 2 });
+      [[0, 0.22], [9, 0.18], [-11, 0.18]].forEach(function (x, i) {
+        S.osc(r, vox, t, { w: 'sawtooth', f: [[0, 70], [0.15, 95, 'e'], [L, 62, 'e']], det: x[0], g: roar(0.03, L - 0.05, 1, 31 + i * 4, 0.55, rnd).concat([[L + 0.08, 0.0001, 'e']]), v: x[1] }, p);
+      });
+      S.noise(r, o, t, { c: 'pink', bp: [[0, 700], [0.2, 1500, 'e'], [L, 800, 'e']], q: 0.9, g: roar(0.03, L - 0.05, 1, 27, 0.5, rnd).concat([[L + 0.08, 0.0001, 'e']]), v: 0.35 }, p);
+      S.noise(r, o, t, { c: 'brown', lp: 300, g: [[0, 0], [0.01, 1], [0.4, 0.0001, 'e']], v: 0.6 }, p);
+    } });
+
+  def('gpt.super', { cat: 'gpt', dur: 2.0, poly: 1, guard: 0.5, prio: 5, wet: 0.4, irDur: 1.5, stereo: true,
+    desc: '≈1.5 s: three rising lock-on tones (three dragon heads), then a huge converging beam blast, bright tail', when: 'GPT super: heads appear (after the super flash)',
+    build: function (r, o, t, p, rnd) {
+      var X = 0.62, B = 0.6;
+      // three heads locking on: E4 → A4 → E5, each a rising FM tone panned L / R / C
+      [['E4', -0.6], ['A4', 0.6], ['E5', 0]].forEach(function (x, i) {
+        var tt = t + i * 0.18, f = N(x[0]), w = S.bus(r, o, 1, { pan: x[1], t: tt });
+        S.osc(r, w, tt, { w: 's25', f: [[0, f * 0.7], [0.12, f, 'e']], g: [[0, 0], [0.01, 1], [0.15, 0.7], [X - i * 0.18 + 0.02, 0.5], [X - i * 0.18 + 0.06, 0.0001, 'e']], v: 0.08, lp: 3500 }, p);
+        S.osc(r, w, tt, { w: 'sine', f: [[0, f * 1.4], [0.12, f * 2, 'e']], g: [[0, 0], [0.005, 1], [0.25, 0.0001, 'e']], v: 0.07, fm: { r: 2.41, i: [[0, 2], [0.2, 0.2, 'e']] } }, p);
+        S.noise(r, w, tt, { c: 'white', bp: [[0, 1500], [0.15, 5000, 'e']], q: 2, g: S.ad(0.03, 0.15), v: 0.2 }, p);
+      });
+      S.noise(r, o, t, { c: 'white', bp: [[0, 500], [X, 4500, 'e']], q: 1.5, g: [[0, 0.0001], [X, 1, 'e'], [X + 0.02, 0.0001, 'e']], v: 0.3 }, p);
+      // converging blast
+      S.osc(r, o, t + X, { w: 'sine', f: [[0, 110], [0.25, 55, 'e']], g: [[0, 0], [0.003, 1], [B, 0.7], [B + 0.35, 0.0001, 'e']], v: 0.7, drive: 1.6 }, p);
+      S.noise(r, o, t + X, { c: 'white', hp: 1800, lp: 8000, g: S.ad(0.0005, 0.02), v: 0.6 });
+      var body = S.bus(r, o, 1, { lp: [[0, 1200], [0.06, 4200, 'e'], [B, 3000], [B + 0.35, 900, 'e']], t: t + X });
+      ['A2', 'E3', 'A3', 'E4', 'B4'].forEach(function (n) {
+        [-8, 8].forEach(function (d, j) {
+          S.osc(r, body, t + X, { w: 'sawtooth', f: N(n), det: d, g: roar(0.01, B, 1, 20 + j * 3, 0.35, rnd).concat([[B + 0.35, 0.0001, 'e']]), v: 0.07 }, p);
+        });
+      });
+      S.noise(r, o, t + X, { c: 'white', bp: 1400, q: 0.5, lp: 6000, g: roar(0.01, B, 1, 26, 0.45, rnd).concat([[B + 0.3, 0.0001, 'e']]), v: 0.4 });
+      S.noise(r, o, t + X, { c: 'brown', lp: 400, g: S.ad(0.005, 0.9), v: 0.6 }, p);
+      // bright icy tail
+      var wide = S.bus(r, o, 1, { pan: [[0, -0.5], [0.8, 0.5]], t: t + X + B - 0.1 });
+      icyShimmer(r, wide, t + X + B - 0.1, 0.5, 0.06, p, rnd);
+      S.noise(r, o, t + X + B - 0.05, { c: 'crackle', hp: 4000, lp: 10000, g: [[0, 0], [0.05, 1], [0.6, 0.0001, 'e']], v: 0.3 });
+    } });
 })();
 
 </script>
@@ -6665,7 +6955,8 @@
     'ui.move': 2.2, 'ui.confirm': 1.13, 'ui.cancel': 0.77, 'ui.start': 0.66, 'ui.error': 0.93, 'ui.pause': 1.27, 'ui.lock': 1.0, 'text.blip': 2.57,
     'claude.spark': 1.07, 'claude.sparkHit': 1.5, 'claude.sonnet': 1.12, 'claude.haiku': 2.0, 'claude.guardrail': 0.79, 'claude.beam': 0.79,
     'deepseek.wave': 0.92, 'deepseek.waveHit': 1.19, 'deepseek.breach': 1.4, 'deepseek.dive': 1.07, 'deepseek.emerge': 1.58,
-    'deepseek.chain': 1.5, 'deepseek.diveKick': 1.3, 'deepseek.whale': 0.78
+    'deepseek.chain': 1.5, 'deepseek.diveKick': 1.3, 'deepseek.whale': 0.78,
+    'gpt.breath': 0.6, 'gpt.rise': 1.12, 'gpt.call': 1.08, 'gpt.callSlam': 0.42, 'gpt.roar': 1.07, 'gpt.super': 0.97
   };
   Object.keys(MIX).forEach(function (n) { if (K.SFX[n]) K.SFX[n].vol *= MIX[n]; });
   K.MIX = MIX;
@@ -6678,6 +6969,7 @@
  * between vowels, plus breathy consonant noise. Not words — short cute vowel blips.
  * Claude 娘: lower, rounder, softer (a/o/u vowels, darker filter, gentle contours).
  * DeepSeek 娘: higher, brighter, peppier (a/e/i vowels, quicker syllables, bouncier contours).
+ * GPT 娘: lowest and coolest — regal, measured (slower syllables, flatter contours, darker formants, more breath).
  * Mixer.playVoice(charId, kind, t, opts) — one voice per character at a time (new chirp cuts the old). */
 (function () {
   'use strict';
@@ -6689,7 +6981,8 @@
   };
   var CHAR = {
     claude:   { f0: 300, fs: 0.96, src: 'glottal', lp: 3200, breath: 0.1, speed: 1.0, bend: 1.0, vol: 1.0 },
-    deepseek: { f0: 420, fs: 1.1, src: 'reed', lp: 4600, breath: 0.07, speed: 0.82, bend: 1.25, vol: 0.9 }
+    deepseek: { f0: 420, fs: 1.1, src: 'reed', lp: 4600, breath: 0.07, speed: 0.82, bend: 1.25, vol: 0.9 },
+    gpt:      { f0: 235, fs: 0.88, src: 'glottal', lp: 2500, breath: 0.13, speed: 1.15, bend: 0.7, vol: 1.0 }
   };
   // syllables: c = consonant (h breath, t/k click, y glide), v = vowel or [from, to], d = duration (s),
   //            f = pitch contour (ratios of f0), vib = vibrato cents, a = amplitude
@@ -6708,7 +7001,8 @@
   // Per-kind loudness trims from offline measurement (target ≈ -19 LUFS-M at unity; light -22, super -16, ko -18)
   var GAIN = {
     claude:   { light: 2.04, medium: 0.87, heavy: 0.7, special: 1.0, super: 0.56, hurt: 0.8, ko: 1.2, win: 0.5, intro: 0.82 },
-    deepseek: { light: 4.0, medium: 1.32, heavy: 1.05, special: 0.74, super: 0.85, hurt: 1.62, ko: 1.64, win: 1.05, intro: 1.16 }
+    deepseek: { light: 4.0, medium: 1.32, heavy: 1.05, special: 0.74, super: 0.85, hurt: 1.62, ko: 1.64, win: 1.05, intro: 1.16 },
+    gpt:      { light: 1.86, medium: 1.02, heavy: 0.64, special: 0.93, super: 0.56, hurt: 0.94, ko: 1.3, win: 0.47, intro: 0.82 }
   };
 
   function syllable(mx, out, t, ch, s, rf, rnd) {
@@ -6765,6 +7059,8 @@
     srcs.forEach(function (x) { x.start(t); x.stop(end); });
     return d;
   }
+
+  K.VOICE_CHARS = Object.keys(CHAR);
 
   K.Mixer.prototype.playVoice = function (charId, kind, t, opts) {
     var ch = CHAR[charId], syl = KINDS[kind];
@@ -7412,7 +7708,7 @@
   };
 
   A.list = function () {
-    return { sfx: K.SFX_ORDER.slice(), music: K.TRACK_ORDER.slice(), voice: { chars: ['claude', 'deepseek'], kinds: VOICE_KINDS.slice() } };
+    return { sfx: K.SFX_ORDER.slice(), music: K.TRACK_ORDER.slice(), voice: { chars: (K.VOICE_CHARS || ['claude', 'deepseek']).slice(), kinds: VOICE_KINDS.slice() } };
   };
 
   // ---- additions (documented in NOTES.md) -----------------------------------------
@@ -8143,6 +8439,22 @@
         seal: ramp(pi === 0 ? ['#fff3df', '#e8482e', '#a8241c', '#5e1414'] : ['#fffbe6', '#e6a020', '#9c5e10', '#4e2c08'])
       };
     }
+    if (ch === 'gpt') {   // GPT 娘: teal-green magic (pal 1: violet), platinum metal, dragon scales
+      var Ag = P.accent, Mg = P.metal, Sg = P.scale, Og = P.outline;
+      var dk = I.mix(Ag[3], Og, 0.55);
+      return {
+        id: ch + pi, ch: ch, pal: pi, outline: Og,
+        // light: white-hot -> accent -> deep (flame, beams, claws); same shape as claude.light
+        light: ramp(['#ffffff', Ag[0], Ag[1], Ag[2], Ag[3], dk]),
+        glow: ramp(['#ffffff', Ag[0], Ag[1], Ag[2]]),
+        gold: ramp(['#ffffff', Mg[0], Mg[1], Mg[2], Mg[3]]),
+        scale: ramp(Sg.slice()),
+        wing: ramp(P.wing.slice()),
+        // night: deep sky for the super backdrop (dark indigo tinted toward the magic colour)
+        night: ramp([I.mix(Ag[3], Og, 0.35), I.mix(Ag[3], Og, 0.7), I.mix(Og, '#000000', 0.15), I.mix(Og, '#000000', 0.45), I.mix(Og, '#000000', 0.7)]),
+        deep: dk
+      };
+    }
     var Ac = P.accent, Wc = P.cloth1, Bc = P.cloth2;
     var deep = pi === 0 ? Bc[3] : Wc[3];
     return {
@@ -8155,7 +8467,14 @@
       deep: deep
     };
   }
-  I.SC = { claude: [schemeFor('claude', 0), schemeFor('claude', 1)], deepseek: [schemeFor('deepseek', 0), schemeFor('deepseek', 1)] };
+  I.SC = { claude: [schemeFor('claude', 0), schemeFor('claude', 1)], deepseek: [schemeFor('deepseek', 0), schemeFor('deepseek', 1)], gpt: [schemeFor('gpt', 0), schemeFor('gpt', 1)] };
+  // generic per-char roles: main = the character's magic ramp (6), twk = twinkle / glint ramp
+  ['claude', 'deepseek', 'gpt'].forEach(function (ch) {
+    I.SC[ch].forEach(function (s) { s.main = ch === 'deepseek' ? s.water : s.light; s.twk = ch === 'claude' ? s.gold : s.glow; });
+  });
+  /** Characters with FX colour schemes (generic effects bake one tinted variant per char x palette). */
+  I.CHS = ['claude', 'deepseek', 'gpt'];
+  I.hasChar = function (ch) { return !!(ch && I.SC[ch]); };
   I.scheme = function (ch, pal) { return (I.SC[ch] || I.SC.claude)[pal === 1 ? 1 : 0]; };
 
   // ---- basic kinds -------------------------------------------------------------
@@ -8949,9 +9268,9 @@
     A.ringW = [ringAnim(14, 9, [Wh[0], G[1], G[2], G[3], G[4]]), ringAnim(26, 11, [Wh[0], G[1], G[2], G[3], G[4]]), ringAnim(42, 13, [Wh[0], G[1], G[3], G[4], G[5]], false, 4)];
     A.ringG = [ringAnim(22, 10, [D[0], D[1], D[2], D[3]], true), ringAnim(40, 12, [Wh[0], D[0], D[1], D[2], D[3]], true, 4)];
     A.ringC = {}; A.ringGC = {};
-    ['claude', 'deepseek'].forEach(function (ch) {
+    I.CHS.forEach(function (ch) {
       [0, 1].forEach(function (p) {
-        var sc = I.scheme(ch, p), r = ch === 'claude' ? sc.light.u : sc.water.u;
+        var sc = I.scheme(ch, p), r = sc.main.u;
         var rr = [r[0], r[1], r[2], r[3], r[4]];
         A.ringC[ch + p] = [ringAnim(14, 9, rr), ringAnim(26, 11, rr), ringAnim(42, 13, rr, false, 4)];
         A.ringGC[ch + p] = [ringAnim(22, 10, rr, true), ringAnim(40, 12, rr, true, 4)];
@@ -9061,7 +9380,8 @@
     A.orb = orb([Wh[0], G[1], G[3], G[4]]);
     A.orbC = {
       claude0: orb(sl(I.scheme('claude', 0).light.u)), claude1: orb(sl(I.scheme('claude', 1).light.u)),
-      deepseek0: orb(sl(I.scheme('deepseek', 0).water.u)), deepseek1: orb(sl(I.scheme('deepseek', 1).water.u))
+      deepseek0: orb(sl(I.scheme('deepseek', 0).water.u)), deepseek1: orb(sl(I.scheme('deepseek', 1).water.u)),
+      gpt0: orb(sl(I.scheme('gpt', 0).light.u)), gpt1: orb(sl(I.scheme('gpt', 1).light.u))
     };
     function sl(u) { return [u[0], u[1], u[2], u[4]]; }
   }
@@ -9081,7 +9401,7 @@
       p.vx = I.RS() * 1.2; p.vy = -I.RR(0.6, 1.8); p.g = 0.06; p.drag = 0.95; p.life = life + I.RI(-3, 4); p.ramp = rampCss; p.size = 1; p.c = 1;
     }
   }
-  function charRing(O) { return O.char ? A.ringC[O.char + O.pal] : A.ringW; }
+  function charRing(O) { return I.hasChar(O.char) ? A.ringC[O.char + O.pal] : A.ringW; }
 
   I.def('dust.jump', function (x, y, O) {
     var L = lay(O, I.FRONT);
@@ -9131,12 +9451,12 @@
   }, { desc: 'Expanding shockwave ring; power picks size (14/26/42 px); opts.char tints it.', use: 'Generic accent: clashes, bounces, super start.' });
 
   I.def('ring.ground', function (x, y, O) {
-    var set = O.char ? A.ringGC[O.char + O.pal] : A.ringG, i = O.power <= 0.6 ? 0 : 1;
+    var set = I.hasChar(O.char) ? A.ringGC[O.char + O.pal] : A.ringG, i = O.power <= 0.6 ? 0 : 1;
     I.anim1(set[i], x, y, 1, lay(O, I.BACK), 1);
   }, { desc: 'Flat elliptical ring along the floor (extra).', use: 'Heavy landings, wall/ground bounces, super landing.' });
 
   I.def('sparkle', function (x, y, O) {
-    var rc = O.char === 'claude' ? I.scheme('claude', O.pal).gold.css : O.char === 'deepseek' ? I.scheme('deepseek', O.pal).glow.css : I.N.gold.css;
+    var rc = I.hasChar(O.char) ? I.scheme(O.char, O.pal).twk.css : I.N.gold.css;
     I.twinkle(x, y, 3 + Math.round(O.power * 2), 14, rc, lay(O, I.FRONT));
   }, { desc: 'Single 4-point twinkle (extra).', use: 'Glints: pen nib, menu-ish accents, perfect round.' });
 
@@ -9184,7 +9504,7 @@
   }, { desc: 'Huge white burst, red inversion, 3 rings, screen-wide flash lines, embers & twinkles, ~52f.', use: 'At the final hit’s contact point on the KO frame (plays fine under KO slow-mo).' });
 
   I.def('meter.full', function (x, y, O) {
-    var rc = O.char ? (O.char === 'claude' ? I.scheme('claude', O.pal).gold.css : I.scheme('deepseek', O.pal).glow.css) : I.N.gold.css;
+    var rc = I.hasChar(O.char) ? I.scheme(O.char, O.pal).twk.css : I.N.gold.css;
     I.anim1(A.ringW[1], x, y, 1, I.FRONT, 1);
     for (var i = 0; i < nOf(9, O); i++) {
       var p = I.twinkle(x + I.RS() * 18, y + I.RS() * 30, I.RI(2, 4), I.RI(12, 18), rc, I.FRONT, I.RI(0, 18));
@@ -9197,8 +9517,8 @@
   }, { desc: 'Gold ring pulse + twinkles and rising motes over the body, ~36f.', use: 'At the fighter’s `center` anchor when the gauge reaches 100.' });
 
   I.def('super.charge', function (x, y, O) {
-    var sc = O.char ? I.scheme(O.char, O.pal) : null;
-    var rc = sc ? (O.char === 'claude' ? sc.light.css : sc.water.css) : I.N.gold.css;
+    var sc = I.hasChar(O.char) ? I.scheme(O.char, O.pal) : null;
+    var rc = sc ? sc.main.css : I.N.gold.css;
     var orb = sc ? A.orbC[O.char + O.pal] : A.orb;
     I.anim1(orb, x, y, 1, I.FRONT, 1);
     var e = I.emitter(function (p) {
@@ -10430,6 +10750,10 @@
       var sc = I.scheme('deepseek', pal), Wt = sc.water.css, B = sc.blue.css;
       return { core: '#ffffff', ring: Wt[1], nearA: Wt[4], nearB: B[1], farA: B[1], farB: B[3], line: '#ffffff', line2: Wt[2], dark: I.mix(B[3], '#000000', 0.5) };
     }
+    if (ch === 'gpt') {
+      var sg = I.scheme('gpt', pal), Lg = sg.light.css, Ng = sg.night.css;
+      return { core: '#ffffff', ring: Lg[1], nearA: Lg[3], nearB: Lg[5], farA: Lg[5], farB: Ng[2], line: '#ffffff', line2: Lg[1], dark: Ng[4] };
+    }
     var R = I.N.red.css;
     return { core: '#ffffff', ring: '#fff6b8', nearA: R[5], nearB: '#2a0a18', farA: '#2a0a18', farB: '#0e0610', line: '#ffffff', line2: R[2], dark: '#05040a' };
   }
@@ -10483,8 +10807,8 @@
     return wedges[key];
   }
   I.onInit('screen', function () {
-    ['claude:0', 'claude:1', 'deepseek:0', 'deepseek:1', 'none:0'].forEach(lineSet);
-    ['claude:0', 'claude:1', 'deepseek:0', 'deepseek:1', ':0'].forEach(wedgeSet);
+    ['claude:0', 'claude:1', 'deepseek:0', 'deepseek:1', 'gpt:0', 'gpt:1', 'none:0'].forEach(lineSet);
+    ['claude:0', 'claude:1', 'deepseek:0', 'deepseek:1', 'gpt:0', 'gpt:1', ':0'].forEach(wedgeSet);
   });
 
   // ---- sprites -----------------------------------------------------------------------
@@ -10493,9 +10817,9 @@
     use: 'Between stage.drawBack and fx back layer while the super flash runs: drawSprite(ctx,"screen.superBg",0,0,t,{char,palette,cx,cy}) with cx,cy = attacker chest on screen.',
     info: { duration: 0, bbox: { x: 0, y: 0, w: W, h: H } },
     draw: function (ctx, sx, sy, t, o) {
-      var sf = soft(), a0 = ctx.globalAlpha, ch = o.char === 'claude' || o.char === 'deepseek' ? o.char : 'none';
+      var sf = soft(), a0 = ctx.globalAlpha, ch = I.hasChar(o.char) ? o.char : 'none';
       ctx.globalAlpha = a0 * Math.min(1, (t + 1) / 3) * (sf ? 0.6 : 0.84);
-      ctx.fillStyle = ch === 'deepseek' ? '#040a1c' : ch === 'claude' ? '#140806' : '#05040a';
+      ctx.fillStyle = ch === 'deepseek' ? '#040a1c' : ch === 'claude' ? '#140806' : ch === 'gpt' ? I.scheme('gpt', o.pal).night.css[4] : '#05040a';
       ctx.fillRect(sx - 8, sy - 8, W + 16, H + 16);
       var f = focus(o), fr = lineSet(ch + ':' + o.pal);
       ctx.globalAlpha = a0 * (sf ? 0.45 : 1);
@@ -10560,7 +10884,7 @@
     use: 'When a super KOs: instead of the stage/backdrop, behind the fighters: drawSprite(ctx,"screen.superFinish",0,0,t,{char: winner, palette, cx, cy}) with cx,cy = the KO contact point on screen. Hold it as long as the freeze lasts (t keeps counting; the image is static after t = 3).',
     info: { duration: 0, bbox: { x: 0, y: 0, w: W, h: H } },
     draw: function (ctx, sx, sy, t, o) {
-      var ch = o.char === 'deepseek' ? 'deepseek' : 'claude', c = burstCols(ch, o.pal), f = focus(o), sf = soft();
+      var ch = o.char === 'deepseek' || o.char === 'gpt' ? o.char : 'claude', c = burstCols(ch, o.pal), f = focus(o), sf = soft();
       ctx.drawImage(wedgeSet(ch + ':' + o.pal), sx + f[0] - BCX, sy + f[1] - BCY);
       var cx = o.cx == null ? f[0] : Math.round(o.cx), cy = o.cy == null ? f[1] : Math.round(o.cy);
       rays(ctx, sx, sy, cx, cy, 0, sf ? 24 : 40, 911, c, false, sf);
@@ -10576,7 +10900,7 @@
     use: 'From the end of the KO white-out (koFlash t >= 5) until the body lands: instead of stage.drawBack, drawSprite(ctx,"screen.koBackdrop",0,0,t,{cx,cy,char?,palette?}); t = frames since it started (render frames are fine). cx,cy = KO contact point on screen. No char = neutral KO red.',
     info: { duration: 0, bbox: { x: 0, y: 0, w: W, h: H } },
     draw: function (ctx, sx, sy, t, o) {
-      var ch = o.char === 'claude' || o.char === 'deepseek' ? o.char : '', c = burstCols(ch, o.pal), f = focus(o), sf = soft();
+      var ch = I.hasChar(o.char) ? o.char : '', c = burstCols(ch, o.pal), f = focus(o), sf = soft();
       ctx.drawImage(wedgeSet(ch + ':' + (ch ? o.pal : 0)), sx + f[0] - BCX, sy + f[1] - BCY);
       var a0 = ctx.globalAlpha;
       ctx.globalAlpha = a0 * 0.45; ctx.fillStyle = c.dark; ctx.fillRect(sx - 8, sy - 8, W + 16, H + 16); ctx.globalAlpha = a0;
@@ -11434,9 +11758,9 @@
     HB.heavy = burst(84, 76, 16, 811, 12, 30, Ho, {});
     HB.counter = burst(100, 92, 22, 823, 16, 38, [Rd[0], Rd[1], Rd[2], Rd[3], Rd[4], Rd[5], Rd[6]], { crackle: true, ring2: true, inv: Rd[6] });
     HB.special = { generic: burst(88, 80, 18, 833, 8, 30, Go, { diamond: true, fwd: 4 }) };
-    ['claude', 'deepseek'].forEach(function (ch) {
+    I.CHS.forEach(function (ch) {
       [0, 1].forEach(function (pal) {
-        var sc = I.scheme(ch, pal), r = ch === 'claude' ? sc.light.u : sc.water.u;
+        var sc = I.scheme(ch, pal), r = sc.main.u;
         HB.special[ch + pal] = burst(88, 80, 18, 833, 8, 30, r, { diamond: true, fwd: 4 });
       });
     });
@@ -11467,7 +11791,7 @@
 
   I.def('hit.special', function (x, y, O) {
     var key = O.char ? O.char + O.pal : 'generic', Aa = HB.special[key] || HB.special.generic;
-    var rc = O.char === 'claude' ? I.scheme('claude', O.pal).light.css : O.char === 'deepseek' ? I.scheme('deepseek', O.pal).water.css : I.N.gold.css;
+    var rc = I.hasChar(O.char) ? I.scheme(O.char, O.pal).main.css : I.N.gold.css;
     I.anim1(Aa, x, y, O.facing, I.lay(O, I.FRONT));
     I.sparksFan(x, y, O, nOf(9, O), 1.2, 3.2, 6, 9, 14, rc, { max: 10 });
     speedLines(x, y, O, nOf(3, O), 10, rc);
@@ -13871,7 +14195,9 @@
     'm0', 'm1', 'm2', 'm3', 'W', 'hl', 'sl', 'cl', 'dl', 'al', 'ml', 'lash', 'mo', 'tg', 'tear',
     'tear2', 'ew', 'tl', 'blS', 'sp', 'K', 'gl0', 'gl1', 'sk1',
     // V2: x* = extra ramp (Claude `book`, DeepSeek `fin`), u* = DeepSeek `under` (Claude: cloth1)
-    'x0', 'x1', 'x2', 'x3', 'xl', 'u0', 'u1', 'u2', 'u3', 'ul', 'eK', 'xP'];
+    'x0', 'x1', 'x2', 'x3', 'xl', 'u0', 'u1', 'u2', 'u3', 'ul', 'eK', 'xP',
+    // V2.5 (GPT): x* = `scale`, u* = `wing`, z* = `blob` (others: cloth2 / cloth1 / accent)
+    'z0', 'z1', 'z2', 'z3', 'zl'];
   var S = K.S = {};
   SLOT_NAMES.forEach(function (n, i) { S[n] = i + 1; });
   K.NSLOT = SLOT_NAMES.length + 1;
@@ -13905,9 +14231,10 @@
     c.K = mix(ol, '#000000', 0.3);
     c.gl0 = mix(p.accent[0], '#ffffff', 0.5); c.gl1 = p.accent[1];
     c.sk1 = mix(p.skin[1], p.skin[2], 0.5);
-    var xr = p.book || p.fin || p.cloth2, ur = p.under || p.cloth1;
+    var xr = p.book || p.fin || p.scale || p.cloth2, ur = p.under || p.wing || p.cloth1, zr = p.blob || p.accent;
     for (var j = 0; j < 4; j++) { c['x' + j] = xr[j]; c['u' + j] = ur[j]; }
-    c.xl = mix(xr[3], ol, 0.5); c.ul = mix(ur[3], ol, 0.5);
+    for (var q = 0; q < 4; q++) c['z' + q] = zr[q];
+    c.xl = mix(xr[3], ol, 0.5); c.ul = mix(ur[3], ol, 0.5); c.zl = mix(zr[3], ol, 0.5);
     c.eK = mix(p.eye[3], ol, 0.5);     // dark iris rim / upper iris
     c.xP = mix(xr[0], '#ffffff', 0.32); // pale inner face of DeepSeek's fins
     var out = [[0, 0, 0, 0]];

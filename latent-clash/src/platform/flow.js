@@ -26,6 +26,16 @@
     if (!l.length) l = LC.CHARS;
     return l[(Math.random() * l.length) | 0];
   };
+  // Feature detection for modules that are still learning about newer fighters.
+  app.fightSupports = function (ch) {
+    var F = LC.fight;
+    if (!F || !F.createMatch) return false;
+    if (F.chars) return !!F.chars[ch];
+    try { var l = F.getMoveList && F.getMoveList(ch); return !!(l && l.length); } catch (e) { return false; }
+  };
+  app.rigSupports = function (ch) {
+    try { return !!(LC.rig && LC.rig.hasAnim && LC.rig.hasAnim(ch, 'idle')); } catch (e) { return false; }
+  };
   app.palUi = function (ch, pal) {
     var P = (LC.PAL[ch] || LC.PAL[LC.CHARS[0]] || [])[pal ? 1 : 0] || {};
     return { ui: P.ui || '#fff', light: P.uiLight || P.ui || '#fff', dark: P.uiDark || P.ui || '#444' };
