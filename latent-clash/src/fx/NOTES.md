@@ -89,6 +89,14 @@ Next / known weaknesses:
 - Not reviewed against the four real stages (only the viewer mock backdrops), and not tested with the
   new 100 px rig sprites.
 
+## GPT progress / next steps (truthful, updated as work lands)
+- [ ] 1. `char:'gpt'` colour scheme in core + generic tinted effects (hits, rings, charge, screen.*)
+- [ ] 2. super: `screen.superBackdrop` gpt (night sky + attention grids), `gpt.attention`
+- [ ] 3. specials: `gpt.breath` sprite + `breathCast/riseTrail/callSlam/roarRing/clawHit/scales`
+- [ ] 4. strips / review / viewer / bench
+- [ ] 5. "GPT integration" section below
+Started: nothing written yet beyond this list.
+
 ## V2 integration (for FIGHT)
 Coordinates: `spawn` uses world coordinates, `drawSprite` uses screen coordinates
 (`sx = worldX − camX`). Bboxes are relative to the origin, facing right. For facing −1 use
