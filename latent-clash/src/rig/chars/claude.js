@@ -342,8 +342,8 @@
     if (sk.ds && sk.ds.drape && kL < 0.85) {
       // sitting / kneeling (getup): the front drapes over the raised knee and down the shin to the
       // floor; the back pools on the floor behind her
-      var dk = sk.knF[1] < sk.knB[1] ? sk.knF : sk.knB, da = dk === sk.knF ? sk.anF : sk.anB;
-      rf = { m: [dk[0] + 2, dk[1] - 6], e: [Math.max(da[0], dk[0]) + 4, Math.min(-1, da[1] + 2)] };
+      var kx = Math.max(sk.knF[0], sk.knB[0]), ky = Math.min(sk.knF[1], sk.knB[1]), ax = Math.max(sk.anF[0], sk.anB[0]);
+      rf = { m: [kx + 2, ky - 6], e: [Math.max(ax, kx) + 4, -2] };
       var bx = Math.min(rootB[0] - 8, rb.e[0]);
       rb = { m: [rootB[0] - 5, lerp(rootB, [bx, -1], 0.55)[1]], e: [bx, -1] };
     }
