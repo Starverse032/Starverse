@@ -5,12 +5,32 @@
   var app = LC.app = LC.app || {};
   var LORE = LC.LORE;
 
-  function other(ch) { return ch === 'claude' ? 'deepseek' : 'claude'; }
+  // Any fighter other than ch (first rival, else the next one in the roster).
+  function other(ch) {
+    var r = LORE.rivals && LORE.rivals[ch];
+    if (r && r.length) return r[0];
+    var C = LC.CHARS, i = C.indexOf(ch);
+    return C[(i + 1) % C.length] || C[0];
+  }
+  function rivalsOf(ch) {
+    var r = (LORE.rivals && LORE.rivals[ch]) || LC.CHARS.filter(function (c) { return c !== ch; });
+    return r.length ? r : [ch];
+  }
   function clampLv(v) { return Math.max(1, Math.min(5, v | 0)); }
-  function homeOf(ch) { for (var k in LORE.stages) if (LORE.stages[k].home === ch) return k; return 'latent'; }
+  function homeOf(ch) { if (LORE.homeStage && LORE.homeStage[ch]) return LORE.homeStage[ch]; for (var k in LORE.stages) if (LORE.stages[k].home === ch) return k; return 'latent'; }
   app.other = other;
   app.homeOf = homeOf;
-  app.charName = function (ch) { return (LORE.chars[ch] || LORE.chars.claude).nameZh; };
+  app.rivalsOf = rivalsOf;
+  app.randomChar = function (except) {
+    var l = LC.CHARS.filter(function (c) { return c !== except; });
+    if (!l.length) l = LC.CHARS;
+    return l[(Math.random() * l.length) | 0];
+  };
+  app.palUi = function (ch, pal) {
+    var P = (LC.PAL[ch] || LC.PAL[LC.CHARS[0]] || [])[pal ? 1 : 0] || {};
+    return { ui: P.ui || '#fff', light: P.uiLight || P.ui || '#fff', dark: P.uiDark || P.ui || '#444' };
+  };
+  app.charName = function (ch) { return (LORE.chars[ch] || LORE.chars[LC.CHARS[0]]).nameZh; };
   app.stageIds = function () {
     var ids = LC.STAGES.slice();
     try { if (LC.stages && LC.stages.list) { var l = LC.stages.list().map(function (s) { return s.id; }); if (l.length) ids = l; } } catch (e) { console.error('[platform] stages.list', e); }
@@ -22,7 +42,7 @@
   function side(p, flat, idx, mode) {
     var o = typeof p === 'string' ? { char: p } : Object.assign({}, p || {});
     if (!o.char && flat['p' + (idx + 1)] && typeof flat['p' + (idx + 1)] === 'string') o.char = flat['p' + (idx + 1)];
-    if (LC.CHARS.indexOf(o.char) < 0) o.char = idx === 0 ? 'claude' : 'deepseek';
+    if (LC.CHARS.indexOf(o.char) < 0) o.char = LC.CHARS[idx % LC.CHARS.length];
     if (o.palette == null) o.palette = flat['pal' + (idx + 1)] != null ? +flat['pal' + (idx + 1)] : 0;
     if (o.control == null) o.control = flat['ctl' + (idx + 1)] || (mode === 'demo' ? 'cpu' : idx === 0 ? 'human' : 'cpu');
     if (o.level == null) o.level = flat.level != null ? +flat.level : LC.settings.difficulty;
@@ -37,7 +57,7 @@
     var opts = app.opts || {};
     var mode = p.mode || 'versus';
     var p1 = side(p.p1, p, 0, mode), p2 = side(p.p2, p, 1, mode);
-    if (p1.char === p2.char && p1.palette === p2.palette) p2.palette = 1 - p1.palette;
+    if (p1.char === p2.char && p1.palette === p2.palette) p2.palette = p1.palette ? 0 : 1;
     var stage = p.stage || (mode === 'training' ? 'training' : homeOf(p2.char));
     if (stage === 'random') { var ids = app.stageIds(); stage = ids[(Math.random() * ids.length) | 0]; }
     var cfg = {
@@ -62,15 +82,22 @@
     app.session = { mode: 'arcade', vs: 'pvc', arcade: { char: ch, palette: pal, stage: 0, score: 0, continues: 0, wins: 0, history: [] } };
     return app.session;
   };
+  // Resolve ladder step k for the arcade character: { foe, palette, stage }.
+  app.arcadeStep = function (A, k) {
+    var step = LORE.arcade[k], R = rivalsOf(A.char), f = step.foe;
+    var foe = f === 'mirror' ? A.char : f === 'rival2' ? (R[1] || R[0]) : f === 'rival' || f === 'rival1' ? R[0] : (LC.CHARS.indexOf(f) >= 0 ? f : R[0]);
+    var pal = step.palette ? 1 : 0;
+    if (foe === A.char && pal === A.palette) pal = A.palette ? 0 : 1;
+    var st = step.stage;
+    var stage = st === 'foeHome' || st === 'rivalHome' ? homeOf(foe) : st === 'ownHome' ? homeOf(A.char) : st;
+    return { step: step, foe: foe, palette: pal, stage: stage };
+  };
   app.arcadeFightParams = function () {
-    var A = app.session.arcade, step = LORE.arcade[A.stage];
-    var foe = step.foe === 'mirror' ? A.char : other(A.char);
-    var pal = step.palette;
-    if (foe === A.char && pal === A.palette) pal = 1 - A.palette;
-    var stage = step.stage === 'rivalHome' ? homeOf(foe) : step.stage === 'ownHome' ? homeOf(A.char) : step.stage;
+    var A = app.session.arcade, rs = app.arcadeStep(A, A.stage), step = rs.step;
+    var foe = rs.foe, pal = rs.palette, stage = rs.stage;
     var intro = null, me = LORE.chars[A.char];
     var foeLines = step.foe === 'mirror' ? LORE.arcadeTaunt.mirror[A.char] : step.boss ? LORE.arcadeTaunt.boss[foe] : null;
-    if (foeLines) intro = [(me.intro[foe] || []).slice(), foeLines.slice()];
+    if (foeLines) intro = [((me && me.intro && me.intro[foe]) || []).slice(), foeLines.slice()];
     return {
       mode: 'arcade',
       p1: { char: A.char, palette: A.palette, control: 'human' },
