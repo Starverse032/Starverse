@@ -132,9 +132,11 @@
     return { c: c, U: U, V: V, o: sk.bko, h: BKH * sc, w: BKW * sc };
   };
   C.quillGeo = function (sk) {
+    // ds.ql (0..1): drawn-out length while the quill is pulled out of the book (start-ups)
     var g = handTip(sk, 'F', 2), u = rot(1, 0, sk.pen), pg = sk.pg || 0;
-    return { g: g, u: u, butt: [g[0] - u[0] * (QL * pg + 7), g[1] - u[1] * (QL * pg + 7)],
-      tip: [g[0] + u[0] * QL * (1 - pg), g[1] + u[1] * QL * (1 - pg)] };
+    var ql = sk.ds && sk.ds.ql != null ? sk.ds.ql : 1, L = QL * ql, bt = 7 * Math.min(1, ql * 2);
+    return { g: g, u: u, ql: ql, L: L + bt + L * pg, butt: [g[0] - u[0] * (L * pg + bt), g[1] - u[1] * (L * pg + bt)],
+      tip: [g[0] + u[0] * L * (1 - pg), g[1] + u[1] * L * (1 - pg)] };
   };
   C.post = function (sk) {
     sk.pen = Math.round(sk.pen);
@@ -304,7 +306,14 @@
   function drawQuill(p, sk) {
     var g = C.quillGeo(sk), u = g.u, v = [-u[1], u[0]], b = g.butt, t = g.tip;
     function q(a, s) { return [b[0] + u[0] * a + v[0] * s, b[1] + u[1] * a + v[1] * s]; }
-    var L = QL + 7 + QL * (sk.pg || 0);
+    var L = g.L;
+    if (g.ql < 1) {
+      // being drawn out: a bare streak of light with a bright head, vane not yet unfurled
+      p.cap(b[0], b[1], t[0], t[1], 0.9, 1.6, M.glow, null, 0);
+      ln(p, b, t, col(M.glow, 0), true);
+      p.ell(t[0], t[1], 1.6, 1.6, M.glow, null, 0);
+      return;
+    }
     // feather vane (blade of light): wide on the upper side, tapering to the nib
     p.poly(H.flat([q(0, 0), q(L * 0.18, -2.6), q(L * 0.45, -3.6), q(L * 0.75, -2.6), q(L - 3, -0.8), q(L - 3, 0.8), q(L * 0.6, 1.8), q(L * 0.25, 1.4)]), M.glow, null, 1);
     // light along the leading (upper) edge, shade on the lower barbs
