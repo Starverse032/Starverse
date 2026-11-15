@@ -1,7 +1,7 @@
 // LATENT CLASH — ILLUST screenshots.  node tools/illust-shots.mjs [group ...]
 // Writes .shots/illust/*.png: every asset at x4 (on a dark backdrop, plus a transparent copy for
 // portraits), contact sheets, and a full-page shot of dev/illust-gallery.html.
-// Groups: all (default) | portraits | claude | deepseek | logo | banners | icons | title | gallery | sheet:<expr>
+// Groups: all (default) | portraits | claude | deepseek | gpt | logo | banners | icons | title | gallery | sheet:<expr>
 import { createRequire } from 'module';
 import { fileURLToPath, pathToFileURL } from 'url';
 import path from 'path';
@@ -33,12 +33,12 @@ async function sheet(name, expr, scale = 4, bg = '#15132a') {
   save(name, url);
 }
 
-const info = await page.evaluate(() => ({ initMs: LC.illust.initMs, names: LC.illust.names() }));
+const info = await page.evaluate(() => ({ initMs: LC.illust.initMs, names: LC.illust.names(), chars: LC.CHARS.slice() }));
 console.log('init ms:', info.initMs && info.initMs.toFixed(1));
 
 for (const g of groups) if (g.startsWith('sheet:')) await sheet('sheet', g.slice(6));
 
-for (const c of ['claude', 'deepseek']) {
+for (const c of info.chars) {
   if (!(want('portraits') || want(c))) continue;
   for (const kind of info.names.portraits) {
     for (const pal of [0, 1]) {
@@ -51,7 +51,9 @@ for (const c of ['claude', 'deepseek']) {
 }
 if (want('portraits')) {
   await sheet('pair-busts', `[LC.illust.portrait('claude','bust',0), LC.illust.portrait('deepseek','bust',0)]`, 4, '#231f45');
-  await sheet('faces', `['claude','deepseek'].flatMap(c=>[0,1].map(p=>LC.illust.portrait(c,'face',p)))`, 6, '#231f45');
+  await sheet('trio-busts', `LC.CHARS.map(c=>LC.illust.portrait(c,'bust',0))`, 3, '#231f45');
+  await sheet('trio-busts-light', `LC.CHARS.map(c=>LC.illust.portrait(c,'bust',0))`, 3, '#e8e2d4');
+  await sheet('faces', `LC.CHARS.flatMap(c=>[0,1].map(p=>LC.illust.portrait(c,'face',p)))`, 6, '#231f45');
 }
 if (want('logo')) {
   await sheet('logo', `[LC.illust.logo()]`, 4, '#15132a');
