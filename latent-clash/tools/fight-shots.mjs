@@ -68,6 +68,11 @@ for (const [c, o] of [['claude', 'deepseek'], ['deepseek', 'claude']]) {
 add('v2-flashoff-superko', V('claude', 'deepseek', { hp2: 120, settings: { flash: false } }), [...nearC.claude, st(2, 5, 'HS'), ...W(80)], 'ko12');
 add('v2-flashoff-impact', V('deepseek', 'claude', { settings: { flash: false } }), [...nearC.deepseek, st(1, 5, 'H'), st(11, 5)]);
 for (const k of [30, 60, 90]) add(`v2-ko-${k}`, { mode: 'demo', stage: 'abyss', seed: 21, intro: false, p1: { char: 'claude', control: 'cpu', level: 5 }, p2: { char: 'deepseek', control: 'cpu', level: 4 } }, [], 'ko' + k);
+// KO backdrop timeline (hold KO_BG_HOLD, stepped fade KO_BG_FADE): `--only=kot-` / `--only=kots-` → `--sheet`
+for (const k of [12, 44, 62, 68, 74, 80, 120]) {
+  add(`kot-${k}`, { mode: 'demo', stage: 'abyss', seed: 21, intro: false, p1: { char: 'claude', control: 'cpu', level: 5 }, p2: { char: 'deepseek', control: 'cpu', level: 4 } }, [], 'ko' + k);
+  add(`kots-${k}`, V('claude', 'deepseek', { hp2: 120 }), [...nearC.claude, st(2, 5, 'HS'), ...W(80)], 'ko' + k);
+}
 add('v2-ko', { mode: 'demo', stage: 'abyss', seed: 21, intro: false, p1: { char: 'claude', control: 'cpu', level: 5 }, p2: { char: 'deepseek', control: 'cpu', level: 4 } }, [], 'ko12');
 
 const only = args.only ? String(args.only).split(',') : null;
