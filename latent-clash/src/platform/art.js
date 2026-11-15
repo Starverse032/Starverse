@@ -131,7 +131,7 @@
 
   function RigPuppet(ch, p) {
     this.p = LC.rig.createPuppet(ch, { palette: p || 0 });
-    this.ch = ch; this.real = true; this.anim = 'idle'; this.t0 = 0;
+    this.ch = ch; this.pal = p || 0; this.real = true; this.anim = 'idle'; this.t0 = 0;
     this.has = {};
   }
   RigPuppet.prototype.setAnim = function (anim, t) {
@@ -140,14 +140,22 @@
     if (anim !== this.anim) { this.anim = anim; this.t0 = t; }
   };
   RigPuppet.prototype.tick = function (t, env) {
-    this.p.setPose(this.anim, t - this.t0);
-    this.p.tick(env || { x: 0, y: LC.GROUND_Y, vx: 0, vy: 0, facing: 1, grounded: true });
+    if (this.broken) return;
+    try {
+      this.p.setPose(this.anim, t - this.t0);
+      this.p.tick(env || { x: 0, y: LC.GROUND_Y, vx: 0, vy: 0, facing: 1, grounded: true });
+    } catch (e) { this.broken = true; console.error('[platform] rig puppet ' + this.ch, e); }
   };
-  RigPuppet.prototype.draw = function (c, sx, sy, o) { this.p.draw(c, sx | 0, sy | 0, o || {}); };
+  RigPuppet.prototype.draw = function (c, sx, sy, o) {
+    if (this.broken) { if (!this.fb) this.fb = new FallbackPuppet(this.ch, this.pal); this.fb.t = (this.fb.t || 0) + 1; this.fb.draw(c, sx, sy, o); return; }
+    this.p.draw(c, sx | 0, sy | 0, o || {});
+  };
   RigPuppet.prototype.getAnchor = function (n) { try { return this.p.getAnchor(n); } catch (e) { return { x: 0, y: -40 }; } };
 
   ui.puppet = function (ch, p) {
-    if (LC.rig && LC.rig.createPuppet) {
+    var known = true;
+    if (LC.rig && LC.rig.hasAnim) { try { known = !!LC.rig.hasAnim(ch, 'idle'); } catch (e) { known = false; } }
+    if (known && LC.rig && LC.rig.createPuppet) {
       try { return new RigPuppet(ch, p); } catch (e) { console.error('[platform] rig.createPuppet', e); }
     }
     var fp = new FallbackPuppet(ch, p);
