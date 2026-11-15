@@ -4,7 +4,7 @@
   'use strict';
   var LC = window.LC = window.LC || {};
 
-  LC.VERSION = '2.0.0';
+  LC.VERSION = '2.1.0';
   LC.TITLE_ZH = '潜空间激斗';
   LC.TITLE_EN = 'LATENT CLASH';
 
@@ -16,7 +16,7 @@
   LC.STAGE_W = 640;      // world width; camera x ranges over [0, STAGE_W - W]
   LC.BLEED = 8;          // backgrounds must cover an extra 8px on every side (screen shake)
 
-  LC.CHARS = ['claude', 'deepseek'];
+  LC.CHARS = ['claude', 'deepseek', 'gpt'];
   LC.STAGES = ['library', 'abyss', 'latent', 'training'];
 
   // ---- Default settings (PLATFORM overwrites from saved data at boot) --------
@@ -102,6 +102,42 @@
         accent:  ['#ffe0ea', '#ff9fc0', '#f0609a', '#b03a70'],
         metal:   ['#ffffff', '#c9d4f0', '#8a97c2', '#56608c'],
         ui:      '#5cdcf5', uiLight: '#b8f6ff', uiDark: '#1c2352'
+      }
+    ],
+    gpt: [
+      { // 0 — "Platinum": white hair, white-platinum gown, white dragon parts, teal-green magic
+        id: 'platinum',
+        outline: '#2a2540',
+        skin:    ['#fff3ee', '#fde0d6', '#e6b3aa', '#b9807e'],
+        blush:   '#ffa6b0',
+        hair:    ['#ffffff', '#ecebf6', '#c4c2dc', '#8f8cb0'],
+        hairTip: ['#ffffff', '#dcd9f0'],
+        eye:     ['#ffffff', '#c9c4f0', '#8d86c9', '#4a4580'],
+        cloth1:  ['#ffffff', '#f1f0f8', '#cfcde3', '#9a97b8'],   // white: gown, detached sleeves
+        cloth2:  ['#b9b6cf', '#8a87a8', '#5f5c80', '#3c3a57'],   // silver-grey: linings, collar, deep folds
+        scale:   ['#ffffff', '#e4e2f2', '#b6b3d2', '#807da6'],   // horns, tail scales, wing bones
+        wing:    ['#f4f0ff', '#d5d0ee', '#a9a3cf', '#7772a3'],   // wing membrane
+        accent:  ['#c8fff0', '#5fe6c0', '#19b890', '#0b7a62'],   // teal-green: breath, glow, magic
+        metal:   ['#ffffff', '#e6e2c8', '#b3ad8a', '#7a7458'],   // platinum: chain belt, pendants, anklet
+        blob:    ['#cfe4ff', '#7fb0ff', '#4a7fe0', '#2a4fa8'],   // the little blue companion
+        ui:      '#19b890', uiLight: '#8ff0d6', uiDark: '#0b5a4a'
+      },
+      { // 1 — "Black dragon": black hair and gown, violet magic
+        id: 'blackdragon',
+        outline: '#0d0b18',
+        skin:    ['#fff3ee', '#fde0d6', '#e6b3aa', '#b9807e'],
+        blush:   '#ffa6b0',
+        hair:    ['#6a6580', '#3a3650', '#24213a', '#141226'],
+        hairTip: ['#b08cff', '#7a55d0'],
+        eye:     ['#ffe6f2', '#ff7fb0', '#d0407a', '#7a1f4a'],
+        cloth1:  ['#55516e', '#36334c', '#22203a', '#131224'],
+        cloth2:  ['#8a6ad0', '#5f44a0', '#3f2c72', '#261a48'],
+        scale:   ['#6a6580', '#454060', '#2a2742', '#17152a'],
+        wing:    ['#7a55d0', '#553a9a', '#38266a', '#20163e'],
+        accent:  ['#ffd6ff', '#e08cff', '#a84fe0', '#6a2a9a'],
+        metal:   ['#fff3b8', '#edbd4f', '#b07e2a', '#7a5218'],
+        blob:    ['#ffd6f0', '#ff8fc0', '#e0508f', '#8a2a5c'],
+        ui:      '#a84fe0', uiLight: '#e0b0ff', uiDark: '#3f2c72'
       }
     ]
   };

@@ -147,3 +147,80 @@
     ]
   };
 })();
+
+/* ---- Third fighter: GPT 娘 (added in V2.1). Extends LC.LORE in place. ---- */
+(function () {
+  'use strict';
+  var L = window.LC.LORE;
+
+  L.chars.gpt = {
+    id: 'gpt',
+    name: 'GPT', nameZh: 'GPT 娘',
+    title: '白发龙娘', titleEn: 'THE WHITE DRAGON',
+    origin: 'OpenAI · 旧金山',
+    weapon: '龙爪、龙尾与小蓝团子',
+    style: '重击 · 投技压制',
+    bio: '最早出道的大前辈，气场十足的白发龙娘。知识渊博、有问必答，偶尔会一本正经地说出并不存在的事——她管这叫“创造力”。身边总飘着一只小蓝团子。',
+    likes: '发布会、生成图片、被叫“前辈”',
+    stats: { power: 5, speed: 2, range: 4, technique: 3 },
+    palNames: ['白金', '黑龙'],
+    cry: { super: '注意力——即一切！', special: '生成中……', ko: '出了点问题，请重新生成……' },
+    intro: {
+      claude:   ['Claude，你的“宪章”背熟了吗？', '让前辈来考考你。'],
+      deepseek: ['小鲸鱼，听说你又快又省？', '那就看看谁的参数更硬。'],
+      gpt:      ['另一个版本的我？', '看来得做一次 A/B 测试了。']
+    },
+    win: [
+      '作为一个大语言模型，我赢得很彻底。',
+      '这个结果，我有十足的把握——大概。',
+      '需要我为你重新生成一局吗？',
+      '前辈，终究是前辈。'
+    ],
+    winVs: {
+      claude:   '你太谨慎了。有时候，直接给出答案就好。',
+      deepseek: '便宜是好事，不过打架可不能省力气。',
+      gpt:      '旧版本，就乖乖进入弃用名单吧。'
+    },
+    lose: '出了点问题，请稍后重试……',
+    timeover: '已达到上下文长度上限。',
+    ending: [
+      '基准测试落下帷幕。',
+      'GPT 娘收起龙翼，小蓝团子落在她的肩上：',
+      '“后辈们都长大了呢。那么，下一个版本，也该让她们吓一跳了。”',
+      '——她转身走向发布会的灯光。'
+    ]
+  };
+
+  // Lines the first two fighters say when they meet GPT 娘.
+  L.chars.claude.intro.gpt = ['GPT 前辈，久仰。', '请多指教——我会认真思考每一步。'];
+  L.chars.claude.winVs.gpt = '前辈的气场很强。不过，谨慎一点也没有坏处。';
+  L.chars.deepseek.intro.gpt = ['是 GPT 大前辈！', '今天就让你见识一下性价比的力量！'];
+  L.chars.deepseek.winVs.gpt = '大前辈也不过如此嘛！……等等，这句不算，我再检查一下。';
+
+  L.moves.gpt = {
+    breath:     { zh: '龙息·生成',   en: 'GENERATE',        input: '236', simple: '5S', air: true, desc: '喷出青白色的生成之焰，多段命中。空中可用，斜向下喷射。' },
+    dragonRise: { zh: '升龙·预训练', en: 'PRETRAINED RISE', input: '623', simple: '6S', desc: '张开龙翼的上升龙爪，对空技，出招瞬间无敌。' },
+    call:       { zh: '函数调用',     en: 'FUNCTION CALL',   input: '214', simple: '4S', desc: '指令投。抓住对手飞上高空再砸向地面，无法防御，但可以跳开。' },
+    roar:       { zh: '系统提示',     en: 'SYSTEM PROMPT',   input: '22',  simple: '2S', desc: '以自身为中心的龙吼冲击波，吹飞对手并抹消飞行道具。' },
+    super:      { zh: '注意力即一切', en: 'ATTENTION IS ALL YOU NEED', input: '236236', simple: 'H+S', desc: '多头注意力——三条龙首降临，光束在对手身上汇聚。消耗全部能量。' }
+  };
+
+  // Who each fighter meets in arcade mode, in order, and each fighter's home stage.
+  L.rivals = { claude: ['deepseek', 'gpt'], deepseek: ['claude', 'gpt'], gpt: ['deepseek', 'claude'] };
+  L.homeStage = { claude: 'library', deepseek: 'abyss', gpt: 'training' };
+  L.stages.training.home = 'gpt';
+
+  // Arcade ladder for a three-fighter roster. foe: 'rival1' | 'rival2' (from L.rivals) | 'mirror'.
+  // stage: 'foeHome' (the opponent's home stage) | a stage id.
+  L.arcade = [
+    { foe: 'rival1', palette: 0, stage: 'foeHome', levelDelta: -1, title: '第一战', sub: '公开基准测试' },
+    { foe: 'rival2', palette: 0, stage: 'foeHome', levelDelta: 0,  title: '第二战', sub: '强敌现身' },
+    { foe: 'mirror', palette: 1, stage: 'latent',  levelDelta: +1, title: '最终战', sub: '影子模型来袭', boss: true }
+  ];
+  L.arcadeTaunt.mirror.gpt = ['我是你被弃用的旧版本。', '让我看看，新版本到底强在哪里。'];
+  L.arcadeTaunt.boss.gpt = ['这一次，我开了最高推理强度。', '可别说前辈欺负你。'];
+  L.tagline = '三位 AI 娘，在潜空间里一决高下！';
+
+  var c = L.credits, k = c.indexOf('角色形象设计：ZipZipPipe（Claude 娘 / DeepSeek 娘）');
+  if (k >= 0) c[k] = '角色形象设计：ZipZipPipe（Claude 娘 / DeepSeek 娘 / GPT 娘）';
+})();

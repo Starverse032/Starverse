@@ -147,3 +147,86 @@ Bigger, bolder, layered — arcade "wow". In particular:
 - Heavy hits and counters: larger impact flashes, speed-line bursts, brief full-screen tint.
 - KO: full-screen white-out → radial burst backdrop behind the slow-motion fall.
 - Respect `LC.settings.flash === false` (no white-outs, softened tints). No anti-aliasing.
+
+---------------------------------------------------------------------------------------------------
+
+## V2.5 Third fighter: GPT 娘 (`gpt`)
+
+`LC.CHARS` is now `['claude', 'deepseek', 'gpt']`. Palettes: `LC.PAL.gpt` (new slots `scale`,
+`wing`, `blob`). Names, bio, dialogue, move names, arcade ladder (`LC.LORE.rivals`,
+`LC.LORE.homeStage`, new `LC.LORE.arcade` semantics): the block at the end of
+`src/shared/lore.js`. Nothing in any module may assume exactly two fighters any more — iterate
+`LC.CHARS`.
+
+### Design (ZipZipPipe's "白发龙娘"; reference art `.shots/ref/gpt-ref.png` — reference only, never
+trace, copy pixels or commit it)
+- The senior of the cast: regal, composed, a little imperious; cool half-lidded gaze, small
+  closed mouth; fierce when attacking. Tall and slender (**102 px** to the top of the head; the
+  horns rise ≈ 8 px above that).
+- **Hair**: pure white, very long and wavy with loose curls, an ahoge; pointed ears with a drop
+  earring.
+- **Dragon parts** (`scale` ramp, pale lavender shading): two curved **horns** sweeping up and
+  back; a pair of **bat-like wings** at the lower back (`wing` membrane, `scale` bones), normally
+  half-folded, spreading on big moves; a long, thick, **scaled tail** with a row of dorsal
+  spikes, curling near the floor.
+- **Eyes**: pale lavender (`eye`).
+- **Outfit** — a white-platinum gown: sleeveless high-collared fitted bodice with a diamond
+  cut-out line; **detached, very wide, frilled sleeves** hanging from the upper arms almost to
+  the knees; long white skirt with a **high side slit** showing one leg; a platinum **chain belt**
+  with diamond pendants and tassels; round **knot rosettes** (an interlaced-loop flower, drawn in
+  white with dark line work — our own design, not a logo) in the hair, at the hips and along the
+  hem; white heeled shoes with an ankle chain.
+- **Companion**: a small round **blue blob** with two eyes floating near her shoulder (`blob`);
+  it bobs along in idle and reacts in intro/win/lose.
+- **Magic colour**: teal-green and white (`accent`) — her flames, claws' glow and beams — so
+  the three fighters read as orange / blue / green.
+- **Silhouette keys**: horns, wings, long tail, wide hanging sleeves, slit gown.
+
+### Fighting style and metrics
+Power character: slower, hard-hitting, long tail, a command grab. Claw swipes with a teal
+after-glow (L), high kicks through the slit (M), tail lashes and wing buffets (H).
+
+| | GPT 娘 |
+|---|---|
+| Standing / crouch height, body width | 102 / 68 / 28 px |
+| Walk forward / back | 1.4 / 1.1 px/f |
+| Dash / back-dash | 70 px in 20f / 60 px in 22f |
+| Jump apex / airtime | 82 px / 46f |
+| Normals startup/active/recovery | 5L 6/3/9 · 5M 9/4/15 · 5H 13/5/24 · 2L 6/3/10 · 2M 9/4/16 · 2H 12/5/25 · jL 5/6/∞ · jM 8/6/∞ · jH 11/6/∞ |
+| Reach 5L / 5M / 5H | 36 / 54 / 68 px (5H = tail lash) |
+| Reach 2L / 2M / 2H | 38 / 56 / 72 px (2H = tail sweep, knocks down) |
+| Reach jL / jM / jH | 32 / 44 / 54 px |
+
+Common animations: the full common set of CONTRACT §3.3 with the same segment ids and frame
+counts as Claude's (`dashF` go 20, `dashB` go 22; `super`: startup 6, cast 12, active 50,
+recovery 30).
+
+| Move id | Input (simple) | What it is | Animation segments |
+|---|---|---|---|
+| `breath` | 236+X (`5S`) | 龙息·生成 — a cone of teal-white flame from her mouth, 3 hits, not a travelling projectile. Range L 60 / M 85 / H 110 px. | `breath`: startup 12, active 16, recovery 22 (`muzzle` = mouth) |
+| `airBreath` | air 236+X (`jS`) | the same breath aimed 45° down-forward | `airBreath`: startup 10, active 12, recovery* 12 |
+| `dragonRise` | 623+X (`6S`) | 升龙·预训练 — rising claw uppercut with wings flared; invulnerable start-up; anti-air; knocks down | `dragonRise`: startup 5, rise 14, fall* 12, land 14 |
+| `call` | 214+X (`4S`) | 函数调用 — **command grab**: unblockable, range ≈ 60 px, misses airborne opponents, long whiff recovery. On a catch she carries the victim up on her wings and slams them down (150 / 170 / 190 damage). | `call`: startup 7, active 3, recovery 30 · `callHit`: hold 14, rise 16, slam 12, recovery 22 (`grab` anchor throughout; victim released at the end of `slam`) |
+| `roar` | 22+X (`2S`) | 系统提示 — a point-blank roar: shock-wave around her (radius L 56 / M 70 / H 84 px) that blows the opponent away and destroys projectiles. | `roar`: startup 9, active 6, recovery 24 |
+| `super` | 236236+X (`H+S`) | 注意力即一切 ATTENTION IS ALL YOU NEED — "multi-head attention": three huge spectral dragon heads descend around the screen and fire beams that converge on the opponent, ending in a full-screen burst. Full-screen, multi-hit, blockable. | `super` as above |
+
+Anchors as CONTRACT §5.3 (`weapon` = claw tip / toe / tail tip of the current attack; `muzzle`
+= mouth in `breath`/`airBreath`, raised hand in `super`; `grab` in `throwHit` and `callHit`),
+plus `blob` (the companion's position).
+
+### What each module adds for her
+- **RIG**: sprite + every animation above (and the common set). 
+- **FX** (teal/white/platinum; palette 1 = violet): spawn `gpt.breathCast`, `gpt.riseTrail`,
+  `gpt.callSlam` (crater burst + scale shards), `gpt.roarRing`, `gpt.clawHit`, `gpt.scales`;
+  sprites `gpt.breath` (flame cone; `opts.length`, `opts.angle`, `opts.phase` 'start'|'loop'|'end'),
+  `gpt.attention` (the super: three dragon heads + converging beams + burst; drawn at 0,0 with
+  `opts.tx, opts.ty` = target point; `spriteInfo().frames[t]` hit boxes and `events`); and
+  `char: 'gpt'` variants of `screen.superBackdrop` (a night sky of drifting attention-matrix
+  grids and falling scales), `screen.superFinish`, `screen.koBackdrop`, `screen.superBg`.
+- **ILLUST**: `portrait('gpt', …)` for every kind and both palettes; `emblem.gpt` (+ `.lg`): the
+  knot rosette.
+- **AUDIO**: SFX `gpt.breath`, `gpt.rise`, `gpt.call`, `gpt.callSlam`, `gpt.roar`, `gpt.super`
+  (≈ 1.5 s); `voice('gpt', kind)` with her own timbre (cool, regal, lower than the others).
+- **FIGHT**: move data, command-grab and roar logic, CPU plans for and against her, move list,
+  balance across all six pairings.
+- **PLATFORM**: three tiles on character select, the new arcade ladder, move lists for three.
