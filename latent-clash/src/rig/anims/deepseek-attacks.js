@@ -210,17 +210,23 @@
       ['land', P(S, { hip: [0, -36], lean: 18, sq: 1, hF: [21, -46], hB: [9, -44], skirt: 0.3, eyes: 'focus' }), 'snap'], ['land+5', P(S, ATK)], ['land+11', S]]
   });
 
-  // super 「深度思考·鲸落」: gathers water low, then both arms thrown up to call the whale, held; tail raised
-  var SU0 = P(C, ATK, { hip: [0, -20], lean: 30, hF: [24, -26], hB: [16, -24], handF: 'flat', handB: 'flat', eyes: 'closed', mouth: 'shout', tail: 0, arch: 30 });
-  var SU1 = P(S, HIT, { hip: [0, -47], lean: -8, bend: -8, tilt: -10, fF: [12, 0], fB: [-12, 0], hF: [20, -96], hB: [-4, -98], handF: 'open', handB: 'open',
-    mouth: 'grin', weapon: 'hF', skirt: 0.35, tail: -40, arch: 30, tsw: 1.6 });
+  // super 「深度思考·鲸落」: sinks into a pooled crouch cupping water between the palms, then snaps one finger
+  // to the sky (held through active: skirt, hair and tail flared), then a relaxed, pleased settle
+  var SU0 = P(C, ATK, { hip: [0, -22], lean: 26, bend: 4, hF: [22, -30], hB: [16, -32], handF: 'open', handB: 'open', eyes: 'closed', mouth: 'neutral',
+    tail: 6, arch: 30, tsw: 0.4, wg: 'FB', z: { armB: 6 } });
+  var SU0b = P(SU0, { hip: [0, -18], lean: 32, hF: [20, -24], hB: [15, -25], tail: 16, arch: 34, mouth: 'shout', skirt: 0.45 });
+  var SU1 = P(S, HIT, { hip: [0, -48], lean: -8, bend: -10, tilt: -14, fF: [12, 0], fB: [-12, 0], hF: [16, -100], hB: [-20, -72], handF: 'point', handB: 'open',
+    mouth: 'grin', weapon: 'hF', skirt: 0.75, tail: -45, arch: 30, pen: 14, tsw: 2.2, wg: 'F' });
+  var SUh = P(SU1, { hip: [0, -47], skirt: 0.6, tail: -36, pen: 6, hB: [-19, -70] });
   def('super', {
     segs: [['startup', 6], ['cast', 8], ['active', 44], ['recovery', 34]], step: 2,
-    keys: [['startup', P(S, ATK)], ['startup+5', SU0, 'out'],
-      ['cast', SU0], ['cast+5', P(SU0, { hip: [0, -18] }), 'snap'],
+    keys: [['startup', P(S, ATK)], ['startup+4', SU0, 'out'],
+      ['cast', SU0], ['cast+5', SU0b, 'out'],
       ['active', P(SU1, { smear: { part: 'hF', from: 'cast+5', n: 4 } }), 'snap'], ['active+3', SU1, 'snap'],
-      ['active+22', P(SU1, { hip: [0, -46], hF: [21, -95] })], ['active+42', SU1],
-      ['recovery', P(SU1, { mouth: 'smile', eyes: 'happy' }), 'snap'], ['recovery+10', P(SU1, { mouth: 'smile', eyes: 'happy', hF: [18, -80], hB: [0, -82] }), 'out'],
-      ['recovery+26', P(S, ATK)], ['recovery+33', S]]
+      ['active+12', SUh, 'inout'], ['active+22', P(SU1, { skirt: 0.7 }), 'inout'], ['active+32', SUh, 'inout'], ['active+42', SU1, 'inout'],
+      ['recovery', P(SU1, { mouth: 'smile', eyes: 'happy', skirt: 0.4, tsw: 1.2 }), 'snap'],
+      ['recovery+8', P(S, { hip: [0, -45], lean: -2, bend: -4, hF: [14, -60], hB: [-6, -56], handF: 'relax', handB: 'relax', eyes: 'happy', mouth: 'smile', skirt: 0.2, tail: -10, tsw: 1.4, hs: 0.15 }), 'out'],
+      ['recovery+20', P(S, { hip: [0, -46], eyes: 'closed', mouth: 'smile', tail: 0 }), 'inout'],
+      ['recovery+28', P(S, ATK)], ['recovery+33', S]]
   });
 })();
