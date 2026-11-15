@@ -125,6 +125,9 @@ for (const [tag, file] of targets) {
     check(['result', 'match'].includes(sc), 'gpt match did not finish: ' + sc);
   } else {
     console.log(`  note [${tag}] GPT match skipped: fight supports gpt=${sup.fight}, rig.hasAnim('gpt','idle')=${sup.rig}`);
+    // still make sure a match config involving her degrades without errors (FIGHT substitutes / stub)
+    await page.evaluate(() => { LC.debug.goto('match', { mode: 'versus', p1: 'gpt', p2: 'claude', ctl1: 'cpu', ctl2: 'cpu', skipIntro: 1, seed: 11 }); LC.debug.step(240); });
+    await shot('match-gpt-degraded');
   }
   // pause via the start key in a human match
   const paused = await page.evaluate(() => {
