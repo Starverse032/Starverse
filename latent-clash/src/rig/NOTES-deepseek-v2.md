@@ -20,10 +20,29 @@ Design source: CONTRACT-V2 §V2.1 (rewritten from the reference picture) + `LC.P
 - Reach (weapon anchor x at the first active frame): 5L 32 5M 50 5H 63 2L 34 2M 52 2H 65 jL 30 jM 40 jH 48.
 - Perf: shared `--perf` deepseek_drawMs 0.82 (re-render every frame). `I._dsProf = {}` enables per-part timing.
 
+## Polish pass 1 (2026-11-15) — done, sheet-reviewed
+- New pose fields (deepseek.js): `pool` (discrete, 1 = the front hem runs over the knee cap and spills to the
+  floor: crouch family inherits it from `POSE.crouch`), `hem` (core numeric channel, px, - = hem lifted), `tw` (core
+  numeric channel, deg, hem swing; + = forward), `hs` (discrete 0..1: settle hair chains toward rest that tick — use
+  after flips/hops), `wg` ('F'|'B'|'FB': cyan water bead + droplets at the palm tip). `C.sigExtra` adds hem/tw.
+- crouchIn/crouch/crouchOut (+ guardCrouch, hitCrouch, 2L/2M/2H via the crouch pose): knees under a pooled skirt.
+- walkF/walkB: `gait()` extra on `G.walk` — heel-strike toe-up / push-off toe-down, hem lifted 3–4 px and swinging,
+  apron follows, bounce 2/1.5, tail counter-sway; speeds unchanged.
+- launch (tumble: skirt/tail/hair whip alternating), getup (sit → kneel on hands with the tail braced → hop → land),
+  thrown (limp dangle, head lolling, tail hanging), breach fall (`hs` settles the hair on the first fall frame).
+- super: pooled crouch cupping water (`wg: 'FB'`) → snap point to the sky held with skirt/hair/tail flared and a
+  slow breathing flare cycle → relaxed happy settle. throwHit: haul → overhead heave (tail braced on the floor) →
+  forward slam with the tail flung up behind. intro: deeper curtsy holding the skirt → stretch-yawn (tail stretched)
+  → eye rub → snap into stance with a tail flick. win: hop → bouncing wave/hand-on-head with tail wag. lose: shock →
+  sulk (arms folded, head down, foot scuff, sigh), tail flat on the floor.
+- Palm glow `wg` on 5L, 2L, chain1 (rear hand), chain3, super.
+- Known, not mine to fix in this pass: 2H flipped frames (startup+8 … recovery+6) draw no skirt at all (pre-existing,
+  verified against b06f962) — likely skirt surface degenerate in the flipped crouch frame.
+- Hem lift during walks pops 3 px at walk start/stop (idle has no lift).
+
 ## Weak / next (polish)
-- Walk: feet mostly hidden by the ankle-length skirt; skirt sway could be pushed. Crouch knees poke above the skirt.
-- Hair stays blocky in silhouette; breach fall: hair flips up for a few frames after the somersault (chain inertia).
-- Hands are small stamps; no water glow on palms yet (smears are cyan water).
+- Hair stays blocky in silhouette; throwHit toss still flips the hair forward for ~2 frames.
+- Hands are small stamps.
 - No back-view head for spins (spins mirror the whole sprite instead).
 
 ## Tools
