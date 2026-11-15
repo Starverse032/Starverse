@@ -82,7 +82,7 @@
   LC.scenes.define('ladder', function () {
     var A = LC.app.session.arcade, fp = LC.app.arcadeFightParams(), step = LORE.arcade[A.stage];
     var foe = fp.p2.char, lines = fp.introLines ? fp.introLines[1] : null;
-    var tw = lines ? new ui.Typewriter(lines.join('\n'), { speed: 0.4, font: { size: 12, color: U.text, lineGap: 3 }, pitch: foe === 'deepseek' ? 1.25 : 1 }) : null;
+    var tw = lines ? new ui.Typewriter(lines.join('\n'), { speed: 0.4, font: { size: 12, color: U.text, lineGap: 3 }, pitch: ({ deepseek: 1.25, gpt: 0.9 })[foe] || 1 }) : null;
     var leaving = false;
     function go() { if (leaving) return; leaving = true; LC.scenes.go('vs', { config: LC.app.matchConfig(fp) }, { transition: 'slash' }); }
     return {
@@ -103,8 +103,8 @@
           var pulse = cur ? ((t >> 3) & 1) : 0;
           ui.box(c, x - 1 - pulse, y - 1 - pulse, 34 + pulse * 2, 34 + pulse * 2, cur ? U.gold : done ? U.dim : U.line);
           ui.box(c, x, y, 32, 32, U.bg1);
-          var fc = s.foe === 'mirror' ? A.char : LC.app.other(A.char);
-          var b = ui.portrait(fc, 'bust', s.foe === 'mirror' ? 1 - A.palette : s.palette);
+          var rs = LC.app.arcadeStep(A, i);
+          var b = ui.portrait(rs.foe, 'bust', rs.palette);
           if (b) c.drawImage(i > A.stage ? ui.tint(b, '#0b0a14', 0.85) : b, 40, 26, 32, 32, x, y, 32, 32);
           if (done) LC.font.draw(c, 'CLEAR', x + 16, y + 22, { size: 8, color: U.green, outline: U.black, align: 'center' });
           LC.font.draw(c, s.title, x + 40, y + 4, { size: 12, color: cur ? U.gold : done ? U.dim : '#4f4a78' });
@@ -165,8 +165,8 @@
 
   // ---------------------------------------------------------------- ending
   LC.scenes.define('ending', function () {
-    var A = LC.app.session.arcade, L = LORE.chars[A.char];
-    var lines = L.ending, idx = 0, tw = null, hold = 0;
+    var A = LC.app.session.arcade, L = LORE.chars[A.char] || { nameZh: A.char, title: '' };
+    var lines = L.ending || [], idx = 0, tw = null, hold = 0;
     function next() { tw = idx < lines.length ? new ui.Typewriter(LC.font.wrap(lines[idx], 240, { size: 12 }).join('\n'), { speed: 0.35, font: { size: 12, color: U.text, lineGap: 3 } }) : null; hold = 0; }
     next();
     return {
