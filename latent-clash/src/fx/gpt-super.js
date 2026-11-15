@@ -16,7 +16,7 @@
   var I = FX._ = FX._ || {};
   var W = LC.W || 384, H = LC.H || 216, PI = Math.PI, TAU = PI * 2, D2R = PI / 180;
   var G = I.GPT = I.GPT || [{}, {}];
-  var NA = 10, JAW = [0, 0.3, 0.6];
+  var NA = 10, JAW = [0, 0.24, 0.46], HS = 0.86;   // aim angles, jaw poses, head scale
   var DUR = 70, EV = { enter: 0, lock: 12, open: 18, fire: 24, hits: [25, 30, 35, 40], burst: 44, dissolve: 52, end: 70 };
 
   // ---- head bake ---------------------------------------------------------------------------
@@ -38,13 +38,14 @@
     var g = G[pal], s = g.specU, P = LC.PAL.gpt[pal], Su = g.Su;
     var th = ai * 10 * D2R, c = Math.cos(th), sn = Math.sin(th), OX = 180, OY = 190, b = new I.Buf(262, 252);
     var phi = JAW[ji], hx = -74, hy = 2, jc = Math.cos(phi), js = Math.sin(phi);
-    function P2(x, y) { return [OX + x * c - y * sn, OY + x * sn + y * c]; }
+    function P2(x, y) { x *= HS; y *= HS; return [OX + x * c - y * sn, OY + x * sn + y * c]; }
     function J2(x, y) { var dx = x - hx, dy = y - hy; return P2(hx + dx * jc - dy * js, hy + dx * js + dy * jc); }
+    function hw(r) { return function (u) { return r(u) * HS; }; }
     function poly(L, col, jaw) { var o = []; for (var k = 0; k < L.length; k += 2) { var p = jaw ? J2(L[k], L[k + 1]) : P2(L[k], L[k + 1]); o.push(p[0], p[1]); } b.poly(o, col); }
     function tri(x0, y0, x1, y1, x2, y2, col, jaw) { poly([x0, y0, x1, y1, x2, y2], col, jaw); }
     function hornStroke(L, r0, r1, col) {
       var o = []; for (var k = 0; k < L.length; k += 2) { var p = P2(L[k], L[k + 1]); o.push(p[0], p[1]); }
-      b.stroke(o, function (u) { return r0 + (r1 - r0) * u; }, col);
+      b.stroke(o, hw(function (u) { return r0 + (r1 - r0) * u; }), col);
     }
     // horns (behind the skull): base, shade underside, ridge bands
     hornStroke(HORN2, 3.6, 0.8, Su[2]);
@@ -58,11 +59,15 @@
       var mo = [];
       [[hx, hy], [-50, 1], [-24, 0], [2, 0]].forEach(function (q) { var p = P2(q[0], q[1]); mo.push(p[0], p[1]); });
       [[2, 2], [-24, 2], [-50, 2]].forEach(function (q) { var p = J2(q[0], q[1]); mo.push(p[0], p[1]); });
-      b.poly(mo, g.dkU);
+      b.poly(mo, s[5]);
       var mi = [];
-      [[-56, 1], [-24, 0], [2, 0]].forEach(function (q) { var p = P2(q[0], q[1] + 2); mi.push(p[0], p[1]); });
+      [[-50, 1], [-24, 0], [2, 0]].forEach(function (q) { var p = P2(q[0], q[1] + 2); mi.push(p[0], p[1]); });
       [[2, 2], [-24, 2]].forEach(function (q) { var p = J2(q[0], q[1] - 2); mi.push(p[0], p[1]); });
-      b.poly(mi, s[5]);
+      b.poly(mi, s[4]);
+      var mw = [];
+      [[-30, 2], [2, 1]].forEach(function (q) { var p = P2(q[0], q[1] + 2); mw.push(p[0], p[1]); });
+      [[2, 2], [-30, 1]].forEach(function (q) { var p = J2(q[0], q[1] - 2); mw.push(p[0], p[1]); });
+      if (ji === 2) b.poly(mw, s[2]);
     }
     // lower jaw + beard spike
     poly(JAWP, s[2], true); poly(JAWSH, s[4], true); poly(BEARD, s[3], true);
@@ -74,7 +79,7 @@
     for (var y = 0; y < b.h; y++) for (var x = 0; x < BW; x++) {
       var i = y * BW + x, v = bd[i];
       if (v !== s[1] && v !== s[2]) continue;
-      var dx = x + 0.5 - OX, dy = y + 0.5 - OY, lx = dx * c + dy * sn, ly = -dx * sn + dy * c;
+      var dx = x + 0.5 - OX, dy = y + 0.5 - OY, lx = (dx * c + dy * sn) / HS, ly = (-dx * sn + dy * c) / HS;
       if (lx > -58 || lx < -106 || ly > 0) continue;
       var r = Math.floor((ly + 40) / 4), fx = ((lx + 200 + (r & 1) * 3) % 6 + 6) % 6, fy = ((ly + 40) % 4 + 4) % 4;
       if ((fy >= 3 && fx >= 1 && fx < 5) || (fy >= 2 && fy < 3 && (fx < 1 || fx >= 5))) bd[i] = v === s[1] ? s[2] : s[3];
@@ -134,9 +139,9 @@
   var HD = [{}, {}, {}];
   function layout(t, tx, ty) {
     var hov = [
-      [I.clamp(tx - 122, 64, 220), I.clamp(ty - 58, 30, 120)],
-      [I.clamp(tx - 6, 120, 300), I.clamp(ty - 80, 36, 90)],
-      [I.clamp(tx + 112, 200, W - 36), I.clamp(ty - 54, 34, 120)]
+      [Math.max(tx - 128, Math.min(100, tx - 36)), I.clamp(ty - 46, 50, 120)],
+      [I.clamp(tx - 22, 60, W - 60), I.clamp(ty - 66, 60, 110)],
+      [Math.min(tx + 116, Math.max(W - 100, tx + 36)), I.clamp(ty - 50, 50, 120)]
     ];
     var ent = [[-150, 0, 0], [0, -170, 90], [W + 150, 0, 180]];   // entry offsets / travel angle
     for (var k = 0; k < 3; k++) {
@@ -350,6 +355,13 @@
       ctx.fillStyle = b < 6 ? L[0] : L[1]; ctx.fillRect(-8, -8, W + 16, H + 16);
       ctx.globalAlpha = a0;
     }
+    if (b >= 5 && b < 11) {   // full-screen teal wedge burst (the super-finish image), stepping out
+      var fin = I.sprites['screen.superFinish'];
+      BO.pal = BO.palette = g === G[1] ? 1 : 0; BO.cx = tx; BO.cy = ty;
+      ctx.globalAlpha = a0 * (sf ? 0.5 : 1) * [0.9, 0.85, 0.7, 0.5, 0.32, 0.16][b - 5];
+      fin.draw(ctx, 0, 0, 9, BO);
+      ctx.globalAlpha = a0;
+    }
     if (b >= 6 && b < 14) {   // after-glow core
       var cr = Math.max(0, 22 - (b - 6) * 3);
       ctx.fillStyle = L[1]; disc(ctx, tx, ty, cr + 2); ctx.fillStyle = L[0]; disc(ctx, tx, ty, cr);
@@ -372,6 +384,7 @@
     }
   }
 
+  var BO = { char: 'gpt', pal: 0, palette: 0, cx: 0, cy: 0, facing: 1, raw: {} };
   var info = { duration: DUR, bbox: { x: 0, y: 0, w: W, h: H }, events: EV, frames: [], hitbox: { x: -16, y: -20, w: 32, h: 40 }, burstBox: { x: -48, y: -48, w: 96, h: 96 } };
   for (var t = 0; t < DUR; t++) {
     if (t > EV.fire && t < EV.burst) info.frames.push({ x: -16, y: -20, w: 32, h: 40 });
