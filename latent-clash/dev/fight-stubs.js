@@ -32,23 +32,30 @@ window.fightStubs = function () {
       wave: [['startup', 15], ['active', 3], ['recovery', 26]], breach: [['startup', 5], ['rise', 12], ['fall', 12, 1], ['land', 14]],
       chain1: [['startup', 9], ['active', 4], ['recovery', 18]], chain2: [['startup', 7], ['active', 4], ['recovery', 20]],
       chain3: [['startup', 9], ['active', 5], ['recovery', 26]], diveIn: [['startup', 6], ['sink', 6]],
-      diveOut: [['startup', 6], ['active', 5], ['recovery', 22]], diveKick: [['startup', 8], ['active', 10, 1], ['land', 12]]
+      diveOut: [['startup', 6], ['active', 5], ['recovery', 22]], diveKick: [['startup', 8], ['active', 10, 1], ['land', 12]],
+      breath: [['startup', 12], ['active', 16], ['recovery', 22]], airBreath: [['startup', 10], ['active', 12], ['recovery', 12, 1]],
+      dragonRise: [['startup', 5], ['rise', 14], ['fall', 12, 1], ['land', 14]],
+      call: [['startup', 7], ['active', 3], ['recovery', 30]], callHit: [['hold', 14], ['rise', 16], ['slam', 12], ['recovery', 22]],
+      roar: [['startup', 9], ['active', 6], ['recovery', 24]]
     };
+    // per-character segment overrides (CONTRACT-V2 §V2.5: GPT super cast 12 / active 50, dashes 20 / 22)
+    var SEGC = { gpt: { 'super': [['startup', 6], ['cast', 12], ['active', 50], ['recovery', 30]], dashF: [['go', 20]], dashB: [['go', 22]] } };
+    function segsOf(c, a) { return (SEGC[c] && SEGC[c][a]) || SEGS[a] || SEGS.idle; }
     ['5L', '5M', '5H', '2L', '2M', '2H'].forEach(function (n) { SEGS[n] = [['startup', 8], ['active', 4], ['recovery', 14]]; });
     ['jL', 'jM', 'jH'].forEach(function (n) { SEGS[n] = [['startup', 7], ['active', 6], ['recovery', 12, 1]]; });
-    var CH = { claude: { h: 104, ch: 70, w: 26 }, deepseek: { h: 98, ch: 66, w: 28 } };   // V2 metrics
+    var CH = { claude: { h: 104, ch: 70, w: 26 }, deepseek: { h: 98, ch: 66, w: 28 }, gpt: { h: 102, ch: 68, w: 28 } };   // V2 metrics
     var R = LC.rig = {};
     R.init = function () { return Promise.resolve(); };
     R.listAnims = function () { return Object.keys(SEGS); };
     R.hasAnim = function (c, a) { return !!SEGS[a]; };
     R.animInfo = function (c, a) {
-      var s = SEGS[a] || SEGS.idle, t = 0;
+      var s = segsOf(c, a), t = 0;
       return { segs: s.map(function (x) { t += x[1]; return { id: x[0], f: x[1], loop: !!x[2] }; }), total: t, loop: !!s[s.length - 1][2] };
     };
-    R.charInfo = function (c) { return { height: CH[c].h, crouchHeight: CH[c].ch, width: CH[c].w, palettes: 2 }; };
+    R.charInfo = function (c) { var k = CH[c] || CH.claude; return { height: k.h, crouchHeight: k.ch, width: k.w, palettes: 2 }; };
 
-    function Puppet(c, opts) { this.c = c; this.pal = (opts && opts.palette) | 0; this.a = 'idle'; this.s = 'loop'; this.u = 0; this.H = CH[c].h; }
-    Puppet.prototype.setPose = function (a, f) { this.a = a; this.s = (SEGS[a] || SEGS.idle)[0][0]; this.u = f / 20; };
+    function Puppet(c, opts) { this.c = c; this.pal = (opts && opts.palette) | 0; this.a = 'idle'; this.s = 'loop'; this.u = 0; this.H = (CH[c] || CH.claude).h; }
+    Puppet.prototype.setPose = function (a, f) { this.a = a; this.s = segsOf(this.c, a)[0][0]; this.u = f / 20; };
     Puppet.prototype.setPoseSeg = function (a, s, u) { this.a = a; this.s = s; this.u = u; };
     Puppet.prototype.tick = function () {};
     Puppet.prototype.reset = function () {};
@@ -80,8 +87,17 @@ window.fightStubs = function () {
         case 'footF': return { x: 7, y: 0 };
         case 'footB': return { x: -7, y: 0 };
         case 'weapon': return b ? { x: b[0] + b[2] - 2, y: b[1] + b[3] / 2 } : { x: this.c === 'claude' ? 30 : 22, y: top + 32 };
-        case 'muzzle': return this.c === 'deepseek' && this.a === 'wave' ? { x: 40, y: 0 } : (this.a === 'airSpark' ? { x: 36, y: -56 } : { x: this.a === 'super' ? 34 : 40, y: this.a === 'super' ? -82 : top + 26 });
+        case 'muzzle':
+          if (this.c === 'gpt') return this.a === 'breath' ? { x: 23, y: -81 } : this.a === 'airBreath' ? { x: 30, y: -76 } : this.a === 'super' ? { x: 22, y: -105 } : { x: 6, y: -88 };
+          return this.c === 'deepseek' && this.a === 'wave' ? { x: 40, y: 0 } : (this.a === 'airSpark' ? { x: 36, y: -56 } : { x: this.a === 'super' ? 34 : 40, y: this.a === 'super' ? -82 : top + 26 });
         case 'grab':
+          if (this.a === 'callHit') {   // hold (42,-64) -> rise (22,-126) -> slam to (42,-10)
+            var q = Math.min(1, this.u);
+            if (this.s === 'hold') return { x: 42 - 6 * q, y: -64 };
+            if (this.s === 'rise') return { x: 26 - 4 * q, y: -105 - 21 * q };
+            if (this.s === 'slam') return { x: 46 - 4 * q, y: -54 + 44 * Math.min(1, q * 1.2) };
+            return { x: 40, y: -6 };
+          }
           if (this.a !== 'throwHit') return { x: 32, y: top + 32 };
           if (this.s === 'toss') { var k = Math.min(1, this.u); return { x: 32 + 28 * k, y: top + 32 - Math.sin(k * Math.PI) * 30 }; }
           return { x: 32, y: top + 32 };
@@ -162,7 +178,8 @@ window.fightStubs = function () {
     X.count = function () { return parts.length; };
     X.drawSprite = function (ctx, name, sx, sy, t, o) {
       o = o || {};
-      var P = (name.indexOf('claude') === 0 ? LC.PAL.claude : LC.PAL.deepseek)[o.palette | 0] || LC.PAL.claude[0];
+      var pre = name.split('.')[0], PS = LC.PAL[pre] || LC.PAL[o['char']] || LC.PAL.claude;
+      var P = PS[o.palette | 0] || PS[0];
       var f = o.facing || 1;
       ctx.globalAlpha = o.alpha != null ? o.alpha : 1;
       switch (name) {

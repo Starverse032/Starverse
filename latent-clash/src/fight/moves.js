@@ -89,7 +89,8 @@
     intro: { act: 100 }, win: { 'in': 30, loop: 60 }, lose: { 'in': 30, loop: 60 },
     'super': { startup: 6, cast: 10, active: 40, recovery: 30 },
     jL: { recovery: 12 }, jM: { recovery: 12 }, jH: { recovery: 12 },
-    airSpark: { recovery: 12 }, sonnet: { fall: 12 }, breach: { fall: 12 }, diveKick: { active: 10 }
+    airSpark: { recovery: 12 }, sonnet: { fall: 12 }, breach: { fall: 12 }, diveKick: { active: 10 },
+    airBreath: { recovery: 12 }, dragonRise: { fall: 12 }
   };
 
   var infoCache = {};
