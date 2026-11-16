@@ -63,10 +63,15 @@
   }
 
   // ---- placement rules per name -------------------------------------------------
-  var GROUND = /^(gpt\.callSlam|deepseek\.tidal|deepseek\.geyser|deepseek\.breachCrescent|claude\.sonnetPillar|dust\.|throw\.slam|ring\.ground|deepseek\.pool|deepseek\.whale|deepseek\.wave$|deepseek\.waveCast|deepseek\.poolIn|deepseek\.poolOut|deepseek\.whaleSplash|claude\.guardrail|land)/;
+  var GROUND = /^(gemini\.twin|gemini\.blink|gpt\.callSlam|deepseek\.tidal|deepseek\.geyser|deepseek\.breachCrescent|claude\.sonnetPillar|dust\.|throw\.slam|ring\.ground|deepseek\.pool|deepseek\.whale|deepseek\.wave$|deepseek\.waveCast|deepseek\.poolIn|deepseek\.poolOut|deepseek\.whaleSplash|claude\.guardrail|land)/;
   function isScreen(n) { return /^screen\.|^gpt\.attention$/.test(n); }
   function anchorY(n) { return GROUND.test(n) ? GY : GY - 40; }
   FXV.cellFor = function (n) {
+    if (/gemini\.(clawHit|starHit|starCast)/.test(n)) return { w: 110, h: 96, ox: 0, oy: 48 };
+    if (/gemini\.star$/.test(n)) return { w: 90, h: 64, ox: 0, oy: 32 };
+    if (/gemini\.sparkles/.test(n)) return { w: 96, h: 100, ox: 0, oy: 50 };
+    if (/gemini\.riseTrail/.test(n)) return { w: 100, h: 120, ox: 0, oy: 70 };
+    if (/gemini\.(twin|blink)/.test(n)) return { w: 130, h: 140, ox: 0, oy: 130 };
     if (/gpt\.breath$/.test(n)) return { w: 150, h: 120, ox: 60, oy: 50 };
     if (/gpt\.callSlam/.test(n)) return { w: 180, h: 110, ox: 0, oy: 90 };
     if (/gpt\.roarRing/.test(n)) return { w: 190, h: 160, ox: 0, oy: 80 };
