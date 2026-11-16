@@ -1,9 +1,9 @@
 # FX — `LC.fx` notes
 
 ## Status (truthful)
-- All CONTRACT §5.4 names exist and render, plus the V2 additions and GPT 娘's set: 46 spawn effects and
-  17 sprites. `node tools/fx-check.mjs` (every effect × char none/claude/deepseek/gpt × palette × facing ×
-  settings.flash, every sprite × phase × t; ~78k calls) gives zero console errors.
+- All CONTRACT §5.4 names exist and render, plus the V2 additions, GPT 娘's set and Gemini 娘's set: 55 spawn
+  effects and 19 sprites. `node tools/fx-check.mjs` (every effect × char none/claude/deepseek/gpt/gemini × palette ×
+  facing × settings.flash, every sprite × phase × t; ~130k calls) gives zero console errors.
 - V2 (CONTRACT-V2 §V2.4) work is listed in "V2 progress" below. The integration guide for FIGHT is at the end.
 - Perf (headless Chromium, software 2D): the particle stress test (~360 live) has a `draw` median of
   0.3 ms and a p90 of 0.5–0.6 ms. Full super compositions (backdrop + beam + book, or backdrop + whale
@@ -307,7 +307,7 @@ omitted: ax = 70 (facing 1) / 314, bx = 384 − ax, ay = by = GROUND_Y − 74.
 | `gemini.twinSpawn` | at the twin's ORIGIN (feet) on the frame the twin is created, facing = the twin's. Sparkles converge t 0–12, the light silhouette flashes at t 11 and fades to t 22. Start drawing the puppet at t 12 and fade its alpha in over t 12–20 |
 | `gemini.twinVanish` | at the twin's ORIGIN on the frame it disappears (after twinStrike recovery, when she is hit, or when swapped away), facing = the twin's; stop drawing the puppet on that frame. ~34f |
 | `gemini.blinkOut` | at her ORIGIN on `blinkOut` startup f0, facing = hers: a lens of light her size collapses to a point at y − 50 over 5f (= startup), point star at f5, ring to f11. Hide her sprite from vanish f0 |
-| `gemini.blinkIn` | at her ORIGIN at the arrival point on `blinkIn` appear f0, facing = hers: point star f0–1, the lens unfolds f2–6 and fades to f11. Draw her from appear f3. H blink with a twin (swap): `blinkOut` at her old spot + `twinVanish`-free swap: `blinkIn` at both arrival points |
+| `gemini.blinkIn` | at her ORIGIN at the arrival point on `blinkIn` appear f0, facing = hers: point star f0–1, the lens unfolds f2–6 and fades to f11. Draw her from appear f3. H blink swap with the twin: `blinkOut` at both her spot and the twin's on the same frame, then `blinkIn` at both arrival points (the twin gets the same lens; draw the puppet from f3) |
 | `gemini.sparkles` | free accent around her (idle/intro/win, double-jump flip `airJump` f0 at her feet with `layer:'back'`, the waiting twin every ~24f); ~90f |
 
 ### Drawing the light-twin (recommendation)
