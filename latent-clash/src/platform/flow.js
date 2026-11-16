@@ -95,7 +95,10 @@
   // Resolve ladder step k for the arcade character: { foe, palette, stage }.
   app.arcadeStep = function (A, k) {
     var step = LORE.arcade[k], R = rivalsOf(A.char), f = step.foe;
-    var foe = f === 'mirror' ? A.char : f === 'rival2' ? (R[1] || R[0]) : f === 'rival' || f === 'rival1' ? R[0] : (LC.CHARS.indexOf(f) >= 0 ? f : R[0]);
+    var m = /^rival(\d*)$/.exec(f || ''), foe;
+    if (f === 'mirror') foe = A.char;
+    else if (m) { var ri = Math.max(0, (+m[1] || 1) - 1); foe = R[ri] || R[ri % R.length] || R[0]; }
+    else foe = LC.CHARS.indexOf(f) >= 0 ? f : R[0];
     var pal = step.palette ? 1 : 0;
     if (foe === A.char && pal === A.palette) pal = A.palette ? 0 : 1;
     var st = step.stage;
