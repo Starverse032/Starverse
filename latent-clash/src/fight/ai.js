@@ -313,11 +313,12 @@
     var r = function (id) { return self.reachOf(me, id) + 15; };
     var full = me.meter >= 100;
     // universal
-    add('walkF', 0.6 + ag * 0.6, [{ d: 6, n: 10 + this.rng.int(20) }]);
+    var isG = C === 'gpt', gW = isG ? (P.gWalk != null ? P.gWalk : 0.35) : 1;   // GPT: patient, lets them come
+    add('walkF', (0.6 + ag * 0.6) * (isG && dx < 150 ? gW : 1), [{ d: 6, n: 10 + this.rng.int(20) }]);
     add('walkB', dx < D(120) ? 0.35 : 0.1, [{ d: 4, n: 8 + this.rng.int(14) }]);
-    add('wait', 0.25 * (1 - ag), [{ d: dx < D(80) ? 1 : 4, n: 8 + this.rng.int(12) }]);
+    add('wait', 0.25 * (1 - ag) + (isG ? (P.gWait != null ? P.gWait : 0.5) : 0), [{ d: dx < D(80) ? 1 : 4, n: 8 + this.rng.int(12) }]);
     var PF = prof(C), vsG = o.ch === 'gpt' && C !== 'gpt';
-    if (dx > D(70)) add('dashF', 0.25 + ag * 0.4 * PF.dashW, [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 1 }]);
+    if (dx > D(70)) add('dashF', (0.25 + ag * 0.4 * PF.dashW) * (isG && dx < 170 ? gW : 1), [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 1 }]);
     if (dx < D(70) && me.x > T.WALL + 60 && me.x < LC.STAGE_W - T.WALL - 60) add('dashB', 0.15, [{ d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }]);
     var jr = PF.jr;
     if (dx > jr[0] && dx < jr[1]) add('jumpIn', P.jump * 4 * (0.6 + ag) * (C === 'claude' ? P.cJump : 1), [{ d: 9, n: 3 }]);   // V2: DeepSeek's breach box anti-airs Claude's jump-ins well
