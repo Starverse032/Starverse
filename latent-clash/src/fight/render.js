@@ -121,7 +121,33 @@
       }
       // [C] the whale is behind the fighters
       if (mv.whale && st >= 0 && st < 60) F.sprite(ctx, 'deepseek.whale', sx + f.facing * mv.whale.x, GY, st, o);
+      // [C] GPT super: necks + heads behind the fighters (target point latched at cast f0)
+      if (mv.attn && st >= 0 && st < 70 && f.attnX != null) F.sprite(ctx, 'gpt.attention', 0, 0, st, attnOpts(m, f, 'back'));
       return;
+    }
+    // [D] GPT super: lines, beams, orb, burst, scales after the fighters
+    if (mv.attn && st >= 0 && st < 70 && f.attnX != null) {
+      if (!F.sprite(ctx, 'gpt.attention', 0, 0, st, attnOpts(m, f, 'front')) && st >= 24 && st < 50) {
+        var ob = F.attnBox(f), P0 = palOf(f);
+        if (ob) { rect(ctx, ob.x - m.camX, ob.y, ob.w, ob.h, P0.accent[1]); rect(ctx, ob.x - m.camX + 4, ob.y + 4, ob.w - 8, ob.h - 8, P0.accent[0]); }
+      }
+    }
+    // [D] GPT breath: flame cone at the mouth (start → loop on active frames, 10f 'end' after)
+    if (mv.flame) {
+      var ph = null, ft = 0, mx = 0, my = 0;
+      if (sg.id === 'active') {
+        var mz = F.flameMouth(f);
+        mx = sx + mz.x * f.facing; my = sy + mz.y; ft = f.sf; ph = f.sf < 6 ? 'start' : 'loop';
+        f.flameAt = { x: f.x + mz.x * f.facing, y: f.y + mz.y };   // render-only: where the 'end' flies on
+      } else if (sg.id === 'recovery' && f.sf < 10 && f.flameAt) { mx = Math.round(f.flameAt.x - m.camX); my = Math.round(f.flameAt.y); ft = f.sf; ph = 'end'; }
+      if (ph) {
+        var fo = { length: F.v(mv.flame.length, f.str), angle: mv.flame.angle, phase: ph, facing: f.facing, palette: f.pal };
+        if (!F.sprite(ctx, 'gpt.breath', mx, my, ft, fo) && ph !== 'end') {
+          var fl = F.flameLocal(f), P1 = palOf(f), fb = F.worldBox(fl, f.x, f.y, f.facing);
+          rect(ctx, fb.x - m.camX, fb.y + 4, fb.w, Math.max(2, fb.h - 8), P1.accent[1]);
+          rect(ctx, fb.x - m.camX, fb.y + 10, fb.w, Math.max(2, fb.h - 20), P1.accent[0]);
+        }
+      }
     }
     if (mv.catchSeg) {
       if (sg.id === 'hold' || sg.id === 'startup') F.sprite(ctx, 'claude.guardrail', sx, sy, f.mf, { facing: f.facing, palette: f.pal });
@@ -146,6 +172,10 @@
       var tt = F.tidalT(f);
       if (tt >= 0 && tt < 48) F.sprite(ctx, 'deepseek.tidal', sx + f.facing * (mv.whale.x + F.whaleCrashX()), GY, tt, o);
     }
+  }
+
+  function attnOpts(m, f, part) {
+    return { tx: Math.round(f.attnX - m.camX), ty: Math.round(f.attnY), facing: f.facing, palette: f.pal, part: part };
   }
 
   function drawProjs(ctx, m) {

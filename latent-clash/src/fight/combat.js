@@ -191,6 +191,13 @@
     var x = f.facing > 0 ? f.attnX + fr.x : f.attnX - fr.x - fr.w;
     return { x: x, y: f.attnY + fr.y, w: fr.w, h: fr.h };
   };
+  // cast f0: latch the target point (victim chest, world); a comboed victim is pinned until the beams
+  F.attnLatch = function (m, f, o) {
+    var c = o.anchor('chest');
+    f.attnX = o.x + c.x * o.facing; f.attnY = F.clamp(o.y + c.y, 24, GY - 24);
+    var comboed = !o.ko && (o.action === 'hitstun' || o.action === 'caught' || (o.action === 'launch' && o.juggle < 99));
+    if (comboed) { o.setActionRaw('caught'); o.caughtT = (f.mv.attn && f.mv.attn.pinT) || 28; o.vx = 0; o.vy = 0; o.pushN = 0; o.pullTo = null; }
+  };
   F.resetGptInfo = function () { breathInfo = undefined; attnInfo = undefined; flameCache = {}; };
 
   F.barrierBox = function (f) {
