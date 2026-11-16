@@ -287,6 +287,23 @@
         deep: dk
       };
     }
+    if (ch === 'gemini') {   // Gemini 娘: pink-violet magic (pal 1: yellow-green), iridescent star facets
+      var Ae = P.accent, Se = P.star, Oe = P.outline, He = P.hair, H2 = P.hair2, Ht = P.hairTip;
+      var dke = I.mix(Ae[3], Oe, 0.5);
+      return {
+        id: ch + pi, ch: ch, pal: pi, outline: Oe,
+        light: ramp(['#ffffff', Ae[0], Ae[1], Ae[2], Ae[3], dke]),
+        glow: ramp(['#ffffff', Ae[0], Ae[1], Ae[2]]),
+        // twinkle: white centre, cyan arms, then pink arms (iridescent sparkle)
+        iri: ramp(['#ffffff', Se[1], Se[2], Ae[2]]),
+        star: ramp(Se.slice()),
+        // aurora: hair blue -> violet -> pink ends
+        aur: ramp([He[1], H2[1], Ht[1], He[2], H2[2], Ht[0]]),
+        // night: deep cosmic sky tinted toward violet (pal 1: olive-brown)
+        night: ramp([I.mix(H2[3], Oe, 0.45), I.mix(Ae[3], Oe, 0.72), I.mix(Oe, '#000000', 0.2), I.mix(Oe, '#000000', 0.45), I.mix(Oe, '#000000', 0.7)]),
+        deep: dke
+      };
+    }
     var Ac = P.accent, Wc = P.cloth1, Bc = P.cloth2;
     var deep = pi === 0 ? Bc[3] : Wc[3];
     return {

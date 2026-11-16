@@ -123,6 +123,13 @@ Next / known weaknesses (GPT):
 - `gpt.breathCast` is small; `gpt.callSlam` uses the neutral dust puffs.
 - Not yet checked with the real GPT rig sprite or on the four real stages.
 
+## Gemini progress / next steps (truthful, updated as work lands)
+- [ ] 1. `char:'gemini'` colour scheme (core `schemeFor('gemini')`, screen burstCols, generic2 orbs).
+- [ ] 2. super: `screen.superBackdrop` gemini branch (`gemini-backdrop.js`), `gemini.meteor` (`gemini-super.js`).
+- [ ] 3. specials: `gemini.star` sprite + spawn effects (`gemini.js`, `gemini-specials.js`).
+- [ ] 4. strips, viewer, fx-check, bench.
+- [ ] 5. "Gemini integration (for FIGHT)" section.
+
 ## V2 integration (for FIGHT)
 Coordinates: `spawn` uses world coordinates, `drawSprite` uses screen coordinates
 (`sx = worldX − camX`). Bboxes are relative to the origin, facing right. For facing −1 use
