@@ -112,7 +112,7 @@
   var TAIL_N = 10, TAIL_LEN = [5, 5, 5, 5, 5, 5, 5, 5, 5, 5];
   // rest shape (deg added per link at arch 10): drops behind her, sweeps back, the tip curls up
   var TAIL_PROF = [0, 6, 14, 24, 38, 56, 78, 100, 124, 146];
-  var TAIL_R = [2.2, 2.8, 3.3, 3.7, 3.9, 4.0, 4.0, 3.9, 3.6, 3.1, 2.2];
+  var TAIL_R = [1.8, 2.2, 2.6, 2.9, 3.1, 3.2, 3.2, 3.1, 2.9, 2.5, 1.8];
   var HAIR_GRAV = 0.24;
   C.chains = [
     { id: 'tail', n: TAIL_N, len: TAIL_LEN, rest: [100, 106, 114, 124, 138, 156, 178, 200, 224, 246], stiff: 0.55, damp: 0.74, grav: 0.02, drag: 0.22, hys: 0.6 },
@@ -122,8 +122,8 @@
     { id: 'lockN', n: 4, len: [7, 7, 7, 6], rest: [84, 88, 92, 96], stiff: 0.32, damp: 0.8, grav: 0.22, drag: 0.25, cvel: 0.5 },
     { id: 'lockF', n: 3, len: [6, 6, 6], rest: [84, 88, 92], stiff: 0.34, damp: 0.8, grav: 0.22, drag: 0.25, cvel: 0.5 },
     { id: 'ahoge', n: 3, len: [4, 4, 3], rest: [-96, -40, 20], stiff: 0.5, damp: 0.7, grav: 0.03, drag: 0.14 },
-    { id: 'sFb', n: 2, len: [8, 8], rest: [92, 90], stiff: [0.3, 0.24], damp: 0.84, grav: 0.24, drag: 0.42, cvel: 0.5 },
-    { id: 'sBb', n: 2, len: [8, 8], rest: [92, 90], stiff: [0.3, 0.24], damp: 0.84, grav: 0.24, drag: 0.42, cvel: 0.5 },
+    { id: 'sFb', n: 2, len: [6, 6], rest: [96, 100], stiff: [0.3, 0.24], damp: 0.84, grav: 0.24, drag: 0.42, cvel: 0.5 },
+    { id: 'sBb', n: 2, len: [6, 6], rest: [96, 100], stiff: [0.3, 0.24], damp: 0.84, grav: 0.24, drag: 0.42, cvel: 0.5 },
     { id: 'hemF', n: 2, len: [8, 8], rest: [78, 84], stiff: [0.42, 0.36], damp: 0.78, grav: 0.2, drag: 0.32, limit: limF },
     { id: 'hemB', n: 2, len: [8, 8], rest: [106, 100], stiff: [0.42, 0.36], damp: 0.78, grav: 0.2, drag: 0.32, limit: limB },
     { id: 'cpN', n: 3, len: [12, 12, 12], rest: [94, 92, 91], stiff: [0.34, 0.28, 0.24], damp: 0.84, grav: 0.24, drag: 0.36, cvel: 0.4 },
@@ -159,7 +159,7 @@
   // lead drifting star: behind-above her rear shoulder (pose offset bk)
   function starTarget(d) {
     var b = d.bk || [0, 0];
-    return [Math.round(d.neck[0] - 18 + b[0]), Math.round(d.neck[1] - 10 + b[1])];
+    return [Math.round(d.neck[0] - 30 + b[0]), Math.round(d.neck[1] - 4 + b[1])];
   }
 
   // ------------------------------------------------------------------ flip (spins)
@@ -311,9 +311,9 @@
     // coat-tail panels: hang from the hip sides; book = flare back/out, bko = lift
     var cf = (d.book || 0) * 46 + (d.bko || 0), cl = L * 0.5;
     var cn = own(by.cpN), cfar = own(by.cpF);
-    cn.def.rest[0] = 94 + cf + cl; cn.def.rest[1] = 92 + cf * 0.9 + cl; cn.def.rest[2] = 91 + cf * 0.8 + cl;
-    cfar.def.rest[0] = 100 + cf * 1.1 + cl; cfar.def.rest[1] = 96 + cf + cl; cfar.def.rest[2] = 94 + cf * 0.9 + cl;
-    var PN = fr(d.pel, L * 0.6, -3, -4), PF = fr(d.pel, L * 0.6, -8, -5);
+    cn.def.rest[0] = 104 + cf + cl; cn.def.rest[1] = 98 + cf * 0.9 + cl; cn.def.rest[2] = 95 + cf * 0.8 + cl;
+    cfar.def.rest[0] = 112 + cf * 1.1 + cl; cfar.def.rest[1] = 104 + cf + cl; cfar.def.rest[2] = 99 + cf * 0.9 + cl;
+    var PN = fr(d.pel, L * 0.6, -5, -4), PF = fr(d.pel, L * 0.6, -9, -5);
     sec.attach('cpN', PN[0], PN[1], 0);
     sec.attach('cpF', PF[0], PF[1], 0);
     var tn = H.chainPts(by.cpN), tf = H.chainPts(by.cpF);
@@ -501,7 +501,7 @@
     var u = norm(el[0] - sh[0], el[1] - sh[1]), un = [-u[1], u[0]];
     if (un[1] > 0 || (Math.abs(un[1]) < 0.2 && un[0] > 0)) un = [-un[0], -un[1]];
     var band = lerp(sh, el, 0.45);
-    return { sh: sh, el: el, ha: ha, e: e, n: n, u: u, un: un, band: band, eb: [el[0] - n[0] * 2.5, el[1] - n[1] * 2.5] };
+    return { sh: sh, el: el, ha: ha, e: e, n: n, u: u, un: un, band: band, eb: [ha[0] + e[0] * 2.5 - n[0] * 4, ha[1] + e[1] * 2.5 - n[1] * 4] };
   }
   function drawArmSkin(p, sk, s) {
     var sh = s === 'F' ? sk.shF : sk.shB, el = s === 'F' ? sk.elF : sk.elB, ha = s === 'F' ? sk.haF : sk.haB, t = s === 'F' ? 1 : 2;
@@ -510,32 +510,27 @@
     p.ell(sh[0] - 0.5, sh[1] + 0.5, 2.5, 2.4, M.skin, SH.body, t);
   }
   function drawSleeve(p, sk, sec, s) {
-    var g = sleeveFrame(sk, s), t = s === 'F' ? 1 : 2, bag = H.chainPts(sec['s' + s + 'b']);
-    var A = [g.band[0] + g.un[0] * 2.6, g.band[1] + g.un[1] * 2.6], A2 = [g.band[0] - g.un[0] * 2.6, g.band[1] - g.un[1] * 2.6];
-    var Bt = [g.el[0] + g.n[0] * 3, g.el[1] + g.n[1] * 3];
+    var g = sleeveFrame(sk, s), t = s === 'F' ? 1 : 2, bag = H.chainPts(sec['s' + s + 'b']), t0 = t - 1;
+    var A = [g.band[0] + g.un[0] * 2.4, g.band[1] + g.un[1] * 2.4], A2 = [g.band[0] - g.un[0] * 2.4, g.band[1] - g.un[1] * 2.4];
+    var Bt = [g.el[0] + g.n[0] * 2.8, g.el[1] + g.n[1] * 2.8], Bb = [g.el[0] - g.n[0] * 3.2, g.el[1] - g.n[1] * 3.2];
     var W = [g.ha[0] + g.e[0] * 2.5, g.ha[1] + g.e[1] * 2.5];
-    var Ct = [W[0] + g.n[0] * 4.6, W[1] + g.n[1] * 4.6], Dt = [W[0] - g.n[0] * 4.2, W[1] - g.n[1] * 4.2];
-    var E1 = bag[1], E2 = bag[2];
-    // keep the bag from folding up through the forearm
-    var lowest = [lerp(Dt, E2, 0.5)];
-    void lowest;
-    var outline = [A, Bt, Ct, Dt, E2, E1, bag[0], A2];
-    p.poly(H.flat(outline), M.c2, SH.soft, t);
-    // violet lining showing at the opening (lower half of the mouth of the sleeve) and along the bag edge
-    p.poly(H.flat([lerp(Ct, Dt, 0.45), Dt, lerp(Dt, E2, 0.35), lerp(lerp(Ct, Dt, 0.45), lerp(Dt, E2, 0.35), 0.5)]), ML, null, t);
-    // white cuff band just inside the opening (+ gold trim at the very edge)
-    var c0 = lerp(Ct, Bt, 0.22), c1 = lerp(Dt, E2, 0.2);
-    p.poly(H.flat([lerp(Ct, Bt, 0.07), lerp(Ct, Bt, 0.24), lerp(Dt, E1, 0.22), lerp(Dt, E2, 0.08)]), M.c1, null, t - 1 < 0 ? 0 : t - 1);
-    ln(p, Ct, lerp(Dt, E2, 0.02), col(M.metal, 1), true);
-    ln(p, c0, c1, col(M.metal, 2), true);
-    // folds down the bag + a highlight along the top
-    dl(p, lerp(Bt, bag[0], 0.5), lerp(Dt, E2, 0.5));
-    dl(p, lerp(A, A2, 0.5), lerp(E1, E2, 0.4));
-    ln(p, lerp(A, Bt, 0.3), lerp(Bt, Ct, 0.5), col(M.c2, 0), true);
+    var Ct = [W[0] + g.n[0] * 4.4, W[1] + g.n[1] * 4.4], Dt = bag[0], E1 = bag[1], E2 = bag[2];
+    var Lw = [lerp(Bb, E2, 0.55)[0], lerp(Bb, E2, 0.55)[1] + 2];     // the lower edge sags between elbow and corner
+    p.poly(H.flat([A, Bt, Ct, Dt, E1, E2, Lw, Bb, A2]), M.c2, SH.soft, t);
+    // the mouth of the bell: violet lining crescent, then a white cuff band, gold trim on the rim
+    var m0 = lerp(Ct, Dt, 0.5), m1 = lerp(Dt, E2, 0.5);
+    p.poly(H.flat([lerp(Ct, Bt, 0.2), Ct, Dt, E1, E2, lerp(E2, Lw, 0.25), lerp(m1, Lw, 0.3), lerp(m0, Bt, 0.3)]), M.c1, null, t0);
+    p.poly(H.flat([m0, Dt, E1, E2, lerp(m1, Lw, 0.12)]), ML, null, t);
+    ln(p, Ct, Dt, col(M.metal, 1), true); ln(p, Dt, E1, col(M.metal, 1), true); ln(p, E1, E2, col(M.metal, 2), true);
+    ln(p, lerp(Ct, Bt, 0.24), lerp(E2, Lw, 0.28), col(M.metal, 2), true);
+    // folds + a sheen along the top
+    dl(p, lerp(Bt, Bb, 0.5), lerp(Ct, E2, 0.6));
+    dl(p, lerp(A, A2, 0.6), lerp(Lw, E2, 0.3));
+    ln(p, lerp(A, Bt, 0.4), lerp(Bt, Ct, 0.45), col(M.c2, 0), true);
     // white top band where the sleeve is tied on (gold edge)
-    p.cap(A[0], A[1], A2[0], A2[1], 1.3, 1.3, M.c1, null, t - 1 < 0 ? 0 : t - 1);
-    var b0 = [g.band[0] + g.u[0] * 1.5, g.band[1] + g.u[1] * 1.5];
-    ln(p, [b0[0] + g.un[0] * 2.6, b0[1] + g.un[1] * 2.6], [b0[0] - g.un[0] * 2.6, b0[1] - g.un[1] * 2.6], col(M.metal, 1), true);
+    p.cap(A[0], A[1], A2[0], A2[1], 1.2, 1.2, M.c1, null, t0);
+    var b0 = [g.band[0] + g.u[0] * 1.6, g.band[1] + g.u[1] * 1.6];
+    ln(p, [b0[0] + g.un[0] * 2.4, b0[1] + g.un[1] * 2.4], [b0[0] - g.un[0] * 2.4, b0[1] - g.un[1] * 2.4], col(M.metal, 1), true);
   }
   function drawHand(p, sk, s, ds) {
     var el = s === 'F' ? sk.elF : sk.elB, ha = s === 'F' ? sk.haF : sk.haB;
@@ -683,7 +678,7 @@
     var cc = H.chainPts(sec[which === 'cpN' ? 'chN' : 'chF']);
     ln(p, tip, cc[1], col(M.metal, 1));
     p.end({ outline: false });
-    drawStar(p, [cc[1][0], cc[1][1] + 2], 's5', (sk._tw || 0) + (t === 1 ? 0 : 2));
+    drawStar(p, [cc[1][0], cc[1][1] + 1], 's3', (sk._tw || 0) + (t === 1 ? 0 : 2));
     p.end({ hard: true });
   }
 
@@ -716,7 +711,7 @@
     var c = sk.chest, ca = sk.chestAng, n = sk.neck;
     // white choker-halter band around the neck with a gold star clasp
     var a0 = lerp(c, n, 0.35);
-    p.cap(fr(a0, ca, -2, 0)[0], fr(a0, ca, -2, 0)[1], fr(a0, ca, 2.2, -0.3)[0], fr(a0, ca, 2.2, -0.3)[1], 1.1, 1.1, M.c1, null, 1);
+    ln(p, fr(a0, ca, -2, 0), fr(a0, ca, 2.2, -0.3), col(M.c1, 1));
     var g = R0(fr(a0, ca, 2, 0.6));
     p.pxOn(g[0], g[1], col(M.metal, 0));
     p.px(g[0], g[1] + 1, col(M.metal, 1));
@@ -743,10 +738,10 @@
     var s = sk._tw || 0;
     var A = H.chainPts(sec.stA)[1], B = H.chainPts(sec.stB)[1], Cc = H.chainPts(sec.stC)[1];
     if (front) {
-      drawStar(p, A, (s % 6) < 3 ? 's7' : 's5', s);
+      drawStar(p, A, (s % 6) < 2 ? 's7' : 's5', s);
       drawStar(p, Cc, 's3', s + 1);
-      if (sk._sd) drawStar(p, B, 's5', s + 2);
-    } else if (!sk._sd) drawStar(p, B, 's5', s + 2);
+      if (sk._sd) drawStar(p, B, 's3', s + 2);
+    } else if (!sk._sd) drawStar(p, B, 's3', s + 2);
     p.end({ hard: true });
   }
 
@@ -773,7 +768,7 @@
       [-9.5, function () { drawHairLock(p, sec.hairC, [5, 3, 3], 1.8, 3.1, [0.4, 0.75], [0.48, 0.8], 0); p.end(); }],
       [z.armB != null ? z.armB : -7, function () { drawArmSkin(p, d, 'B'); p.end(); drawSleeve(p, d, sec, 'B'); p.end(); drawHand(p, d, 'B', ds); p.end(); }],
       [z.legB != null ? z.legB : -4, function () { drawLeg(p, d, 'B', lockB, false); p.end(); }],
-      [z.tail != null ? z.tail : -3.5, function () { drawTail(p, d, sec, ds); p.end(); }],
+      [z.tail != null ? z.tail : -4.5, function () { drawTail(p, d, sec, ds); p.end(); }],
       [z.coatN != null ? z.coatN : -3, function () { drawCoat(p, d, sec, 'cpN'); }],
       [z.legF != null ? z.legF : -1.5, function () { drawLeg(p, d, 'F', lockF, true); p.end(); }],
       [-1, function () { drawPetticoat(p, S2); p.end(); drawOverskirt(p, S); p.end(); }],
@@ -791,7 +786,7 @@
         drawStar(p, headPt(d, 4, 14), 's7', (sk0._tw || 0) + 1); p.end({ hard: true });     // star clip on the bun
       }],
       [2.5, function () { drawHairLock(p, sec.lockN, [2.8, 1.6, 1], 1, 0.7, [0.5], [0.55, 0.9], 0); p.end(); }],
-      [3, function () { drawHairLock(p, sec.lockF, [1.8, 0.9, 0.6], 0.6, 2.2, [], [0.6, 0.95], 0); p.end(); }],
+      [1.5, function () { drawHairLock(p, sec.lockF, [1.8, 0.9, 0.6], 0.6, 2.2, [], [0.6, 0.95], 0); p.end(); }],
       [z.armF != null ? z.armF : 4, function () { drawArmSkin(p, d, 'F'); p.end(); drawSleeve(p, d, sec, 'F'); p.end(); }],
       [4.5, function () { if (D.smear) { H.smear2(p, D.smear, M.smear); p.end({ outline: false }); } }],
       [z.armF != null ? z.armF + 0.6 : 5, function () { drawHand(p, d, 'F', ds); p.end(); }],
