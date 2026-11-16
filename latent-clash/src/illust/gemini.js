@@ -111,16 +111,20 @@
   // hair colour shift in clean bands: blue crown -> violet -> pink ends, by d = y + k·|x - cx|
   // (2-px checker transition). Applied to every h*/t* pixel inside `region` (default: everything).
   var HB = [S.h0, S.h1, S.h2, S.h3, S.hl], HX = [S.x0, S.x1, S.x2, S.x3, S.xl], HT = [S.t0, S.t1, S.tS, S.tS, S.tl];
-  function hairShift(P, a, b, skip, k, cx) {
+  function lvl(d, t, x, y) { return d >= t + 2 ? 1 : d >= t ? (x + y) & 1 : d >= t - 2 ? ((x & 1) === 0 && (y & 1) === 0 ? 1 : 0) : 0; }
+  // remap h* pixels (inside `only`, or everywhere but `skip`) to violet / pink by a field d(x, y)
+  function shiftBy(P, only, dfn, a, b, skip) {
     var idx = {}; HB.forEach(function (s, i) { idx[s] = i; });
-    k = k === undefined ? 0.7 : k; cx = cx === undefined ? 56 : cx;
-    function lvl(d, t, x, y) { return d >= t + 2 ? 1 : d >= t ? (x + y) & 1 : d >= t - 2 ? ((x & 1) === 0 && (y & 1) === 0 ? 1 : 0) : 0; }
     for (var y = 0; y < P.h; y++) for (var x = 0; x < P.w; x++) {
-      var i = y * P.w + x, v = idx[P.c[i]]; if (v === undefined || (skip && skip.d[i])) continue;
-      var d = y + k * Math.abs(x - cx) + 3 * Math.sin(x * 0.45);
+      var i = y * P.w + x, v = idx[P.c[i]]; if (v === undefined || (only && !only.d[i]) || (skip && skip.d[i])) continue;
+      var d = dfn(x, y);
       if (lvl(d, b, x, y)) P.c[i] = HT[v];
       else if (lvl(d, a, x, y)) P.c[i] = HX[v];
     }
+  }
+  function hairShift(P, a, b, skip, k, cx) {
+    k = k === undefined ? 0.7 : k; cx = cx === undefined ? 56 : cx;
+    shiftBy(P, null, function (x, y) { return y + k * Math.abs(x - cx) + 3 * Math.sin(x * 0.45); }, a, b, skip);
   }
   // four-pointed iridescent star: 8 facets in the star hues, coloured outline. Returns the mask.
   var FACETS = [S.q0, S.q1, S.q2, S.q3, S.q2, S.q1, S.q3, S.q1];
