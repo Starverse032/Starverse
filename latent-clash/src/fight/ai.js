@@ -321,7 +321,7 @@
     if (dx > D(70)) add('dashF', (0.25 + ag * 0.4 * PF.dashW) * (isG && dx < 170 ? gW : 1), [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 1 }]);
     if (dx < D(70) && me.x > T.WALL + 60 && me.x < LC.STAGE_W - T.WALL - 60) add('dashB', 0.15, [{ d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }]);
     var jr = PF.jr;
-    if (dx > jr[0] && dx < jr[1]) add('jumpIn', P.jump * 4 * (0.6 + ag) * (C === 'claude' ? P.cJump : 1), [{ d: 9, n: 3 }]);   // V2: DeepSeek's breach box anti-airs Claude's jump-ins well
+    if (dx > jr[0] && dx < jr[1]) add('jumpIn', P.jump * 4 * (0.6 + ag) * (C === 'claude' ? P.cJump : isG ? (P.gJump != null ? P.gJump : 0.25) : 1), [{ d: 9, n: 3 }]);   // V2: DeepSeek's breach box anti-airs Claude's jump-ins well
     if (dx < D(70)) add('jumpN', P.jump * (C === 'claude' ? P.cJump / 0.55 : 1), [{ d: 8, n: 3 }]);
     // pokes at range
     if (dx <= r('5L')) { add('5L', 0.7, this.press('L')); add('2L', 0.7, this.press('L', 2)); }
@@ -330,7 +330,7 @@
     var gT = C === 'gpt' ? (P.gTail != null ? P.gTail : 1.8) : 1;   // GPT: patient spacing with the long tail
     if (dx <= r('5H') && dx > r('5M') - 8) add('5H', 0.35 * gT, this.press('H'));
     if (dx <= r('2H') && dx > r('2M') - 8) add('2H', 0.3 * gT, this.press('H', 3));
-    if (dx < me.C.throwRange - 2 && o.action !== 'blockstun') add('throw', (0.55 + ag * 0.3) * (C === 'claude' && P.cThrow != null ? P.cThrow : 1), [{ d: this.chance(0.3) ? 4 : 6, b: 'LM', n: 2 }, { d: 5, n: 1 }]);
+    if (dx < me.C.throwRange - 2 && o.action !== 'blockstun') add('throw', (0.55 + ag * 0.3) * (C === 'claude' && P.cThrow != null ? P.cThrow : isG ? (P.gThrow != null ? P.gThrow : 0.35) : 1), [{ d: this.chance(0.3) ? 4 : 6, b: 'LM', n: 2 }, { d: 5, n: 1 }]);
     if (P.mash > 0 && dx < D(80)) add('mash', P.mash * 2 * (C === 'claude' && P.cMash != null ? P.cMash : 1), this.press(this.pick(['L', 'M', 'H', 'S']), this.pick([5, 2, 6])));
     if (full && dx < PF.superR && this.chance(P.sup * 0.15)) add('superRaw', 0.8, this.special('super', 'H'));
     var pk = vsG && dx < 150 ? 0.25 : 1;   // vs GPT: no projectiles into a point-blank roar
