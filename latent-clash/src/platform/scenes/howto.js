@@ -118,13 +118,29 @@
   LC.scenes.define('howto', function (params) {
     var page = params.page || 0, scroll = 0, maxScroll = 0, pageT = 0;
     // two fixed pages, then one move-list page per fighter in LC.CHARS
-    var TABS = ['基本操作', '系统'].concat(LC.CHARS.map(function (ch) { return (LORE.chars[ch] || {}).nameZh || ch; }));
-    var TAB_W = Math.min(64, Math.floor((W - 86) / TABS.length) - 2), TAB_X = W - TABS.length * (TAB_W + 2);
-    function tabLabel(i) {
-      var tb = TABS[i], sz = i >= 2 ? 10 : 12;
-      if (i >= 2 && LC.font.measure(tb, { size: sz }).w > TAB_W - 4) tb = (LORE.chars[LC.CHARS[i - 2]] || {}).name || tb;
-      return tb;
-    }
+    // Tab labels: one consistent style for every fighter — the zh name without the space
+    // ("Claude娘"), else (if the row would not fit) the short latin name ("DeepSeek"), else size 8.
+    var FIX = ['基本操作', '系统'], TAB_L = 86, TAB_GAP = 2;
+    var shortName = function (ch) { var n = (LORE.chars[ch] || {}).nameZh || ch; return n.replace(/\s*娘$/, '') || n; };
+    var STYLES = [
+      { size: 10, pad: 6, label: function (ch) { return ((LORE.chars[ch] || {}).nameZh || ch).replace(/\s+/g, ''); } },
+      { size: 10, pad: 6, label: shortName },
+      { size: 8, pad: 4, label: shortName }
+    ];
+    var TABS, TSZ, TABW, TABX;
+    (function layoutTabs() {
+      for (var si = 0; si < STYLES.length; si++) {
+        var st = STYLES[si];
+        TABS = FIX.concat(LC.CHARS.map(st.label));
+        TSZ = TABS.map(function (tb, i) { return i < 2 ? 12 : st.size; });
+        TABW = TABS.map(function (tb, i) { return LC.font.measure(tb, { size: TSZ[i] }).w + (i < 2 ? 8 : st.pad * 2); });
+        var tot = TABW.reduce(function (a, b) { return a + b + TAB_GAP; }, 0);
+        if (tot <= W - TAB_L || si === STYLES.length - 1) {
+          var x = Math.max(TAB_L, W - tot); TABX = TABW.map(function (w) { var r = x; x += w + TAB_GAP; return r; });
+          return;
+        }
+      }
+    })();
     function setPage(p) { page = (p + TABS.length) % TABS.length; scroll = 0; pageT = 0; ui.sfx('ui.move'); }
     function drawControls(c) {
       var K = LC.input.keys, kn = LC.input.keyName;
@@ -191,7 +207,7 @@
         else if (m.up) { if (scroll > 0) { scroll--; ui.sfx('ui.move', { vol: 0.5 }); } }
         else if (m.cancel || m.ok) { ui.sfx('ui.cancel'); LC.scenes.go('menu', {}, { transition: 'wipe' }); }
         var p = LC.input.pointer;
-        if (p.pressed && p.y < 20) { for (var i = 0; i < TABS.length; i++) if (p.x >= 120 + i * 66 && p.x < 184 + i * 66) setPage(i); }
+        if (p.pressed && p.y < 20) { for (var i = 0; i < TABS.length; i++) if (p.x >= TABX[i] && p.x < TABX[i] + TABW[i]) setPage(i); }
         else if (p.pressed) setPage(page + (p.x > W / 2 ? 1 : -1));
       },
       draw: function (c) {
@@ -200,9 +216,9 @@
         ui.box(c, 0, 0, W, 20, 'rgba(5,4,10,0.85)'); ui.box(c, 0, 20, W, 1, U.line);
         LC.font.draw(c, '出招表与教学', 8, 4, { size: 12, color: U.text });
         TABS.forEach(function (tb, i) {
-          var x = TAB_X + i * (TAB_W + 2), sel = i === page;
-          if (sel) { ui.box(c, x, 2, TAB_W, 18, U.bg2); ui.box(c, x, 18, TAB_W, 2, U.gold); }
-          LC.font.draw(c, tabLabel(i), x + (TAB_W >> 1), i >= 2 ? 6 : 5, { size: i >= 2 ? 10 : 12, color: sel ? U.text : U.dim, align: 'center' });
+          var x = TABX[i], tw = TABW[i], sel = i === page;
+          if (sel) { ui.box(c, x, 2, tw, 18, U.bg2); ui.box(c, x, 18, tw, 2, U.gold); }
+          LC.font.draw(c, tb, x + (tw >> 1), TSZ[i] === 12 ? 5 : TSZ[i] === 10 ? 6 : 7, { size: TSZ[i], color: sel ? U.text : U.dim, align: 'center' });
         });
         var a = ui.ease.out(pageT / 10);
         c.save(); c.translate(Math.round((1 - a) * 16), 0);
