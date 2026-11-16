@@ -36,7 +36,7 @@
 
   function bakeHead(pal, ai, ji) {
     var g = G[pal], s = g.specU, P = LC.PAL.gpt[pal], Su = g.Su;
-    var th = ai * 10 * D2R, c = Math.cos(th), sn = Math.sin(th), OX = 180, OY = 190, b = new I.Buf(262, 252);
+    var th = ai * 10 * D2R, c = Math.cos(th), sn = Math.sin(th), OX = 132, OY = 134, b = new I.Buf(188, 182);
     var phi = JAW[ji], hx = -74, hy = 2, jc = Math.cos(phi), js = Math.sin(phi);
     function P2(x, y) { x *= HS; y *= HS; return [OX + x * c - y * sn, OY + x * sn + y * c]; }
     function J2(x, y) { var dx = x - hx, dy = y - hy; return P2(hx + dx * jc - dy * js, hy + dx * js + dy * jc); }

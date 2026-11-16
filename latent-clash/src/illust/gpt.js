@@ -164,13 +164,14 @@
     P.recol(all.band(2, -2), [S.c0], S.c1);
     P.recol(all.band(1, -1).and(all.band(2, -2)), [S.c1], S.c2);
     var core = P.ell(cx, cy, r * (o.core || 0.2), r * (o.core || 0.2));
-    P.part(core, S.c0, L);
+    P.part(core, o.gem ? S.a1 : S.c0, o.gem ? S.al : L);
+    if (o.gem) P.recol(core.band(-1, 1), [S.a1], S.a0);
     if (r >= 10) P.px(Math.round(cx), Math.round(cy - 1), S.W);
     return all;
   }
   I.gptEmblem = function (P, size) {
-    if (size >= 32) knot(P, 16, 16, 15, 5, -Math.PI / 2, {});
-    else knot(P, size / 2, size / 2, size * 0.465, 5, -Math.PI / 2, { small: 1, d: 0.58, ro: 0.44, hole: 1.2, core: 0.3, noNotch: 1 });
+    if (size >= 32) knot(P, 16, 16, 15, 5, -Math.PI / 2, { gem: 1, core: 0.24 });
+    else knot(P, size / 2, size / 2, size * 0.465, 5, -Math.PI / 2, { small: 1, d: 0.58, ro: 0.44, hole: 1.2, core: 0.3, noNotch: 1, gem: 1 });
     P.outer(S.ol);
   };
   I.knot = knot;
