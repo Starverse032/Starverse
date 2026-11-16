@@ -66,6 +66,18 @@
       dragonRise: [g('startup', 5), g('rise', 14), g('fall', 12, true), g('land', 14)],
       call: sar(7, 3, 30), callHit: [g('hold', 14), g('rise', 16), g('slam', 12), g('recovery', 22)],
       roar: sar(9, 6, 24)
+    }),
+    gemini: Object.assign({}, COMMON, {
+      dashF: [g('go', 16)], dashB: [g('go', 18)], walkB: [g('loop', 32, 1)],
+      super: [g('startup', 6), g('cast', 12), g('active', 54), g('recovery', 28)],
+      airJump: [g('go', 6)],
+      '5L': sar(4, 3, 7), '5M': sar(7, 4, 12), '5H': sar(10, 5, 20),
+      '2L': sar(4, 3, 8), '2M': sar(7, 4, 13), '2H': sar(10, 5, 22),
+      jL: jsar(4, 8), jM: jsar(6, 6), jH: jsar(9, 6),
+      star: sar(11, 3, 24), airStar: [g('startup', 9), g('active', 3), g('recovery', 12, true)],
+      starRise: [g('startup', 4), g('rise', 12), g('fall', 12, true), g('land', 14)],
+      twin: sar(10, 2, 18), twinStrike: sar(8, 4, 14),
+      blinkOut: [g('startup', 5), g('vanish', 5)], blinkIn: [g('appear', 5), g('recovery', 9)]
     })
   };
 
@@ -83,6 +95,11 @@
     gpt: {
       '5M': '5L', '2L': '5L', '2M': '5L', '2H': '5H', jL: 'jumpFall', jM: 'jumpFall', jH: 'jumpFall',
       breath: '5L', airBreath: 'jumpFall', dragonRise: '5H', call: 'throw', callHit: 'throwHit', roar: '5H', super: '5H'
+    },
+    gemini: {
+      '5M': '5L', '2L': '5L', '2M': '5L', '2H': '5H', jL: 'jumpFall', jM: 'jumpFall', jH: 'jumpFall',
+      airJump: 'jumpRise', star: '5L', airStar: 'jumpFall', starRise: '5H', twin: '5L', twinStrike: '5L',
+      blinkOut: 'crouchIn', blinkIn: 'crouchOut', super: '5H'
     }
   };
   var FALLBACK = ['idle'];

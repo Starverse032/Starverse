@@ -316,13 +316,13 @@
       deep: deep
     };
   }
-  I.SC = { claude: [schemeFor('claude', 0), schemeFor('claude', 1)], deepseek: [schemeFor('deepseek', 0), schemeFor('deepseek', 1)], gpt: [schemeFor('gpt', 0), schemeFor('gpt', 1)] };
+  I.SC = { claude: [schemeFor('claude', 0), schemeFor('claude', 1)], deepseek: [schemeFor('deepseek', 0), schemeFor('deepseek', 1)], gpt: [schemeFor('gpt', 0), schemeFor('gpt', 1)], gemini: [schemeFor('gemini', 0), schemeFor('gemini', 1)] };
   // generic per-char roles: main = the character's magic ramp (6), twk = twinkle / glint ramp
-  ['claude', 'deepseek', 'gpt'].forEach(function (ch) {
-    I.SC[ch].forEach(function (s) { s.main = ch === 'deepseek' ? s.water : s.light; s.twk = ch === 'claude' ? s.gold : s.glow; });
+  ['claude', 'deepseek', 'gpt', 'gemini'].forEach(function (ch) {
+    I.SC[ch].forEach(function (s) { s.main = ch === 'deepseek' ? s.water : s.light; s.twk = ch === 'claude' ? s.gold : ch === 'gemini' ? s.iri : s.glow; });
   });
   /** Characters with FX colour schemes (generic effects bake one tinted variant per char x palette). */
-  I.CHS = ['claude', 'deepseek', 'gpt'];
+  I.CHS = ['claude', 'deepseek', 'gpt', 'gemini'];
   I.hasChar = function (ch) { return !!(ch && I.SC[ch]); };
   I.scheme = function (ch, pal) { return (I.SC[ch] || I.SC.claude)[pal === 1 ? 1 : 0]; };
 
