@@ -165,10 +165,13 @@ Next (if time): hitbox retune pass against final rig poses (see "Depends on RIG"
   P2 arrows + `1 2 3 5` (or numpad / `, . / ;`). `F1` boxes, `F2` frame-step (`F6`/`]` = 1 frame),
   `F3` slow-mo, `F4` restart, `F7` reset positions. Query: `mode p1 p2 ctl1 ctl2 lv1 lv2 level stage
   seed pal1 pal2 intro rounds time dummy guard hitboxes manual`.
-- `node tools/fight-sim.mjs [--n=30] [--levels=1,3,5] [--cross] [--real] [--draw] [--off=claude.spark,…]`
+- `node tools/fight-sim.mjs [--n=30] [--levels=1,3,5] [--cross] [--real] [--draw] [--off=gpt.breath,…]
+  [--pairs=claude-gpt,…] [--mirror] [--plans] [--quiet] [--mu=gpt>deepseek:breath=1.7;tail=2]` — every cross
+  pairing of the roster by default (both side assignments), A-win % per pair/level; `--plans` counts AI plans.
   CPU-vs-CPU at ~300k ticks/s (stubs) / ~170k (real modules), invariants every tick, determinism,
   balance table, move usage, damage by source. `--off` disables AI plans (ablation).
-- `node tools/fight-combos.mjs [--real] [--debug]` — scripted bread-and-butter combos (below).
+- `node tools/fight-combos.mjs [--real] [--debug] [--all | --vs=gpt] [--chars=gpt] [--no-oki]` — scripted
+  bread-and-butter combos (below) + the GPT command-grab oki-loop check.
 - `node tools/fight-shots.mjs [--real] [--boxes] [--only=a,b]` → `.shots/fight/*.png` (×3).
 
 ## Architecture (src/fight, load order = manifest)
