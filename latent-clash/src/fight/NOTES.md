@@ -265,8 +265,18 @@ Rounds average 19–28 s, no time-ups between CPUs.
   specials' `weapon` anchor is not used for hitboxes. DeepSeek's `tail` anchor drives breachTrail.
 - FX: `claude.beam` + `claude.book` drawn at the `muzzle` anchor + 16 px (clamped to the beam hitbox); whale and
   tidal hit boxes, `events.crash`, `crashX` from `spriteInfo` (fallback boxes otherwise). AUDIO voices/music calls are guarded (silent until present).
+- GPT: RIG `muzzle` (mouth in breath / airBreath, clamped ±10 px around (23,−81) / (30,−76)), `chest` (roar centre,
+  ±12 px), `grab` (throwHit, callHit victim path; her origin stays on the floor during callHit), `weapon` (normals,
+  riseTrail). FX `spriteInfo('gpt.breath').box(len, angle)` (flame hit area), `spriteInfo('gpt.attention').frames[t]`
+  (super hit boxes rel. the latched target; fallback boxes t 25–43 / 44–49 without fx). Both caches are re-read
+  in `F.init` (`F.resetGptInfo`). AUDIO `gpt.breath` (first active frame), `gpt.rise` (move start), `gpt.call`
+  (grab connects), `gpt.callSlam` (release), `gpt.roar` (move start), `gpt.super` (cast f0 = heads appear).
 
 ## Known issues
+- GPT: the breath hit box grows over 6 frames (`flame.grow`), the fx 'start' cone looks near full length by
+  ≈ f2, so the box is a little shorter than the drawing on active f0–3 (conservative). L1 CPU GPT is favoured
+  (see GPT balance). Claude–DeepSeek L5 sits ≈ 55 % on fresh seeds — identical outcomes to the pre-GPT code on
+  the same seeds (verified: seed 31, L5, 52.0 % both), so this is sampling, not a regression.
 - L2 ≈ 45 % (low edge of the band); other levels 47–53 %.
 - Training stage signage scrolls under the move tag / combo counter; both sit on fully opaque bordered plates.
 - Speech-bubble wrap width tuned for the 10 px font only.
