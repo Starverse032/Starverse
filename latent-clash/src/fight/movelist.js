@@ -9,19 +9,20 @@
   var NORMAL_EN = { '5L': 'STAND LIGHT', '5M': 'STAND MEDIUM', '5H': 'STAND HEAVY', '2L': 'CROUCH LIGHT', '2M': 'CROUCH MEDIUM',
     '2H': 'SWEEP', jL: 'JUMP LIGHT', jM: 'JUMP MEDIUM', jH: 'JUMP HEAVY' };
 
+  function lmh(x) { return typeof x === 'object' ? x.L + '/' + x.M + '/' + x.H : String(x); }
   function dmgOf(mv) {
-    if (mv.proj) { var d = mv.proj.dmg; return typeof d === 'object' ? d.L + '/' + d.M + '/' + d.H : String(d); }
+    if (mv.proj) return lmh(mv.proj.dmg);
+    if (mv.grabDmg) return lmh(mv.grabDmg);
     if (!mv.hits) return '';
     var parts = mv.hits.map(function (h) {
-      if (h.every) {
+      if (h.every) {   // multi-hit: total per strength
         var n = Math.floor((h.fr[1] - h.fr[0]) / h.every) + 1;
-        var fin = h.final && h.final.dmg ? h.final.dmg : h.dmg;
-        return String(h.dmg * (n - 1) + fin);
+        var tot = function (s) { var d = F.v(h.dmg, s), fin = h.final && h.final.dmg ? F.v(h.final.dmg, s) : d; return d * (n - 1) + fin; };
+        return typeof h.dmg === 'object' ? tot('L') + '/' + tot('M') + '/' + tot('H') : String(tot('M'));
       }
-      var x = h.dmg;
-      return typeof x === 'object' ? x.L + '/' + x.M + '/' + x.H : String(x);
+      return lmh(h.dmg);
     });
-    return parts.join(' + ');
+    return mv.kind === 'super' ? String(parts.reduce(function (a, b) { return a + (+b || 0); }, 0)) : parts.join(' + ');
   }
 
   F.getMoveList = function (charId) {
@@ -48,11 +49,14 @@
       var dmg = dmgOf(mv);
       if (id === 'chain') dmg = [C.moves.chain, C.moves.chain2, C.moves.chain3].map(function (x) { return x.hits[0].dmg.M; }).join(' + ');
       if (id === 'guardrail') dmg = dmgOf(C.moves.guardrailHit);
+      if (mv.cmdGrab && C.moves[mv.cmdGrab.to]) dmg = dmgOf(C.moves[mv.cmdGrab.to]);
       out.push({ id: id, name: lore.zh || id, nameEn: lore.en || id.toUpperCase(),
         input: (lore.input || mv.motion) + (id === 'super' ? '+攻击' : '+L/M/H'), simple: lore.simple || '',
         type: mv.kind === 'super' ? 'super' : 'special', desc: (lore.desc || '') + (id === 'super' ? '（需要满能量）' : ''), damage: dmg });
       if (id === 'spark' && C.moves.airSpark) out.push({ id: 'airSpark', name: (lore.zh || '') + '（空中）', nameEn: 'AIR ' + (lore.en || ''),
         input: 'j.236+L/M/H', simple: 'j.S', type: 'special', desc: '空中斜向下发射。', damage: dmgOf(C.moves.airSpark) });
+      if (id === 'breath' && C.moves.airBreath) out.push({ id: 'airBreath', name: (lore.zh || '') + '（空中）', nameEn: 'AIR ' + (lore.en || ''),
+        input: 'j.236+L/M/H', simple: 'j.S', type: 'special', desc: '空中向斜下方喷出龙息，多段命中。', damage: dmgOf(C.moves.airBreath) });
     });
     return out;
   };
