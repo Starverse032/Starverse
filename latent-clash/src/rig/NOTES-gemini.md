@@ -40,10 +40,10 @@ four gemini files exist), `anims/placeholders.js` (her segment table + aliases).
   behind her rear shoulder; = the front claw tip while `stars: 'hand'` (star, airStar, starRise, super)).
   `weapon` = claw tip (L, starRise, twinStrike), toe (5M, 2M, jM), heel/sole (5H, 2H, jH), raised hand (super).
   `muzzle` = flicking hand (star (34,-75), airStar (28,-46)), raised hand in super ((16,-104) → points ahead
-  (≈35,-75) from active+44 for the X beams). `grab` in throwHit (see above).
+  (≈38,-80) from active+44 for the X beams). `grab` in throwHit (see above).
 - Mirrored drawings (`flip`): 5H startup+6 … recovery+5, 2H startup+6 … recovery, jH startup+7 … active, starRise
   rise+2 / rise+6 (corkscrew), super cast+4, win in+12. Anchors are already in screen space for those frames
-  (starRise's weapon stays over her head: x ≈ +3 on the flipped drawings).
+  (starRise's weapon stays over her head: x ≈ +8…+18 on all rise drawings).
 - Below the floor: grounded drawings are clipped 2 px under the origin; `air: true` poses (jump set, airJump, dashes,
   launch, starRise rise, blinkOut ball, throwHit hop, thrown, intro drop) are not clipped.
 - Extents (drawn pixels, all anims): x -72 … +73, y down to -128 (throwHit hop) / -170 (intro drop-in from 40 px up).

@@ -161,7 +161,7 @@
     segs: [['startup', 4], ['rise', 12], ['fall', 12, true], ['land', 14]], step: 2,
     keys: [['startup', P(S, ATK)], ['startup+2', SR0, 'snap'],
       ['rise', P(SR1, { smear: { part: 'hF', from: 'startup+2', n: 4 } }), 'snap'], ['rise+2', SRf, 'snap'], ['rise+4', P(SR1, { hF: [17, -104] }), 'snap'],
-      ['rise+6', P(SRf, { hF: [12, -98] }), 'snap'], ['rise+8', P(SR1, { hF: [15, -98], mouth: 'cat' }), 'snap'],
+      ['rise+6', P(SRf, { hF: [-2, -100] }), 'snap'], ['rise+8', P(SR1, { hF: [15, -98], mouth: 'cat' }), 'snap'],
       ['rise+10', P(JR, ATK, { hF: [16, -82], claw: '', hs: 0.25 }), 'out'],
       ['fall', P(JF, ATK, { skirt: 0.85, coat: 0.8 })], ['fall+6', P(JF, ATK, { skirt: 0.8, hB: [-12, -63] })],
       ['land', P(S, { hip: [0, -38], lean: 22, bend: 6, sq: 1, faB: 30, hF: [22, -46], hB: [10, -44], skirt: 0.45, coat: 0.5, tail: 26, eyes: 'focus' }), 'snap'],
