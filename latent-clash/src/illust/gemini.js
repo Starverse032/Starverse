@@ -199,8 +199,8 @@
   function H() { return I.H; }
 
   // the light-twin: a translucent pink-violet copy peeking in behind her (win)
-  function twin(P, dx, dy) {
-    var Q = K.painter(P.w, P.h); Q.ox = dx; Q.oy = dy;
+  function twin(P, dx, dy, sc) {
+    var Q = K.painter(P.w, P.h); Q.ox = dx; Q.oy = dy; Q.s = sc || 1;
     var m = Q.ell(53, 37, 25, 26).or(Q.ell(47, 42, 21, 23))
       .or(Q.spoly([29, 28, 25, 16, 25, 6, 27, 1, 34, 4, 41, 8, 47, 13, 38, 16])).or(Q.spoly([62, 14, 68, 8, 75, 4, 81, 1, 84, 7, 83, 16, 80, 25, 72, 22]))
       .or(Q.spoly([30, 40, 24, 60, 26, 80, 20, 100, 24, 132, 94, 132, 98, 100, 92, 80, 94, 60, 84, 36]));
@@ -209,7 +209,7 @@
     P.recol(m.band(-2, 2), [S.a1], S.a0);
     P.fill(m.edge(), S.a0);
     // glinting eyes
-    [[44, 46], [66, 46]].forEach(function (e) { var x = Math.round(e[0] + dx), y = Math.round(e[1] + dy); P.px(x, y, S.W); P.px(x, y + 1, S.W); P.px(x + 1, y + 1, S.a0); P.px(x, y + 2, S.a0); });
+    [[44, 46], [66, 46]].forEach(function (e) { var x = Q.tx(e[0]), y = Q.ty(e[1]); P.px(x, y, S.W); P.px(x, y + 1, S.W); P.px(x + 1, y + 1, S.a0); P.px(x, y + 2, S.a0); });
   }
 
   // ---------------------------------------------------------------- bust
@@ -351,8 +351,7 @@
     P.outer(S.ol);
 
     if (win) {
-      star4(P, 98, 12, 6, { rot: 0.2 }); star4(P, 14, 16, 5); star4(P, 104, 40, 3);
-      star4(P, 8, 40, 2); star4(P, 92, 30, 2);
+      star4(P, 14, 16, 5); star4(P, 105, 50, 3); star4(P, 8, 40, 2); star4(P, 74, 4, 2);
     } else if (lose) {
       // drooping star + a little "?"
       star4(P, 98, 16, 5, { rot: 0.6, k: 0.36 });
@@ -538,7 +537,7 @@
 
   I.ART.gemini = {
     bust: function () { var P = K.painter(112, 128); drawBust(P, {}); return P; },
-    bustWin: function () { var P = K.painter(112, 128); twin(P, 30, 2); var Q = K.painter(112, 128); drawBust(Q, { expr: 'win' }); P.blit(Q, 0, 0); return P; },
+    bustWin: function () { var P = K.painter(112, 128); twin(P, 68, 6, 0.62); var Q = K.painter(112, 128); drawBust(Q, { expr: 'win' }); P.blit(Q, 0, 0); return P; },
     bustLose: function () { var P = K.painter(112, 128); drawBust(P, { expr: 'lose' }); return P; },
     titleFrame: function (o) { var P = K.painter(112, 128); drawBust(P, o); return P; },
     cutin: function () { return I.cutin ? I.cutin('gemini') : K.painter(240, 72); },
