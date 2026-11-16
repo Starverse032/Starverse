@@ -1,7 +1,7 @@
 // LATENT CLASH — PLATFORM smoke test (Playwright). node tools/platform-smoke.mjs
 // Boots index.html and dist/latent-clash.html with LC_OPTS { manual, mute }, walks every scene with
 // LC.debug, plays a CPU-vs-CPU match to the result screen, exercises pause / arcade routing / touch
-// layout, asserts LC.debug.errors is empty, and saves screenshots to .shots/platform/smoke-*.png.
+// layout, the roster (every ladder, GPT + Gemini picked with real keys, their screens and matches), asserts LC.debug.errors is empty, and saves screenshots to .shots/platform/smoke-*.png.
 import { createRequire } from 'module';
 import path from 'path';
 import fs from 'fs';
@@ -124,11 +124,9 @@ for (const [tag, file] of targets) {
   console.log(`[${tag}] ladders: ` + ladders.map(l => l.ch + '→' + l.steps.map(s => s.foe + '@' + s.stage).join(',')).join(' | '));
   // newer fighters: pick via the select screen with real menu input; then a match when FIGHT + RIG know them
   for (const who of ['gpt', 'gemini']) {
-    const pick = await page.evaluate(async (who) => {
+    const pick = await page.evaluate((who) => {
       LC.app.lastPick = {};
       LC.debug.goto('select', { mode: 'versus', vs: 'pvc' }); LC.debug.step(30);
-      const keys = [];
-      const press = (k) => new Promise(r => { keys.push(k); r(); });
       return { idx: LC.CHARS.indexOf(who) };
     }, who);
     // real key presses (ArrowRight / KeyZ are the default solo-mode menu keys)
