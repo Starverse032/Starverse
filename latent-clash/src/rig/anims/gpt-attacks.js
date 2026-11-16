@@ -195,7 +195,7 @@
   // roar 系统提示: inhales (wings close in), then a point-blank roar — wings fully spread, arms flung wide,
   // head thrust forward, the tail lifted; muzzle = mouth
   var RO0 = P(S, ATK, MZ, { hip: [-2, -50], lean: -6, bend: -6, tilt: 8, hF: [8, -66], hB: [2, -64], handF: 'claw', handB: 'claw', wing: 0.2, wf: 30, tail: 14, eyes: 'closed', mouth: 'neutral', shr: 1 });
-  var RO1 = P(S, MZ, { hip: [2, -49], lean: 12, bend: 4, tilt: -10, head: [2, 0], fF: [13, 0], fB: [-12, 0], hF: [26, -78], hB: [-22, -74], handF: 'claw', handB: 'claw',
+  var RO1 = P(S, MZ, { hip: [0, -50], lean: -2, bend: -6, tilt: -12, head: [3, -1], fF: [13, 0], fB: [-12, 0], hF: [31, -62], hB: [-24, -66], handF: 'claw', handB: 'claw',
     eyes: 'focus', mouth: 'shout', wing: 1.15, wf: -14, tail: -22, arch: 5, skirt: 0.5, hd: 18, claw: 'FB' });
   def('roar', {
     segs: sar(9, 6, 24), step: 2,
