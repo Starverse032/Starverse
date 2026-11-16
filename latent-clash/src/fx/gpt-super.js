@@ -43,9 +43,17 @@
     function hw(r) { return function (u) { return r(u) * HS; }; }
     function poly(L, col, jaw) { var o = []; for (var k = 0; k < L.length; k += 2) { var p = jaw ? J2(L[k], L[k + 1]) : P2(L[k], L[k + 1]); o.push(p[0], p[1]); } b.poly(o, col); }
     function tri(x0, y0, x1, y1, x2, y2, col, jaw) { poly([x0, y0, x1, y1, x2, y2], col, jaw); }
-    function hornStroke(L, r0, r1, col) {
-      var o = []; for (var k = 0; k < L.length; k += 2) { var p = P2(L[k], L[k + 1]); o.push(p[0], p[1]); }
-      b.stroke(o, hw(function (u) { return r0 + (r1 - r0) * u; }), col);
+    function hornStroke(L, r0, r1, col) {   // tapered polygon along the (rotated) centre line
+      var o = [], np = L.length >> 1, left = [], right = [];
+      for (var k = 0; k < np; k++) { var p = P2(L[k * 2], L[k * 2 + 1]); o.push(p); }
+      for (k = 0; k < np; k++) {
+        var a = o[Math.max(0, k - 1)], z = o[Math.min(np - 1, k + 1)], tx = z[0] - a[0], ty = z[1] - a[1], tl = Math.sqrt(tx * tx + ty * ty) || 1;
+        var r = (r0 + (r1 - r0) * k / (np - 1)) * HS, nx = -ty / tl * r, ny = tx / tl * r;
+        left.push(o[k][0] + nx, o[k][1] + ny); right.unshift(o[k][0] - nx, o[k][1] - ny);
+      }
+      for (k = 0; k < right.length; k += 2) left.push(right[k], right[k + 1]);
+      b.poly(left, col);
+      b.disc(o[0][0], o[0][1], r0 * HS, col);
     }
     // horns (behind the skull): base, shade underside, ridge bands
     hornStroke(HORN2, 3.6, 0.8, Su[2]);
@@ -127,9 +135,11 @@
     return { o: [mk(false, 0), mk(false, 1)], b: [mk(true, 0), mk(true, 1)] };
   }
 
-  function bakeSuper() {
-    [0, 1].forEach(function (pal) {
-      var g = G[pal];
+  // palette 0 bakes in init; palette 1 (mirror matches) bakes ~0.1 s later in idle time, or on first use
+  function bakePal(pal) {
+    var g = G[pal];
+    if (g.heads) return;
+    (function () {
       g.heads = [];
       for (var ai = 0; ai < NA; ai++) { var row = []; for (var ji = 0; ji < 3; ji++) row.push(bakeHead(pal, ai, ji)); g.heads.push(row); }
       g.neck = bakeNeck(pal);
