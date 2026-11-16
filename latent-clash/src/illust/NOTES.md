@@ -1,5 +1,8 @@
 # ILLUST — notes
 
+## Gemini progress / next steps (V2.6 fourth fighter — truthful, current)
+- STARTED: reading docs/reference. Nothing written yet in code.
+
 ## GPT progress / next steps (V2.5 third fighter — truthful, current)
 DONE (zero console errors; init ≈ 430 ms with three chars; Claude/DeepSeek art, emblems, logo, banners
 and title verified pixel-identical to the pre-GPT baseline):
