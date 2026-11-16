@@ -29,7 +29,7 @@
   var PROF = {
     claude:   { dp: 'sonnet',     want: D(92), jr: [D(70), D(130)], dashW: 0.8,  superR: D(200) },
     deepseek: { dp: 'breach',     want: D(60), jr: [D(70), D(150)], dashW: 0.9,  superR: D(120) },
-    gpt:      { dp: 'dragonRise', want: 80,    jr: [D(70), D(125)], dashW: 0.55, superR: 0, wantVs: { deepseek: 96 } }
+    gpt:      { dp: 'dragonRise', want: 80,    jr: [D(70), D(125)], dashW: 0.55, superR: 0 }
   };
   function prof(ch) { return PROF[ch] || PROF.claude; }
   F.AI_PROF = PROF;
@@ -243,7 +243,7 @@
     // vs GPT up close while blocking a lot: leave command-grab range (jump back / back-dash)
     if (o.ch === 'gpt' && dx < 74 && C !== 'gpt' && this.recentBlocks(150) >= 2 && o.action !== 'attack' && this.escRolled !== this.blkLog[this.blkLog.length - 1]) {
       this.escRolled = this.blkLog[this.blkLog.length - 1];
-      if (this.chance(P.block * (P.vsGrab != null ? P.vsGrab : 0.6))) {
+      if (this.chance(P.block * (P.vsGrab != null ? P.vsGrab : 0))) {
         if (this.chance(0.5) && me.x > T.WALL + 50 && me.x < LC.STAGE_W - T.WALL - 50) this.push([{ d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }], 'escDash');
         else this.push([{ d: this.chance(0.5) ? 7 : 8, n: 3 }], 'escJump');
         return this.emit();
@@ -464,7 +464,7 @@
     this.wakePlanned = true;
     var close = dx < D(70), oAtk = o.action === 'attack';
     var r = this.rng.next();
-    var vsG = o.ch === 'gpt' && me.ch !== 'gpt' && dx < 72 ? (this.P.vsWake != null ? this.P.vsWake : 0.1) : 0;   // her meaty command grab
+    var vsG = o.ch === 'gpt' && me.ch !== 'gpt' && dx < 72 ? (this.P.vsWake != null ? this.P.vsWake : 0) : 0;   // her meaty command grab
     if (close && r < 0.08 + this.level * 0.03) { this.push(this.special(prof(me.ch).dp, 'H'), 'reversal'); return this.emit(); }
     if (me.ch === 'gpt' && close && !oAtk && r < 0.16 + this.level * 0.02) { this.push(this.special('roar', 'H'), 'wakeRoar'); return this.emit(); }
     if (close && r < 0.18 + this.level * 0.03 + vsG) { this.push([{ d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }], 'wakeBack'); return this.emit(); }
