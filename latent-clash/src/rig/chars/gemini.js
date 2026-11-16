@@ -45,7 +45,7 @@
     // bouncy stance on the balls of her feet: lead paw up at chest height, rear paw tucked by her ribs
     rest: {
       root: [0, 0], hip: [0, -50], lean: 3, bend: -3, head: [0, 0], tilt: -2,
-      hF: [15, -64], hB: [4, -60], fF: [9, 0], fB: [-9, 0], faF: 0, faB: 14,
+      hF: [17, -61], hB: [4, -60], fF: [9, 0], fB: [-9, 0], faF: 0, faB: 14,
       pen: 0, sq: 0, shr: 0, haF: 0, haB: 0, pg: 0, skirt: 0, tail: 0, arch: 10,
       book: 0, bko: 0, bk: [0, 0], tw: 0, hem: 0,
       eyes: 'open', mouth: 'neutral', handF: 'paw', handB: 'paw',
@@ -109,21 +109,21 @@
   }
 
   // ------------------------------------------------------------------ chains
-  var TAIL_N = 10, TAIL_LEN = [4.6, 4.6, 4.6, 4.6, 4.6, 4.6, 4.6, 4.6, 4.4, 4.2];
+  var TAIL_N = 10, TAIL_LEN = [5, 5, 5, 5, 5, 5, 5, 5, 4.6, 4.2];
   // rest shape (deg added per link at arch 10): drops behind her, sweeps back, the tip curls up
-  var TAIL_PROF = [0, 4, 10, 20, 36, 58, 84, 110, 134, 154];
+  var TAIL_PROF = [0, -2, -2, 2, 14, 36, 64, 94, 122, 146];
   var TAIL_R = [1.8, 2.2, 2.6, 2.9, 3.1, 3.2, 3.2, 3.1, 2.9, 2.5, 1.8];
   var HAIR_GRAV = 0.24;
   C.chains = [
-    { id: 'tail', n: TAIL_N, len: TAIL_LEN, rest: [100, 104, 110, 120, 136, 158, 184, 210, 234, 254], stiff: 0.55, damp: 0.74, grav: 0.02, drag: 0.22, hys: 0.6 },
+    { id: 'tail', n: TAIL_N, len: TAIL_LEN, rest: [96, 94, 94, 98, 110, 132, 160, 190, 218, 242], stiff: 0.55, damp: 0.74, grav: 0.02, drag: 0.22, hys: 0.6 },
     { id: 'hairA', n: 7, len: [10, 10, 10, 10, 10, 9, 9], rest: [100, 94, 92, 92, 95, 100, 108], stiff: [0.36, 0.3, 0.25, 0.21, 0.18, 0.15, 0.13], damp: 0.84, grav: HAIR_GRAV, drag: 0.3, cvel: 0.6 },
     { id: 'hairB', n: 6, len: [10, 10, 10, 10, 9, 9], rest: [120, 106, 100, 102, 112, 128], stiff: [0.36, 0.3, 0.24, 0.2, 0.16, 0.14], damp: 0.84, grav: HAIR_GRAV, drag: 0.3, cvel: 0.6 },
     { id: 'hairC', n: 6, len: [10, 10, 10, 9, 9, 8], rest: [92, 88, 86, 85, 84, 82], stiff: [0.38, 0.3, 0.24, 0.2, 0.16, 0.14], damp: 0.83, grav: HAIR_GRAV, drag: 0.3, cvel: 0.6 },
     { id: 'lockN', n: 4, len: [7, 7, 7, 6], rest: [84, 88, 92, 96], stiff: 0.32, damp: 0.8, grav: 0.22, drag: 0.25, cvel: 0.5 },
     { id: 'lockF', n: 3, len: [6, 6, 6], rest: [84, 88, 92], stiff: 0.34, damp: 0.8, grav: 0.22, drag: 0.25, cvel: 0.5 },
     { id: 'ahoge', n: 3, len: [4, 4, 3], rest: [-96, -40, 20], stiff: 0.5, damp: 0.7, grav: 0.03, drag: 0.14 },
-    { id: 'sFb', n: 2, len: [6, 6], rest: [96, 100], stiff: [0.3, 0.24], damp: 0.84, grav: 0.24, drag: 0.42, cvel: 0.5 },
-    { id: 'sBb', n: 2, len: [6, 6], rest: [96, 100], stiff: [0.3, 0.24], damp: 0.84, grav: 0.24, drag: 0.42, cvel: 0.5 },
+    { id: 'sFb', n: 2, len: [5, 5], rest: [96, 102], stiff: [0.3, 0.24], damp: 0.84, grav: 0.24, drag: 0.42, cvel: 0.5 },
+    { id: 'sBb', n: 2, len: [5, 5], rest: [96, 102], stiff: [0.3, 0.24], damp: 0.84, grav: 0.24, drag: 0.42, cvel: 0.5 },
     { id: 'hemF', n: 2, len: [8, 8], rest: [78, 84], stiff: [0.42, 0.36], damp: 0.78, grav: 0.2, drag: 0.32, limit: limF },
     { id: 'hemB', n: 2, len: [8, 8], rest: [106, 100], stiff: [0.42, 0.36], damp: 0.78, grav: 0.2, drag: 0.32, limit: limB },
     { id: 'cpN', n: 3, len: [12, 12, 12], rest: [94, 92, 91], stiff: [0.34, 0.28, 0.24], damp: 0.84, grav: 0.24, drag: 0.36, cvel: 0.4 },
@@ -146,7 +146,7 @@
   function tailRoot(d) { return fr(d.pel, d.lean, -5, 3); }
   var TA = new Float64Array(TAIL_N);
   function tailAngles(d, out) {
-    var a0 = 100 + d.tail + d.lean * 0.5, k = d.arch / 10, whip = d.pen;
+    var a0 = 96 + d.tail + d.lean * 0.5, k = d.arch / 10, whip = d.pen;
     for (var i = 0; i < TAIL_N; i++) out[i] = a0 + TAIL_PROF[i] * k + (i >= 5 ? whip * (i - 4) : 0);
     return out;
   }
@@ -472,7 +472,7 @@
     var e = pts[m - 1], e0 = pts[m - 2], de = norm(e[0] - e0[0], e[1] - e0[1]);
     p.poly(H.flat([[e[0] - de[1] * 2.6, e[1] + de[0] * 2.6], [e[0] + de[0] * 3.5, e[1] + de[1] * 3.5], [e[0] + de[1] * 2.6, e[1] - de[0] * 2.6]]), M.hair, null, 1);
     // gradient: violet over the outer 45 %, dithered seam
-    var cut = Math.floor(m * 0.55), poly = [], j;
+    var cut = Math.floor(m * 0.66), poly = [], j;
     function sidePts(i0, i1, sg) {
       var o = [];
       for (j = i0; j <= i1; j++) {
@@ -486,6 +486,11 @@
     H.recolor(p, poly, M.hair, MV);
     var Ld = sidePts(cut, cut + 1, 1), Rd = sidePts(cut, cut + 1, -1);
     H.recolor(p, H.flat(Ld.concat(Rd.reverse())), MV, M.hair, true);
+    // lit ridge along the upper side
+    for (i = 1; i < m - 2; i++) {
+      var Aa = pts[i], Bb2 = pts[i + 1], qq = norm(Bb2[0] - Aa[0], Bb2[1] - Aa[1]), sgn = qq[0] <= 0 ? 1 : -1, rr0 = rr[i] - 1, rr1 = rr[i + 1] - 1;
+      ln(p, [Aa[0] + qq[1] * rr0 * sgn, Aa[1] - qq[0] * rr0 * sgn], [Bb2[0] + qq[1] * rr1 * sgn, Bb2[1] - qq[0] * rr1 * sgn], col(i >= cut ? MV : M.hair, 0), true);
+    }
     // light fur streaks on the upper side, a dark crease on the underside
     for (i = 2; i < m - 3; i += 3) {
       var A2 = pts[i], B2 = pts[i + 1], q3 = norm(B2[0] - A2[0], B2[1] - A2[1]), up = q3[0] >= 0 ? -1 : 1;
@@ -517,13 +522,14 @@
     var W = [g.ha[0] + g.e[0] * 2.5, g.ha[1] + g.e[1] * 2.5];
     var Ct = [W[0] + g.n[0] * 4.4, W[1] + g.n[1] * 4.4], Dt = bag[0], E1 = bag[1], E2 = bag[2];
     var Lw = [lerp(Bb, E2, 0.55)[0], lerp(Bb, E2, 0.55)[1] + 2];     // the lower edge sags between elbow and corner
-    p.poly(H.flat([A, Bt, Ct, Dt, E1, E2, Lw, Bb, A2]), M.c2, SH.soft, t);
+    p.poly(H.flat([A, Bt, Ct, Dt, E1, E2, Lw, Bb, A2]), M.c2, SH.soft, t0);
+    p.poly(H.flat([lerp(A, A2, 0.5), lerp(Bt, Bb, 0.55), lerp(Ct, E2, 0.6), E2, Lw, Bb, A2]), M.c2, null, t);
     // the mouth of the bell: violet lining crescent, then a white cuff band, gold trim on the rim
     var m0 = lerp(Ct, Dt, 0.5), m1 = lerp(Dt, E2, 0.5);
-    p.poly(H.flat([lerp(Ct, Bt, 0.2), Ct, Dt, E1, E2, lerp(E2, Lw, 0.25), lerp(m1, Lw, 0.3), lerp(m0, Bt, 0.3)]), M.c1, null, t0);
+    p.poly(H.flat([lerp(Ct, Bt, 0.3), Ct, Dt, E1, E2, lerp(E2, Lw, 0.35), lerp(m1, Lw, 0.42), lerp(m0, Bt, 0.42)]), M.c1, null, t0);
     p.poly(H.flat([m0, Dt, E1, E2, lerp(m1, Lw, 0.12)]), ML, null, t);
     ln(p, Ct, Dt, col(M.metal, 1), true); ln(p, Dt, E1, col(M.metal, 1), true); ln(p, E1, E2, col(M.metal, 2), true);
-    ln(p, lerp(Ct, Bt, 0.24), lerp(E2, Lw, 0.28), col(M.metal, 2), true);
+    ln(p, lerp(Ct, Bt, 0.34), lerp(E2, Lw, 0.38), col(M.metal, 2), true);
     // folds + a sheen along the top
     dl(p, lerp(Bt, Bb, 0.5), lerp(Ct, E2, 0.6));
     dl(p, lerp(A, A2, 0.6), lerp(Lw, E2, 0.3));
