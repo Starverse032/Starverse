@@ -25,7 +25,15 @@
     var lv = S.difficulty || 3;
     function pl(p, i) {
       p = p || {};
-      return { char: F.chars[p.char] ? p.char : (i ? 'deepseek' : 'claude'), palette: p.palette | 0,
+      var ch = p.char;
+      if (!F.chars[ch]) {   // unknown id: first registered roster entry (logged once, never silent)
+        var ids = (LC.CHARS || []).filter(function (k) { return F.chars[k]; });
+        if (!ids.length) ids = Object.keys(F.chars);
+        var fb = ids[Math.min(i, ids.length - 1)];
+        if (ch != null) F.warn('createMatch: unknown character "' + ch + '", using ' + fb, '');
+        ch = fb;
+      }
+      return { char: ch, palette: p.palette | 0,
         control: p.control === 'cpu' ? 'cpu' : 'human', level: F.clamp(p.level | 0 || lv, 1, 5) };
     }
     c.p1 = pl(cfg.p1, 0); c.p2 = pl(cfg.p2, 1);
