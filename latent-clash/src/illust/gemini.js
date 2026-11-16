@@ -441,9 +441,6 @@
     Q.part(Q.rect(4, 20, 104, 60), S.h2, S.hl);
     Q.recol(Q.rect(4, 20, 104, 60).band(-6, 0), [S.h2], S.h3);
     HH.strands(Q, [[86, 30, 90, 44, 87, 56, 91, 70], [93, 30, 97, 46, 94, 58, 98, 70], [22, 30, 17, 44, 21, 56, 16, 70]], S.h3);
-    // cat ears (cheated down so their lower halves cut into the top of the frame)
-    catEar(Q, [24, 46, 20, 38, 19, 30, 21, 24, 28, 28, 35, 33, 40, 38, 32, 42], [26, 42, 23, 35, 23, 30, 26, 30, 31, 33, 35, 37], [[28, 41, 27, 35]]);
-    catEar(Q, [72, 38, 78, 33, 85, 29, 90, 26, 92, 32, 91, 41, 88, 48, 80, 44], [77, 38, 83, 33, 89, 30, 89, 35, 87, 42, 84, 44], [[81, 43, 85, 36]]);
     Q.part(Q.ell(53, 37, 25, 26).or(Q.ell(47, 42, 21, 23)), S.h1, S.hl);
     var f = Q.spoly(FACEPTS);
     Q.part(f, S.s1, S.sl); Q.recol(f.band(4, 0), [S.s1], S.s2); Q.recol(f.band(-2, 0), [S.s1], S.s0);
@@ -472,6 +469,9 @@
     var fr = Q.mask();
     FR.forEach(function (c) { fr = fr.or(Q.sr(c[0], c[1], c[2], c[3])); });
     Q.recol(fr.shift(-2, 6).or(fr.shift(0, 6)), [S.s1, S.s0], S.s2);
+    // cat ears (cheated down so their lower halves cut into the top of the frame), bases under the fringe
+    catEar(Q, [31, 45, 27, 37, 26, 29, 28, 25, 34, 28, 40, 32, 45, 37, 38, 42], [32, 41, 29, 34, 29, 29, 32, 29, 36, 32, 40, 36], [[34, 41, 33, 34], [38, 39, 37, 34]]);
+    catEar(Q, [70, 38, 76, 33, 83, 29, 89, 26, 91, 32, 90, 40, 87, 47, 79, 43], [75, 38, 81, 33, 87, 30, 88, 35, 86, 41, 83, 43], [[80, 42, 84, 35]]);
     FR.forEach(function (c) { HH.hairClump(Q, c, S.h1); });
     // hair sweeping across the sides
     HH.hairClump(Q, [[36, 36, 30, 48, 32, 58, 26, 66, 22, 72], 10, 5, 11, 0, [0.1, 0.6]], S.h1);
@@ -483,9 +483,10 @@
   // band motif: a huge faint four-pointed star behind the face, constellation lines + nodes
   function cutinMotif(P) {
     function st(cx, cy, r, k) { var pts = []; for (var i = 0; i < 8; i++) { var a = -Math.PI / 2 + i * Math.PI / 4, rr = i % 2 ? r * k : r; pts.push(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } return P.poly(pts); }
-    P.fill(st(152, 36, 120, 0.2), S.a2);
-    P.fill(st(152, 36, 70, 0.22), S.a3);
-    P.fill(st(152, 36, 52, 0.22), S.a2);
+    P.fill(st(36, 36, 110, 0.16), S.a2);
+    P.fill(st(36, 36, 62, 0.18), S.a3);
+    P.fill(st(36, 36, 46, 0.18), S.a2);
+    P.fill(st(36, 36, 30, 0.2), S.a3);
     var C = [[8, 52], [22, 40], [36, 46], [50, 30], [64, 18], [84, 10], [196, 8], [214, 22], [232, 14], [226, 50], [206, 64]];
     [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [6, 7], [7, 8], [7, 9], [9, 10]].forEach(function (e) {
       P.line([C[e[0]][0], C[e[0]][1], C[e[1]][0], C[e[1]][1]], S.a1);
@@ -494,18 +495,43 @@
   }
   // over the finished band: streaking iridescent stars with trails
   function cutinOver(P) {
-    [[70, 10, 4.5], [228, 60, 5], [24, 62, 3], [118, 64, 3], [200, 6, 2.5]].forEach(function (q) {
+    [[70, 10, 4.5, 30], [228, 58, 5, 12], [24, 62, 3, 18], [206, 7, 2.5, 8]].forEach(function (q) {
       var x = q[0], y = q[1], r = q[2];
-      for (var t = 2; t < 26 + r * 4; t++) if (t < 10 || t % 3) P.px(x - r - t, y, t < 10 ? S.a0 : S.a1);
+      for (var t = 2; t < q[3]; t++) if (t < 10 || t % 3) P.px(x - r - t, y, t < 10 ? S.a0 : S.a1);
       star4(P, x, y, r, { line: S.ol });
     });
   }
 
-  // ---------------------------------------------------------------- face icon 24x24 (TODO: hand map)
-  function face(P) {
-    var Q = K.painter(112, 128); drawBust(Q, {});
-    for (var y = 0; y < 24; y++) for (var x = 0; x < 24; x++) P.px(x, y, Q.get(28 + Math.round(x * 2.3), 2 + Math.round(y * 2.3)));
-  }
+  // ---------------------------------------------------------------- face icon 24x24 (hand-typed)
+  var FACE = [
+    '..o.............o.......',
+    '.oJo...........oHo......',
+    '.oPHo..ooooo..oPPHo.....',
+    '.oPpHohJJJJJhhoPpHo.....',
+    '.oPpHHJJHHHJJHHPHHo.....',
+    '.ohHHJHHHHHHHJJHHho.....',
+    '..hHHHHHHHHHHHHHHHh.....',
+    '..hHHHHHHHhHHHHHHHh.....',
+    '.hHHHHHHHhfhHHHhHHHh....',
+    '.hHHHHHHhffhHHhffhHHh...',
+    'ohHHHhKKKKfffhKKKfhHHh..',
+    'ohGhHKrWRKffffKyWfhGHh..',
+    'oVGfhwRRRwfffwYYwfhGVh..',
+    'oVVfhfffffffffffffhVVh..',
+    'oVVhffbbfffffffbbfhVVh..',
+    'oVvhhffffffnmmfffhVVVh..',
+    'oVvVhfffffffffffhVVvVh..',
+    'ovVVhhfffffffffhhVvVVh..',
+    'ovVVVhhhffffffhhhVVvVh..',
+    'oTvVVheeDMDDDMDehVVvVh..',
+    'oTTvheffDDDqDDDfehVTvh..',
+    'oTThefffDDDDDDDDfehTTh..',
+    'oThefffDDdDDDDDDDffhTh..',
+    'ohefffDDDDdDDDDDDDffeh..'
+  ];
+  var FL = { o: S.ol, h: S.hl, H: S.h1, J: S.h0, G: S.h2, V: S.x1, v: S.x2, T: S.t1, P: S.z1, p: S.z2, f: S.s1, e: S.s2,
+    K: S.lash, r: S.e2, R: S.e1, W: S.W, y: S.g2, Y: S.g1, w: S.ew, b: S.bl, n: S.sl, m: S.mo, D: S.d1, d: S.d2, M: S.m1, q: S.q1 };
+  function face(P) { P.map(0, 0, FACE, FL); }
 
   I.ART.gemini = {
     bust: function () { var P = K.painter(112, 128); drawBust(P, {}); return P; },
