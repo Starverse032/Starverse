@@ -7,13 +7,26 @@
   var LC = window.LC = window.LC || {};
   var U = LC.UI, W = LC.W, H = LC.H, ui = LC.ui, LORE = LC.LORE;
   var CH = LC.CHARS;
-  // Tile grid: every fighter plus a trailing "random" tile, centred between the two live puppets
-  // (x 128 / 256, ~44 px wide each) so they never overlap. 4 tiles -> 2×2.
-  var RND = CH.length, NT = CH.length + 1, TS = 38, TG = 3;
-  var COLS = Math.max(2, Math.ceil(Math.sqrt(NT)));
-  var GX = (W - (COLS * TS + (COLS - 1) * TG)) >> 1, GY = 26;
-  function tilePos(k) { return { x: GX + (k % COLS) * (TS + TG), y: GY + Math.floor(k / COLS) * (TS + TG) }; }
+  // Tile grid: every fighter plus a trailing "random" tile, in a narrow column of 2 (3 for big rosters)
+  // centred between the two live puppets (x 128 / 256, ~44 px wide each) and above the info panels
+  // (y 148). Rows are filled left to right; a short last row is centred (4 + 随机 -> 2·2·1).
+  var RND = CH.length, NT = CH.length + 1, TG = 3;
+  var COLS = Math.max(2, Math.ceil(NT / 3)), ROWS = Math.ceil(NT / COLS);
+  var TW = Math.min(36, Math.floor((78 - (COLS - 1) * TG) / COLS)), TH = Math.min(34, Math.floor((110 - (ROWS - 1) * TG) / ROWS));
+  var GX = (W - (COLS * TW + (COLS - 1) * TG)) >> 1, GY = ROWS > 2 ? 24 : 26;
+  function tilePos(k) {
+    var r = Math.floor(k / COLS), inRow = Math.min(COLS, NT - r * COLS);
+    var off = ((COLS - inRow) * (TW + TG)) >> 1;
+    return { x: GX + off + (k % COLS) * (TW + TG), y: GY + r * (TH + TG), row: r };
+  }
+  // tile label: the zh name without "娘" (Claude / DeepSeek / GPT / Gemini), shrunk to size 8 latin if needed
+  function tileName(ch) {
+    var L = LORE.chars[ch] || {}, n = (L.nameZh || ch).replace(/\s*娘$/, '');
+    if (LC.font.measure(n, { size: 8 }).w > TW - 2) n = L.name || n;
+    return n;
+  }
   function roll(not) { var l = CH.filter(function (c) { return c !== not; }); if (!l.length) l = CH; return l[(Math.random() * l.length) | 0]; }
+  function ZHNUM(n) { var d = '零一二三四五六七八九十'; return n <= 10 ? d[n] : n < 20 ? '十' + d[n - 10] : String(n); }
   var STATS = [['power', '力量'], ['speed', '速度'], ['range', '射程'], ['technique', '技巧']];
   var MODE_TAG = { arcade: '街机模式', versus: '对战', training: '训练' };
 
@@ -104,7 +117,7 @@
       // tiles
       for (var k = 0; k < NT; k++) {
         var tp = tilePos(k), tx = tp.x, ty = tp.y;
-        if (p.x >= tx && p.x < tx + TS && p.y >= ty && p.y < ty + TS) {
+        if (p.x >= tx && p.x < tx + TW && p.y >= ty && p.y < ty + TH) {
           var s = !sides[0].locked ? sides[0] : (twoSided && sides[1].active && !sides[1].locked ? sides[1] : null);
           if (!s) return;
           if (s.cur !== k) { s.cur = k; s.slide = 0; s.bioT = 0; ui.sfx('ui.move'); }
@@ -185,18 +198,18 @@
         for (var k = 0; k < NT; k++) {
           var tp = tilePos(k), tx = tp.x, ty = tp.y, ch = CH[k];
           var hov0 = sides[0].cur === k, hov1 = twoSided && sides[1].active && sides[1].cur === k;
-          ui.box(c, tx - 1, ty - 1, TS + 2, TS + 2, U.black);
+          ui.box(c, tx - 1, ty - 1, TW + 2, TH + 2, U.black);
           if (k === RND) {
-            ui.box(c, tx, ty, TS, TS, '#1c1930');
-            LC.font.draw(c, '?', tx + (TS >> 1), ty + 3, { size: 12, scale: 2, color: (t >> 4) & 1 ? U.gold : U.text, outline: U.black, align: 'center' });
-            LC.font.draw(c, '随机', tx + (TS >> 1), ty + TS - 11, { size: 10, color: U.text, outline: U.black, align: 'center' });
+            ui.box(c, tx, ty, TW, TH, '#1c1930');
+            LC.font.draw(c, '?', tx + (TW >> 1), ty + 2, { size: 12, scale: 2, color: (t >> 4) & 1 ? U.gold : U.text, outline: U.black, align: 'center' });
+            LC.font.draw(c, '随机', tx + (TW >> 1), ty + TH - 11, { size: 10, color: U.text, outline: U.black, align: 'center' });
           } else {
-            ui.box(c, tx, ty, TS, TS, ui.charCol(ch, 0).dark);
+            ui.box(c, tx, ty, TW, TH, ui.charCol(ch, 0).dark);
             var b = ui.portrait(ch, 'bust', 0);
-            if (b) c.drawImage(b, 37, b.lcFallback ? 40 : 22, TS, TS, tx, ty, TS, TS);   // fallback busts sit lower
-            LC.font.draw(c, (LORE.chars[ch] || {}).name || ch, tx + (TS >> 1), ty + TS - 8, { size: 8, color: U.text, outline: U.black, align: 'center' });
+            if (b) c.drawImage(b, 56 - (TW >> 1), b.lcFallback ? 40 : 22, TW, TH, tx, ty, TW, TH);   // fallback busts sit lower
+            LC.font.draw(c, tileName(ch), tx + (TW >> 1), ty + TH - 8, { size: 8, color: U.text, outline: U.black, align: 'center' });
           }
-          if (!hov0 && !hov1) { c.globalAlpha = 0.45; ui.box(c, tx, ty, TS, TS, U.bg0); c.globalAlpha = 1; }
+          if (!hov0 && !hov1) { c.globalAlpha = 0.45; ui.box(c, tx, ty, TW, TH, U.bg0); c.globalAlpha = 1; }
         }
         // cursors
         sides.forEach(function (s, i) {
@@ -207,17 +220,17 @@
           var g = 2 + pulse;
           c.fillStyle = col;
           // corner brackets
-          [[-g, -g, 1, 1], [TS + g - 6, -g, -1, 1], [-g, TS + g - 1, 1, -1], [TS + g - 6, TS + g - 1, -1, -1]].forEach(function (q) {
+          [[-g, -g, 1, 1], [TW + g - 6, -g, -1, 1], [-g, TH + g - 1, 1, -1], [TW + g - 6, TH + g - 1, -1, -1]].forEach(function (q) {
             var x = tx + q[0], y = ty + q[1];
             c.fillRect(x + (q[2] < 0 ? 0 : 0), y, 6, 2);
             c.fillRect(q[2] > 0 ? x : x + 4, q[3] > 0 ? y : y - 4, 2, 6);
           });
           var tag = tagOf(i), tw = LC.font.measure(tag, { size: 8 }).w + 6;
           // tags sit outside the grid (above the top row, below the others) so they never cover a tile label
-          var tagX = i === 0 ? tx - 2 : tx + TS + 2 - tw, tagY = ty === GY ? ty - 9 : ty + TS + 3;
+          var tagX = i === 0 ? tx - 2 : tx + TW + 2 - tw, tagY = tp.row === 0 ? ty - 9 : ty + TH + 3;
           ui.box(c, tagX, tagY, tw, 9, col);
           LC.font.draw(c, tag, tagX + 3, tagY + 1, { size: 8, color: U.bg0 });
-          if (s.locked) { var ic = ui.icon('lock'); if (ic) c.drawImage(ic, i ? tx + 2 : tx + TS - ic.width - 2, ty + 2); }
+          if (s.locked) { var ic = ui.icon('lock'); if (ic) c.drawImage(ic, i ? tx + 2 : tx + TW - ic.width - 2, ty + 2); }
         });
         // puppets
         sides.forEach(function (s, i) {
@@ -234,7 +247,7 @@
             ui.panel(c, px, py, pw, ph, {});
             LC.font.draw(c, '挑战者', px + 8, py + 6, { size: 12, color: U.dim });
             LC.font.draw(c, 'NEXT CHALLENGER', px + 8, py + 22, { size: 8, color: '#4f4a78' });
-            LC.font.draw(c, '击败三位对手，抵达潜空间。', px + 8, py + 34, { size: 10, color: '#4f4a78' });
+            LC.font.draw(c, '击败' + ZHNUM(LORE.arcade.length) + '位对手，抵达潜空间。', px + 8, py + 34, { size: 10, color: '#4f4a78' });
             return;
           }
           var ch = s.ch(), L = LORE.chars[ch], col = ui.charCol(ch, palFor(i));
