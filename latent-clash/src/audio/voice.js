@@ -48,15 +48,15 @@
     var v0 = VOW[Array.isArray(s.v) ? s.v[0] : s.v], v1 = VOW[Array.isArray(s.v) ? s.v[1] : s.v];
     var src = ctx.createOscillator();
     if (ch.src === 'glottal' || ch.src === 'reed') src.setPeriodicWave(r.wave(ch.src)); else src.type = ch.src;
-    var fc = s.f, n = fc.length;
+    var fc = s.f, n = fc.length, fl = ch.flick && !ch.noFlick ? ch.flick : 0, span = fl ? 0.72 : 1;
     for (var i = 0; i < n; i++) {
-      var ratio = 1 + (fc[i] - 1) * ch.bend, tt = t + d * (n === 1 ? 0 : i / (n - 1));
+      var ratio = 1 + (fc[i] - 1) * ch.bend, tt = t + d * span * (n === 1 ? 0 : i / (n - 1));
       if (i === 0) src.frequency.setValueAtTime(f0 * ratio, tt); else src.frequency.exponentialRampToValueAtTime(f0 * ratio, tt);
     }
-    if (ch.flick && kindOf !== 'ko' && kindOf !== 'hurt') {   // cat-like upward flick at the end of the syllable
-      var last = 1 + (fc[n - 1] - 1) * ch.bend;
-      if (n === 1) src.frequency.setValueAtTime(f0 * last, t + d * 0.7); else src.frequency.setValueAtTime(f0 * last, t + d);
-      src.frequency.exponentialRampToValueAtTime(f0 * last * (1 + ch.flick), (n === 1 ? t + d * 0.7 : t + d) + d * 0.3 + 0.03);
+    if (fl) {   // cat-like upward flick over the end of the syllable ("nya~" tail)
+      var last = f0 * (1 + (fc[n - 1] - 1) * ch.bend);
+      src.frequency.setValueAtTime(last, t + d * span);
+      src.frequency.exponentialRampToValueAtTime(last * (1 + fl), t + d + 0.03);
     }
     var end = t + d + 0.08;
     var srcs = [src];
@@ -124,6 +124,7 @@
     if (opts.pan && ctx.createStereoPanner) { var pn = ctx.createStereoPanner(); pn.pan.value = opts.pan; lp.connect(pn); node = pn; }
     node.connect(this.sfxBus);
     var rf = (1 + (rnd() * 2 - 1) * 0.04) * (opts.pitch || 1), tt = t + 0.002;
+    if (ch.flick) ch = Object.assign({}, ch, { noFlick: kind === 'hurt' || kind === 'ko' });   // no playful flick when hurt / KO'd
     for (var i = 0; i < syl.length; i++) tt += syllable(this, g, tt, ch, syl[i], rf, rnd) + 0.012;
     this.voiceLast[charId] = { g: g, t: t };
     var self = this;

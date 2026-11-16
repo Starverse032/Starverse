@@ -57,6 +57,23 @@
       ui.box(c, sx - 1, sy - 5, 3, 11, O); ui.box(c, sx - 5, sy - 1, 11, 3, O);
       ui.box(c, sx, sy - 4, 1, 9, P.accent[1]); ui.box(c, sx - 4, sy, 9, 1, P.accent[1]); ui.box(c, sx - 1, sy - 1, 3, 3, P.accent[0]);
       ui.box(c, 26, 56, 6, 40, P.hair[1]); ui.box(c, 80, 56, 6, 40, P.hair[1]);
+    } else if (ch === 'gemini') {
+      // cat ears (blue outside, pink inside) + a four-point star clip
+      var ic = P.ear || P.blush ? (P.ear || [P.blush, P.blush]) : P.hair;
+      [[34, -1], [78, 1]].forEach(function (e) {
+        for (var k = 0; k < 14; k++) {
+          var w = Math.max(1, 16 - k), x = e[0] - (w >> 1) + e[1] * Math.round(k / 4);
+          ui.box(c, x - 1, 30 - k, w + 2, 1, O);
+          ui.box(c, x, 30 - k, w, 1, P.hair[1]);
+          if (k < 9 && w > 6) ui.box(c, x + 3, 30 - k, w - 6, 1, ic[1]);
+        }
+        ui.box(c, e[0] - 1 + e[1] * 4, 16, 3, 1, O);
+      });
+      var gx = 82, gy = 40, st = P.star || P.accent;
+      ui.box(c, gx - 1, gy - 4, 3, 9, O); ui.box(c, gx - 4, gy - 1, 9, 3, O);
+      ui.box(c, gx, gy - 3, 1, 7, st[0]); ui.box(c, gx - 3, gy, 7, 1, st[0]); ui.box(c, gx, gy, 1, 1, st[2] || st[1]);
+      var h2 = P.hair2 || P.hair;
+      ui.box(c, 26, 56, 6, 40, h2[1]); ui.box(c, 80, 56, 6, 40, h2[1]); ui.box(c, 26, 90, 6, 6, (P.hairTip || h2)[1]); ui.box(c, 80, 90, 6, 6, (P.hairTip || h2)[1]);
     } else if (!ds) {
       // generic third+ fighter (GPT: dragon horns)
       var hc = P.scale || P.metal || P.hair;
@@ -128,6 +145,10 @@
     // weapon / gloves
     if (this.ch === 'claude') { R(10, top + 34, 22, 2, P.cloth2[1]); R(30, top + 34, 4, 2, P.metal[1]); }
     else { R(9, top + 30, 5, 5, P.accent[1]); }
+    if (this.ch === 'gemini') {   // cat ears + tail
+      R(-8, top - 3, 5, 4, O); R(-7, top - 2, 3, 3, P.hair[1]); R(3, top - 3, 5, 4, O); R(4, top - 2, 3, 3, P.hair[1]);
+      R(-14, -26 + b, 5, 2, (P.hair2 || P.hair)[1]); R(-16, -32 + b, 2, 7, (P.hair2 || P.hair)[1]); R(-16, -34 + b, 2, 2, (P.hairTip || P.hair)[1]);
+    }
   };
   FallbackPuppet.prototype.getAnchor = function () { return { x: 0, y: -40 }; };
 
