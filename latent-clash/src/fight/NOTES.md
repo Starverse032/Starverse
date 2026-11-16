@@ -19,7 +19,59 @@
   L5 ≈ 48 % Claude; **DeepSeek–GPT ≈ 54–57 % DeepSeek at L3/L5 (edge / just outside the band)** — open
 - [x] 5 shots (`fight-shots --real --boxes --only=gpt-`): normals, specials, call sequence, roar erasing a
   spark, super timeline, super KO, intro / HUD / win quote checked (see "GPT shots" below)
-- [ ] 6 notes (tuning table, combos, AI notes)
+- [x] 6 notes (this section), `getMoveList('gpt')` (breath + airBreath, call damage from callHit, multi-hit totals per strength)
+
+### GPT tuning numbers (`chars/gpt.js`)
+| | GPT 娘 |
+|---|---|
+| hp / height | 1000 / 102 (crouch 68, push width 28) |
+| push stand / crouch / air / down | 28×64 / 30×48 / 24×62 (−82..−20) / 30×26 |
+| hurt stand / crouch / air / launch | head (−9..11, −102..−72) + body 30×72 / 34×50 + head (2..26, −68..−48) / 28×84 (−100..−16) / 46×64 — body only (no wings / tail) |
+| walk F/B · dash F/B | 1.4/1.1 · 70/20f, 60/22f (inv 9) |
+| jump vy/g/vxF/vxB | 7.45/.324/2.6/2.2 (apex ≈ 82, 46f) |
+| normals s/a/r | 5L 6/3/9 · 5M 9/4/15 · 5H 13/5/24 · 2L 6/3/10 · 2M 9/4/16 · 2H 12/5/25 · jL 5/6 · jM 8/6 · jH 11/6 (V2.5) |
+| normals tip (box x+w) / dmg | 5L 38/40 · 5M 56/70 · 5H 70/110 · 2L 40/36 · 2M 58/66 · 2H 75/100 (kd) · jL 34/40 · jM 46/68 · jH 56/105 |
+| adv [hit, block] | 5L +3/+1 · 5M +2/−2 · 5H +2/−6 · 2L +2/0 · 2M +1/−3 · 2H kd/−12 · jL/jM/jH stun 12/9, 15/11, 19/14 |
+| throw | range 58, 120 (generic) |
+| breath 236 | startup 11/12/13, active 16 (hits at sf 0/6/12, `every` 6), rec 20/22/24; flame length 60/85/110 from the mouth (`muzzle`, clamped ±10 of (23,−81)), box = `spriteInfo('gpt.breath').box(len·min(1,(sf+1)/6), 0)`; 30/32/34 ×3, adv last hit +2/+1/0, block −6/−8/−10, push 6 (last 14/18), chip .2, `noCatch` (barrier does not catch it), never a projectile |
+| airBreath j236 | startup 10 (vy 0.3), active 12 (vy 0.5, hits every 4), rec loop-land, land lag 8, minHeight 30; 45° box, 26/28/30 ×3, stun 18/12 |
+| dragonRise 623 | 5 / rise 14 (vy0 −8/−10/−12, g .57/.71/.86, vx 1.2/1.6/2.0 → ≈ 52/65/78 px) / fall loop / land 14; strike-inv 0–6/8/10, throw-inv 0–40; box (0..44, −130..−4) rise f0–8, 110/130/150, launch, block stun 18 |
+| call 214 | startup 6/7/8, active 3, rec 28/30/32; grabs at origin distance ≤ 56/60/64 whatever `throwable()` allows (grounded, not in hit/block stun or the 6f after, not waking up / 6f after, not back-dashing, not throw-inv moves); no tech |
+| callHit | hold 14 / rise 16 / slam 12 / rec 22, inv all 0–52; victim chest on her `grab` anchor (origin stays on the floor); released on the last slam frame: 150/170/190, bounce (juggle 99) → hard knock-down (no quick rise), `gpt.callSlam` + impact + shake |
+| roar 22 | 9 / 6 / 22–26; circle radius 56/70/84 at her chest (clamped ±12 of (−2,−73)), circle-vs-rect test, hits both sides; 80/90/100, launch lvx 3.2/3.6/4.0, block push 30/36/42 adv −6; erases enemy projectiles inside the circle on active frames |
+| super | startup 6 (flash f5), cast 12, active 50, rec 30; inv 0–19; target = victim chest at cast f0 (`attnX/Y`), a comboed victim (hitstun / juggle-able launch / caught) is pinned (`caught`) 28f; boxes = `spriteInfo('gpt.attention').frames[t]` rel. the target: 4 × 55 (t 25/30/35/40, lv X, re-pin each hit) + 110 burst (t 44–49, launch); 330 raw, chip .25 (84), blockable; backdrop out at rec f10 |
+
+### GPT bread-and-butter combos (`fight-combos --real --all`, vs Claude and DeepSeek)
+`jH > 5L > 5M > 5H > 236H` (7 hits, 368, start 120 px) · `2L > 2M > 2H` (196, knock-down, 44) ·
+`5L > 5M > 623H` (245, launch, 36) · `jH > 5M > 623H` (310, 110) · `5M > 5H > 236H (3 hits) > SUPER` (10 hits, 471,
+52; wait for the 3rd breath hit, the cancel is allowed after the first). The command grab is never comboable
+(stun / post-stun protection), so combos are callHit-less. Oki check (same tool): call → meaty call at every
+timing k = −6..14 around the first throwable wake-up frame re-grabs a sleeping / blocking victim, but never one
+who back-dashes, jumps or reverses (DP) — no unblockable loop.
+
+### GPT CPU (ai.js)
+`PROF` per character (DP id, preferred range, jump-in range, dash weight, raw-super range, `vs` matchup plan
+multipliers). GPT: patient — walk-in / dash-in weights ×`gWalk` (L1 .5 → L5 .15) inside 150 px, extra `wait`,
+jump-ins ×`gJump` .25, throw ×`gThrow` .35 (the command grab replaces it); tail pokes 5H/2H ×1.8; breath 62–145 px
+(L/M/H by distance); call when ≤ 57 px weighted by how much the opponent guards (`oppGuard`), walk-up call,
+tick-call after a blocked 5L/2L (timed to land after the 6f post-blockstun protection); oki: meaty call / 2M /
+5H at the opponent's get-up; roar vs incoming projectiles (arrival-time estimate), as anti-air (≤ 64 px), on
+wake-up; dragonRise anti-air / reversal / vs a blocked rekka (buffered in blockstun); airBreath from jump-ins;
+punisher: call (≤ 56 px) / normals / breath; combos end in breath H or dragonRise H, super after a breath hit.
+Lunge-aware guard (start-up travel of the opponent's move counts toward the threat range).
+vs GPT (Claude / DeepSeek): leave grab range (jump back / back-dash) when she is close and they blocked ≥ 2 times
+in 150 ticks; projectiles ×.25 inside 150 px (no shots into a point-blank roar); whiffed call punished with
++.25 chance and a dash-in 5H; wake-up back-dash / jump chances +.1 / +.2 when she is within 72 px.
+
+### GPT shots (`fight-shots --real [--boxes] --only=gpt- --sheet`)
+Boxes sit on the sprite for every normal (claw at the hand, kick at the toe, tail tips for 5H/2H/jH, the
+long tail extends her hurt box during active + 2/3 recovery); breath flame starts at the mouth and the box
+covers the cone (L/M/H, crouching DeepSeek is hit at M); airBreath cone 45° down; dragonRise box on the claw;
+roar circle (overlay draws the circle) and `gpt.roarRing`; roar erases a spark (`gpt-roar-vs-spark`); call
+sequence: hold at her hand → lifted → slammed (victim in `launch` pose during slam) → `gpt.callSlam` on the
+floor at release; super: flash cut-in (GPT portrait / 注意力即一切), backdrop reveal from her side, heads,
+reticle and beams converge on the latched chest point, burst; super KO → GPT `screen.superFinish`; HUD face /
+name / colours are hers on either side; intro line and win quote from `LC.LORE`.
 
 ## V2 progress / next steps (CONTRACT-V2 retune — keep truthful)
 - [x] 1 retune to the V2 bodies (boxes, movement, spacing, reach, specials, fx positions); sim, combos, box shots
