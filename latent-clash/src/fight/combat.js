@@ -67,6 +67,13 @@
       }
       return b;
     }
+    if (h.flame) return F.flameLocal(f);
+    if (h.radius) { var rc = F.roarCircle(f, true); return [rc.x - rc.r, rc.y - rc.r, 2 * rc.r, 2 * rc.r]; }
+    if (h.attn) {   // GPT super: fx box rel. the target point latched at cast f0 (world) -> local
+      var wb = F.attnBox(f);
+      if (!wb) return null;
+      return [f.facing > 0 ? wb.x - f.x : f.x - wb.x - wb.w, wb.y - f.y, wb.w, wb.h];
+    }
     // normals follow the rig's weapon anchor (tip-aligned), clamped close to the designed reach so
     // a pose tweak can never change balance much; specials use their designed boxes
     if (h.anchor && f.mv.kind === 'normal' && f.puppet && !f.puppetFallback) {
@@ -120,6 +127,72 @@
   F.whaleCrashX = function () { var wi = F.whaleInfo(); return wi && wi.crashX != null ? wi.crashX : 194; };
   F.resetWhaleInfo = function () { whaleInfo = undefined; tidalInfo = undefined; };
 
+  // ---- GPT: flame cone (fx spriteInfo('gpt.breath').box(length, angle) rel. the mouth)
+  var breathInfo, flameCache = {};
+  function fxInfo(name) {
+    if (!F.mod('fx', 'spriteInfo')) return null;
+    try { return LC.fx.spriteInfo(name) || null; } catch (e) { F.err('fx.spriteInfo ' + name, e); return null; }
+  }
+  F.flameBox = function (len, ang) {
+    len = Math.max(8, Math.round(len)); ang = ang | 0;
+    var k = len + '|' + ang;
+    if (flameCache[k]) return flameCache[k];
+    if (breathInfo === undefined) { breathInfo = fxInfo('gpt.breath'); if (breathInfo && typeof breathInfo.box !== 'function') breathInfo = null; }
+    var b = null;
+    if (breathInfo) { try { b = breathInfo.box(len, ang); } catch (e) { F.err('fx gpt.breath box', e); b = null; } }
+    if (!b || !isFinite(b.x) || !isFinite(b.w) || b.w <= 0) {   // fallback: a cone's bounding box
+      if (ang) b = { x: -6, y: -10, w: Math.round(len * 0.97), h: Math.round(len * 1.05) };
+      else b = { x: 6, y: -Math.round(len * 0.2), w: len - 6, h: Math.round(len * 0.41) };
+    }
+    return (flameCache[k] = [b.x, b.y, b.w, b.h]);
+  };
+  // mouth point used for the flame (rig muzzle, clamped near the designed mouth)
+  F.flameMouth = function (f) {
+    var fl = f.mv.flame, fb = fl.mouthFb;
+    if (!f.puppet || f.puppetFallback) return { x: fb[0], y: fb[1] };
+    var a = f.anchor('muzzle');
+    return { x: F.clamp(a.x, fb[0] - 10, fb[0] + 10), y: F.clamp(a.y, fb[1] - 10, fb[1] + 10) };
+  };
+  F.flameLen = function (f) {
+    var fl = f.mv.flame, L = F.v(fl.length, f.str);
+    return L * Math.min(1, (f.sf + 1) / (fl.grow || 6));   // grows from the mouth during 'start'
+  };
+  F.flameLocal = function (f) {
+    var mz = F.flameMouth(f), b = F.flameBox(F.flameLen(f), f.mv.flame.angle);
+    return [Math.round(mz.x + b[0]), Math.round(mz.y + b[1]), b[2], b[3]];
+  };
+  // ---- GPT: roar circle (world, or local with local = true)
+  F.roarCircle = function (f, local) {
+    var R = f.mv.roar, fb = R.centerFb, c;
+    if (f.puppet && !f.puppetFallback) { var a = f.anchor(R.center); c = { x: F.clamp(a.x, fb[0] - 12, fb[0] + 12), y: F.clamp(a.y, fb[1] - 12, fb[1] + 12) }; }
+    else c = { x: fb[0], y: fb[1] };
+    var r = F.v(R.radius, f.str);
+    if (local) return { x: c.x, y: c.y, r: r };
+    return { x: f.x + c.x * f.facing, y: f.y + c.y, r: r };
+  };
+  F.circleRect = function (c, b) {
+    var px = F.clamp(c.x, b.x, b.x + b.w), py = F.clamp(c.y, b.y, b.y + b.h);
+    var dx = c.x - px, dy = c.y - py;
+    return dx * dx + dy * dy <= c.r * c.r;
+  };
+  // ---- GPT super: hit box (world) from fx spriteInfo('gpt.attention').frames[t] rel. the latched target
+  var attnInfo;
+  F.attnInfo = function () {
+    if (attnInfo === undefined) { attnInfo = fxInfo('gpt.attention'); if (attnInfo && !(attnInfo.frames && attnInfo.frames.length)) attnInfo = null; }
+    return attnInfo;
+  };
+  F.attnBox = function (f) {
+    var t = F.superT(f);
+    if (t < 0 || f.attnX == null) return null;
+    var ai = F.attnInfo(), fr;
+    if (ai) fr = ai.frames[t];
+    else fr = t >= 25 && t <= 43 ? { x: -16, y: -20, w: 32, h: 40 } : (t >= 44 && t <= 49 ? { x: -48, y: -48, w: 96, h: 96 } : null);
+    if (!fr || !fr.w) return null;
+    var x = f.facing > 0 ? f.attnX + fr.x : f.attnX - fr.x - fr.w;
+    return { x: x, y: f.attnY + fr.y, w: fr.w, h: fr.h };
+  };
+  F.resetGptInfo = function () { breathInfo = undefined; attnInfo = undefined; flameCache = {}; };
+
   F.barrierBox = function (f) {
     if (!f.mv || !f.mv.catchSeg || f.action !== 'attack') return null;
     var sg = f.seg();
@@ -155,8 +228,9 @@
     for (var i = 0; i < hits.length; i++) {
       var e = hits[i], hb = e.box;
       if (!juggleOK(vic, e.h)) continue;
-      var touch = bar && !e.h.noCatch && F.overlap(hb, bar) ? bar : null;
-      for (var j = 0; !touch && j < hurts.length; j++) if (F.overlap(hb, hurts[j])) touch = hurts[j];
+      var circ = e.h.radius ? { x: hb.x + hb.w / 2, y: hb.y + hb.h / 2, r: hb.w / 2 } : null;
+      var touch = bar && !e.h.noCatch && F.overlap(hb, bar) && (!circ || F.circleRect(circ, bar)) ? bar : null;
+      for (var j = 0; !touch && j < hurts.length; j++) if (F.overlap(hb, hurts[j]) && (!circ || F.circleRect(circ, hurts[j]))) touch = hurts[j];
       if (!touch) continue;
       // contact point: centre of the overlap, x pulled toward the victim's front edge
       var ox0 = Math.max(hb.x, touch.x), ox1 = Math.min(hb.x + hb.w, touch.x + touch.w);
@@ -303,6 +377,9 @@
       pushback(att, vic, pd, dir, !proj);
     }
     if (vic.hp <= 0) { vic.juggle = 99; }
+    else if (h.pin && !proj) {   // GPT super: the victim hangs at the target point until the next beam
+      vic.setActionRaw('caught'); vic.caughtT = 8; vic.vx = 0; vic.vy = 0; vic.pushN = 0; vic.pullTo = null;
+    }
     if (h.pull && !proj) {   // the whale carries its victim forward (target grows with the whale's t)
       var pl = h.pull + (h.pullGrow && F.whaleT ? h.pullGrow * Math.max(0, F.whaleT(att) - 8) : 0);
       var pd2 = att.x + att.facing * pl - vic.x;
@@ -322,6 +399,7 @@
     var fxName = counter ? 'hit.counter' : (h.fx || ('hit.' + LVNAME[lv]));
     var fxIdx = h.fxIndex != null ? h.fxIndex : (mv && mv.step != null ? mv.step : 0);
     F.fx(fxName, ctx.x, ctx.y, { facing: dir, power: lv === 'L' ? 0.3 : lv === 'M' ? 0.55 : 0.9, palette: att.pal, 'char': att.ch, index: fxIdx });
+    if (h.fx2) F.fx(h.fx2, ctx.x, ctx.y, { facing: dir, power: lv === 'L' ? 0.3 : lv === 'M' ? 0.55 : 0.9, palette: att.pal, 'char': att.ch });
     m.lastHitPos = { x: ctx.x, y: ctx.y };
     if ((counter || lv === 'H' || h.impact || (h.kd && kind !== 'normal')) && m.impactAt) m.impactAt(ctx.x, ctx.y, counter, att);
     F.sfx(h.sfx || (counter ? 'hit.counter' : 'hit.' + LVNAME[lv]), { pan: F.pan(ctx.x, m.camX) });
