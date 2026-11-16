@@ -346,7 +346,7 @@
     var tas = P.sr([80, 28, 81, 33, 80.5, 39], 1.8, 3);
     P.part(tas, S.c1, S.cl); P.recol(tas.band(1, 0), [S.c1], S.c2);
     P.part(P.rect(79, 28, 3, 2), S.m1, S.ml);
-    knot(P, 77, 23, 7.6, 5, -0.3, { small: 1, d: 0.58, ro: 0.44, hole: 1.2, core: 0.3, noNotch: 1, ring: S.hl });
+    knot(P, 77, 23, 7.6, 5, -0.3, { small: 1, d: 0.58, ro: 0.44, hole: 1.2, core: 0.22, noNotch: 1, ring: S.hl });
 
     // ---- ahoge
     var aho = lose ? P.sr([50, 12, 48, 7, 44, 5, 41, 7], 3.6, 1.8) : P.sr([50, 12, 49, 6, 46, 3, 42, 2, 39, 4], 4, 1.8);
