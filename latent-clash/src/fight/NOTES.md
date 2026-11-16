@@ -9,14 +9,25 @@
   — mechanics checked with a scripted test (real modules): breath 90/96/102 (3 hits, hits crouching DeepSeek
   at M), blocked breath chip 21; dragonRise 150 (H); call 170 / 190 vs crouch, grabs a blocking dummy,
   whiffs at 66 px and vs jumping; roar 90/100, L whiffs at 85 px; super 330 raw (5 hits), 84 chip blocked
-- [~] 3 CPU: GPT plans (breath, tail pokes, call vs guarders, tick-call, oki mix-up, roar vs projectiles /
-  anti-air / wake-up, airBreath, punisher, buffered dragonRise vs a blocked rekka, lunge-aware guard) and
-  vs-GPT logic (escape jump/back-dash, fewer projectiles close, whiff-call punish, wake-up jump/back-dash).
-  Tuning: GPT walks / dashes in much less (`gWalk` per level), jump-ins ×0.25 (`gJump`), throw ×0.35 (`gThrow`)
-- [~] 4 sim (all pairings: `--pairs`, `--mirror`, `--plans`, `--mu`) and combos (`--all`, `--vs`, `--chars`, `wN`,
-  oki-loop check) done; GPT combos 5/5 OK vs both (stubs + real); oki loop escapable (back-dash / jump /
-  reversal beat every meaty timing). Balance (real, 300 matches per cell, many seeds): Claude–GPT L3 ≈ 46,
-  L5 ≈ 48 % Claude; **DeepSeek–GPT ≈ 54–57 % DeepSeek at L3/L5 (edge / just outside the band)** — open
+- [x] 3 CPU: GPT plans (breath, tail pokes, call vs guarders, tick-call, oki mix-up, roar vs projectiles /
+  anti-air / wake-up / DeepSeek's dive, airBreath, punisher, buffered dragonRise vs a blocked rekka,
+  lunge-aware guard) and vs-GPT logic for the other two (escape jump/back-dash, fewer projectiles close,
+  whiff-call punish, wake-up jump/back-dash). Tuning: GPT walks / dashes in much less (`gWalk` L1 .8, L2 .4,
+  L3 .35, L4 .2, L5 .15), jump-ins ×.25 (`gJump`, L1 ×1), throw ×.35 (`gThrow`), breath ×1.7 vs DeepSeek (`PROF.gpt.vs`)
+- [x] 4 sim (all pairings: `--pairs`, `--mirror`, `--plans`, `--mu`) and combos (`--all`, `--vs`, `--chars`, `wN`,
+  oki-loop check); GPT combos 5/5 OK vs both (stubs + real); oki loop escapable (back-dash / jump /
+  reversal beat every meaty timing). Sim (real): 0 violations, deterministic (5 det. pairs incl. GPT mirror),
+  every match finishes, 0 console errors (also `--draw`, all pairs + mirrors). Balance below.
+
+### GPT balance (real modules, `fight-sim --n=150 --levels=1,3,5 --real`, seeds 31 / 32 / 41 / 42 → 1200 matches per cell, both sides)
+| A vs B (A win %) | L1 | L3 | L5 | per-seed range L3 / L5 |
+|---|---|---|---|---|
+| Claude vs DeepSeek | 54.6 | 49.4 | 55.4 | 47.7–51.0 / 52.5–57.0 (bit-identical to the pre-GPT code on the same seeds) |
+| Claude vs GPT | 50.1 | 46.6 | 48.7 | 44.3–48.7 / 47.2–49.7 |
+| DeepSeek vs GPT | 52.4 | 52.7 | 53.7 | 47.3–61.2 / 50.0–56.3 |
+Rounds 21–31 s, no time-ups. Single 300-match runs vary more than binomial noise (seed blocks); use ≥ 2 seeds.
+Next: DeepSeek–GPT is the least stable cell (one seed block at 61 % L3); GPT vs rushdown is AI-limited
+(she rarely blocks DeepSeek's rekka step 1 — reaction 17f vs an 8f lunge), not data-limited.
 - [x] 5 shots (`fight-shots --real --boxes --only=gpt-`): normals, specials, call sequence, roar erasing a
   spark, super timeline, super KO, intro / HUD / win quote checked (see "GPT shots" below)
 - [x] 6 notes (this section), `getMoveList('gpt')` (breath + airBreath, call damage from callHit, multi-hit totals per strength)
