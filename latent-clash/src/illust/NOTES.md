@@ -5,7 +5,14 @@
   for gemini `x*` = `hair2`, `u*` = `lining`, `z*` = `ear` (fallback chains; other chars unchanged).
 - tools/illust-hash.mjs: `save` / `check` pixel hashes of the other chars' portraits, icons, banners,
   logo, title (baseline in `.shots/illust/hash-baseline.json`).
-- IN PROGRESS: gemini.js (bust first).
+- gemini.js (manifest: after gpt.js) — registered, renders with zero console errors:
+  bust / bustWin (wink, peace sign, light-twin silhouette, stars) / bustLose (flattened ears, teary
+  pout, "?" + drooping star, limp tail, arm lowered) / face (hand map) / cut-in hooks / `emblem` hook.
+  `hairShift()` = blue → violet → pink in 3-step dithered bands by a diagonal wavy field; `star4()` =
+  faceted iridescent four-pointed star; `catEar()`, furry `tail()`, `twin()`.
+- icons.js: generic `I.ART[c].emblem(P, size)` hook before the whale fallback; api.js ICONS +
+  `emblem.gemini(.lg)`. cutin.js untouched (uses the generic cutinFace/Motif/Over hooks).
+- IN PROGRESS: review of cut-in / face / emblem, then a bust refinement round.
 
 ## GPT progress / next steps (V2.5 third fighter — truthful, current)
 DONE (zero console errors; init ≈ 430 ms with three chars; Claude/DeepSeek art, emblems, logo, banners
