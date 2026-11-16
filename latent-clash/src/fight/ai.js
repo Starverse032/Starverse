@@ -189,6 +189,11 @@
       this.rekRolled = this.blkLog[this.blkLog.length - 1];
       if (this.chance(P.block * (P.gRekka != null ? P.gRekka : 0.7))) { this.push(this.special('dragonRise', this.level >= 4 ? 'H' : 'M'), 'antiRekka'); return this.emit(); }
     }
+    // GPT vs DeepSeek's dive: the roar circle covers both sides when she surfaces (front or behind)
+    if (C === 'gpt' && pv && pv.mv === 'dive' && pv.act === 'attack' && this.diveRolled !== pv.x) {
+      this.diveRolled = pv.x;
+      if (this.chance(P.block * (P.gDive != null ? P.gDive : 0.8))) { this.q.length = 0; this.push(this.special('roar', 'H'), 'roarDive'); return this.emit(); }
+    }
     // keep guarding briefly once committed
     if (this.guardT > 0) {
       var tn = this.threat(me, pv, dx);
