@@ -139,15 +139,18 @@
   function bakePal(pal) {
     var g = G[pal];
     if (g.heads) return;
-    (function () {
-      g.heads = [];
-      for (var ai = 0; ai < NA; ai++) { var row = []; for (var ji = 0; ji < 3; ji++) row.push(bakeHead(pal, ai, ji)); g.heads.push(row); }
-      g.neck = bakeNeck(pal);
-      // tag labels Q / K / V (3x5 font, white with deep outline)
-      g.tags = ['Q', 'K', 'V'].map(function (ch) { var tb = new I.Buf(7, 9); I.text35(tb, ch, 2, 2, I.col('#ffffff')); tb.outline(g.dkU); return I.toCanvas(tb); });
-    });
+    var heads = [];
+    for (var ai = 0; ai < NA; ai++) { var row = []; for (var ji = 0; ji < 3; ji++) row.push(bakeHead(pal, ai, ji)); heads.push(row); }
+    g.neck = bakeNeck(pal);
+    // tag labels Q / K / V (3x5 font, white with deep outline)
+    g.tags = ['Q', 'K', 'V'].map(function (ch) { var tb = new I.Buf(7, 9); I.text35(tb, ch, 2, 2, I.col('#ffffff')); tb.outline(g.dkU); return I.toCanvas(tb); });
+    g.heads = heads;
   }
-  I.onInit('gpt-super', bakeSuper);
+  I.gptBakeSuper = bakePal;
+  I.onInit('gpt-super', function () {
+    bakePal(0);
+    if (typeof setTimeout === 'function') setTimeout(function () { bakePal(1); }, 120);
+  });
 
   // ---- geometry --------------------------------------------------------------------------------
   function ease(u) { u = u < 0 ? 0 : u > 1 ? 1 : u; return 1 - (1 - u) * (1 - u) * (1 - u); }
@@ -241,6 +244,7 @@
   function draw(ctx, sx, sy, t, o) {
     if (t >= DUR) return;
     var g = G[o.pal], raw = o.raw, f = o.facing, part = raw.part;
+    if (!g.heads) bakePal(o.pal);
     var tx0 = raw.tx == null ? W * 0.68 : +raw.tx, ty = Math.round(raw.ty == null ? 140 : +raw.ty);
     var tx = Math.round(f > 0 ? tx0 : W - tx0), sf = I.softFlash();
     var hd = layout(t, tx, ty), L = g.L, a0 = ctx.globalAlpha;
