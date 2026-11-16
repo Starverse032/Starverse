@@ -129,6 +129,7 @@
       for (var j = 0; j <= i; j++) {
         var w = weight(gd, i, j) * (0.55 + 0.45 * Math.sin(t * 0.07 + i * 0.6 - j * 0.4)) + wave * 0.5;
         var l = Math.min(gd.max, Math.floor(w * (gd.max + 0.99)));
+        if (gi === 0 && y + i * cs > 92 && l > 1) l = j === i ? 2 : 1;      // keep the fighters' lane calm
         ctx.fillStyle = lv[l];
         ctx.fillRect(sx + x + 5 + j * cs, sy + y + 5 + i * cs, cs - 1, cs - 1);
       }
