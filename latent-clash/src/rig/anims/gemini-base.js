@@ -202,4 +202,94 @@
       [14, P(S, { hip: [-1, -38], lean: 24, bend: 4, tilt: -6, fF: [10, 0], fB: [-10, 0], faB: 30, hF: [22, -44], hB: [10, -42], eyes: 'half', mouth: 'cat', skirt: 0.3, coat: 0.4, hs: 0.2 }), 'inout'],
       [19, P(S, { hip: [0, -51], lean: -1, tilt: -6, hF: [16, -66], hB: [2, -60], eyes: 'open', tail: 10 }), 'out'], [23, S]]
   });
+  // ---------------------------------------------------------------- throws
+  // whiff: a two-paw pounce-grab that claps shut on air; ears droop, a pout, the tail lashes
+  var TH = P(S, { hip: [4, -47], lean: 22, bend: 4, tilt: -6, fF: [16, 0], faB: 34, hF: [32, -62], hB: [28, -68], handF: 'open', handB: 'open', eyes: 'focus', mouth: 'cat', coat: 0.4, tail: -10 });
+  def('throw', {
+    segs: [['startup', 5], ['active', 2], ['recovery', 22]], step: 2,
+    keys: [['startup', P(S, { lean: 10, hF: [14, -70], hB: [10, -72], handF: 'claw', handB: 'claw', eyes: 'focus' })], ['startup+3', TH, 'out'],
+      ['active', P(TH, { hF: [33, -63], hB: [30, -66], handF: 'fist', handB: 'fist' }), 'snap'],
+      ['recovery+4', P(TH, { handF: 'fist', handB: 'fist', eyes: 'half', mouth: 'frown', ears: 'flat', tail: 20, pen: 8 })],
+      ['recovery+12', P(S, { lean: 6, hF: [14, -62], eyes: 'half', mouth: 'frown', ears: 'flat', tail: 16 }), 'inout'], ['recovery+21', S]]
+  });
+  // throwHit: grabs the collar in both paws, yanks them close, hops up and plants both platform soles on their chest,
+  // then kicks off — the victim is launched forward while she back-flips away (self-contained hop: root up to -22,
+  // back on the floor at recovery). grab = where the victim's chest goes; released at the end of `toss`.
+  var TG = P(S, { lean: 14, hip: [3, -49], hF: [28, -64], hB: [25, -68], handF: 'fist', handB: 'fist', grab: [30, -62], fF: [14, 0], faB: 30,
+    eyes: 'focus', mouth: 'cat', coat: 0.3, tail: 10 });
+  var TC = P(TG, { root: [0, -18], hip: [-2, -50], lean: -14, bend: -4, tilt: -8, fF: [18, -26], fB: [14, -22], faF: -50, faB: -40, knF: -1, knB: -1,
+    hF: [24, -46], hB: [22, -48], grab: [24, -44], skirt: 0.5, hem: -4, coat: 0.6, cl: 10, tail: 30, air: true, mouth: 'grin' });
+  var TK = P(TC, { root: [0, -22], hip: [-8, -52], lean: -40, bend: -8, tilt: -24, fF: [34, -32], fB: [30, -26], faF: -80, faB: -70,
+    hF: [-14, -66], hB: [-20, -60], handF: 'open', handB: 'open', grab: [36, -40], coat: 1, cl: 30, tail: 50, mouth: 'teeth' });
+  def('throwHit', {
+    segs: [['hold', 16], ['toss', 14], ['recovery', 18]], step: 2,
+    keys: [['hold', TG],
+      ['hold+5', P(TG, { lean: 6, hip: [1, -46], sq: 1, hF: [22, -62], hB: [20, -64], grab: [24, -62], faB: 40 }), 'out'],
+      ['hold+9', TC, 'out'], ['hold+13', P(TC, { root: [0, -20], fF: [16, -24], fB: [12, -21], lean: -20, sq: 1 })],
+      ['toss', P(TK, { smear: { part: 'fF', from: 'hold+13', n: 4 } }), 'snap'],
+      ['toss+4', P(spin(TK, -120), { root: [0, -24], grab: [46, -40], hs: 0.3 }), 'snap'],
+      ['toss+8', P(spin(TK, -240), { root: [0, -16], grab: [52, -38] }), 'snap'],
+      ['toss+11', P(spin(P(TK, { fF: [10, -16], fB: [6, -14] }), -330), { root: [0, -6], grab: [56, -36], eyes: 'focus', mouth: 'cat' }), 'snap'],
+      ['recovery', P(S, { hip: [0, -38], lean: 22, bend: 6, sq: 1, faB: 30, hF: [22, -46], hB: [10, -44], skirt: 0.45, coat: 0.5, tail: 26, grab: [56, -36], hs: 0.3 }), 'snap'],
+      ['recovery+6', P(S, { hip: [0, -48], lean: 6, hB: [6, -76], handB: 'point', elB: -1, eyes: 'wink', mouth: 'smile', grab: [56, -36] }), 'out'],
+      ['recovery+17', P(S, { grab: [56, -36] })]]
+  });
+  // thrown: held by the collar, limp — arms and legs dangle, head lolls, ears flat, tail hanging
+  var TW = P(S, { root: [0, -4], hip: [-2, -52], lean: -6, bend: 4, tilt: 28, hF: [5, -40], hB: [-5, -39], handF: 'relax', handB: 'relax', elF: 1, elB: 1,
+    fF: [3, 0], fB: [-3, -1], faF: 55, faB: 60, eyes: 'dizzy', mouth: 'hurt', ears: 'flat', tail: -24, arch: 2, tsw: 0.4, skirt: -0.1, coat: 0, air: true });
+  def('thrown', {
+    segs: [['loop', 20, true]], step: 4,
+    keys: [[0, TW],
+      [6, P(TW, { lean: -2, tilt: 32, hF: [8, -40], hB: [-2, -39], fF: [5, 0], fB: [-1, -1], tail: -18 }), 'inout'],
+      [14, P(TW, { lean: -9, tilt: 24, hF: [3, -41], hB: [-7, -40], fF: [1, 0], fB: [-5, -1], tail: -28 }), 'inout']]
+  });
+
+  // ---------------------------------------------------------------- intro: drops in with a tuck, lands in a pounce-crouch,
+  // a long cat stretch (paws forward, hips up, tail high), a yawn-stretch, a quick paw-lick, finger to cheek + wink → stance
+  var DROP = P(TK0(), {});
+  function TK0() { return P(I.POSE_GEM.jumpRise, { lean: 20, bend: 10, tilt: 10, fF: [6, -26], fB: [0, -22], faF: 60, faB: 60, hF: [14, -54], hB: [8, -56], handF: 'paw', handB: 'paw', eyes: 'closed', mouth: 'cat' }); }
+  var STR = P(S, { hip: [-6, -40], lean: 74, bend: 6, tilt: -60, head: [1, 0], fF: [6, 0], fB: [-6, 0], faF: 0, faB: 10, hF: [30, -1], hB: [24, -1], handF: 'flat', handB: 'flat',
+    eyes: 'closed', mouth: 'cat', tail: 60, arch: 6, coat: 0.3, skirt: 0.2, hd: 20 });
+  var YAWN = P(S, { hip: [0, -52], lean: -6, bend: -8, tilt: -20, fF: [6, 0], fB: [-6, 0], faB: 0, hF: [6, -104], hB: [-2, -104], handF: 'paw', handB: 'paw', elF: -1, elB: -1,
+    eyes: 'closed', mouth: 'o', tail: 30, arch: 8 });
+  var LICK = P(S, { hip: [0, -51], lean: 2, bend: 2, tilt: 10, fF: [7, 0], fB: [-7, 0], faB: 0, hF: [11, -79], hB: [4, -62], handF: 'paw', handB: 'paw',
+    eyes: 'closed', mouth: 'tongue', tail: 10, arch: 10 });
+  var CHEEK = P(S, { hip: [0, -51], lean: 2, tilt: -10, fF: [8, 0], fB: [-8, 0], faB: 10, hF: [9, -80], hB: [4, -60], handF: 'point', handB: 'paw', elF: -1,
+    eyes: 'wink', mouth: 'smile', tail: -6, arch: 9, blush: 1 });
+  def('intro', {
+    segs: [['act', 100]], step: 2,
+    keys: [[0, P(spin(DROP, -40), { root: [0, -40], air: true })], [4, P(spin(DROP, -120), { root: [0, -22], air: true }), 'linear'], [7, P(DROP, { root: [0, -6], air: true }), 'in'],
+      [9, P(POSE.crouch, { hip: [2, -20], sq: 1, eyes: 'closed', mouth: 'cat', coat: 0.6, skirt: 0.5 }), 'snap'], [14, P(POSE.crouch, { eyes: 'sly', mouth: 'cat' }), 'out'],
+      [22, STR, 'inout'], [30, P(STR, { hip: [-7, -42], tail: 70, pen: 6 })], [36, P(STR, { tail: 54, pen: -6 })],
+      [44, YAWN, 'inout'], [50, P(YAWN, { hF: [8, -105], hB: [-4, -105] })],
+      [56, LICK, 'inout'], [61, P(LICK, { hF: [12, -81], tilt: 12 })], [64, LICK], [67, P(LICK, { hF: [12, -81], tilt: 12 })],
+      [72, P(LICK, { mouth: 'cat', eyes: 'sly', hF: [14, -70] }), 'inout'],
+      [80, CHEEK, 'out'], [90, P(CHEEK, { eyes: 'sly', mouth: 'cat' })], [96, P(S, { eyes: 'sly' }), 'inout'], [99, S]]
+  });
+  // ---------------------------------------------------------------- win: a little hop-twirl, lands in her signature pose —
+  // finger to cheek, a wink, one heel kicked up behind; sways, tail swishing, a quick paw-lick, the stars orbiting
+  var WP = P(S, { hip: [0, -51], lean: 2, bend: -2, tilt: -10, fF: [4, 0], fB: [-14, -16], faB: 70, knB: -1, hF: [9, -80], hB: [-10, -56], handF: 'point', handB: 'paw', elF: -1,
+    eyes: 'wink', mouth: 'smile', blush: 1, tail: 20, arch: 8, coat: 0.15 });
+  def('win', {
+    segs: [['in', 30], ['loop', 60, true]], step: 2,
+    keys: [['in', P(S, { eyes: 'closed', mouth: 'cat' })], ['in+4', P(SQ, { eyes: 'closed', mouth: 'cat' }), 'out'],
+      ['in+8', P(JR, { root: [0, -14], eyes: 'closed', mouth: 'smile', hF: [10, -90], hB: [-6, -88] }), 'out'],
+      ['in+12', P(JR, { flip: 1, root: [0, -16], eyes: 'closed', mouth: 'smile', hF: [10, -90], hB: [-6, -88] }), 'snap'],
+      ['in+16', P(JF, { root: [0, -8], eyes: 'closed', mouth: 'smile', hs: 0.3 }), 'in'],
+      ['in+19', P(WP, { hip: [0, -46], sq: 1, coat: 0.5, skirt: 0.4 }), 'snap'], ['in+24', WP, 'out'],
+      ['loop', WP], ['loop+12', P(WP, { lean: 5, tilt: -14, tail: 36, hd: -6 }), 'inout'], ['loop+24', WP, 'inout'],
+      ['loop+32', P(LICK, { fB: [-12, -14], faB: 70, eyes: 'closed', mouth: 'tongue', blush: 1, tail: 24 }), 'inout'], ['loop+38', P(LICK, { hF: [12, -81], fB: [-12, -14], faB: 70, blush: 1, tilt: 12 })],
+      ['loop+42', P(LICK, { fB: [-12, -14], faB: 70, blush: 1 })], ['loop+50', P(WP, { eyes: 'sly', mouth: 'cat' }), 'inout']]
+  });
+  // ---------------------------------------------------------------- lose (time over): ears flat, head hung, sleeves drooping,
+  // tail limp on the floor; a sniffle loop
+  var LS = P(S, { hip: [0, -49], lean: 6, bend: 8, head: [1, 1], tilt: 22, fF: [6, 0], fB: [-6, 0], faB: 0, hF: [10, -54], hB: [6, -54], handF: 'relax', handB: 'relax', shr: -1,
+    eyes: 'sad', mouth: 'frown', ears: 'flat', tail: -30, arch: 2, tsw: 0.2, coat: 0, skirt: -0.05 });
+  def('lose', {
+    segs: [['in', 30], ['loop', 60, true]], step: 3,
+    keys: [['in', P(S, { eyes: 'wide', mouth: 'o' })], ['in+6', P(S, { eyes: 'wide', mouth: 'o', hip: [-1, -51], lean: -4, ears: 'flat', tail: 40 }), 'out'],
+      ['in+18', P(LS, { tail: -16 }), 'inout'], ['in+26', LS],
+      ['loop', LS], ['loop+15', P(LS, { hip: [0, -48], sq: 1, eyes: 'closed', tilt: 26 })], ['loop+21', LS],
+      ['loop+36', P(LS, { hF: [9, -78], handF: 'paw', eyes: 'closed', tilt: 18 }), 'inout'], ['loop+46', P(LS, { hF: [9, -78], handF: 'paw', eyes: 'sad' })], ['loop+56', LS, 'inout']]
+  });
 })();
