@@ -111,21 +111,22 @@
   // hair colour shift in clean bands: blue crown -> violet -> pink ends, by d = y + k·|x - cx|
   // (2-px checker transition). Applied to every h*/t* pixel inside `region` (default: everything).
   var HB = [S.h0, S.h1, S.h2, S.h3, S.hl], HX = [S.x0, S.x1, S.x2, S.x3, S.xl], HT = [S.t0, S.t1, S.tS, S.tS, S.tl];
-  function hairShift(P, a, b, region, k) {
+  function hairShift(P, a, b, skip, k, cx) {
     var idx = {}; HB.forEach(function (s, i) { idx[s] = i; });
-    k = k === undefined ? 0.42 : k;
+    k = k === undefined ? 0.7 : k; cx = cx === undefined ? 56 : cx;
+    function lvl(d, t, x, y) { return d >= t + 2 ? 1 : d >= t ? (x + y) & 1 : d >= t - 2 ? ((x & 1) === 0 && (y & 1) === 0 ? 1 : 0) : 0; }
     for (var y = 0; y < P.h; y++) for (var x = 0; x < P.w; x++) {
-      var i = y * P.w + x, v = idx[P.c[i]]; if (v === undefined || (region && !region.d[i])) continue;
-      var d = y + k * Math.abs(x - 56), ch = (x + y) & 1;
-      if (d >= b + 2 || (d >= b && ch)) P.c[i] = HT[v];
-      else if (d >= a + 2 || (d >= a && ch)) P.c[i] = HX[v];
+      var i = y * P.w + x, v = idx[P.c[i]]; if (v === undefined || (skip && skip.d[i])) continue;
+      var d = y + k * Math.abs(x - cx) + 3 * Math.sin(x * 0.45);
+      if (lvl(d, b, x, y)) P.c[i] = HT[v];
+      else if (lvl(d, a, x, y)) P.c[i] = HX[v];
     }
   }
   // four-pointed iridescent star: 8 facets in the star hues, coloured outline. Returns the mask.
   var FACETS = [S.q0, S.q1, S.q2, S.q3, S.q2, S.q1, S.q3, S.q1];
   function star4(P, cx, cy, r, o) {
     o = o || {};
-    var k = o.k || 0.3, rot = (o.rot || 0) - Math.PI / 2, pts = [], i;
+    var k = o.k || 0.4, rot = (o.rot || 0) - Math.PI / 2, pts = [], i;
     for (i = 0; i < 8; i++) { var a = rot + i * Math.PI / 4, rr = i % 2 ? r * k : r; pts.push(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); }
     var m = P.poly(pts);
     if (r < 4.5) {
@@ -145,7 +146,7 @@
       var j = (i + 1) % 8, tri = P.poly([cx, cy, pts[i * 2], pts[i * 2 + 1], pts[j * 2], pts[j * 2 + 1]]).and(m);
       P.fill(tri, (o.cols || FACETS)[i]);
     }
-    P.fill(m.edge(), o.line || S.ul);
+    if (o.inner) P.fill(m.edge(), o.line || S.ul); else P.fill(m.grow(1).sub(m), o.line || S.ul);
     P.px(Math.round(cx - 0.5), Math.round(cy - 0.5), S.W);
     if (r >= 6) { P.px(Math.round(cx - 0.5), Math.round(cy - 1.5), S.W); P.px(Math.round(cx + 0.5), Math.round(cy - 0.5), S.W); }
     return m;
@@ -178,6 +179,9 @@
     P.recol(m.band(2, -1).and(m.band(4, -3)), [S.h2], S.h3);
     P.recol(m.band(-1, 2), [S.h1], S.h0);
     H().strands(P, [pts.map(function (v, i) { return v + (i & 1 ? 1.5 : -1); })], S.h2);
+    // blue base -> violet -> pink tip, by distance from the tip end (same 3-step band as the hair)
+    var n2 = pts.length, ex = pts[n2 - 2], ey = pts[n2 - 1];
+    shiftBy(P, m, function (x, y) { return 40 - Math.sqrt((x + 0.5 - ex) * (x + 0.5 - ex) + (y + 0.5 - ey) * (y + 0.5 - ey)); }, 26, 34);
     return m;
   }
   function H() { return I.H; }
