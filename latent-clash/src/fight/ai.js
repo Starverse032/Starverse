@@ -68,6 +68,7 @@
       if (o.mv.attn) ob.reach = 500;
     }
     if (o.mv && o.mv.cmdGrab) ob.grab = true;
+    if (o.res && o.res.segs[0] && o.res.segs[0].vx) ob.lunge = o.res.segs[0].vx * o.res.segs[0].f;   // forward travel during start-up
     for (var i = 0; i < m.projs.length; i++) { var p = m.projs[i]; if (p.owner === o) ob.projs.push({ x: p.x, y: p.y, vx: p.vx }); }
     this.obs.push(ob);
     if (this.obs.length > 40) this.obs.shift();
@@ -170,7 +171,8 @@
   AI.prototype.threat = function (me, pv, dx) {
     if (!pv) return null;
     var pdx = Math.abs(pv.x - me.x);
-    if (pv.act === 'attack' && (pv.ph === 'startup' || pv.ph === 'active') && pv.kind !== 'throw' && !pv.grab && pdx < pv.reach + D(34)) return 'strike';
+    var lunge = me.ch === 'gpt' && pv.lunge ? pv.lunge * (this.P.gLunge != null ? this.P.gLunge : 1) : 0;   // GPT's patient guard reads lunges
+    if (pv.act === 'attack' && (pv.ph === 'startup' || pv.ph === 'active') && pv.kind !== 'throw' && !pv.grab && pdx < pv.reach + D(34) + lunge) return 'strike';
     if (pv.air && pdx < D(110) && F.sign(me.x - pv.x) === F.sign(pv.vx || 0)) return 'air';
     for (var i = 0; i < pv.projs.length; i++) {
       var p = pv.projs[i];
