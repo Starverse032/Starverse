@@ -464,11 +464,11 @@
     FR.forEach(function (c) { fr = fr.or(Q.sr(c[0], c[1], c[2], c[3])); });
     Q.recol(fr.shift(-2, 6).or(fr.shift(0, 6)), [S.s1, S.s0], S.s2);
     FR.forEach(function (c) { H.hairClump(Q, c, S.h1); });
+    // horns slicing up through the top of the frame (near one from behind the side lock)
+    horn(Q, [30, 64, 24, 55, 18.5, 47, 14.5, 40.5, 12, 34], 7.2, 4);
     H.hairClump(Q, [[34, 40, 29, 54, 31, 66, 26, 78], 10, 6, 11, 0, [0.1, 0.6]], S.h1);
     H.hairClump(Q, [[76, 30, 80, 44, 79, 56, 83, 68], 9, 6, 10, 0, [0.1, 0.6]], S.h1);
-    // horns slicing up through the top of the frame
-    horn(Q, [31, 52, 27, 46, 24, 41.5, 22, 37.5, 21.5, 33], 7, 4);
-    horn(Q, [80, 50, 83, 45, 85, 40.5, 85.6, 35], 6, 3);
+    horn(Q, [79, 58, 83, 51, 86, 44, 87.5, 36], 6, 3);
   }
   // band motif: dragon-scale crescents + teal flame tongues along the bottom (px coords)
   function cutinMotif(P) {
