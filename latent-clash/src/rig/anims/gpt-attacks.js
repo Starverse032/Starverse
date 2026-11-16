@@ -107,7 +107,7 @@
   });
   // jH: mid-air half-turn, the tail lashes down-forward (reach 54)
   var JH0 = P(JF, ATK, { lean: -10, hF: [14, -78], hB: [-4, -76], tail: -40, arch: 14, wing: 0.8, wf: -10 });
-  var JHX = P(JF, HIT, { flip: 1, hip: [3, -50], lean: 10, bend: 4, fF: [6, -8], fB: [-8, -14], faF: 30, faB: 40, hF: [18, -66], hB: [6, -70], handF: 'open', handB: 'claw',
+  var JHX = P(JF, HIT, { flip: 1, hip: [6, -50], lean: 10, bend: 4, fF: [6, -8], fB: [-8, -14], faF: 30, faB: 40, hF: [18, -66], hB: [6, -70], handF: 'open', handB: 'claw',
     tail: 43, arch: 0.5, tl: 1, tsw: 0, skirt: 0.6, z: { tail: 6 }, weapon: 'tail', wing: 0.7, wf: -16, eyes: 'focus', mouth: 'teeth' });
   def('jH', {
     segs: jsar(11, 6), step: 2,
