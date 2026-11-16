@@ -111,11 +111,11 @@
   // ------------------------------------------------------------------ chains
   var TAIL_N = 10, TAIL_LEN = [5, 5, 5, 5, 5, 5, 5, 5, 4.6, 4.2];
   // rest shape (deg added per link at arch 10): drops behind her, sweeps back, the tip curls up
-  var TAIL_PROF = [0, -2, -2, 2, 14, 36, 64, 94, 122, 146];
+  var TAIL_PROF = [0, 0, 4, 10, 20, 36, 58, 84, 110, 134];
   var TAIL_R = [1.8, 2.2, 2.6, 2.9, 3.1, 3.2, 3.2, 3.1, 2.9, 2.5, 1.8];
   var HAIR_GRAV = 0.24;
   C.chains = [
-    { id: 'tail', n: TAIL_N, len: TAIL_LEN, rest: [96, 94, 94, 98, 110, 132, 160, 190, 218, 242], stiff: 0.55, damp: 0.74, grav: 0.02, drag: 0.22, hys: 0.6 },
+    { id: 'tail', n: TAIL_N, len: TAIL_LEN, rest: [116, 116, 120, 126, 136, 152, 174, 200, 226, 250], stiff: 0.55, damp: 0.74, grav: 0.02, drag: 0.22, hys: 0.6 },
     { id: 'hairA', n: 7, len: [10, 10, 10, 10, 10, 9, 9], rest: [100, 94, 92, 92, 95, 100, 108], stiff: [0.36, 0.3, 0.25, 0.21, 0.18, 0.15, 0.13], damp: 0.84, grav: HAIR_GRAV, drag: 0.3, cvel: 0.6 },
     { id: 'hairB', n: 6, len: [10, 10, 10, 10, 9, 9], rest: [120, 106, 100, 102, 112, 128], stiff: [0.36, 0.3, 0.24, 0.2, 0.16, 0.14], damp: 0.84, grav: HAIR_GRAV, drag: 0.3, cvel: 0.6 },
     { id: 'hairC', n: 6, len: [10, 10, 10, 9, 9, 8], rest: [92, 88, 86, 85, 84, 82], stiff: [0.38, 0.3, 0.24, 0.2, 0.16, 0.14], damp: 0.83, grav: HAIR_GRAV, drag: 0.3, cvel: 0.6 },
@@ -146,7 +146,7 @@
   function tailRoot(d) { return fr(d.pel, d.lean, -5, 3); }
   var TA = new Float64Array(TAIL_N);
   function tailAngles(d, out) {
-    var a0 = 96 + d.tail + d.lean * 0.5, k = d.arch / 10, whip = d.pen;
+    var a0 = 116 + d.tail + d.lean * 0.5, k = d.arch / 10, whip = d.pen;
     for (var i = 0; i < TAIL_N; i++) out[i] = a0 + TAIL_PROF[i] * k + (i >= 5 ? whip * (i - 4) : 0);
     return out;
   }
