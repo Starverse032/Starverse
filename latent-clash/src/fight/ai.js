@@ -228,7 +228,7 @@
     if (C === 'gpt' && pv && pv.act === 'attack' && (pv.mv === 'chain' || pv.mv === 'chain2') && dx < 66 && this.blkLog.length &&
       m.tick - this.blkLog[this.blkLog.length - 1] < 24 && this.rekRolled !== this.blkLog[this.blkLog.length - 1]) {
       this.rekRolled = this.blkLog[this.blkLog.length - 1];
-      if (this.chance(P.block * (P.gRekka != null ? P.gRekka : 0.4))) { this.push(this.special('dragonRise', this.level >= 4 ? 'H' : 'M'), 'antiRekka'); return this.emit(); }
+      if (this.chance(P.block * (P.gRekka != null ? P.gRekka : 0.7))) { this.push(this.special('dragonRise', this.level >= 4 ? 'H' : 'M'), 'antiRekka'); return this.emit(); }
     }
     // vs GPT up close while blocking a lot: leave command-grab range (jump back / back-dash)
     if (o.ch === 'gpt' && dx < 74 && C !== 'gpt' && this.recentBlocks(150) >= 2 && o.action !== 'attack' && this.escRolled !== this.blkLog[this.blkLog.length - 1]) {
@@ -339,7 +339,7 @@
     if (dx < me.C.throwRange - 2 && o.action !== 'blockstun') add('throw', (0.55 + ag * 0.3) * (C === 'claude' && P.cThrow != null ? P.cThrow : isG ? (P.gThrow != null ? P.gThrow : 0.35) : 1), [{ d: this.chance(0.3) ? 4 : 6, b: 'LM', n: 2 }, { d: 5, n: 1 }]);
     if (P.mash > 0 && dx < D(80)) add('mash', P.mash * 2 * (C === 'claude' && P.cMash != null ? P.cMash : 1), this.press(this.pick(['L', 'M', 'H', 'S']), this.pick([5, 2, 6])));
     if (full && dx < PF.superR && this.chance(P.sup * 0.15)) add('superRaw', 0.8, this.special('super', 'H'));
-    var pk = vsG && dx < 150 ? 0.25 : 1;   // vs GPT: no projectiles into a point-blank roar
+    var pk = vsG && dx < 115 ? 0.25 : 1;   // vs GPT: no projectiles into a point-blank roar
     if (C === 'claude') {
       if (me.proj === 0 && dx > D(120)) add('spark', (0.9 + (dx > D(200) ? 0.8 : 0)) * P.cSpark * pk, this.special('spark', dx > D(220) ? 'L' : this.pick(['M', 'H'])));
       if (me.proj === 0 && dx > D(70) && dx <= D(120)) add('spark', 0.35 * pk, this.special('spark', 'H'));
