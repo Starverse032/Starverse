@@ -522,6 +522,67 @@
     if (m.onContact) m.onContact(att, vic, 'hit', dmg, null, 'throw');
   }
 
+  // ------------------------------------------------------------------ GPT command grab (call -> callHit)
+  // Unblockable, cannot be teched; takes exactly what a normal throw could take (grounded, not in
+  // hit/block stun or the 6f after it, not waking up, not back-dashing, not in throw-invulnerable moves).
+  F.tryCmdGrab = function (m, att, vic) {
+    if (m.noHits || att.victim) return false;
+    var G = att.mv.cmdGrab, s = att.str;
+    if (Math.abs(vic.x - att.x) > F.v(G.range, s)) return false;
+    if (!vic.throwable()) return false;
+    att.startMove(G.to, s);
+    att.victim = vic;
+    abortMove(vic);
+    vic.setActionRaw('thrown'); vic.thrower = att; vic.techT = 0;
+    vic.vx = 0; vic.vy = 0; vic.air = false; vic.pushN = 0; vic.pullTo = null;
+    vic.facing = -att.facing;
+    vic.flash = 0.6; vic.flashColor = '#ffffff';
+    m.addShake(1, 6);
+    if (m.onContact) m.onContact(att, vic, 'grab', 0, null, 'special');
+    return true;
+  };
+
+  // every callHit frame: the victim's chest follows her `grab` anchor; released on the last slam frame
+  F.callStep = function (m, att, vic) {
+    if (!vic || vic.action !== 'thrown' || vic.thrower !== att) return;
+    var sg = att.seg();
+    if (!sg || sg.id === 'recovery') return;
+    var g;
+    if (att.puppet && !att.puppetFallback) { var a = att.anchor('grab'); g = [a.x, a.y]; }
+    else g = lerpPath(att.C.grabPath['call' + sg.id], att.sf / Math.max(1, sg.f - 1));
+    var c = vic.anchor('chest');
+    vic.x = att.x + g[0] * att.facing - c.x * vic.facing;
+    vic.y = Math.min(GY, att.y + g[1] - c.y);
+    if (sg.id === 'slam' && att.sf >= sg.f - 1) callRelease(m, att, vic);
+  };
+
+  function callRelease(m, att, vic) {
+    var dmg = F.v(att.mv.grabDmg, att.str) || 170;
+    var dir = att.facing;
+    vic.hp = Math.max(0, vic.hp - dmg);
+    att.stats.damage += dmg; att.stats.hits++;
+    att.combo = 1; att.comboDmg = dmg; att.comboShow = 1; att.comboShowDmg = dmg; att.comboT = 0;
+    if (att.stats.maxCombo < 1) att.stats.maxCombo = 1;
+    if (vic.hp <= 0) m.lastKill = { side: att.side, kind: 'special' };
+    vic.thrower = null; att.victim = null;
+    // slammed into the floor: a short bounce, then a hard knock-down (no quick rise)
+    vic.setActionRaw('launch'); vic.knock = 'knock'; vic.juggle = 99; vic.air = true; vic.hardKD = true;
+    var K = T.LAUNCH_K || 1;
+    vic.vx = 0.6 * dir * K; vic.vy = -2.4 * K; vic.grav = 0.45 * K;
+    vic.y = GY - 2;
+    vic.flash = 1; vic.flashColor = '#ffffff';
+    vic.stop = 10; att.stop = 10;
+    att.addMeter(12); vic.addMeter(6);
+    F.fx('gpt.callSlam', vic.x, GY, { facing: att.facing, palette: att.pal, power: 1, 'char': att.ch });
+    if (m.impactAt) m.impactAt(vic.x, GY - 30, false, att);
+    F.sfx('gpt.callSlam', { pan: F.pan(vic.x, m.camX) });
+    F.voice(vic.ch, 'hurt');
+    m.addShake(4, 14);
+    m.stageEvent('hit', { x: vic.x, power: 1 });
+    m.lastHitPos = { x: vic.x, y: GY - 30 };
+    if (m.onContact) m.onContact(att, vic, 'hit', dmg, null, 'special');
+  }
+
   // ------------------------------------------------------------------ projectiles
   var projId = 0;
   F.spawnProj = function (m, f) {
@@ -583,17 +644,22 @@
         m.addShake(1, 4);
       }
     }
-    // projectiles vs supers, barriers, fighters
+    // projectiles vs supers, GPT's roar, barriers, fighters
     for (i = 0; i < ps.length; i++) {
       var q = ps[i];
       if (q.dead || q.stop > 0) continue;
       var vic = m.opp(q.owner), qb = projBox(q);
-      if (vic.action === 'attack' && vic.mv && vic.mv.kind === 'super') {
-        var sh = F.activeHits(vic, tmpA);
+      if (vic.action === 'attack' && vic.mv && vic.mv.kind === 'super' && vic.seg().id === 'active') {
         var big = vic.mv.hits[0];
-        var lb = big.beam ? F.hitLocal(vic, big) : big.box;
-        if (vic.seg().id === 'active' && F.overlap(qb, F.worldBox(lb, vic.x, vic.y, vic.facing))) { killProj(m, q, true); continue; }
-        if (sh.length) { /* nothing else */ }
+        var lb = (big.beam || big.attn) ? F.hitLocal(vic, big) : big.box;
+        if (lb && F.overlap(qb, F.worldBox(lb, vic.x, vic.y, vic.facing))) { killProj(m, q, true); continue; }
+      }
+      if (vic.action === 'attack' && vic.mv && vic.mv.roar && vic.seg().id === 'active' && F.circleRect(F.roarCircle(vic), qb)) {
+        killProj(m, q, true);   // the shock-wave erases projectiles inside it
+        F.fx('ring', q.x, q.y - (q.spec.ground ? 18 : 0), { power: 0.5, 'char': vic.ch, palette: vic.pal });
+        F.sfx('hit.special', { pan: F.pan(q.x, m.camX), vol: 0.6 });
+        if (m.onContact) m.onContact(vic, q.owner, 'erase', 0, null, 'special');
+        continue;
       }
       var bar = F.barrierBox(vic);
       if (bar && F.overlap(qb, bar)) {
