@@ -110,7 +110,7 @@
   // ---------------------------------------------------------------- helpers
   // hair colour shift in clean bands: blue crown -> violet -> pink ends, by d = y + k·|x - cx|
   // (2-px checker transition). Applied to every h*/t* pixel inside `region` (default: everything).
-  var HB = [S.h0, S.h1, S.h2, S.h3, S.hl], HX = [S.x0, S.x1, S.x2, S.x3, S.xl], HT = [S.t0, S.t1, S.tS, S.tS, S.tl];
+  var HB = [S.h0, S.h1, S.h2, S.h3, S.hl], HX = [S.x0, S.x1, S.x2, S.x3, S.xl], HT = [S.t0, S.t0, S.t1, S.tS, S.tl];
   function lvl(d, t, x, y) { return d >= t + 2 ? 1 : d >= t ? (x + y) & 1 : d >= t - 2 ? ((x & 1) === 0 && (y & 1) === 0 ? 1 : 0) : 0; }
   // remap h* pixels (inside `only`, or everywhere but `skip`) to violet / pink by a field d(x, y)
   function shiftBy(P, only, dfn, a, b, skip) {
@@ -197,9 +197,9 @@
       .or(Q.spoly([29, 28, 25, 16, 25, 6, 27, 1, 34, 4, 41, 8, 47, 13, 38, 16])).or(Q.spoly([62, 14, 68, 8, 75, 4, 81, 1, 84, 7, 83, 16, 80, 25, 72, 22]))
       .or(Q.spoly([30, 40, 24, 60, 26, 80, 20, 100, 24, 132, 94, 132, 98, 100, 92, 80, 94, 60, 84, 36]));
     P.fill(m, S.a1);
-    for (var y = 0; y < P.h; y++) for (var x = 0; x < P.w; x++) if (((x + y * 2) % 4) === 0 && m.has(x, y)) P.px(x, y, S.a0);
+    for (var y = 0; y < P.h; y += 4) for (var x = (y & 4) ? 2 : 0; x < P.w; x += 4) if (m.has(x, y)) P.px(x, y, S.a0);
     P.recol(m.band(-2, 2), [S.a1], S.a0);
-    P.fill(m.edge(), S.a2);
+    P.fill(m.edge(), S.a0);
     // glinting eyes
     [[44, 46], [66, 46]].forEach(function (e) { var x = Math.round(e[0] + dx), y = Math.round(e[1] + dy); P.px(x, y, S.W); P.px(x, y + 1, S.W); P.px(x + 1, y + 1, S.a0); P.px(x, y + 2, S.a0); });
   }
@@ -223,12 +223,11 @@
     ].forEach(function (c) { HH.hairClump(P, c, S.h2); });
     // escaping curls
     [[[14, 60, 7, 66, 5, 74, 7, 79, 11, 78], 3.6, 1.2], [[8, 92, 2, 98, 1, 106, 4, 109], 3.2, 1.2], [[10, 114, 4, 120, 4, 127, 7, 128], 3, 1.2],
-      [[99, 54, 105, 60, 107, 68, 105, 73, 101, 72], 3.6, 1.2], [[104, 86, 110, 92, 111, 100, 108, 103], 3.2, 1.2]
     ].forEach(function (c) { var m = P.sr(c[0], c[1], c[2]); P.part(m, S.h2, S.hl); P.recol(m.band(-1, 1), [S.h2], S.h1); });
 
     // ---- tail tip curling in at the right, behind the sleeve
-    var tl = lose ? tail(P, [116, 92, 110, 100, 106, 110, 105, 120, 106, 130], 10)
-      : tail(P, [116, 122, 108, 110, 104, 96, 106, 84, 104, 74, 98, 70], 10);
+    var tl = lose ? tail(P, [118, 60, 112, 68, 108, 80, 107, 90, 104, 98], 9)
+      : tail(P, [117, 108, 111, 96, 108, 82, 109, 70, 105, 60, 99, 58, 96, 62], 9.5);
 
     // ---- body: bare shoulders, navy halter top
     var neck = P.poly([50, 60, 62, 60, 63, 84, 50, 84]);
@@ -246,12 +245,11 @@
     P.recol(K.inner(top).edge().and(P.rect(0, 88, 112, 40)), [S.d1, S.d0], S.m1);
     P.recol(K.inner(top).edge().and(P.rect(0, 88, 112, 40)), [S.d2], S.m2);
     // white front panel in a V down to the star gem, violet inset, gold piping
-    var pan = P.poly([50, 84, 64, 84, 62, 96, 57, 108, 52, 96]);
+    var pan = P.poly([50, 84, 64, 84, 62, 93, 57, 99, 52, 93]);
     P.part(pan, S.c1, S.m2);
     P.recol(pan.band(3, 0), [S.c1], S.c2);
     P.recol(pan.band(-1, 1), [S.c1], S.c0);
-    var ins = P.poly([55, 86, 59, 86, 57, 100]);
-    P.part(ins, S.u1, S.u2); P.recol(ins.band(-1, 0), [S.u1], S.u0);
+
     // violet under-bust band peeking at the bottom
     var ub = P.sr([37, 124, 48, 127, 58, 127.5, 68, 127, 78, 124], 4, 4).and(top);
     P.part(ub, S.u1, S.ul); P.recol(ub.band(0, 1), [S.u1], S.u0);
@@ -264,7 +262,7 @@
     P.recol(col.band(-1, 1), [S.d1], S.d0);
     P.recol(col.band(0, -2), [S.d1, S.d0, S.d2], S.m1);
     P.recol(col.band(0, 2).and(P.rect(0, 0, 112, 80)), [S.d1, S.d0, S.d2], S.m2);
-    star4(P, 57, 107, 6, { line: S.m2 });
+    star4(P, 57, 105.5, 5.5, { line: S.m2, k: 0.46 });
     star4(P, 57, 80, 2, { line: S.m3 });
 
     // ---- near arm: top of the wide detached sleeve (white frill, navy, gold trim)
@@ -353,7 +351,7 @@
       P.map(84, 4, ['.ooo.', 'oWWWo', 'oWooWo', '.o.oWo', '..oWo', '..oWo', '..ooo', '..oWo', '..ooo'], { o: S.ul, W: S.a0 });
       P.map(77, 32, ['.r.', 'rRr', 'rRR', '.R.'], EL);
     } else {
-      star4(P, 13, 16, 6, { rot: 0.1 }); star4(P, 101, 44, 3);
+      star4(P, 13, 16, 6, { rot: 0.1 }); star4(P, 104, 40, 3);
     }
   }
 
