@@ -8,13 +8,10 @@ aliases). Dev: `dev/rig-sheet.html` `sheetMulti(..., noAnchors)` and `sheetVersu
 
 ## Progress / next steps (kept current for restarts)
 - DONE step 1: registration (manifest, placeholders table + aliases, charInfo 102/68/28, palettes 0/1) + body + look.
-  Head stamp 30×28 (horns in the stamp, pointed ear + drop earring, rosette), 102-px body, slit gown, sleeves,
-  wings, tail, blob. Reviewed at ×5–×8 and in the 3-fighter versus sheet; palette 1 checked.
-- IN PROGRESS step 2 (base set): idle, walkF/B, crouch set, jump set, land, dashes, guards, hits, launch, down,
-  getup written in `anims/gpt-base.js`; idle + walks reviewed once; the rest needs its first sheet review.
-- TODO step 3: normals (5L 5M 5H 2L 2M 2H jL jM jH) + reach check (`node tools/rig-sheet.mjs --reach gpt`).
-- TODO step 4: breath, airBreath, dragonRise, call, callHit, roar, super.
-- TODO step 5: throw, throwHit, thrown, intro, win, lose (currently aliased by placeholders.js).
+- DONE (first pass, sheet-reviewed once) steps 2–5: every required anim is authored (42, no placeholders, segment
+  table check passes): base set, normals (reach on target), breath, airBreath, dragonRise, call, callHit, roar,
+  super, throw, throwHit, thrown, intro, win, lose.
+- NEXT: polish pass (look at ×5 per group), walk foot-slide check (`--walk`), perf, final report.
 
 ## Implementation notes
 - Materials (15 shared slots, re-purposed locally): legs = `scale`, shoe = `wing`, white = `blob`.
