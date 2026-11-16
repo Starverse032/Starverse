@@ -89,13 +89,13 @@
       var top = 18 + 9 * s8(2, x, 1) + 5 * s8(5, x, 0), len = 46 + 16 * s8(3, x, 2);
       var str = (0.5 + 0.4 * s8(4, x, 0) * s8(7, x, 0.5)) * (0.45 + 0.75 * I.hash(Math.floor(x / 2) * 13) * (0.6 + 0.4 * s8(23, x, 1)));
       for (y = Math.round(top); y < top + len && y < 110; y++) {
-        var u = (y - top) / len, den = str * (u < 0.15 ? u / 0.15 : 1 - (u - 0.15) / 0.85 * 0.95);
-        if (I.bayer(x, y) < den * 0.95) ab.set(x, y, u < 0.32 ? ac[0] : u < 0.62 ? ac[1] : ac[2]);
+        var u = (y - top) / len, den = str * (u < 0.12 ? u / 0.12 : 1 - (u - 0.12) / 0.88 * 0.75);
+        if (I.bayer(x, y) < den * 0.95) ab.set(x, y, u < 0.26 ? ac[0] : u < 0.52 ? ac[1] : ac[2]);
         if (u > 0.04 && u < 0.1 && str > 0.55) ab.set(x, y, ac[4]);
       }
     }
     B.aur = I.toCanvas(ab);
-    B.bdCols = { line: [mixc(L[3], N[2], 0.35), L[1], '#ffffff'], edge: ['#ffffff', S[2], L[2]], tw: [S[1], S[2], S[3], '#ffffff'] };
+    B.bdCols = { line: [mixc(L[3], N[2], 0.6), L[1], '#ffffff'], edge: ['#ffffff', S[2], L[2]], tw: [S[1], S[2], S[3], '#ffffff'] };
   }
   I.onInit('gemini-backdrop', function () { bake(0); bake(1); });
 

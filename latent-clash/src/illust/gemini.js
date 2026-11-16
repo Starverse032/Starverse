@@ -496,7 +496,7 @@
   function cutinOver(P) {
     [[70, 10, 4.5], [228, 60, 5], [24, 62, 3], [118, 64, 3], [200, 6, 2.5]].forEach(function (q) {
       var x = q[0], y = q[1], r = q[2];
-      for (var t = 2; t < 26 + r * 4; t++) P.px(x - r - t, y, t < 10 ? S.a0 : t % 3 === 0 ? 0 : S.a1);
+      for (var t = 2; t < 26 + r * 4; t++) if (t < 10 || t % 3) P.px(x - r - t, y, t < 10 ? S.a0 : S.a1);
       star4(P, x, y, r, { line: S.ol });
     });
   }

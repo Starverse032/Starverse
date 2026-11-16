@@ -654,7 +654,8 @@
     var pc = H.chainPts(sec.pend);
     ln(p, pc[0], pc[1], col(M.metal, 1)); ln(p, pc[1], pc[2], col(M.metal, 2));
     p.end();
-    drawStar(p, [pc[2][0], pc[2][1] + 2], 's5', (sk._tw || 0) + 1);
+    drawStar(p, [pc[2][0], pc[2][1] + 2], 's3', (sk._tw || 0) + 1);
+    p.end({ hard: true });
   }
 
   function drawCoat(p, sk, sec, which) {
@@ -683,6 +684,7 @@
     ln(p, tip, cc[1], col(M.metal, 1));
     p.end({ outline: false });
     drawStar(p, [cc[1][0], cc[1][1] + 2], 's5', (sk._tw || 0) + (t === 1 ? 0 : 2));
+    p.end({ hard: true });
   }
 
   function drawTorso(p, sk) {
@@ -773,10 +775,9 @@
       [z.legB != null ? z.legB : -4, function () { drawLeg(p, d, 'B', lockB, false); p.end(); }],
       [z.tail != null ? z.tail : -3.5, function () { drawTail(p, d, sec, ds); p.end(); }],
       [z.coatN != null ? z.coatN : -3, function () { drawCoat(p, d, sec, 'cpN'); }],
-      [-2.6, function () { drawPetticoat(p, S2); p.end(); }],
       [z.legF != null ? z.legF : -1.5, function () { drawLeg(p, d, 'F', lockF, true); p.end(); }],
       [-1, function () { drawPetticoat(p, S2); p.end(); drawOverskirt(p, S); p.end(); }],
-      [-0.5, function () { drawBelt(p, d, sec); p.end(); }],
+      [-0.5, function () { drawBelt(p, d, sec); }],
       [0, function () { drawTorso(p, d); p.end(); }],
       [0.5, function () { drawCollar(p, d); p.end(); }],
       [2, function () {
