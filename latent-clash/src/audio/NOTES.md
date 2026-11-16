@@ -9,6 +9,7 @@
   music bus −2.5 dB (`K.MUSIC_TRIM`) so music sits under SFX at equal sliders; `ui.start`/`ui.lock`
   trimmed −2 dB to stay under `hit.light`.
 - 2026-11-15: GPT 娘 added (6 `gpt.*` SFX, `voice('gpt', …)`, `list().voice.chars` now from voice.js); smoke ALL OK, 0 clips.
+- 2026-11-16: Gemini 娘 added (7 `gemini.*` SFX, `voice('gemini', …)` with a cat-like upward flick per syllable); smoke ALL OK, 0 clips.
 - Next (optional): see "Known weaknesses".
 
 Everything is synthesized at runtime — no audio files. Dev pages: `dev/audio-test.html` (button per
@@ -105,8 +106,14 @@ Additions: `setMuted(bool)`, `isMuted()`, `isUnlocked()`, `state()` ('locked'|'r
 | gpt.call / gpt.callSlam | snatch + wing-beat lift / heavy floor impact + rumble | command grab connects / victim hits floor |
 | gpt.roar | growling formant sweep + pressure thump | roar move |
 | gpt.super | ~1.5 s: three lock-on tones (L/R/C), converging beam blast, icy tail | GPT super: heads appear (after super flash) |
+| gemini.star / gemini.starHit | glassy ting + rising sparkle arpeggio / crystalline shatter | star or airStar leaves the hand / star hits (blocked: vol 0.6) |
+| gemini.rise | upward whoosh + two detuned twin-star tones (L/R) | starRise start-up → rise |
+| gemini.twin | soft two-note chime played twice (echo, L then R) | twin gesture: light-twin appears |
+| gemini.twinStrike | light slash + ghostly phasey tail | twinStrike active (the twin claws) |
+| gemini.blink | reversed suck-in → pop + sparkle | blinkOut start (optionally blinkIn too, vol 0.6) |
+| gemini.super | ~1.5 s: twinkle build-up, falling-star cascade, two crossing beam swells, bright burst | Gemini super: constellation lights (after super flash) |
 
-Voices: `voice('claude'|'deepseek'|'gpt', kind)` (gpt: lowest, darkest, slower/flatter = regal), kinds `light medium heavy special super hurt ko win intro`.
+Voices: `voice('claude'|'deepseek'|'gpt'|'gemini', kind)` (gpt: lowest, darkest, slower/flatter = regal; gemini: highest, brightest, quickest, upward "nya~" flick at syllable ends except hurt/ko), kinds `light medium heavy special super hurt ko win intro`.
 Suggested: light/medium/heavy on ~1/3 of normals (not every hit), special on specials, super with
 the super flash, hurt on heavy/counter hits taken, ko on KO, win on the win pose, intro at entrance.
 
@@ -160,8 +167,8 @@ bass root on downbeats/chord changes, and m2/M7 clashes between melody and count
 | big | ko -0.5/-8.1 · super.flash -0.5/-10.3 · super.charge -9.0/-16.1 · claude.beam -1.1/-7.8 · deepseek.whale -0.9/-7.2 |
 | system | meter.full -9.8/-17.0 · counter.catch -2.2/-16.8 · timer.tick -1.9/-23.6 · ann.* -0.5…-4.0 / -11.1…-12.0 |
 | UI | move -7.5/-26.1 · confirm -10.5/-21.1 · cancel -12.2/-21.0 · start -12.4/-20.0 · error -9.8/-21.1 · pause -9.9/-21.0 · lock -5.3/-20.1 · text.blip -5.7/-28.2 |
-| characters | specials -1.0…-7.7 / -16.0…-19.6 (chain/haiku hits ≈ -19) · gpt breath -8.4/-16.0 · rise -3.6/-16.0 · call -3.1/-18.1 · callSlam -3.5/-12.9 · roar -2.8/-14.9 · super -0.7/-7.4 |
-| voices | peak -7…-13, LUFS-M -16 (super) … -22 (light) |
+| characters | specials -1.0…-7.7 / -16.0…-19.6 (chain/haiku hits ≈ -19) · gpt breath -8.4/-16.0 · rise -3.6/-16.0 · call -3.1/-18.1 · callSlam -3.5/-12.9 · roar -2.8/-14.9 · super -0.7/-7.4 · gemini star -4.3/-17.2 · starHit -1.2/-17.5 · rise -5.6/-15.9 · twin -6.9/-17.0 · twinStrike -5.5/-18.7 · blink -2.1/-20.3 · super -0.5/-8.9 |
+| voices | peak -7…-13 (gemini -5.7…-11.6), LUFS-M -16 (super) … -22 (light) |
 | music (20 s, after trim) | loops -14.6…-15.7 LUFS-I (peak ≤ -1.7); stings vs -13.2, victory -12.5 |
 Game defaults (master .8, music .6, sfx .9): combat mix -17.1 LUFS-I, music alone -28.2 → music ≈ 11 LU under.
 

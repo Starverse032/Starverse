@@ -216,7 +216,7 @@
           } else {
             ui.box(c, tx, ty, TW, TH, ui.charCol(ch, 0).dark);
             var b = ui.portrait(ch, 'bust', 0);
-            if (b) c.drawImage(b, 56 - (TW >> 1), b.lcFallback ? 40 : 22, TW, TH, tx, ty, TW, TH);   // fallback busts sit lower
+            if (b) c.drawImage(b, 56 - (TW >> 1), b.lcFallback ? 44 : 22, TW, TH, tx, ty, TW, TH);   // fallback busts sit lower
             LC.font.draw(c, tileName(ch), tx + (TW >> 1), ty + TH - 8, { size: 8, color: U.text, outline: U.black, align: 'center' });
           }
           if (!hov0 && !hov1) { c.globalAlpha = 0.45; ui.box(c, tx, ty, TW, TH, U.bg0); c.globalAlpha = 1; }
