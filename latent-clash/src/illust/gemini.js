@@ -173,19 +173,27 @@
 
   // fluffy tail: thick tapered ribbon with tufted outline, shade underneath, lit top
   function tail(P, pts, w) {
-    var m = P.sr(pts, w, 2.5, w * 1.15);
-    for (var t = 0.15; t < 0.95; t += 0.14) {
-      var p = K.bez(K.smooth(pts), 24), n = (p.length >> 1) - 1, q = Math.floor(t * n);
-      m = m.or(P.ell(p[q * 2] + 0.5, p[q * 2 + 1] - 0.5, w * (0.62 - t * 0.35), w * (0.55 - t * 0.3)));
+    var p = K.bez(K.smooth(pts), 24), n = (p.length >> 1) - 1, i, n2 = pts.length, ex = pts[n2 - 2], ey = pts[n2 - 1];
+    var m = P.sr(pts, w, w * 0.55, w * 1.08).or(P.ell(ex, ey, w * 0.3, w * 0.3));
+    // fur tufts: little wedges flicking back toward the base, alternating sides
+    for (i = 1; i < 12; i++) {
+      var t = i / 12, q = Math.min(n - 1, Math.floor(t * n)), x = p[q * 2], y = p[q * 2 + 1];
+      var dx = p[q * 2 + 2] - x, dy = p[q * 2 + 3] - y, l = Math.sqrt(dx * dx + dy * dy) || 1; dx /= l; dy /= l;
+      var sd = i & 1 ? 1 : -1, hw = (w * (1 - t) + w * 0.55 * t) / 2 - 0.4, bx = x - dy * hw * sd, by = y + dx * hw * sd;
+      m = m.or(P.poly([bx + dx * 1.8, by + dy * 1.8, bx - dy * sd * 2.4 - dx * 3.2, by + dx * sd * 2.4 - dy * 3.2, bx - dx * 2.2, by - dy * 2.2]));
     }
     P.part(m, S.h1, S.hl);
     P.recol(m.band(3, -2), [S.h1], S.h2);
     P.recol(m.band(2, -1).and(m.band(4, -3)), [S.h2], S.h3);
     P.recol(m.band(-1, 2), [S.h1], S.h0);
-    H().strands(P, [pts.map(function (v, i) { return v + (i & 1 ? 1.5 : -1); })], S.h2);
+    // short fur strokes along the spine
+    for (i = 2; i < 11; i += 2) {
+      var u = i / 12, r = Math.floor(u * n), ux = p[r * 2], uy = p[r * 2 + 1], vx = p[r * 2 + 2] - ux, vy = p[r * 2 + 3] - uy, vl = Math.sqrt(vx * vx + vy * vy) || 1;
+      var o2 = (i & 2 ? 1.6 : -1.6);
+      P.line([ux - vy / vl * o2, uy + vx / vl * o2, ux - vy / vl * o2 + vx / vl * 3, uy + vx / vl * o2 + vy / vl * 3], S.h2, false, true);
+    }
     // blue base -> violet -> pink tip, by distance from the tip end (same 3-step band as the hair)
-    var n2 = pts.length, ex = pts[n2 - 2], ey = pts[n2 - 1];
-    shiftBy(P, m, function (x, y) { return 40 - Math.sqrt((x + 0.5 - ex) * (x + 0.5 - ex) + (y + 0.5 - ey) * (y + 0.5 - ey)); }, 26, 34);
+    shiftBy(P, m, function (x, y) { return 40 - Math.sqrt((x + 0.5 - ex) * (x + 0.5 - ex) + (y + 0.5 - ey) * (y + 0.5 - ey)); }, 24, 33);
     return m;
   }
   function H() { return I.H; }
@@ -226,8 +234,8 @@
     ].forEach(function (c) { var m = P.sr(c[0], c[1], c[2]); P.part(m, S.h2, S.hl); P.recol(m.band(-1, 1), [S.h2], S.h1); });
 
     // ---- tail tip curling in at the right, behind the sleeve
-    var tl = lose ? tail(P, [118, 60, 112, 68, 108, 80, 107, 90, 104, 98], 9)
-      : tail(P, [117, 108, 111, 96, 108, 82, 109, 70, 105, 60, 99, 58, 96, 62], 9.5);
+    var tl = lose ? tail(P, [119, 58, 113, 66, 109, 78, 108, 88, 105, 97], 10)
+      : tail(P, [118, 106, 112, 94, 109, 82, 110, 70, 107, 60, 101, 55, 95, 56, 92, 60], 11);
 
     // ---- body: bare shoulders, navy halter top
     var neck = P.poly([50, 60, 62, 60, 63, 84, 50, 84]);
@@ -426,6 +434,73 @@
     P.outer(S.ol);
   }
 
+  // ---------------------------------------------------------------- cut-in hooks (see cutin.js)
+  // Q = the x2.8 painter in bust coordinates; visible window = x 1-87, y 37-63
+  function cutinFace(Q) {
+    var HH = I.H, i;
+    Q.part(Q.rect(4, 20, 104, 60), S.h2, S.hl);
+    Q.recol(Q.rect(4, 20, 104, 60).band(-6, 0), [S.h2], S.h3);
+    HH.strands(Q, [[86, 30, 90, 44, 87, 56, 91, 70], [93, 30, 97, 46, 94, 58, 98, 70], [22, 30, 17, 44, 21, 56, 16, 70]], S.h3);
+    // cat ears (cheated down so their lower halves cut into the top of the frame)
+    catEar(Q, [24, 46, 20, 38, 19, 30, 21, 24, 28, 28, 35, 33, 40, 38, 32, 42], [26, 42, 23, 35, 23, 30, 26, 30, 31, 33, 35, 37], [[28, 41, 27, 35]]);
+    catEar(Q, [72, 38, 78, 33, 85, 29, 90, 26, 92, 32, 91, 41, 88, 48, 80, 44], [77, 38, 83, 33, 89, 30, 89, 35, 87, 42, 84, 44], [[81, 43, 85, 36]]);
+    Q.part(Q.ell(53, 37, 25, 26).or(Q.ell(47, 42, 21, 23)), S.h1, S.hl);
+    var f = Q.spoly(FACEPTS);
+    Q.part(f, S.s1, S.sl); Q.recol(f.band(4, 0), [S.s1], S.s2); Q.recol(f.band(-2, 0), [S.s1], S.s0);
+    var E = [{ x: 46, y: 48.5, w: 12, h: 10 }, { x: 66.4, y: 48.5, w: 8.4, h: 10 }];
+    E.forEach(function (e, k) {
+      I.bigEye(Q, e, k === 0, { lid: 0.36, fierce: true });
+      // cat slit pupil: clear the round pupil, draw a narrow vertical slit + glint
+      var ix = e.x + e.w * 0.08, iy = e.y + e.h * 0.06, rx = e.w * (k === 0 ? 0.3 : 0.34), ry = e.h * 0.52;
+      var iris = Q.ell(ix, iy, rx - 0.5, ry - 0.5);
+      Q.recol(iris, [S.lash], S.e2);
+      Q.recol(Q.ell(ix, iy + 0.4, rx * 0.2, ry * 0.66).and(iris), [S.e0, S.e1, S.e2, S.e3, S.eK], S.lash);
+      Q.recol(Q.ell(ix + rx * 0.42, iy - ry * 0.05, 0.5, ry * 0.36).and(iris), [S.e0, S.e1, S.e2, S.e3], S.W);
+      if (k === 1) {
+        var R = Q.rect(e.x - 6, e.y - 7, 12, 14), from = [S.e0, S.e1, S.e2, S.e3, S.eK], to = [S.g0, S.g1, S.g2, S.g3, S.gK];
+        for (i = 0; i < 5; i++) Q.recol(R, [from[i]], to[i]);
+      }
+    });
+    // glint streaks from the outer corners (rose on the near eye, gold on the far)
+    Q.fill(Q.sr([39.6, 47.4, 35, 46.6, 29, 46.4], 0.9, 0.3), S.e0);
+    Q.fill(Q.sr([70.8, 47.4, 74, 46.4, 78, 46], 0.8, 0.3), S.g0);
+    // sly brows: inner ends raised a touch, outer ends down
+    Q.fill(Q.sr([40.2, 41.6, 46, 40.6, 51.8, 41.4], 1.1, 1.5, 1.5), S.hl);
+    Q.fill(Q.sr([62.4, 41.4, 66, 40.6, 69.6, 41.6], 1.4, 0.9, 1.3), S.hl);
+    Q.line([71, 57, 71.4, 58.2], S.s2); Q.px(Q.tx(71.2), Q.ty(58.6), S.sl);
+    [[43, 56.5], [45, 56.5], [47, 56.5], [67, 56.5], [69, 56.5]].forEach(function (p) { Q.line([p[0], p[1], p[0] - 1.2, p[1] + 1.6], S.bl); });
+    var fr = Q.mask();
+    FR.forEach(function (c) { fr = fr.or(Q.sr(c[0], c[1], c[2], c[3])); });
+    Q.recol(fr.shift(-2, 6).or(fr.shift(0, 6)), [S.s1, S.s0], S.s2);
+    FR.forEach(function (c) { HH.hairClump(Q, c, S.h1); });
+    // hair sweeping across the sides
+    HH.hairClump(Q, [[36, 36, 30, 48, 32, 58, 26, 66, 22, 72], 10, 5, 11, 0, [0.1, 0.6]], S.h1);
+    HH.hairClump(Q, [[76, 32, 81, 44, 79, 54, 84, 62, 90, 68], 9, 5, 10, 0, [0.1, 0.6]], S.h1);
+    HH.hairClump(Q, [[16, 36, 10, 46, 13, 56, 6, 66], 7, 3, 8, 0], S.h2);
+    // colour shift toward violet at the lower sides (pixel coordinates)
+    shiftBy(Q, null, function (x, y) { return y + 0.42 * Math.abs(x - 150); }, 62, 999);
+  }
+  // band motif: a huge faint four-pointed star behind the face, constellation lines + nodes
+  function cutinMotif(P) {
+    function st(cx, cy, r, k) { var pts = []; for (var i = 0; i < 8; i++) { var a = -Math.PI / 2 + i * Math.PI / 4, rr = i % 2 ? r * k : r; pts.push(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } return P.poly(pts); }
+    P.fill(st(152, 36, 120, 0.2), S.a2);
+    P.fill(st(152, 36, 70, 0.22), S.a3);
+    P.fill(st(152, 36, 52, 0.22), S.a2);
+    var C = [[8, 52], [22, 40], [36, 46], [50, 30], [64, 18], [84, 10], [196, 8], [214, 22], [232, 14], [226, 50], [206, 64]];
+    [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [6, 7], [7, 8], [7, 9], [9, 10]].forEach(function (e) {
+      P.line([C[e[0]][0], C[e[0]][1], C[e[1]][0], C[e[1]][1]], S.a1);
+    });
+    C.forEach(function (c, i) { var x = c[0], y = c[1]; P.px(x, y, S.W); P.px(x - 1, y, S.a0); P.px(x + 1, y, S.a0); P.px(x, y - 1, S.a0); P.px(x, y + 1, S.a0); });
+  }
+  // over the finished band: streaking iridescent stars with trails
+  function cutinOver(P) {
+    [[70, 10, 4.5], [228, 60, 5], [24, 62, 3], [118, 64, 3], [200, 6, 2.5]].forEach(function (q) {
+      var x = q[0], y = q[1], r = q[2];
+      for (var t = 2; t < 26 + r * 4; t++) P.px(x - r - t, y, t < 10 ? S.a0 : t % 3 === 0 ? 0 : S.a1);
+      star4(P, x, y, r, { line: S.ol });
+    });
+  }
+
   // ---------------------------------------------------------------- face icon 24x24 (TODO: hand map)
   function face(P) {
     var Q = K.painter(112, 128); drawBust(Q, {});
@@ -440,7 +515,7 @@
     cutin: function () { return I.cutin ? I.cutin('gemini') : K.painter(240, 72); },
     face: function () { var P = K.painter(24, 24); face(P); return P; },
     emblem: emblem,
-    cutinCfg: { seed: 53 }
+    cutinFace: cutinFace, cutinMotif: cutinMotif, cutinOver: cutinOver, cutinCfg: { seed: 53 }
   };
   I.drawGeminiBust = drawBust;
   I.ART.gemini.head = { FR: FR, face: FACEPTS, skull: SKULL };
