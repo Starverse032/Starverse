@@ -218,12 +218,12 @@
   // ---------------------------------------------------------------- lose (time over): hand to her brow, head bowed, wings drooping,
   // tail flat; the blob floats close and pats her head
   var LS = P(ST, { hip: [0, -50], lean: 6, bend: 6, head: [1, 1], tilt: 18, hF: [14, -84], hB: [-6, -54], handF: 'flat', handB: 'relax', shr: -1,
-    eyes: 'sad', mouth: 'frown', wing: 0, wf: 40, tail: -20, arch: 3, tsw: 0.15, skirt: -0.05, blob: [12, -4], bf: 'sad' });
+    eyes: 'sad', mouth: 'frown', wing: 0, wf: 40, tail: -20, arch: 3, tsw: 0.15, skirt: -0.05, blob: [26, -24], bf: 'sad', z: { blob: 6 } });
   def('lose', {
     segs: [['in', 30], ['loop', 60, true]], step: 3,
     keys: [['in', P(S, { eyes: 'wide', mouth: 'o', bf: 'wide' })], ['in+6', P(S, { eyes: 'wide', mouth: 'o', hip: [-1, -51], lean: -4, wing: 0.4, bf: 'wide' }), 'out'],
       ['in+18', P(LS, { tail: -10 }), 'inout'], ['in+26', LS],
-      ['loop', LS], ['loop+15', P(LS, { blob: [14, -8] })], ['loop+21', P(LS, { blob: [12, -4] })],
-      ['loop+36', P(LS, { hip: [0, -49], sq: 1, eyes: 'closed', tilt: 20, blob: [14, -8] })], ['loop+48', P(LS, { eyes: 'closed', blob: [12, -4] })]]
+      ['loop', LS], ['loop+15', P(LS, { blob: [27, -27] })], ['loop+21', P(LS, { blob: [26, -24] })],
+      ['loop+36', P(LS, { hip: [0, -49], sq: 1, eyes: 'closed', tilt: 20, blob: [27, -27] })], ['loop+48', P(LS, { eyes: 'closed', blob: [26, -24] })]]
   });
 })();
