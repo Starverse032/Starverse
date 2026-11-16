@@ -179,7 +179,8 @@
     A.orbC = {
       claude0: orb(sl(I.scheme('claude', 0).light.u)), claude1: orb(sl(I.scheme('claude', 1).light.u)),
       deepseek0: orb(sl(I.scheme('deepseek', 0).water.u)), deepseek1: orb(sl(I.scheme('deepseek', 1).water.u)),
-      gpt0: orb(sl(I.scheme('gpt', 0).light.u)), gpt1: orb(sl(I.scheme('gpt', 1).light.u))
+      gpt0: orb(sl(I.scheme('gpt', 0).light.u)), gpt1: orb(sl(I.scheme('gpt', 1).light.u)),
+      gemini0: orb(sl(I.scheme('gemini', 0).light.u)), gemini1: orb(sl(I.scheme('gemini', 1).light.u))
     };
     function sl(u) { return [u[0], u[1], u[2], u[4]]; }
   }

@@ -74,6 +74,10 @@
       var sg = I.scheme('gpt', pal), Lg = sg.light.css, Ng = sg.night.css;
       return { core: '#ffffff', ring: Lg[1], nearA: Lg[3], nearB: Lg[5], farA: Lg[5], farB: Ng[2], line: '#ffffff', line2: Lg[1], dark: Ng[4] };
     }
+    if (ch === 'gemini') {   // pink-violet bands, violet hair far bands, iridescent (cyan / pink) lines
+      var se = I.scheme('gemini', pal), Le = se.light.css, Ne = se.night.css, Ve = LC.PAL.gemini[pal].hair2, Se = se.star.css;
+      return { core: '#ffffff', ring: Le[1], nearA: Le[2], nearB: Ve[2], farA: Ve[3], farB: Ne[1], line: Se[1], line2: Se[2], dark: Ne[4] };
+    }
     var R = I.N.red.css;
     return { core: '#ffffff', ring: '#fff6b8', nearA: R[5], nearB: '#2a0a18', farA: '#2a0a18', farB: '#0e0610', line: '#ffffff', line2: R[2], dark: '#05040a' };
   }
@@ -129,6 +133,9 @@
   I.onInit('screen', function () {
     ['claude:0', 'claude:1', 'deepseek:0', 'deepseek:1', 'gpt:0', 'gpt:1', 'none:0'].forEach(lineSet);
     ['claude:0', 'claude:1', 'deepseek:0', 'deepseek:1', 'gpt:0', 'gpt:1', ':0'].forEach(wedgeSet);
+    // gemini: baked in idle time ~0.15 s after init (lazy on first use otherwise) to keep init short
+    var gem = function () { ['gemini:0', 'gemini:1'].forEach(function (k) { lineSet(k); wedgeSet(k); }); };
+    if (typeof setTimeout === 'function') setTimeout(gem, 150); else gem();
   });
 
   // ---- sprites -----------------------------------------------------------------------
@@ -139,7 +146,7 @@
     draw: function (ctx, sx, sy, t, o) {
       var sf = soft(), a0 = ctx.globalAlpha, ch = I.hasChar(o.char) ? o.char : 'none';
       ctx.globalAlpha = a0 * Math.min(1, (t + 1) / 3) * (sf ? 0.6 : 0.84);
-      ctx.fillStyle = ch === 'deepseek' ? '#040a1c' : ch === 'claude' ? '#140806' : ch === 'gpt' ? I.scheme('gpt', o.pal).night.css[4] : '#05040a';
+      ctx.fillStyle = ch === 'deepseek' ? '#040a1c' : ch === 'claude' ? '#140806' : ch === 'gpt' || ch === 'gemini' ? I.scheme(ch, o.pal).night.css[4] : '#05040a';
       ctx.fillRect(sx - 8, sy - 8, W + 16, H + 16);
       var f = focus(o), fr = lineSet(ch + ':' + o.pal);
       ctx.globalAlpha = a0 * (sf ? 0.45 : 1);
@@ -204,7 +211,7 @@
     use: 'When a super KOs: instead of the stage/backdrop, behind the fighters: drawSprite(ctx,"screen.superFinish",0,0,t,{char: winner, palette, cx, cy}) with cx,cy = the KO contact point on screen. Hold it as long as the freeze lasts (t keeps counting; the image is static after t = 3).',
     info: { duration: 0, bbox: { x: 0, y: 0, w: W, h: H } },
     draw: function (ctx, sx, sy, t, o) {
-      var ch = o.char === 'deepseek' || o.char === 'gpt' ? o.char : 'claude', c = burstCols(ch, o.pal), f = focus(o), sf = soft();
+      var ch = I.hasChar(o.char) ? o.char : 'claude', c = burstCols(ch, o.pal), f = focus(o), sf = soft();
       ctx.drawImage(wedgeSet(ch + ':' + o.pal), sx + f[0] - BCX, sy + f[1] - BCY);
       var cx = o.cx == null ? f[0] : Math.round(o.cx), cy = o.cy == null ? f[1] : Math.round(o.cy);
       rays(ctx, sx, sy, cx, cy, 0, sf ? 24 : 40, 911, c, false, sf);
