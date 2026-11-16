@@ -1,21 +1,34 @@
 # ILLUST — notes
 
 ## GPT progress / next steps (V2.5 third fighter — truthful, current)
-- core.js: slots appended (indices of old slots unchanged): `z0..z3,zl` = `blob` ramp; for gpt
-  `x*` = `scale`, `u*` = `wing` (fallbacks for the old chars unchanged: book/fin, under/cloth1).
-- gpt.js (in manifest after deepseek.js): bust / bustWin / bustLose drawn and iterated (horns, wing,
-  ear + earring, knot rosette, collar + diamond cut-out, frilled detached sleeves, beckoning hand —
-  index finger only, blob companion). `knot()` = rosette (cord-ring weave ≥ 32 px, simple
-  scalloped loops below that — the weave turns into a pinwheel at small sizes, avoid).
-- icons.js: emblem regex generalised (`emblem.<char>` for any LC.PAL char), gpt branch calls
-  `I.gptEmblem`; api.js ICONS list + `emblem.gpt`, `emblem.gpt.lg`. Claude/DeepSeek emblems unchanged.
-- tools/illust-shots.mjs: iterates LC.CHARS; `trio-busts(-light)` sheets; `SCALE=n` env for `sheet:`.
-- face 24×24: hand-typed map (horns, white hair, pointed ear, lavender eyes). Horns only 2–3 px.
-- cut-in: cutin.js got generic per-char hooks (`I.ART[c].cutinCfg/cutinMotif/cutinFace/cutinOver`;
-  claude/deepseek branches untouched). GPT: dragon-scale crescents + teal flame tongues, big narrowed
-  eyes with glint streaks, far horn in the face layer, near horn drawn OVER the finished band so it
-  breaks the slanted cut and the top rule. `horn()` ridges are curved chevrons (scale-aware).
-- NEXT: win/lose polish (blob cheer/dizzy), bust refinement vs reference (hair volume/curls, bodice).
+DONE (zero console errors; init ≈ 430 ms with three chars; Claude/DeepSeek art, emblems, logo, banners
+and title verified pixel-identical to the pre-GPT baseline):
+- core.js: slots appended (old indices unchanged): `z0..z3,zl` = `blob` ramp; for gpt `x*` = `scale`,
+  `u*` = `wing` (old chars keep book/fin, under/cloth1; `z*` falls back to accent).
+- gpt.js (manifest: after deepseek.js): bust / bustWin / bustLose / face / cut-in hooks / emblem.
+  Bust: half-lidded lavender eyes, small mouth, long wavy white hair (clumps + escaping curls),
+  ahoge, two ribbed horns sweeping up-back (`horn()`: scale ramp, curved chevron ridges), pointed ear
+  + platinum/teal drop earring, knot rosette + tassel at the far horn root, high collar with clasp,
+  sleeveless bodice with diamond cut-out + diamond studs, princess seams, near detached sleeve top,
+  far frilled sleeve hanging from the raised arm, bracelet, beckoning hand (crooked index finger aimed
+  at the blob — deliberately NOT vertical: a lone upright finger reads as a rude gesture at 1×),
+  bat wing behind the near shoulder, blue blob companion. Win: closed smug eyes, smirk, blob cheering
+  (arms up) + sparkles. Lose: wide teary eyes, worried brows, wavy mouth, hatch blush, sweat, teal
+  "regenerate ⟳" arrow, wing drooped, arm lowered, blob dizzy with orbiting stars.
+- `knot()` rosette: ≥ 32 px = 5 woven cord rings (over at the rim, under near the centre); small =
+  scalloped loops + hole dots (the weave turns into a pinwheel at small sizes — avoid). 5 loops, not 6,
+  to stay clear of any hexagonal logo look. Emblem gets a teal gem core (orange / blue / green set).
+- face 24×24: hand-typed map. Cut-in: cutin.js generic hooks `I.ART[c].cutinCfg/cutinMotif/
+  cutinFace/cutinOver` (old branches untouched); GPT = dragon-scale crescents, teal flame tongues,
+  narrowed glowing eyes with glint streaks, far horn in the face layer, near horn drawn over the
+  finished band so it breaks the slanted cut and the top rule.
+- icons.js: `emblem.<char>` regex generalised (any LC.PAL char); api.js ICONS + `emblem.gpt(.lg)`.
+- tools/illust-shots.mjs: iterates LC.CHARS (`gpt` group), `trio-busts(-light)` sheets, `SCALE=n` for `sheet:`.
+WEAK / NEXT:
+- Face icon horns are 2–3 px and can read as antennae; bust rosette at ~15 px is a "white flower
+  with holes", the weave only shows at 32 px. Bodice is plain next to the others' busier outfits.
+- Front locks still slightly ribbon-like (same weakness as DeepSeek); hand is small.
+- Title key art still shows only Claude vs DeepSeek (not in this brief).
 
 ## V2 progress / next steps (ZipZipPipe redesign — truthful, current)
 DONE (all render with zero console errors; init ≈ 340–390 ms, up from ≈ 260; title 0.1 ms/frame):
@@ -106,6 +119,6 @@ WEAK / NEXT (if there is budget):
 ## Tools
 - Gallery: open `dev/illust-gallery.html` (file:// works): palette toggle, ×1/×2/×4, dark/mid/light
   backgrounds, title animating with logo overlaid, banners over a mock gameplay backdrop.
-- Shots: `node tools/illust-shots.mjs [all|portraits|claude|deepseek|logo|banners|icons|title|gallery]`
+- Shots: `node tools/illust-shots.mjs [all|portraits|claude|deepseek|gpt|logo|banners|icons|title|gallery|sheet:<expr>]`
   → `.shots/illust/*.png` (×4 assets, contact sheets, gallery page, title frames; prints init ms,
   title ms/frame and any console errors).

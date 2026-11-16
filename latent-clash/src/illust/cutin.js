@@ -1,7 +1,8 @@
 /* LATENT CLASH — ILLUST: super cut-ins (240x72), V2. Native-resolution close-up of the upper face
  * (brows → cheeks) drawn with the bust's own head geometry scaled ×2.8 through the painter transform,
  * and large vector eyes (no upscaled bust pixels). Opaque band: deep accent colour, a character motif
- * (Claude: sunburst rays · DeepSeek: water rings), speed lines streaming left; the left ~62 px stay
+ * (Claude: sunburst rays · DeepSeek: water rings · GPT: via I.ART.gpt.cutinMotif/cutinFace/cutinOver
+ * hooks — scale crescents, teal flames, a horn breaking the panel), speed lines streaming left; the left ~62 px stay
  * free for the move name. Facing right like the busts; mirror it yourself for P2 if wanted. */
 (function () {
   'use strict';
