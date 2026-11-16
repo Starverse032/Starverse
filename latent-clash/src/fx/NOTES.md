@@ -100,9 +100,9 @@ Next / known weaknesses:
   scale dissolve; reviewed on warm/light/dark, pal 1, facing -1). `screen.superBackdrop` gpt DONE in
   `gpt-backdrop.js` (wraps the previous def; night sky, moon, aurora, 3 attention matrices, 2 dragon
   silhouettes, falling scales, staircase-cell intro/outro). Review tool: `node tools/fx-gpt-comp.mjs`.
-- [~] 3. specials: `gpt.scales` done (`gpt.js`, K_SCALE particle). `gpt.breath` drafted in `gpt-breath.js`
-  (stateless layered puffs from baked disc sheets, capsule tongues, core streak, embers) — under review.
-  NOT yet: `breathCast`, `riseTrail`, `callSlam`, `roarRing`, `clawHit`.
+- [x] 3. specials: `gpt.scales` (`gpt.js`, K_SCALE), `gpt.breath` (`gpt-breath.js`), `gpt.clawHit`,
+  `gpt.breathCast`, `gpt.riseTrail`, `gpt.callSlam`, `gpt.roarRing` (`gpt-specials.js`) — all reviewed in strips
+  on dark/light (+warm for breath), pal 1 and facing -1 for breath/riseTrail.
 - [ ] 4. strips / review / viewer / bench
 - [ ] 5. "GPT integration" section below
 
