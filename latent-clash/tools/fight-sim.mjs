@@ -18,7 +18,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const args = Object.fromEntries(process.argv.slice(2).map(a => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v == null ? true : v]; }));
+const args = Object.fromEntries(process.argv.slice(2).map(a => { const b = a.replace(/^--/, ''), i = b.indexOf('='); return i < 0 ? [b, true] : [b.slice(0, i), b.slice(i + 1)]; }));
 const N = +(args.n || 12);
 const LEVELS = String(args.levels || '1,3,5').split(',').map(Number);
 const SEED = +(args.seed || 1);
