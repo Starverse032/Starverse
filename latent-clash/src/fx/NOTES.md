@@ -124,9 +124,14 @@ Next / known weaknesses (GPT):
 - Not yet checked with the real GPT rig sprite or on the four real stages.
 
 ## Gemini progress / next steps (truthful, updated as work lands)
-- [ ] 1. `char:'gemini'` colour scheme (core `schemeFor('gemini')`, screen burstCols, generic2 orbs).
+- [x] 1. `char:'gemini'` colour scheme: core `schemeFor('gemini')` (`light`/`glow`/`iri` twinkle/`star` hues/`aur` aurora/
+  `night`/`deep`; `main` = light, `twk` = iri), added to `I.CHS` (rings, hit.special, sparkle, meter.full, super.charge
+  bake/tint per char), screen `burstCols` gemini (superBg/superFinish/koBackdrop/impact; gemini line/wedge images are
+  baked ~0.15 s after init in idle time), generic2 `orbC.gemini*`.
 - [ ] 2. super: `screen.superBackdrop` gemini branch (`gemini-backdrop.js`), `gemini.meteor` (`gemini-super.js`).
-- [ ] 3. specials: `gemini.star` sprite + spawn effects (`gemini.js`, `gemini-specials.js`).
+- [~] 3. specials: DONE in `gemini.js` and reviewed (dark/warm/light): `gemini.star` sprite (faceted iridescent star,
+  3 sizes, halo + orbiting motes on H, trail, glint), `gemini.starCast`, `gemini.starHit`, `gemini.clawHit`,
+  `gemini.sparkles`. TODO in `gemini-specials.js`: riseTrail, twinSpawn, twinVanish, blinkOut, blinkIn.
 - [ ] 4. strips, viewer, fx-check, bench.
 - [ ] 5. "Gemini integration (for FIGHT)" section.
 

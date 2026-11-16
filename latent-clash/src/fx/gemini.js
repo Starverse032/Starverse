@@ -227,7 +227,7 @@
   I.def('gemini.sparkles', function (x, y, O) {
     var L = lay(O, I.FRONT), pal = O.pal, n = I.nOf(8, O);
     for (var i = 0; i < n; i++) {
-      var p = I.gemStarP(pal, x + I.RS() * 26, y + I.RS() * 32, i % 4 === 0 ? 2 : i % 2 ? 1 : 0, I.RS() * 0.25, -I.RR(0.15, 0.5), I.RI(40, 70), L, I.RI(0, 30));
+      var p = I.gemStarP(pal, x + I.RS() * 26, y + I.RS() * 32, i % 4 === 0 ? 2 : i % 2 ? 1 : 0, I.RS() * 0.25, -I.RR(0.15, 0.5), I.RI(40, 70), L, i < 3 ? i : I.RI(0, 30));
       p.e = I.R() * TAU; p.vrot *= 0.6;
     }
     for (i = 0; i < I.nOf(5, O); i++) I.gemTwinkle(pal, x + I.RS() * 30, y + I.RS() * 34, I.RI(2, 3), I.RI(12, 18), L, I.RI(0, 50));
