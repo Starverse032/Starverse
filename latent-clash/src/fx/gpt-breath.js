@@ -50,22 +50,23 @@
       var h1 = I.hash(i * 7 + cyc * 131 + 3), h2 = I.hash(i * 13 + cyc * 71 + 9);
       var tongue = i % 3 === 0;
       var lat = (h1 - 0.5) * u * Ln * 0.3 + Math.sin(t * 0.45 + i * 1.7) * u * 3.5;
-      if (tongue) lat += (h1 < 0.5 ? -1 : 1) * Math.max(0, u - 0.45) * Ln * 0.22;
+      if (tongue) lat += (h1 < 0.5 ? -1 : 1) * Math.max(0, u - 0.4) * Ln * 0.3;
       var dist = u * Ln;
-      var r = 1.5 + rmax * Math.min(1, u / 0.62) * (u > 0.78 ? 1 - (u - 0.78) / 0.22 * 0.65 : 1) * (tongue ? 0.62 : 1) * (0.86 + h2 * 0.28);
+      var r = 1.5 + rmax * Math.min(1, u / 0.58) * (u > 0.66 ? 1 - (u - 0.66) / 0.34 * 0.72 : 1) * (tongue ? 0.62 : 1) * (0.86 + h2 * 0.28);
       if (phase === 'start' && u > grow - 0.12) r *= 1.15;     // rounded front while it grows
       PX[n] = sx + dx * dist + nx * lat; PY[n] = sy + dy * dist + ny * lat; PR[n] = r * shrink; PU[n] = u; n++;
     }
     if (phase !== 'end') { PX[n] = sx + dx * 2; PY[n] = sy + dy * 2; PR[n] = 3.2; PU[n] = 0; n++; }   // nozzle at the mouth
     // passes: rim (dk), deep, body as forward-pointing capsules (tongue tips), then the hot
     // layers as single discs pulled toward the mouth and the axis; then the white-hot core line.
-    var D = g.discs, k, p, q, c1 = 0.92, c2 = 1.7;
+    var D = g.discs, k, p, q, c1 = 1.05, c2 = 2.05;
     for (q = 0; q < 3; q++) {
       var sh = D[5 - q], add = 2 - q;
       for (k = n - 1; k >= 0; k--) {
         var r0 = PR[k], x = PX[k], y = PY[k];
+        if (q === 2 && PU[k] > 0.84) continue;                    // tip wisps stay dark
         dsc(ctx, sh, r0 + add, Math.round(x), Math.round(y));
-        if (r0 > 2.5) { dsc(ctx, sh, r0 * 0.58 + add, Math.round(x + dx * r0 * c1), Math.round(y + dy * r0 * c1)); dsc(ctx, sh, r0 * 0.26 + add, Math.round(x + dx * r0 * c2), Math.round(y + dy * r0 * c2)); }
+        if (r0 > 2.5) { dsc(ctx, sh, r0 * 0.5 + add, Math.round(x + dx * r0 * c1), Math.round(y + dy * r0 * c1)); dsc(ctx, sh, r0 * 0.16 + add * 0.5, Math.round(x + dx * r0 * c2), Math.round(y + dy * r0 * c2)); }
       }
     }
     for (q = 0; q < 3; q++) {
