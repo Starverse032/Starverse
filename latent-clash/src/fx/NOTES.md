@@ -28,10 +28,16 @@ beam v2 + book v2 · `deepseek.js` crowns/bubbles/waveCast/waveHit/breachTrail/p
 full-screen overlays · **`backdrop.js`** superBackdrop · **`specials.js`** V2 specials · **`hits.js`**
 V2 hits/blocks/KO · **`gpt.js`** GPT colour sets, scale sprites, K_SCALE, `gpt.scales` · **`gpt-super.js`**
 `gpt.attention` · **`gpt-backdrop.js`** gpt branch of `screen.superBackdrop` (wraps the previous definition)
-· **`gpt-breath.js`** `gpt.breath` · **`gpt-specials.js`** clawHit/breathCast/riseTrail/callSlam/roarRing.
+· **`gpt-breath.js`** `gpt.breath` · **`gpt-specials.js`** clawHit/breathCast/riseTrail/callSlam/roarRing ·
+**`gemini.js`** Gemini colour sets, faceted star rasteriser `I.gemStar`, tiny sparkle `I.gemMini`, K_GSTAR/K_GSHARD,
+`gemini.star`, starCast/starHit/clawHit/sparkles, per-palette baker registry `I.gemNeed` · **`gemini-backdrop.js`**
+gemini branch of `screen.superBackdrop` (wraps the previous def; `I.GEM.CONST` constellation) · **`gemini-super.js`**
+`gemini.meteor` · **`gemini-specials.js`** riseTrail/twinSpawn/twinVanish/blinkOut/blinkIn (+ silhouette mask).
 A later file overrides an earlier definition with the same name.
 Tools: `dev/fx-viewer.html` (+`fx-viewer.js`), `tools/fx-sheet.mjs`, `tools/fx-check.mjs` (smoke check),
-`tools/fx-gpt-comp.mjs` (gpt super composition strip with fighter dummies, `--frames --tx --ty --facing --palette`).
+`tools/fx-gpt-comp.mjs` (super composition strip with fighter dummies, `--char=gpt|gemini --frames --tx --ty --facing
+--palette`; gemini: her + translucent twin + victim at `--tx`). Strips spawn `gemini.riseTrail` every frame along a
+rising path.
 
 ## How it works
 - Every frame of every effect is drawn once in `init()` by code into a `Buf` (exact pixel-centre
@@ -54,8 +60,9 @@ Spawn (46): `hit.light/medium/heavy/special/counter`, `block.light/heavy`, `dust
 `claude.sparkCast/sparkHit/sonnetTrail/beamHit/pages/haikuSlash/guardCatch/`**`sonnetPillar`**,
 `deepseek.waveCast/waveHit/breachTrail/poolIn/whaleSplash/bubbles/splash/chainHit/diveTrail/poolOut`,
 **`deepseek.breachCrescent`**, **`deepseek.geyser`** (poolOut = alias),
-**`gpt.scales/clawHit/breathCast/riseTrail/callSlam/roarRing`**.
-Sprites (17): **`gpt.attention`**, **`gpt.breath`**, `claude.beam`, `claude.book`, `claude.guardrail`, `claude.spark`, `deepseek.wave`,
+**`gpt.scales/clawHit/breathCast/riseTrail/callSlam/roarRing`**,
+**`gemini.sparkles/starCast/starHit/clawHit/riseTrail/twinSpawn/twinVanish/blinkOut/blinkIn`** (55 in total).
+Sprites (19): **`gemini.star`**, **`gemini.meteor`**, **`gpt.attention`**, **`gpt.breath`**, `claude.beam`, `claude.book`, `claude.guardrail`, `claude.spark`, `deepseek.wave`,
 `deepseek.pool`, `deepseek.whale`, **`deepseek.tidal`**, `screen.superBg`, `screen.speedLines`,
 `screen.koFlash`, **`screen.superBackdrop`**, **`screen.superFinish`**, **`screen.koBackdrop`**,
 **`screen.impact`**. Bold = new in V2. Upgraded in V2: beam, book, whale, guardrail, guardCatch, spark,
@@ -136,8 +143,24 @@ Next / known weaknesses (GPT):
   glint; `gemini.starCast`, `gemini.starHit`, `gemini.clawHit`, `gemini.sparkles`) and `gemini-specials.js`
   (`gemini.riseTrail` double helix, `gemini.twinSpawn`/`twinVanish` on a designed silhouette mask, `gemini.blinkOut`/
   `blinkIn` lens + point star + ring). All reviewed in strips on dark + light (star also warm).
-- [ ] 4. strips, viewer, fx-check, bench.
-- [ ] 5. "Gemini integration (for FIGHT)" section.
+- [x] 4. strips in `.shots/fx/gemini.*.png` (+ `-p1` palette 1 / facing -1, `-H/-L/-M1/-zoom` star sizes),
+  `screen.superBackdrop-gemini(1).png`, `_comp-gemini(-f1).png`, `*-gemini.png` for hit.special / super.charge /
+  meter.full / superBg / superFinish / koBackdrop / impact. Viewer: char `gemini`, cells for every gemini name,
+  `gemini.meteor` full-screen. `fx-check`: char gemini + meteor/star infos, 0 console errors. `--bench`: `geminiSuper`.
+- [x] 5. "Gemini integration (for FIGHT)" section (end of this file).
+- Perf (headless, noisy): gemini palette 0 bakes ≈ 60–75 ms in `init` (shared ≈ 25–30, backdrop ≈ 11–15, super ≈ 6,
+  specials ≈ 19–21); palette 1 (≈ 50 ms) is baked in idle time ~0.12 s after init (or synchronously on first use);
+  the gemini line/wedge images in `screen` ~0.15 s after init. Plus the gemini variants in generic2/hits-v2
+  (rings, orb, hit.special) inside `init`. Total `init` measured 1.14–1.28 s (was 1.08–1.30). Gemini super composition
+  (backdrop + meteor back + front, 152 frames): median 0.3 ms, p90 0.5–0.7 ms. Particle stress unchanged.
+Next / known weaknesses (Gemini):
+- The twin silhouette in twinSpawn/twinVanish is a generic designed mask (ears, hair, sleeves, coat tails, tail, shoes),
+  not the real rig pose; its dithered fill reads slightly grey on very dark backgrounds.
+- The aurora is a scrolling baked band (no curtain sway); palette 1 (banana) sky is olive-brown and less striking.
+- Meteor impacts are small (star flash + floor ring + 3–5 sparkles); the burst's outer layers fade with globalAlpha
+  (flat tints, no dither) on t 61–63.
+- blinkOut/blinkIn lens is a plain ellipse. starHit's 'arms flying apart' is subtle at 1x.
+- Not yet checked with the real Gemini rig sprite or on the four real stages.
 
 ## V2 integration (for FIGHT)
 Coordinates: `spawn` uses world coordinates, `drawSprite` uses screen coordinates
@@ -246,3 +269,54 @@ Palette-1 heads are baked ~0.1 s after `init` (idle `setTimeout`), or synchronou
 | `gpt.callSlam` | callHit: on the last frame of `slam` (victim released) at the victim's landing point on the floor (x, GROUND_Y), facing = hers. ~45f; crater + cracks go to the back layer, debris front. Pair with `screen.impact {cx, cy, char:'gpt'}` (8f) and shake |
 | `gpt.roarRing` | roar active f0 at her chest/mouth, facing = hers, `power` 0 / 0.5 / 1 → ring radius 56 / 70 / 84 (= 56 + 28·power, the V2.5 ranges); ~24f, front layer. The visual reaches full radius at ~t 15 |
 | `gpt.scales` | free accent (wing buffets, tail lashes on hit, landings, intro/win), ~60f |
+
+## Gemini integration (for FIGHT)
+Same conventions: `spawn` = world coords, `drawSprite` = screen coords, boxes facing right (facing −1: `x' = −(x + w)`),
+`palette` 0 = pink-violet "Starry night", 1 = yellow-green "Banana". `char: 'gemini'` works on every char-tinted generic:
+`hit.special`, `ring`, `ring.ground`, `sparkle`, `meter.full`, `super.charge`, `screen.superBg`, `screen.superFinish`,
+`screen.koBackdrop`, `screen.impact`. All gemini names work before palette 1 is baked (it is then baked on the spot).
+
+### Super 双子座·流星雨 GEMINI: METEOR SHOWER (startup 6 → flash → cast 12, active 54, recovery 28)
+She and the twin stand on opposite sides. `t` = frames since cast f0 (active f0 = t 12, recovery f0 = t 66).
+`ax, ay` = her `muzzle` (raised hand) ON SCREEN, `bx, by` = the twin's (same anchor of the twin puppet). Defaults if
+omitted: ax = 70 (facing 1) / 314, bx = 384 − ax, ay = by = GROUND_Y − 74.
+| when | what |
+|---|---|
+| flash (freeze) | [B] `screen.superBg {char:'gemini', palette, cx, cy}` (chest); spawn `super.charge {char:'gemini'}` at the chest; spawn `gemini.twinSpawn` at the twin's origin if the twin is created for the super |
+| t 0 … 85 | [A] `screen.superBackdrop {char:'gemini', palette, facing}` from t 0 (8f four-pointed-star iris opening from her side; draw `stage.drawBack` under it while t < 8). The constellation draws itself over t 2–35 |
+| t 0 … 75 | [C] `gemini.meteor` at (0,0) `{ax, ay, bx, by, facing, palette, part:'back'}` behind the fighters (fine streak rain, constellation flare) and [D] the same with `part:'front'` after the fighters (hand stars, meteors, impacts, beams, crossing star, burst, stardust). Omit `part` to draw both |
+| t 0–13 `events.gather` | sparkles spiral into both raised hands; the hand stars grow |
+| t 12 `events.flare` | constellation flares white with glints + rings from Castor/Pollux (also small glints at each wave start) |
+| t 14 / 24 / 34 `events.rain` | three meteor waves from her side; impacts sweep across the floor from her side to the far side, t 20–27 / 30–37 / 40–47 (`events.impact` = 20, 30, 40) |
+| t 44 `events.beams` | both hands fire beams that grow (70 px/f) to the screen edges and cross over the middle; crossing point `x = (ax+bx)/2, y = min(ay,by) − 46` |
+| t 50 `events.cross` | the crossing swells (faceted star 13 → 18 → 25 px radius + glint) |
+| t 56 `events.burst` | 1f white-out (softened when `settings.flash === false`), then t 57–63 a full-screen nested four-pointed star from the crossing point (covers the fighters ~5f; fades t 61–63) |
+| t 60–75 `events.settle` | stardust and small stars fall; the sprite draws nothing from t 76 (= recovery f10) |
+| recovery f12–19 | `screen.superBackdrop {char:'gemini', phase:'out'}` t = 0..7 over the stage (the iris closes toward her side), then the stage |
+| hit boxes | `spriteInfo('gemini.meteor').frames[t]` in SCREEN space: `{x:0, y:GROUND_Y−124, w:384, h:128}` (the whole floor lane) for t 20–27, 30–37, 40–47 (impact windows) and 56–61 (burst), else `w = 0`. Suggested hit ticks `events.hits` = 21, 31, 41, 50, 57 (multi-hit, blockable; damage per tick is FIGHT's call) |
+| KO by the super | `screen.superFinish {char:'gemini', palette, cx, cy}` |
+
+### Specials
+| name | call |
+|---|---|
+| `gemini.starCast` | spawn at the `muzzle` (flicking hand) on the release frame of `star` / `airStar` (= active f0), facing = hers; ~22f |
+| `gemini.star` (sprite) | every frame for the live projectile at its centre, [D] front: `drawSprite(ctx,'gemini.star',sx,sy,t,{power, angle, facing, palette})`. `power` 0.3 / 0.6 / 1 = L / M / H. `angle` = travel direction in RADIANS on screen (as `claude.spark`): L 0 (facing −1: π), M ≈ −0.35 (20° up; facing −1: π + 0.35), airStar 0.785 (45° down-forward; facing −1: π − 0.785); default = along facing. Hit boxes `spriteInfo().boxes`: L `{x:-8,y:-8,w:16,h:16}`, M `{x:-10,y:-10,w:20,h:20}`, H `{x:-14,y:-14,w:28,h:28}` (visual ≈ 20 / 25 / 32 px; H has a halo + orbiting motes, slower spin) |
+| `gemini.starHit` | at the contact point when the star hits or is blocked (H: on each of its 2 hits), facing = travel direction; ~30f |
+| `gemini.clawHit` | on hit of her claw attacks (5L/2L/jL, starRise, twinStrike) at the contact point, facing = attacker; ~22f. With or instead of `hit.light`/`hit.medium` |
+| `gemini.riseTrail` | every frame of `starRise` "rise" at `weapon` (claw tip), facing = hers. Draws two intertwined strands; the strand behind her goes to the back layer automatically (pass `layer` to force one). Calls on consecutive FX ticks are joined into continuous strands |
+| `gemini.twinSpawn` | at the twin's ORIGIN (feet) on the frame the twin is created, facing = the twin's. Sparkles converge t 0–12, the light silhouette flashes at t 11 and fades to t 22. Start drawing the puppet at t 12 and fade its alpha in over t 12–20 |
+| `gemini.twinVanish` | at the twin's ORIGIN on the frame it disappears (after twinStrike recovery, when she is hit, or when swapped away), facing = the twin's; stop drawing the puppet on that frame. ~34f |
+| `gemini.blinkOut` | at her ORIGIN on `blinkOut` startup f0, facing = hers: a lens of light her size collapses to a point at y − 50 over 5f (= startup), point star at f5, ring to f11. Hide her sprite from vanish f0 |
+| `gemini.blinkIn` | at her ORIGIN at the arrival point on `blinkIn` appear f0, facing = hers: point star f0–1, the lens unfolds f2–6 and fades to f11. Draw her from appear f3. H blink with a twin (swap): `blinkOut` at her old spot + `twinVanish`-free swap: `blinkIn` at both arrival points |
+| `gemini.sparkles` | free accent around her (idle/intro/win, double-jump flip `airJump` f0 at her feet with `layer:'back'`, the waiting twin every ~24f); ~90f |
+
+### Drawing the light-twin (recommendation)
+The twin is the same rig puppet; draw it so it matches `twinSpawn`/`twinVanish` (whose light is `accent[0..2]`):
+1. Render the puppet (same palette, current pose) into a scratch canvas the size of its bbox.
+2. On the scratch: `globalCompositeOperation = 'source-atop'`, fill `LC.PAL.gemini[pal].accent[0]` at alpha 0.45 (a
+   pink-violet wash that keeps the pixel detail), reset to `source-over`.
+3. Draw the scratch to the game canvas at integer coords with `globalAlpha` 0.7 (0.6 on every 4th–7th frame of an
+   8-frame cycle for a gentle shimmer). No blur/shadow (no AA).
+4. Draw it in the fighters' layer (behind her if they overlap), never mirrored text. Its `muzzle` anchor gives `bx, by`
+   for the super. While it waits, spawn `gemini.sparkles {layer:'back'}` at its chest every ~24f.
+
