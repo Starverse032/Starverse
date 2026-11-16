@@ -218,6 +218,12 @@
       FX.drawSprite(g, 'gpt.attention', 0, 0, t % 70, { facing: 1, tx: 270, ty: 140, part: 'back' });
       FX.drawSprite(g, 'gpt.attention', 0, 0, t % 70, { facing: 1, tx: 270, ty: 140, part: 'front' });
     }, 90);
+    out.geminiSuper = run(function (t) {
+      var tt = t % 76, gm = { facing: 1, ax: 70, ay: 112, bx: 314, by: 112 };
+      FX.drawSprite(g, 'screen.superBackdrop', 0, 0, t + 8, { char: 'gemini', facing: 1 });
+      FX.drawSprite(g, 'gemini.meteor', 0, 0, tt, Object.assign({ part: 'back' }, gm));
+      FX.drawSprite(g, 'gemini.meteor', 0, 0, tt, Object.assign({ part: 'front' }, gm));
+    }, 152);
     out.superFinish = run(function (t) { FX.drawSprite(g, 'screen.superFinish', 0, 0, t + 3, { char: 'claude', cx: 200, cy: 120 }); }, 60);
     out.koBackdrop = run(function (t) { FX.drawSprite(g, 'screen.koBackdrop', 0, 0, t, { cx: 200, cy: 120 }); }, 60);
     out.impact = run(function (t) { FX.drawSprite(g, 'screen.impact', 0, 0, t % 8, { cx: 200, cy: 120, phase: 'counter' }); }, 64);

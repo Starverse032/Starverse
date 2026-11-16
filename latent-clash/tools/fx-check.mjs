@@ -26,7 +26,7 @@ const r = await page.evaluate(() => {
       }
       for (const s of n.sprites) for (const ph of [undefined, 'start', 'loop', 'end', 'out', 'fire', 'counter']) for (const t of [0, 3, 8, 13, 20, 30, 45, 50, 57, 60, 69, 80]) {
         const full = s.startsWith('screen.') || s === 'gpt.attention' || s === 'gemini.meteor';
-        FX.drawSprite(g, s, full ? 0 : 180, 150, t, { char: ch, palette: pal, facing: fc, phase: ph, tx: 300, ty: 120, ax: fc > 0 ? 70 : 314, ay: 112, bx: fc > 0 ? 314 : 70, by: 112, angle: 0.6, length: 85, angle: 45, part: t & 1 ? 'back' : undefined });
+        FX.drawSprite(g, s, full ? 0 : 180, 150, t, { char: ch, palette: pal, facing: fc, phase: ph, tx: 300, ty: 120, ax: fc > 0 ? 70 : 314, ay: 112, bx: fc > 0 ? 314 : 70, by: 112, length: 85, angle: 45, part: t & 1 ? 'back' : undefined });
         calls++;
       }
     }
