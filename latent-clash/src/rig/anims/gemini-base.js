@@ -230,7 +230,7 @@
       ['toss+4', P(spin(TK, -120), { root: [0, -24], grab: [46, -40], hs: 0.3 }), 'snap'],
       ['toss+8', P(spin(TK, -240), { root: [0, -16], grab: [52, -38] }), 'snap'],
       ['toss+11', P(spin(P(TK, { fF: [10, -16], fB: [6, -14] }), -330), { root: [0, -6], grab: [56, -36], eyes: 'focus', mouth: 'cat' }), 'snap'],
-      ['recovery', P(S, { hip: [0, -38], lean: 22, bend: 6, sq: 1, faB: 30, hF: [22, -46], hB: [10, -44], skirt: 0.45, coat: 0.5, tail: 26, grab: [56, -36], hs: 0.3 }), 'snap'],
+      ['recovery', P(S, { hip: [0, -38], lean: 22, bend: 6, sq: 1, faB: 30, hF: [22, -46], hB: [10, -44], skirt: 0.45, coat: 0.5, tail: 26, grab: [56, -36], hs: 0.6 }), 'snap'],
       ['recovery+6', P(S, { hip: [0, -48], lean: 6, hB: [6, -76], handB: 'point', elB: -1, eyes: 'wink', mouth: 'smile', grab: [56, -36] }), 'out'],
       ['recovery+17', P(S, { grab: [56, -36] })]]
   });
@@ -259,7 +259,7 @@
   def('intro', {
     segs: [['act', 100]], step: 2,
     keys: [[0, P(spin(DROP, -40), { root: [0, -40], air: true })], [4, P(spin(DROP, -120), { root: [0, -22], air: true }), 'linear'], [7, P(DROP, { root: [0, -6], air: true }), 'in'],
-      [9, P(POSE.crouch, { hip: [2, -20], sq: 1, eyes: 'closed', mouth: 'cat', coat: 0.6, skirt: 0.5 }), 'snap'], [14, P(POSE.crouch, { eyes: 'sly', mouth: 'cat' }), 'out'],
+      [9, P(POSE.crouch, { hip: [2, -20], sq: 1, eyes: 'closed', mouth: 'cat', coat: 0.6, skirt: 0.5, hs: 0.5 }), 'snap'], [14, P(POSE.crouch, { eyes: 'sly', mouth: 'cat' }), 'out'],
       [22, STR, 'inout'], [30, P(STR, { hip: [-7, -42], tail: 70, pen: 6 })], [36, P(STR, { tail: 54, pen: -6 })],
       [44, YAWN, 'inout'], [50, P(YAWN, { hF: [8, -105], hB: [-4, -105] })],
       [56, LICK, 'inout'], [61, P(LICK, { hF: [12, -81], tilt: 12 })], [64, LICK], [67, P(LICK, { hF: [12, -81], tilt: 12 })],
