@@ -156,7 +156,7 @@
   var SR1 = P(S, HIT, { hip: [2, -54], lean: -6, bend: -10, tilt: -20, fF: [8, -14], fB: [-4, -2], faF: 50, faB: 40, knF: -1,
     hF: [16, -104], hB: [-12, -64], handF: 'claw', handB: 'claw', weapon: 'hF', claw: 'FB', tail: 30, arch: 4, skirt: 0.8, hem: -6, coat: 1, cl: -20,
     air: true, hd: 24, stars: 'hand' });
-  var SRf = P(SR1, { flip: 1, hF: [14, -100], hB: [-14, -70], fF: [6, -12], tail: 50 });
+  var SRf = P(SR1, { flip: 1, hF: [-4, -102], hB: [-16, -70], fF: [6, -12], tail: 50 });
   def('starRise', {
     segs: [['startup', 4], ['rise', 12], ['fall', 12, true], ['land', 14]], step: 2,
     keys: [['startup', P(S, ATK)], ['startup+2', SR0, 'snap'],
