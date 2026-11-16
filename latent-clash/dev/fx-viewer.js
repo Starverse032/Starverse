@@ -63,11 +63,15 @@
   }
 
   // ---- placement rules per name -------------------------------------------------
-  var GROUND = /^(deepseek\.tidal|deepseek\.geyser|deepseek\.breachCrescent|claude\.sonnetPillar|dust\.|throw\.slam|ring\.ground|deepseek\.pool|deepseek\.whale|deepseek\.wave$|deepseek\.waveCast|deepseek\.poolIn|deepseek\.poolOut|deepseek\.whaleSplash|claude\.guardrail|land)/;
+  var GROUND = /^(gpt\.callSlam|deepseek\.tidal|deepseek\.geyser|deepseek\.breachCrescent|claude\.sonnetPillar|dust\.|throw\.slam|ring\.ground|deepseek\.pool|deepseek\.whale|deepseek\.wave$|deepseek\.waveCast|deepseek\.poolIn|deepseek\.poolOut|deepseek\.whaleSplash|claude\.guardrail|land)/;
   function isScreen(n) { return /^screen\.|^gpt\.attention$/.test(n); }
   function anchorY(n) { return GROUND.test(n) ? GY : GY - 40; }
   FXV.cellFor = function (n) {
     if (/gpt\.breath$/.test(n)) return { w: 150, h: 120, ox: 60, oy: 50 };
+    if (/gpt\.callSlam/.test(n)) return { w: 180, h: 110, ox: 0, oy: 90 };
+    if (/gpt\.roarRing/.test(n)) return { w: 190, h: 160, ox: 0, oy: 80 };
+    if (/gpt\.clawHit|gpt\.scales|gpt\.breathCast/.test(n)) return { w: 110, h: 96, ox: 0, oy: 48 };
+    if (/gpt\.riseTrail/.test(n)) return { w: 100, h: 100, ox: 0, oy: 60 };
     if (/whale$/.test(n)) return { w: 384, h: 216, ox: 110, oy: 186 };
     if (/tidal$/.test(n)) return { w: 384, h: 130, ox: 150, oy: 120 };
     if (/sonnetPillar|geyser|poolOut/.test(n)) return { w: 110, h: 210, ox: 0, oy: 200 };
