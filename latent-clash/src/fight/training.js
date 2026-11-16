@@ -66,6 +66,11 @@
     ctx.globalAlpha = 0.28; rect(ctx, x, y, w, h, fill); ctx.globalAlpha = 1;
     rect(ctx, x, y, w, 1, line); rect(ctx, x, y + h - 1, w, 1, line); rect(ctx, x, y, 1, h, line); rect(ctx, x + w - 1, y, 1, h, line);
   }
+  function circle(ctx, m, c, col) {   // outline of a hit circle (GPT roar)
+    var n = Math.max(24, Math.round(c.r * 1.6));
+    for (var k = 0; k < n; k++) { var a = k / n * Math.PI * 2; rect(ctx, Math.round(c.x - m.camX + Math.cos(a) * c.r), Math.round(c.y + Math.sin(a) * c.r), 1, 1, col); }
+    ctx.globalAlpha = 0.18; rect(ctx, Math.round(c.x - m.camX - c.r * 0.7), Math.round(c.y - c.r * 0.7), Math.round(c.r * 1.4), Math.round(c.r * 1.4), col); ctx.globalAlpha = 1;
+  }
   F.drawBoxes = function (ctx, m) {
     for (var i = 0; i < 2; i++) {
       var f = m.f[i];
@@ -79,12 +84,14 @@
         f.mv.hits.forEach(function (h) {
           if (h.seg !== sg.id || (h.fr && (f.sf < h.fr[0] || f.sf > h.fr[1]))) return;
           var lb = F.hitLocal(f, h);
-          if (lb) box(ctx, m, F.worldBox(lb, f.x, f.y, f.facing), '#ff3b3b', '#ff3b3b');
+          if (!lb) return;
+          if (h.radius) { circle(ctx, m, F.roarCircle(f), '#ff3b3b'); return; }
+          box(ctx, m, F.worldBox(lb, f.x, f.y, f.facing), '#ff3b3b', '#ff3b3b');
         });
-        if (f.mv.kind === 'throw') {
-          var tr = f.C.throwRange, tx = Math.round(f.x - m.camX), y = Math.round(f.y) - 50;
-          rect(ctx, f.facing > 0 ? tx : tx - tr, y, tr, 1, '#ff4dff');
-        }
+      }
+      if (f.action === 'attack' && f.mv && (f.mv.kind === 'throw' || f.mv.cmdGrab)) {
+        var tr = f.mv.cmdGrab ? F.v(f.mv.cmdGrab.range, f.str) : f.C.throwRange, tx = Math.round(f.x - m.camX), y = Math.round(f.y) - 50;
+        rect(ctx, f.facing > 0 ? tx : tx - tr, y, tr, 1, '#ff4dff');
       }
       var bar = F.barrierBox(f);
       if (bar) box(ctx, m, bar, '#5ee6a8', '#5ee6a8');
