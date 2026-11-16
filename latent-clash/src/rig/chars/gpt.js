@@ -452,7 +452,7 @@
     // membrane: root → wrist → tip0 ⌒ tip1 ⌒ tip2 → back to the root, scalloped between the fingers
     function scal(a, b, k) { var m = lerp(a, b, 0.5); return lerp(m, w, k); }
     var mem = [r, w, tips[0], scal(tips[0], tips[1], 0.36), tips[1], scal(tips[1], tips[2], 0.38), tips[2], scal(tips[2], [r[0] + 1, r[1] + 5], 0.25), [r[0] + 1, r[1] + 5]];
-    p.poly(H.flat(mem), MW, SH.soft, 2 + t);
+    p.poly(H.flat(mem), MW, far ? null : SH.soft, 2 + t);
     // lighter membrane along the leading edge (arm) and the first finger
     p.poly(H.flat([r, w, lerp(w, tips[0], 0.75), lerp(r, tips[1], 0.35)]), MW, null, 1 + t);
     // bones: arm (thick) + three fingers, wrist claw
@@ -667,7 +667,8 @@
     // bare shoulders / upper chest (skin), then the fitted halter bodice over it
     var body = H.flat([fr(c, ca, -3, 0), fr(c, ca, -6, 1.5), fr(c, ca, -6.5, 6), fr(c, ca, -5.5, 12), fr(W, wa, -4.5, 0), fr(W, wa, -5, 3),
       fr(W, wa, 4.5, 3), fr(W, wa, 4, 0), fr(c, ca, 5.2, 12.5), fr(c, ca, 6.8, 9), fr(c, ca, 6, 5), fr(c, ca, 4, 1), fr(c, ca, 1.5, -0.5)]);
-    p.poly(body, M.skin, SH.body);
+    p.poly(body, M.skin, null);
+    dl(p, fr(c, ca, -6, 1.5), fr(c, ca, -6.5, 6));
     var bod = H.flat([fr(c, ca, 0.5, 0), fr(c, ca, 3, 0.5), fr(c, ca, 5.5, 4.5), fr(c, ca, 6.8, 9), fr(c, ca, 5.2, 12.5), fr(W, wa, 4, 0), fr(W, wa, 4.5, 3),
       fr(W, wa, -5, 3), fr(W, wa, -4.5, 0), fr(c, ca, -5.5, 12), fr(c, ca, -6, 7), fr(c, ca, -3, 6), fr(c, ca, -0.5, 3)]);
     p.poly(bod, M.c1, SH.body);
