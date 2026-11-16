@@ -8,11 +8,11 @@ four gemini files exist), `anims/placeholders.js` (her segment table + aliases).
 ## Progress / next steps (kept current for restarts)
 - DONE: registration (manifest, placeholders table + aliases, charInfo 96/64/24, palettes 0/1). Every required anim
   exists (unauthored ones are placeholders aliasing `idle` etc.), so the engine can load her.
-- IN PROGRESS step 1: body + look. Body renders (hair locks with blue→violet→pink gradient, cat ears, bun + star clip,
-  heterochromia, halter top, detached bell sleeves, short navy skirt over a white petticoat, chain belt + star pendant,
-  coat-tail panels with star charms, thigh strap, leg warmers, platform shoes, fluffy tail, drifting stars).
-  Idle is a stub (2-key bob). Still iterating the look (hair silhouette, sleeves, tail, panels).
-- TODO step 2: base set (idle, walks, guards, hits, launch/down/getup, crouch set, jump set + airJump, land, dashes).
+- DONE step 1 (first pass): body + look; versus at game scale matches the other three (scale, outline weight).
+- DONE step 2 (first pass, sheet-reviewed once): idle (toe bounce, paw flex, sly head-tilt), walkF/walkB (custom
+  16-key `G.catWalk`, 1.8 / 1.5 px/f, 32-f loops), crouch set (pounce-crouch, tail up), jump set, airJump (6-f tuck
+  flip via `I.gemSpin`), land, dashF (pounce leap), dashB (springy hop), guards (sleeves crossed, ears flat), hits,
+  launch, down, getup (all-fours → spring up). Ears fold flat (`ears: 'flat'` → head extra) on guards/hits/down.
 - TODO step 3: normals (reach 5L 30 · 5M 48 · 5H 58 · 2L 32 · 2M 50 · 2H 60 · jL 28 · jM 38 · jH 46).
 - TODO step 4: star, airStar, starRise, twin, twinStrike, blinkOut, blinkIn, super.
 - TODO step 5: throw, throwHit, thrown, intro, win, lose.

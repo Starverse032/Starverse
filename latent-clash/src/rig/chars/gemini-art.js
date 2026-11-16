@@ -62,6 +62,18 @@
     '......sssshs..................'
   ];
 
+  // ears folded flat back (hurt, guard, scared): overlay rows 3-10 of the head ('-' erases)
+  var FLAT = [
+    '------------------------------',
+    '------------------------------',
+    '------------------------------',
+    '------------------------------',
+    '--hhs-----------hhs-----------',
+    '---hPpss-------shPps----------',
+    '----sPpnshHHHhhhhpnshhs-------',
+    '...ss.shhhhhhshHHHHhhhhhhs....'
+  ];
+
   // eye overlay: near eye cols 0-3 (rose), far eye cols 7-9 (gold), placed at eyeAt
   var EYES = {
     open: [
@@ -193,7 +205,7 @@
         base: I.parseArt(HEAD, LEGEND, 17, 27),
         eyes: {}, mouth: {}, cache: {},
         eyeAt: [15, 20], mouthAt: [21, 25],
-        extras: { blush: { img: I.parseArt(['bb......b'], LEGEND), at: [15, 24] } }
+        extras: { blush: { img: I.parseArt(['bb......b'], LEGEND), at: [15, 24] }, flat: { img: I.parseArt(FLAT, LEGEND), at: [0, 3] } }
       };
       Object.keys(EYES).forEach(function (k) { var e = set.eyes[k] = I.parseArt(EYES[k], LEGEND); if (EYE_DY[k]) e.dy = EYE_DY[k]; });
       Object.keys(MOUTHS).forEach(function (k) { var m = set.mouth[k] = I.parseArt(MOUTHS[k], LEGEND); if (MOUTHS[k][0].length >= 5) m.dx = -1; });

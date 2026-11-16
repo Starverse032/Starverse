@@ -783,7 +783,7 @@
       [0, function () { drawTorso(p, d); p.end(); }],
       [0.5, function () { drawCollar(p, d); p.end(); }],
       [2, function () {
-        var img = H.headImage(C.headSet, eyes, ds.mouth || 'neutral', ds.blush ? 'blush' : '', d.headAng);
+        var img = H.headImage(C.headSet, eyes, ds.mouth || 'neutral', (ds.blush ? 'blush' : '') + (ds.ears === 'flat' ? (ds.blush ? ',flat' : 'flat') : ''), d.headAng);
         p.blit(img, d.neck[0], d.neck[1]);
         var ah = H.chainPts(sec.ahoge);
         p.cap(ah[0][0], ah[0][1] + 1, ah[1][0], ah[1][1], 0.9, 0.8, M.hair, null);
