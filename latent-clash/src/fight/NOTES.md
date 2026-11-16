@@ -10,12 +10,15 @@
   at M), blocked breath chip 21; dragonRise 150 (H); call 170 / 190 vs crouch, grabs a blocking dummy,
   whiffs at 66 px and vs jumping; roar 90/100, L whiffs at 85 px; super 330 raw (5 hits), 84 chip blocked
 - [~] 3 CPU: GPT plans (breath, tail pokes, call vs guarders, tick-call, oki mix-up, roar vs projectiles /
-  anti-air / wake-up, airBreath, punisher) and vs-GPT logic (escape jump/back-dash, fewer projectiles close,
-  whiff-call punish, wake-up jump/back-dash). First tuning: GPT walks / dashes in much less (`gWalk` per
-  level), jump-ins ×0.25 (`gJump`), normal throw ×0.35 (`gThrow`, the command grab replaces it)
-- [~] 4 sim (all pairings: `--pairs`, `--mirror`, `--plans`) and combos (`--all`, `--vs`, `--chars`, `wN` step)
-  done; GPT combos 5/5 OK vs both (stubs + real). Balance in progress (L3 ≈ in band after `gWalk`)
-- [ ] 5 shots (`--real --boxes`)
+  anti-air / wake-up, airBreath, punisher, buffered dragonRise vs a blocked rekka, lunge-aware guard) and
+  vs-GPT logic (escape jump/back-dash, fewer projectiles close, whiff-call punish, wake-up jump/back-dash).
+  Tuning: GPT walks / dashes in much less (`gWalk` per level), jump-ins ×0.25 (`gJump`), throw ×0.35 (`gThrow`)
+- [~] 4 sim (all pairings: `--pairs`, `--mirror`, `--plans`, `--mu`) and combos (`--all`, `--vs`, `--chars`, `wN`,
+  oki-loop check) done; GPT combos 5/5 OK vs both (stubs + real); oki loop escapable (back-dash / jump /
+  reversal beat every meaty timing). Balance (real, 300 matches per cell, many seeds): Claude–GPT L3 ≈ 46,
+  L5 ≈ 48 % Claude; **DeepSeek–GPT ≈ 54–57 % DeepSeek at L3/L5 (edge / just outside the band)** — open
+- [x] 5 shots (`fight-shots --real --boxes --only=gpt-`): normals, specials, call sequence, roar erasing a
+  spark, super timeline, super KO, intro / HUD / win quote checked (see "GPT shots" below)
 - [ ] 6 notes (tuning table, combos, AI notes)
 
 ## V2 progress / next steps (CONTRACT-V2 retune — keep truthful)
