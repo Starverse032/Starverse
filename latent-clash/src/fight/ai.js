@@ -133,7 +133,14 @@
     var a = me.action;
 
     if (a === 'attack') return this.inMove(me, o, pv, dx) || {};
-    if (a === 'blockstun') { this.guardT = Math.max(this.guardT, 4); return this.holdGuard(me, o, pv); }
+    if (a === 'blockstun') {
+      // GPT: a blocked rekka step (DeepSeek's chain) -> buffered reversal rising claw through the next step
+      if (me.ch === 'gpt' && o.mv && (o.mv.id === 'chain' || o.mv.id === 'chain2') && me.stun <= 6 && dx < 70 && this.rekStun !== o.moveInst) {
+        this.rekStun = o.moveInst;
+        if (this.chance(this.P.block * (this.P.gRekka != null ? this.P.gRekka : 0.7))) { this.q.length = 0; this.push(this.special('dragonRise', this.level >= 4 ? 'H' : 'M'), 'antiRekka'); return this.emit(); }
+      }
+      this.guardT = Math.max(this.guardT, 4); return this.holdGuard(me, o, pv);
+    }
     if (a === 'down' || a === 'getup') return this.wakeup(me, o, dx);
     if (a === 'jump') return this.air(me, o, pv, dx);
     if (a === 'hitstun' || a === 'launch' || a === 'caught' || a === 'thrown' || a === 'dashF' || a === 'dashB' || a === 'land' || a === 'jumpSquat') {
