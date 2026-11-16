@@ -22,15 +22,16 @@ const mot = (seq, b) => seq.split('').map((d, i, a) => st(2, +d, i === a.length 
 const press = (b, d, wait) => [st(2, d || 5, b), st(wait || 1, d || 5)];
 const W = n => [st(n, 5)];
 const near = [st(40, 6)];                       // walk in until close (generic)
-const nearC = { claude: [st(68, 6)], deepseek: [st(60, 6)] };   // V2: ~50 px apart (START_SEP 168)
+const nearC = { claude: [st(68, 6)], deepseek: [st(60, 6)], gpt: [st(84, 6)] };   // V2: ~50 px apart (START_SEP 168)
 
 const T = (p1, p2, extra) => Object.assign({ mode: 'training', stage: 'training', seed: 7, p1: { char: p1 }, p2: { char: p2, control: 'human' }, training: { dummy: 'stand', guard: 'none', hitboxes: !!args.boxes } }, extra || {});
 const S = [];
 function add(name, cfg, steps, after) { S.push({ name, cfg, steps, after: after || 0 }); }
 
-for (const [c, o] of [['claude', 'deepseek'], ['deepseek', 'claude']]) {
+for (const [c, o] of [['claude', 'deepseek'], ['deepseek', 'claude'], ['gpt', 'claude']]) {
   for (const n of ['5L', '5M', '5H', '2L', '2M', '2H']) {
-    const d = n[0] === '2' ? 2 : 5, startup = { claude: { '5L': 5, '5M': 8, '5H': 12, '2L': 5, '2M': 8, '2H': 11 }, deepseek: { '5L': 4, '5M': 7, '5H': 10, '2L': 4, '2M': 7, '2H': 10 } }[c][n];
+    const d = n[0] === '2' ? 2 : 5, startup = { claude: { '5L': 5, '5M': 8, '5H': 12, '2L': 5, '2M': 8, '2H': 11 }, deepseek: { '5L': 4, '5M': 7, '5H': 10, '2L': 4, '2M': 7, '2H': 10 },
+      gpt: { '5L': 6, '5M': 9, '5H': 13, '2L': 6, '2M': 9, '2H': 12 } }[c][n];
     add(`${c}-${n}`, T(c, o), [...nearC[c], st(1, d, n[1]), st(startup, d)]);
   }
   add(`${c}-jH`, T(c, o), [st(14, 6), st(3, 9), st(16, 5), st(12, 5, 'H')]);
@@ -48,6 +49,30 @@ add('deepseek-divekick', T('deepseek', 'claude'), [st(3, 9), st(18, 5), ...mot('
 add('claude-combo', T('claude', 'deepseek'), [st(12, 6), st(3, 9), st(22, 5), st(2, 5, 'H'), st(14, 5), st(2, 5, 'L'), st(8, 5), st(2, 5, 'M'), st(12, 5), st(2, 5, 'H'), st(12, 5), ...mot('214', 'H'), ...W(30)]);
 add('deepseek-combo', T('deepseek', 'claude'), [st(10, 6), st(3, 9), st(22, 5), st(2, 5, 'H'), st(12, 5), st(2, 5, 'L'), st(7, 5), st(2, 5, 'M'), st(10, 5), st(2, 5, 'H'), st(10, 5), ...mot('214', 'H'), st(14, 5), st(2, 5, 'M'), st(12, 5), st(2, 5, 'M'), st(14, 5)]);
 const meter = { training: { dummy: 'stand', guard: 'none', meter: 'full', hitboxes: false } };
+// GPT 娘 (CONTRACT-V2 §V2.5): specials, the command-grab sequence, roar vs a projectile, super timeline, super KO
+const G = (extra) => T('gpt', 'claude', extra);
+for (const [n, len] of [['L', 80], ['M', 100], ['H', 128]]) {
+  add(`gpt-breath${n}-f2`, G(), [st(Math.round((168 - len) / 1.4), 6), ...mot('236', n), ...W({ L: 11, M: 12, H: 13 }[n] + 2)]);
+  add(`gpt-breath${n}-f10`, G(), [st(Math.round((168 - len) / 1.4), 6), ...mot('236', n), ...W({ L: 11, M: 12, H: 13 }[n] + 10 + 12)]);
+}
+add('gpt-breath-crouchDS', T('gpt', 'deepseek', { training: { dummy: 'crouch', guard: 'none', hitboxes: !!args.boxes } }), [st(48, 6), ...mot('236', 'M'), ...W(16)]);
+add('gpt-airBreath', G(), [st(30, 6), st(3, 9), st(14, 5), ...mot('236', 'M'), ...W(14)]);
+add('gpt-jH', G(), [st(40, 6), st(3, 9), st(24, 5), st(2, 5, 'H'), st(11, 5)]);
+add('gpt-jM', G(), [st(40, 6), st(3, 9), st(24, 5), st(2, 5, 'M'), st(8, 5)]);
+add('gpt-throw', G(), [...nearC.gpt, st(1, 5, 'LM'), st(24, 5)]);
+add('gpt-dragonRise', G(), [st(90, 6), ...mot('623', 'H'), ...W(7)]);
+add('gpt-dragonRise-top', G(), [st(90, 6), ...mot('623', 'H'), ...W(16)]);
+for (const w of [1, 8, 20, 30, 37, 41, 46, 60]) add(`gpt-call-${w}`, G(), [st(80, 6), ...mot('214', 'M'), ...W(w)]);
+add('gpt-call-whiff', G(), [st(60, 6), ...mot('214', 'M'), ...W(8)]);
+for (const [n, w] of [['L', 2], ['M', 2], ['H', 2], ['H', 12]]) add(`gpt-roar${n}-${w}`, G(), [st(84, 6), ...mot('252', n), ...W(9 + w)]);
+add('gpt-roar-vs-spark', { mode: 'versus', stage: 'training', seed: 5, intro: false, p1: { char: 'gpt' }, p2: { char: 'claude', control: 'human' }, pre: { fight: true, p2steps: [[2, { down: 1 }], [2, { down: 1, left: 1 }], [2, { left: 1, H: 1 }], [1, {}]] }, training: { hitboxes: !!args.boxes } },
+  [st(26, 5), ...mot('252', 'H'), ...W(12)]);
+for (const w of [18, 24, 32, 38, 42, 52, 56, 64, 80, 96]) add(`gpt-super-${w}`, V('gpt', 'claude'), [...nearC.gpt, st(2, 5, 'HS'), ...W(w)]);
+add('gpt-superko', V('gpt', 'claude', { hp2: 150 }), [...nearC.gpt, st(2, 5, 'HS'), ...W(90)], 'ko12');
+add('gpt-superko-60', V('gpt', 'claude', { hp2: 150 }), [...nearC.gpt, st(2, 5, 'HS'), ...W(90)], 'ko60');
+add('gpt-intro', { mode: 'versus', stage: 'library', seed: 3, intro: true, p1: { char: 'gpt' }, p2: { char: 'deepseek', control: 'cpu', level: 3 } }, [...W(150)]);
+add('gpt-hud', { mode: 'demo', stage: 'abyss', seed: 11, intro: false, p1: { char: 'deepseek', control: 'cpu', level: 5 }, p2: { char: 'gpt', control: 'cpu', level: 5 } }, [...W(1300)]);
+add('gpt-matchend', { mode: 'demo', stage: 'library', seed: 23, intro: false, p1: { char: 'gpt', control: 'cpu', level: 5 }, p2: { char: 'claude', control: 'cpu', level: 3 } }, [], 'quote');
 add('claude-superflash', T('claude', 'deepseek', meter), [...near, st(2, 5, 'HS'), ...W(18)]);
 add('claude-superbeam', T('claude', 'deepseek', meter), [...near, st(2, 5, 'HS'), ...W(80)]);
 add('deepseek-superflash', T('deepseek', 'claude', meter), [...near, st(2, 5, 'HS'), ...W(18)]);
@@ -95,6 +120,7 @@ for (const s of S) {
       if (pre.fight) { let t = 0; while (m.state !== 'fight' && t++ < 2000) m.update({}, {}); }
       if (pre.meter1 != null) m.f[0].meter = pre.meter1;
       if (pre.hp2 != null) m.f[1].hp = pre.hp2;
+      if (pre.p2steps) { for (const [k, inp] of pre.p2steps) for (let i = 0; i < k; i++) m.update({}, inp); }
       if (pre.settings) { window.__set = Object.assign({}, LC.settings); Object.assign(LC.settings = LC.settings || {}, pre.settings); }
     }
     for (const [k, inp] of s.steps) for (let i = 0; i < k; i++) m.update(inp, {});
