@@ -5,7 +5,7 @@
   var U = LC.UI, W = LC.W, H = LC.H, ui = LC.ui;
 
   var MAIN = [
-    { id: 'arcade', label: '街机模式', en: 'ARCADE', desc: '挑战三位对手，直抵潜空间深处！' },
+    { id: 'arcade', label: '街机模式', en: 'ARCADE', desc: '挑战' + '零一二三四五六七八九十'.charAt(Math.min(10, LC.LORE.arcade.length)) + '位对手，直抵潜空间深处！' },
     { id: 'versus', label: '对战', en: 'VERSUS', desc: '与 CPU 或好友一决胜负。' },
     { id: 'training', label: '训练', en: 'TRAINING', desc: '自由练习连段与必杀技。' },
     { id: 'howto', label: '出招表与教学', en: 'HOW TO PLAY', desc: '基本操作、系统与出招表。' },

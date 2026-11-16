@@ -45,7 +45,7 @@
     var x = ((phi + 3 * PI / 4) / Q) % 4; if (x < 0) x += 4;
     var i = Math.floor(x), fr = x - i, a = g.hue[i], b = g.hue[(i + 1) & 3];
     var c = fr < 0.32 ? a : fr > 0.68 ? b : I.mix(a, b, 0.5);
-    return tone === 0 ? I.mix(c, '#ffffff', 0.35) : I.mix(c, g.A[1], 0.32);
+    return tone === 0 ? c : I.mix(c, g.A[2], 0.42);
   }
   I.gemStar = function (b, cx, cy, R, rot, pal, o) {
     o = o || {};
@@ -94,18 +94,12 @@
       // particle stars: tiny (R 2.5, no outline), small (3.6), mid (5.2), big (7)
       g.ps = [starAnim(pal, 2.6, { outline: false, core: 0.5 }), starAnim(pal, 3.6, { core: 0.4 }), starAnim(pal, 5.2, { core: 0.32 }), starAnim(pal, 7, { rim: true })];
       // projectile: L / M / H
-      g.proj = [starAnim(pal, 7.5, { rim: true }), starAnim(pal, 10, { rim: true }), starAnim(pal, 13.5, { rim: true, core: 0.22 })];
+      g.proj = [starAnim(pal, 7.5, { rim: true, p: 0.6, core: 0.22 }), starAnim(pal, 10, { rim: true, p: 0.6, core: 0.2 }), starAnim(pal, 13.5, { rim: true, p: 0.62, core: 0.18 })];
       // halo for the big star: dithered glow disc, 2 pulse frames
       g.halo = I.anim(48, 48, 2, 24, 24, function (b, f) {
-        var r = 19 + f;
-        for (var y = 0; y < 48; y++) for (var x = 0; x < 48; x++) {
-          var dd = Math.sqrt((x + 0.5 - 24) * (x + 0.5 - 24) + (y + 0.5 - 24) * (y + 0.5 - 24));
-          if (dd > r) continue;
-          var k = dd / r;
-          if (k > 0.62 && I.bayer(x, y) < (1 - k) * 1.6) b.set(x, y, k > 0.85 ? Au[3] : Au[2]);
-          else if (k <= 0.62 && I.bayer(x + f, y) < 0.5) b.set(x, y, Au[2]);
-        }
-        b.ring(24, 24, r - 1, r, Au[3]); b.breakup(0.5, f, 0);
+        var m = new I.Buf(48, 48);
+        m.ring(24, 24, 14.2 + f, 15.4 + f, Au[2]); m.breakup(0.7, f * 2, 0); b.blit(m, 0, 0);
+        m = new I.Buf(48, 48); m.ring(24, 24, 18.6 + f, 19.6 + f, Au[3]); m.breakup(0.3, f, 1); b.blit(m, 0, 0);
       }, 1, true);
       // facet shards: 4 hues x 4 spin frames (a sliver of a star arm), 7x7
       g.shard = [0, 1, 2, 3].map(function (h) {
@@ -264,13 +258,16 @@
     draw: function (ctx, sx, sy, t, o) {
       var g = G[o.pal], si = sizeOf(o.power), z = SZ[si], raw = o.raw;
       var ang = raw.angle != null ? +raw.angle : (o.facing > 0 ? 0 : PI), ux = Math.cos(ang), uy = Math.sin(ang);
-      if (si === 2) I.drawAnim(ctx, g.halo, (t >> 2) & 1, sx, sy, 1);
+      if (si === 2) {   // halo rings + 4 orbiting motes
+        I.drawAnim(ctx, g.halo, (t >> 2) & 1, sx, sy, 1);
+        for (var q = 0; q < 4; q++) { var oa = t * 0.12 + q * Q; ctx.fillStyle = g.S[1 + (q % 3)]; ctx.fillRect(sx + Math.round(Math.cos(oa) * 17) - 1, sy + Math.round(Math.sin(oa) * 17), 3, 1); ctx.fillRect(sx + Math.round(Math.cos(oa) * 17), sy + Math.round(Math.sin(oa) * 17) - 1, 1, 3); }
+      }
       // trail: square brush tapering back from the star, accent -> deep, dithered tail
       var len = Math.min(z.len, 4 + t * 4), r0 = z.R * 0.45, T = g.trail;
       for (var pass = 0; pass < 2; pass++) {
         for (var s = 0; s < len; s++) {
-          var k = s / len, w = Math.max(1, Math.round((z.w - (pass ? 1.5 : 0)) * (1 - k * 0.85)));
-          if (pass && (w < 1 || k > 0.55)) continue;
+          var k = s / len, w = Math.max(1, Math.round((z.w - (pass ? 2 : 0)) * (1 - k)));
+          if (pass && k > 0.35) continue;
           var px = Math.round(sx - ux * (r0 + s)), py = Math.round(sy - uy * (r0 + s));
           if (k > 0.6 && I.bayer(px, py + t) < (k - 0.6) * 2.2) continue;
           ctx.fillStyle = pass ? T[0] : (k < 0.3 ? T[1] : k < 0.6 ? T[2] : T[3]);
@@ -288,7 +285,7 @@
       // twinkle glint: long thin axis cross for 3 frames every 10
       var ph = (t + si * 3) % 10;
       if (ph < 3) {
-        var gl = Math.round(z.R * (ph === 1 ? 1.9 : 1.35));
+        var gl = Math.round(z.R * (ph === 1 ? 1.6 : 1.2));
         ctx.fillStyle = g.S[1]; ctx.fillRect(sx - gl, sy, gl * 2 + 1, 1); ctx.fillStyle = g.S[2]; ctx.fillRect(sx, sy - gl, 1, gl * 2 + 1);
         ctx.fillStyle = '#ffffff'; ctx.fillRect(sx - (gl >> 1), sy, gl + 1, 1); ctx.fillRect(sx, sy - (gl >> 1), 1, gl + 1);
       }
