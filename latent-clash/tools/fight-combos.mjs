@@ -24,14 +24,24 @@ export const COMBOS = {
     { name: '2L > 2M > 5H > 236H (wave)', dist: 34, steps: ['2L', '2M', '5H', '236H'], hits: 4 },
     { name: '5L > 5M > 623H (breach)', dist: 40, steps: ['5L', '5M', '623H'], hits: 3 },
     { name: 'jH > 5L > 5H > 214H > S > S > SUPER', dist: 140, steps: ['j9', 'jH', '5L', '5H', '214H', 'S', 'S', 'SUPER'], hits: 11, meter: true }
+  ],
+  gpt: [
+    { name: 'jH > 5L > 5M > 5H > 236H (breath)', dist: 120, steps: ['j9', 'jH', '5L', '5M', '5H', '236H'], hits: 7 },
+    { name: '2L > 2M > 2H (tail sweep)', dist: 44, steps: ['2L', '2M', '2H'], hits: 3 },
+    { name: '5M > 5H > 623H (dragonRise)', dist: 52, steps: ['5M', '5H', '623H'], hits: 3 },
+    { name: '5M > 5H > 236H > SUPER', dist: 52, steps: ['5M', '5H', '236H', 'SUPER'], hits: 10, meter: true }
   ]
 };
+// --vs=claude|deepseek|gpt : dummy character (default: the next one in the roster)
+const VS = (process.argv.find(a => a.startsWith('--vs=')) || '').slice(5) || null;
+const ONLY = (process.argv.find(a => a.startsWith('--chars=')) || '').slice(8) || null;
 
 function inPage() {
-  window.COMBO = function (ch, c) {
+  window.COMBO = function (ch, c, vs) {
     const F = LC.fight;
     F.headless = true;
-    const other = ch === 'claude' ? 'deepseek' : 'claude';
+    const R = ['claude', 'deepseek', 'gpt'];
+    const other = vs || R[(R.indexOf(ch) + 1) % R.length];
     const m = F.createMatch({ mode: 'training', stage: 'training', seed: 5, p1: { char: ch }, p2: { char: other, control: 'human' },
       training: { dummy: 'stand', guard: 'none', meter: c.meter ? 'full' : 'normal', refill: false } });
     const A = m.f[0], B = m.f[1];
@@ -78,17 +88,22 @@ await page.evaluate(inPage);
 if (process.argv.includes('--debug')) await page.evaluate(() => { window.CDBG = 1; });
 let fail = 0;
 const spread = process.argv.includes('--spread');   // also report which start distances (dist-16..+16) still work
+const ALLVS = process.argv.includes('--all');   // every combo against every other character
 for (const ch in COMBOS) for (const c of COMBOS[ch]) {
-  if (spread) {
-    let line = '';
-    for (const d of [-16, -8, 0, 8, 16, 24]) { const r2 = await page.evaluate(([ch, c]) => window.COMBO(ch, c), [ch, Object.assign({}, c, { dist: c.dist + d })]); line += (d >= 0 ? '+' : '') + d + (r2.hits >= c.hits ? ':ok ' : ':' + r2.hits + ' '); }
-    console.log('     spread ' + ch + ' ' + c.name.padEnd(44) + line);
+  if (ONLY && ONLY.split(',').indexOf(ch) < 0) continue;
+  const targets = ALLVS ? ['claude', 'deepseek', 'gpt'].filter(x => x !== ch) : [VS && VS !== ch ? VS : null];
+  for (const vs of targets) {
+    if (spread) {
+      let line = '';
+      for (const d of [-16, -8, 0, 8, 16, 24]) { const r2 = await page.evaluate(([ch, c, vs]) => window.COMBO(ch, c, vs), [ch, Object.assign({}, c, { dist: c.dist + d }), vs]); line += (d >= 0 ? '+' : '') + d + (r2.hits >= c.hits ? ':ok ' : ':' + r2.hits + ' '); }
+      console.log('     spread ' + ch + ' ' + c.name.padEnd(44) + line);
+    }
+    const r = await page.evaluate(([ch, c, vs]) => window.COMBO(ch, c, vs), [ch, c, vs]);
+    const ok = r.hits >= c.hits;
+    if (!ok) fail++;
+    if (r.log && !ok) console.log(r.log);
+    console.log((ok ? 'OK  ' : 'FAIL') + ' ' + ch.padEnd(8) + ' ' + c.name.padEnd(44) + (vs ? ' vs ' + vs.padEnd(8) : '') + ' hits ' + r.hits + '/' + c.hits + '  dmg ' + r.dmg);
   }
-  const r = await page.evaluate(([ch, c]) => window.COMBO(ch, c), [ch, c]);
-  const ok = r.hits >= c.hits;
-  if (!ok) fail++;
-  if (r.log && !ok) console.log(r.log);
-  console.log((ok ? 'OK  ' : 'FAIL') + ' ' + ch.padEnd(8) + ' ' + c.name.padEnd(44) + ' hits ' + r.hits + '/' + c.hits + '  dmg ' + r.dmg);
 }
 await browser.close();
 process.exit(fail ? 1 : 0);
