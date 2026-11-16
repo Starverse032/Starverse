@@ -6,11 +6,15 @@
   AI profile table (`PROF` in ai.js) are per-character data; stubs know GPT (metrics, segments, anchors)
 - [x] 2 `chars/gpt.js` written + engine support (flame hits, roar circle + projectile erase, command grab
   `tryCmdGrab`/`callStep`, hard knock-down, super target latch + pin, breath / attention rendering, box overlay)
-  — NOT yet run or verified at the time of writing
+  — mechanics checked with a scripted test (real modules): breath 90/96/102 (3 hits, hits crouching DeepSeek
+  at M), blocked breath chip 21; dragonRise 150 (H); call 170 / 190 vs crouch, grabs a blocking dummy,
+  whiffs at 66 px and vs jumping; roar 90/100, L whiffs at 85 px; super 330 raw (5 hits), 84 chip blocked
 - [~] 3 CPU: GPT plans (breath, tail pokes, call vs guarders, tick-call, oki mix-up, roar vs projectiles /
   anti-air / wake-up, airBreath, punisher) and vs-GPT logic (escape jump/back-dash, fewer projectiles close,
-  whiff-call punish, wake-up jump/back-dash) written; untuned
-- [~] 4 sim tool for all pairings written (`--pairs`, `--mirror`, `--plans`); combos tool not yet; balance not run
+  whiff-call punish, wake-up jump/back-dash). First tuning: GPT walks / dashes in much less (`gWalk` per
+  level), jump-ins ×0.25 (`gJump`), normal throw ×0.35 (`gThrow`, the command grab replaces it)
+- [~] 4 sim (all pairings: `--pairs`, `--mirror`, `--plans`) and combos (`--all`, `--vs`, `--chars`, `wN` step)
+  done; GPT combos 5/5 OK vs both (stubs + real). Balance in progress (L3 ≈ in band after `gWalk`)
 - [ ] 5 shots (`--real --boxes`)
 - [ ] 6 notes (tuning table, combos, AI notes)
 
