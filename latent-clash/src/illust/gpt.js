@@ -253,6 +253,9 @@
     P.recol(bod.band(-2, 1), [S.c1], S.c0);
     P.line([42, 104, 47, 108, 54, 108], S.c2, true, true);
     P.line([60, 108, 66, 107, 71, 103], S.c2, true, true);
+    P.line([48, 88, 47, 100, 49, 112, 48, 132], S.c2, true, true);
+    P.line([66, 88, 68, 100, 66, 112, 67, 132], S.c3, true, true);
+    P.recol(P.spoly([40, 104, 48, 110, 56, 109, 54, 114, 44, 113, 38, 110]).and(bod), [S.c1], S.c2);
     // diamond cut-out with silver edging, seam of tiny diamonds below
     var cut = P.poly([57, 89, 61.5, 96, 57, 103, 52.5, 96]);
     P.part(cut, S.s1, S.dl);
@@ -319,7 +322,7 @@
     H.strands(P, [[79, 46, 81, 58, 80, 66, 83, 76, 82 + sw, 86]], S.h2);
     // loose curls escaping the silhouette
     [[[16, 66, 10, 72, 8, 80, 10, 85, 13, 84], 3.4, 1.2], [[12, 94, 6, 100, 5, 107, 8, 110], 3, 1.2],
-      [[96, 58, 101, 64, 103, 72, 101, 77, 98, 76], 3.4, 1.2], [[23, 30, 17, 33, 14, 39, 16, 43], 2.8, 1]
+      [[96, 58, 101, 64, 103, 72, 101, 77, 98, 76], 3.4, 1.2]
     ].forEach(function (c) { var m = P.sr(c[0], c[1], c[2]); P.part(m, S.h2, S.hl); P.recol(m.band(-1, 1), [S.h2], S.h1); });
 
     // ---- pointed ear + drop earring
