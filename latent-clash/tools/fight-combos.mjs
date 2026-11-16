@@ -82,6 +82,42 @@ function inPage() {
   };
 }
 
+// Oki-loop check: GPT command grab -> hard knock-down -> meaty command grab timed at every offset k around
+// the victim's first throwable frame. Each escape option must beat every timing; 'none' / 'block' must be
+// grabbable at some timing (the mix-up is real, not an unblockable loop).
+function okiPage() {
+  window.OKI = function (vs, opt, k) {
+    const F = LC.fight, T = F.T;
+    F.headless = true;
+    const m = F.createMatch({ mode: 'versus', stage: 'training', seed: 9, intro: false, rounds: 3, p1: { char: 'gpt' }, p2: { char: vs, control: 'human' } });
+    let t = 0;
+    while (m.state !== 'fight' && t++ < 2000) m.update({}, {});
+    const A = m.f[0], B = m.f[1];
+    B.x = A.x + 50; m.update({}, {});
+    const mot = (o) => [{ down: 1 }, { down: 1 }, { down: 1, left: 1 }, { down: 1, left: 1 }, Object.assign({ left: 1 }, o), Object.assign({ left: 1 }, o)];
+    const q1 = mot({ M: 1 });
+    let g0 = -1, grabs = 0, lastInst = -1, n = 0;
+    for (t = 0; t < 400; t++) {
+      if (B.action === 'getup' && g0 < 0) g0 = t;
+      let i1 = q1.length ? q1.shift() : {}, i2 = {};
+      if (g0 >= 0) {
+        const press = g0 + T.GETUP + T.WAKE_THROW_INV + k - 7;   // call M active frames 8..10 after the press
+        const d = t - (press - 4);
+        if (d >= 0 && d < 6) i1 = mot({ M: 1 })[d];
+        const w = t - g0;   // victim's wake-up input, relative to the get-up start
+        if (opt === 'backdash') i2 = (w >= 20 && w <= 21) || (w >= 25 && w <= 26) ? { left: 1 } : {};
+        else if (opt === 'jump') i2 = w >= 18 && w <= 34 ? { up: 1 } : {};
+        else if (opt === 'reversal') i2 = [{ right: 1 }, { right: 1 }, { down: 1 }, { down: 1 }, { down: 1, right: 1 }, { down: 1, right: 1, H: 1 }, { H: 1 }][w - 17] || {};
+        else if (opt === 'block') i2 = w >= 10 ? { left: 1 } : {};
+      }
+      m.update(i1, i2);
+      if (A.mv && A.mv.id === 'callHit' && A.moveInst !== lastInst) { lastInst = A.moveInst; grabs++; }
+      if (g0 >= 0 && t > g0 + 70) break;
+    }
+    return { grabs, g0 };
+  };
+}
+
 const browser = await chromium.launch();
 const page = await browser.newPage();
 await page.goto('file://' + root + '/dev/fight-sandbox.html?manual=1' + (real ? '' : '&stubs=all'));
@@ -105,6 +141,18 @@ for (const ch in COMBOS) for (const c of COMBOS[ch]) {
     if (!ok) fail++;
     if (r.log && !ok) console.log(r.log);
     console.log((ok ? 'OK  ' : 'FAIL') + ' ' + ch.padEnd(8) + ' ' + c.name.padEnd(44) + (vs ? ' vs ' + vs.padEnd(8) : '') + ' hits ' + r.hits + '/' + c.hits + '  dmg ' + r.dmg);
+  }
+}
+if (!process.argv.includes('--no-oki')) {
+  await page.evaluate(okiPage);
+  for (const vs of ['claude', 'deepseek']) for (const opt of ['none', 'block', 'backdash', 'jump', 'reversal']) {
+    const res = [];
+    for (let k = -6; k <= 14; k += 2) res.push((await page.evaluate(([vs, o, k]) => window.OKI(vs, o, k), [vs, opt, k])).grabs);
+    const caught = res.filter(g => g >= 2).length, first = res.every(g => g >= 1);
+    const escape = opt === 'backdash' || opt === 'jump' || opt === 'reversal';
+    const ok = first && (escape ? caught === 0 : caught > 0);
+    if (!ok) fail++;
+    console.log((ok ? 'OK  ' : 'FAIL') + ' oki gpt call -> meaty call vs ' + vs.padEnd(8) + ' wake-up ' + opt.padEnd(9) + ' re-grabbed at ' + caught + '/' + res.length + ' timings (k = -6..14)');
   }
 }
 await browser.close();
