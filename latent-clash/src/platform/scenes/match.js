@@ -165,6 +165,7 @@
         for (var y = 0; y < H; y += 4) { ui.box(c, ((y >> 2) & 1) * 2, y, 2, 2, U.bg2); ui.box(c, W - 2 - ((y >> 2) & 1) * 2, y, 2, 2, U.bg2); }
         if (!confirmQuit) items[items.length - 1].label = cfg.mode === 'arcade' ? '放弃挑战' : '退出对局';
         if (view === 'moves') {
+          if (ui.rosterTabs) ui.rosterTabs(c, movesChar, W >> 1, 6);
           ui.drawMoveList(c, movesChar, 20, 24, W - 40, H - 44, scroll, t);
           ui.hints(c, [['←→', '切换角色'], ['↑↓', '滚动'], ['M', '返回']], { y: H - 14 });
           return;

@@ -16,6 +16,24 @@
     return w;
   };
 
+  // One tab per fighter (pause move list): same label style as the how-to tabs, centred on cx.
+  ui.rosterTabs = function (c, sel, cx, y, maxW) {
+    var names = LC.CHARS.map(function (ch) { return ((LORE.chars[ch] || {}).nameZh || ch).replace(/\s+/g, ''); });
+    var ws = names.map(function (n) { return LC.font.measure(n, { size: 10 }).w + 12; });
+    if (ws.reduce(function (a, b) { return a + b + 2; }, 0) > (maxW || W - 40)) {
+      names = names.map(function (n) { return n.replace(/娘$/, ''); });
+      ws = names.map(function (n) { return LC.font.measure(n, { size: 10 }).w + 12; });
+    }
+    var tot = ws.reduce(function (a, b) { return a + b + 2; }, -2), x = Math.round(cx - tot / 2);
+    names.forEach(function (n, i) {
+      var on = LC.CHARS[i] === sel, col = ui.charCol(LC.CHARS[i], 0);
+      ui.box(c, x, y, ws[i], 14, on ? U.bg2 : 'rgba(15,13,32,0.8)');
+      if (on) ui.box(c, x, y + 12, ws[i], 2, col.ui);
+      LC.font.draw(c, n, x + (ws[i] >> 1), y + 2, { size: 10, color: on ? U.text : U.dim, align: 'center' });
+      x += ws[i] + 2;
+    });
+  };
+
   // ---------------------------------------------------------------- move lists
   var listCache = {};
   function moveList(ch) {

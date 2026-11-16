@@ -392,7 +392,7 @@
       });
       // big bright burst
       S.osc(r, o, t + B, { w: 'sine', f: [[0, 150], [0.3, 55, 'e']], g: [[0, 0], [0.003, 1], [0.6, 0.0001, 'e']], v: 0.6, drive: 1.5 }, p);
-      S.noise(r, o, t + B, { c: 'white', hp: 1800, lp: 10000, g: S.ad(0.0005, 0.03), v: 0.6 });
+      S.noise(r, o, t + B, { c: 'white', hp: 1800, lp: 10000, g: S.ad(0.0005, 0.03), v: 0.35 });
       S.noise(r, o, t + B, { c: 'white', bp: 2500, q: 0.5, lp: 9000, g: [[0, 0], [0.003, 1], [0.25, 0.6], [0.7, 0.0001, 'e']], v: 0.5 }, p);
       S.noise(r, o, t + B, { c: 'brown', lp: 400, g: S.ad(0.005, 0.6), v: 0.5 }, p);
       var body = S.bus(r, o, 1, { lp: [[0, 6000], [0.7, 1500, 'e']], t: t + B });

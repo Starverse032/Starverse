@@ -19,7 +19,7 @@
     'deepseek.chain': 1.5, 'deepseek.diveKick': 1.3, 'deepseek.whale': 0.78,
     'gpt.breath': 0.6, 'gpt.rise': 1.12, 'gpt.call': 1.08, 'gpt.callSlam': 0.42, 'gpt.roar': 1.07, 'gpt.super': 0.97,
     'gemini.star': 1.15, 'gemini.starHit': 1.08, 'gemini.rise': 0.97, 'gemini.twin': 1.15, 'gemini.twinStrike': 1.3,
-    'gemini.blink': 1.0, 'gemini.super': 1.0
+    'gemini.blink': 1.6, 'gemini.super': 1.2
   };
   Object.keys(MIX).forEach(function (n) { if (K.SFX[n]) K.SFX[n].vol *= MIX[n]; });
   K.MIX = MIX;
