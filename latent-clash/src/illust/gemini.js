@@ -91,7 +91,7 @@
   };
   var MOUTHS = {
     sly: ['.....n', 'n...n.', '.nnn..'],
-    grin: ['nnnnnn', '.Wmmn.', '..nn..'],
+    grin: ['nnnnnn', 'nWmmmn', '.nmtn.', '..nn..'],
     pout: ['.nnn.', 'n...n']
   };
 
@@ -201,15 +201,17 @@
   // the light-twin: a translucent pink-violet copy peeking in behind her (win)
   function twin(P, dx, dy, sc) {
     var Q = K.painter(P.w, P.h); Q.ox = dx; Q.oy = dy; Q.s = sc || 1;
-    var m = Q.ell(53, 37, 25, 26).or(Q.ell(47, 42, 21, 23))
-      .or(Q.spoly([29, 28, 25, 16, 25, 6, 27, 1, 34, 4, 41, 8, 47, 13, 38, 16])).or(Q.spoly([62, 14, 68, 8, 75, 4, 81, 1, 84, 7, 83, 16, 80, 25, 72, 22]))
-      .or(Q.spoly([30, 40, 24, 60, 26, 80, 20, 100, 24, 132, 94, 132, 98, 100, 92, 80, 94, 60, 84, 36]));
+    var head = Q.ell(53, 37, 25, 26).or(Q.ell(47, 42, 21, 23));
+    var m = head.or(Q.spoly([29, 28, 25, 16, 25, 6, 27, 1, 34, 4, 41, 8, 47, 13, 38, 16])).or(Q.spoly([62, 14, 68, 8, 75, 4, 81, 1, 84, 7, 83, 16, 80, 25, 72, 22]))
+      .or(Q.spoly([30, 40, 22, 64, 26, 90, 18, 132, 96, 132, 90, 90, 92, 64, 82, 36]))
+      .or(Q.sr([51, 12, 51, 6, 48, 2, 44, 1, 42, 3, 43, 5], 4, 1.6));
     P.fill(m, S.a1);
-    for (var y = 0; y < P.h; y += 4) for (var x = (y & 4) ? 2 : 0; x < P.w; x += 4) if (m.has(x, y)) P.px(x, y, S.a0);
+    for (var y = 0; y < P.h; y += 3) for (var x = (y % 6) ? 1 : 0; x < P.w; x += 3) if (m.has(x, y)) P.px(x, y, S.a0);
     P.recol(m.band(-2, 2), [S.a1], S.a0);
     P.fill(m.edge(), S.a0);
-    // glinting eyes
-    [[44, 46], [66, 46]].forEach(function (e) { var x = Q.tx(e[0]), y = Q.ty(e[1]); P.px(x, y, S.W); P.px(x, y + 1, S.W); P.px(x + 1, y + 1, S.a0); P.px(x, y + 2, S.a0); });
+    // face: glinting eyes + a smug little smile in the darker accent
+    [[45, 46], [67, 46]].forEach(function (e) { var x = Q.tx(e[0]), y = Q.ty(e[1]); P.px(x, y - 1, S.a2); P.px(x, y, S.W); P.px(x, y + 1, S.W); P.px(x - 1, y + 1, S.a2); P.px(x + 1, y, S.a2); });
+    var mx = Q.tx(59), my = Q.ty(63); P.px(mx - 1, my, S.a2); P.px(mx, my + 1, S.a2); P.px(mx + 1, my + 1, S.a2); P.px(mx + 2, my, S.a2);
   }
 
   // ---------------------------------------------------------------- bust
@@ -351,7 +353,7 @@
     P.outer(S.ol);
 
     if (win) {
-      star4(P, 14, 16, 5); star4(P, 105, 50, 3); star4(P, 8, 40, 2); star4(P, 74, 4, 2);
+      star4(P, 101, 14, 5, { rot: 0.2 }); star4(P, 105, 50, 3); star4(P, 34, 2, 2); star4(P, 4, 6, 2); star4(P, 100, 32, 2);
     } else if (lose) {
       // drooping star + a little "?"
       star4(P, 98, 16, 5, { rot: 0.6, k: 0.36 });
@@ -537,7 +539,7 @@
 
   I.ART.gemini = {
     bust: function () { var P = K.painter(112, 128); drawBust(P, {}); return P; },
-    bustWin: function () { var P = K.painter(112, 128); twin(P, 68, 6, 0.62); var Q = K.painter(112, 128); drawBust(Q, { expr: 'win' }); P.blit(Q, 0, 0); return P; },
+    bustWin: function () { var P = K.painter(112, 128); twin(P, -16, 8, 0.56); var Q = K.painter(112, 128); drawBust(Q, { expr: 'win' }); P.blit(Q, 0, 0); return P; },
     bustLose: function () { var P = K.painter(112, 128); drawBust(P, { expr: 'lose' }); return P; },
     titleFrame: function (o) { var P = K.painter(112, 128); drawBust(P, o); return P; },
     cutin: function () { return I.cutin ? I.cutin('gemini') : K.painter(240, 72); },
