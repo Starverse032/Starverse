@@ -37,8 +37,8 @@
     return b;
   }
 
-  function bake() {
-    [0, 1].forEach(function (pal) {
+  function bake(pal) {
+    (function () {
       var g = G[pal], Au = g.Au, W0 = I.col('#ffffff'), dk = g.dkU, Su = g.Su;
       var m = silMask(W0), pts = [], edge = [];
       for (var y = 0; y < SH; y++) for (var x = 0; x < SW; x++) if (m.d[y * SW + x]) {
@@ -90,9 +90,9 @@
         if (k > 3) q.breakup(1 - (k - 3) * 0.17, k, 0);
         b.blit(q, 0, 0);
       });
-    });
+    })();
   }
-  I.onInit('gemini-specials', bake);
+  (I.gemBakers = I.gemBakers || []).push(['specials', bake]);
 
   // ---- K_GCONV: a sparkle flying from (a,b) to the target (d,e) with ease-out; p.c = mini size --------
   I.K_GCONV = I.kind('gemConv', {
@@ -108,6 +108,7 @@
   function silPt(g, edgeOnly) { var L = edgeOnly ? g.silEdge : g.silPts, i = I.RI(0, (L.length >> 1) - 1); return [L[i * 2], L[i * 2 + 1]]; }
 
   I.def('gemini.riseTrail', function (x, y, O) {
+    I.gemNeed(O.pal);
     var g = G[O.pal], f = O.facing, ph = I.tick * 0.55;
     for (var s = 0; s < 2; s++) {
       var a = ph + s * PI, ox = Math.round(Math.sin(a) * 9) * f, front = Math.cos(a) > 0, L = O.layer != null ? O.layer : front ? I.FRONT : I.BACK;
@@ -125,6 +126,7 @@
   }, { desc: 'Per call: one dot on each of two strands (cyan / pink) at +-9 px around the point, helix phase from the FX tick (the strand passing behind goes to the back layer); a small spinning star on each strand every 3rd call; twinkles. Dots drift down and shrink over 14f, so calls every frame draw two intertwined star trails spiralling up.', use: 'Every frame of starRise "rise" at weapon (claw tip), facing = hers. opts.layer forces one layer.' });
 
   I.def('gemini.twinSpawn', function (x, y, O) {
+    I.gemNeed(O.pal);
     var g = G[O.pal], f = O.facing, L = lay(O, I.FRONT), n = I.nOf(26, O);
     for (var i = 0; i < n; i++) {
       var tp = silPt(g, i & 1), a = I.R() * TAU, r = I.RR(30, 62);
@@ -136,6 +138,7 @@
   }, { desc: 'Twin appears: ~26 iridescent sparkles fly in from around her and land on points of her silhouette (t 0-15), the silhouette lights up (t 11: dotted outline, then a white flash, then the light fades from the feet up with dither while the rim stays, 12f), floor ring, twinkles on the rim; ~30f.', use: 'At the twin\'s ORIGIN (feet) on the frame the twin entity is created, facing = the twin\'s. Start drawing the twin puppet at ~t 12 (fade its alpha in over t 12-20) so the light silhouette dissolves into it.' });
 
   I.def('gemini.twinVanish', function (x, y, O) {
+    I.gemNeed(O.pal);
     var g = G[O.pal], f = O.facing, L = lay(O, I.FRONT), n = I.nOf(30, O);
     I.anim1(g.sil, x, y, f, L, 1, 0).f0 = 1;
     for (var i = 0; i < n; i++) {
@@ -147,6 +150,7 @@
   }, { desc: 'Twin bursts into stardust: its light silhouette flashes white and fades (11f) while ~30 dust motes and small spinning stars burst outward from points of the silhouette and drift up; twinkles; ~34f.', use: 'At the twin\'s ORIGIN on the frame it disappears (after twinStrike, or when Gemini is hit), facing = the twin\'s. Stop drawing the puppet on that frame.' });
 
   I.def('gemini.blinkOut', function (x, y, O) {
+    I.gemNeed(O.pal);
     var g = G[O.pal], L = lay(O, I.FRONT);
     I.anim1(g.blinkOut, x, y, O.facing, L, 1);
     for (var i = 0; i < I.nOf(8, O); i++) {
@@ -157,6 +161,7 @@
   }, { desc: 'She collapses into a point of light: a vertical lens of light her size squeezes to a point at chest height (5f), a faceted point star with glints (1f), then a ring expands (6f) and 8 small stars burst out; sparkles get sucked in during the collapse; ~22f.', use: 'At her ORIGIN (feet) on blinkOut startup f0, facing = hers (the point is at y - 50). Hide her sprite from vanish f0.' });
 
   I.def('gemini.blinkIn', function (x, y, O) {
+    I.gemNeed(O.pal);
     var g = G[O.pal], L = lay(O, I.FRONT);
     I.anim1(g.blinkIn, x, y, O.facing, L, 1);
     for (var i = 0; i < I.nOf(5, O); i++) {

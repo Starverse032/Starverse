@@ -105,8 +105,8 @@
     return I.anim(s, s, NROT, Math.floor(c), Math.floor(c), function (b, f) { I.gemStar(b, c, c, R, f * Q / NROT, pal, o); }, 1, true);
   }
 
-  function bake() {
-    [0, 1].forEach(function (pal) {
+  function bake(pal) {
+    (function () {
       colours(pal);
       var g = G[pal], Au = g.Au, dk = g.dkU;
       // particle stars: tiny (R 2.5, no outline), small (3.6), mid (5.2), big (7)
@@ -173,7 +173,7 @@
           }
         }
       });
-    });
+    })();
   }
   function qb(p, u) { var a = (1 - u) * (1 - u), b = 2 * u * (1 - u), c = u * u; return [a * p[0] + b * p[2] + c * p[4], a * p[1] + b * p[3] + c * p[5]]; }
   function strokeQ(b, p, w, col, u0, u1) {
@@ -181,7 +181,20 @@
     for (var i = 0; i <= n; i++) { var q = qb(p, u0 + (u1 - u0) * i / n); pts.push(q[0], q[1]); }
     b.stroke(pts, function (u) { var uu = u0 + (u1 - u0) * u; return w * Math.pow(Math.sin(Math.PI * uu), 0.7); }, col);
   }
-  I.onInit('gemini-shared', bake);
+  // Per-palette bakers of every gemini module run in order: palette 0 in init, palette 1 in idle time
+  // ~0.12 s after init (or synchronously on first use: I.gemNeed(1)).
+  var BK = I.gemBakers = I.gemBakers || [];
+  BK.unshift(['shared', bake]);
+  I.gemNeed = function (pal) {
+    var g = G[pal];
+    if (g.ready) return;
+    g.ready = true;
+    for (var i = 0; i < BK.length; i++) { try { BK[i][1](pal); } catch (err) { console.error('[fx] gemini bake failed: ' + BK[i][0], err); } }
+  };
+  I.onInit('gemini(pal0)', function () {
+    I.gemNeed(0);
+    if (typeof setTimeout === 'function') setTimeout(function () { I.gemNeed(1); }, 120); else I.gemNeed(1);
+  });
 
   /** Draw a baked particle star (size 0..3, rotation frame f) centred at screen x,y. */
   I.gemPS = function (ctx, pal, size, f, x, y) { I.drawAnim(ctx, G[pal].ps[size], ((f % NROT) + NROT) % NROT, x, y, 1); };
@@ -225,6 +238,7 @@
 
   // ---- spawn effects ----------------------------------------------------------------------------
   I.def('gemini.sparkles', function (x, y, O) {
+    I.gemNeed(O.pal);
     var L = lay(O, I.FRONT), pal = O.pal, n = I.nOf(8, O);
     for (var i = 0; i < n; i++) {
       var p = I.gemStarP(pal, x + I.RS() * 26, y + I.RS() * 32, i % 4 === 0 ? 2 : i % 2 ? 1 : 0, I.RS() * 0.25, -I.RR(0.15, 0.5), I.RI(40, 70), L, i < 3 ? i : I.RI(0, 30));
@@ -238,6 +252,7 @@
   }, { desc: 'Ambient: 8 small spinning iridescent four-pointed stars + twinkles + stardust motes drifting up around the point, each shrinking and flickering out; ~90f.', use: 'Free accent around Gemini: idle/intro/win, meter, the light-twin while it waits, landing of the double jump. Front layer (opts.layer to change).' });
 
   I.def('gemini.starCast', function (x, y, O) {
+    I.gemNeed(O.pal);
     var g = G[O.pal], f = O.facing, L = lay(O, I.FRONT);
     I.anim1(g.cast, x, y, 1, L, 1);
     for (var i = 0; i < I.nOf(6, O); i++) {
@@ -249,6 +264,7 @@
   }, { desc: 'Flick of sparkles at the hand: a faceted star pops with long glints (8f) and 6 tiny iridescent stars flick forward in a fan; ~22f.', use: 'At the muzzle (flicking hand) on the release frame of star / airStar (startup f0 also fine), facing = hers.' });
 
   I.def('gemini.starHit', function (x, y, O) {
+    I.gemNeed(O.pal);
     var g = G[O.pal], f = O.facing, L = lay(O, I.FRONT), n = I.nOf(10, O);
     I.anim1(g.hit, x, y, 1, L, 1);
     for (var i = 0; i < n; i++) {
@@ -261,6 +277,7 @@
   }, { desc: 'The star shatters: a big faceted star flash splits into its four arms flying apart (12f), 10 spinning iridescent facet shards, small stars, a pink ring; ~30f.', use: 'At the contact point when gemini.star hits (or is blocked), facing = the star\'s travel direction. H star (2 hits): spawn on each hit.' });
 
   I.def('gemini.clawHit', function (x, y, O) {
+    I.gemNeed(O.pal);
     var g = G[O.pal], f = O.facing, L = lay(O, I.FRONT);
     I.anim1(g.claw, x, y, f, L, 1);
     for (var i = 0; i < I.nOf(4, O); i++) I.gemStarP(O.pal, x + f * I.RR(6, 22), y + I.RS() * 18, I.RI(0, 1), f * I.RR(0.4, 1.4), -I.RR(0.3, 1), I.RI(14, 22), L, I.RI(2, 6)).drag = 0.9;
@@ -275,6 +292,7 @@
     use: 'Every frame for the live projectile at its centre: drawSprite(ctx,"gemini.star",sx,sy,t,{power, angle, facing, palette}); t = frames alive; angle = travel direction in radians on screen (default along facing; M star e.g. -0.35, airStar 0.785 / PI-0.785). Front layer [D].',
     info: { duration: 0, bbox: { x: -14, y: -14, w: 28, h: 28 }, sizes: { L: 20, M: 25, H: 32 }, boxes: { L: { x: -8, y: -8, w: 16, h: 16 }, M: { x: -10, y: -10, w: 20, h: 20 }, H: { x: -14, y: -14, w: 28, h: 28 } } },
     draw: function (ctx, sx, sy, t, o) {
+      I.gemNeed(o.pal);
       var g = G[o.pal], si = sizeOf(o.power), z = SZ[si], raw = o.raw;
       var ang = raw.angle != null ? +raw.angle : (o.facing > 0 ? 0 : PI), ux = Math.cos(ang), uy = Math.sin(ang);
       if (si === 2) {   // halo rings + 4 orbiting motes

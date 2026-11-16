@@ -23,8 +23,8 @@
   var LANE = { x: 0, y: GY - 124, w: W, h: 128 };
   function soft() { return LC.settings && LC.settings.flash === false; }
 
-  I.onInit('gemini-super', function () {
-    [0, 1].forEach(function (pal) {
+  (I.gemBakers = I.gemBakers || []).push(['super', function (pal) {
+    (function () {
       var g = G[pal];
       g.xstar = [18, 25].map(function (R) {
         var s = R * 2 + 5, c = s / 2;
@@ -33,8 +33,8 @@
       g.mcol = { trail: ['#ffffff', g.S[1], g.S[2], g.A[1], g.A[2], g.dk],
         trailH: [1, 2, 3].map(function (h) { return ['#ffffff', g.S[h], I.mix(g.S[h], g.A[1], 0.5), g.A[1], g.A[2], g.dk]; }), fine: [g.A[2], g.dk, I.mix(g.S[1], g.dk, 0.5)],
         beam: [g.dk, g.A[2], g.A[1], g.A[0], '#ffffff'], edge: [g.S[1], g.S[2]], burst: [g.A[3], g.A[2], g.S[2], g.S[1], g.A[0], '#ffffff'] };
-    });
-  });
+    })();
+  }]);
 
   // ---- meteors ------------------------------------------------------------------------------------
   function meteor(w, m) {      // deterministic per (wave, index)
@@ -219,6 +219,7 @@
 
   function draw(ctx, sx, sy, t, o) {
     if (t >= DUR) return;
+    I.gemNeed(o.pal);
     var g = G[o.pal], pal = o.pal, raw = o.raw, f = o.facing, part = raw.part, sf = soft(), a0 = ctx.globalAlpha;
     var ax = raw.ax != null ? Math.round(+raw.ax) : (f > 0 ? 70 : W - 70), ay = raw.ay != null ? Math.round(+raw.ay) : GY - 74;
     var bx = raw.bx != null ? Math.round(+raw.bx) : W - ax, by = raw.by != null ? Math.round(+raw.by) : ay;

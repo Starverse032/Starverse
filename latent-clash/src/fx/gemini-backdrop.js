@@ -97,7 +97,7 @@
     B.aur = I.toCanvas(ab);
     B.bdCols = { line: [mixc(L[3], N[2], 0.6), L[1], '#ffffff'], edge: ['#ffffff', S[2], L[2]], tw: [S[1], S[2], S[3], '#ffffff'] };
   }
-  I.onInit('gemini-backdrop', function () { bake(0); bake(1); });
+  (I.gemBakers = I.gemBakers || []).push(['backdrop', bake]);
 
   /** Constellation: segment progress at t, glow + core line, a bright head on drawing segments; stars. */
   function drawConst(ctx, sx, sy, t, pal, bright) {
@@ -170,6 +170,7 @@
     info: prev.info,
     draw: function (ctx, sx, sy, t, o) {
       if (o.char !== 'gemini') { prev.draw(ctx, sx, sy, t, o); return; }
+      I.gemNeed(o.pal);
       var out = o.phase === 'out', f = o.facing;
       if (out && t >= 8) return;
       var k = out ? 1 - (t + 1) / 9 : Math.min(1, (t + 1) / 8), tt = out ? 200 + t : t, clip = k < 1, r;
