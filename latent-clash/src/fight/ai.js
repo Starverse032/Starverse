@@ -29,7 +29,7 @@
   var PROF = {
     claude:   { dp: 'sonnet',     want: D(92), jr: [D(70), D(130)], dashW: 0.8,  superR: D(200) },
     deepseek: { dp: 'breach',     want: D(60), jr: [D(70), D(150)], dashW: 0.9,  superR: D(120) },
-    gpt:      { dp: 'dragonRise', want: 80,    jr: [D(70), D(125)], dashW: 0.55, superR: 0 }
+    gpt:      { dp: 'dragonRise', want: 80,    jr: [D(70), D(125)], dashW: 0.55, superR: 0, wantVs: { deepseek: 96 } }
   };
   function prof(ch) { return PROF[ch] || PROF.claude; }
   F.AI_PROF = PROF;
@@ -270,7 +270,7 @@
 
   // default between decisions: drift toward a preferred range, guard if the opponent looks active
   AI.prototype.hold = function (me, o, dx) {
-    var want = prof(me.ch).want;
+    var PFh = prof(me.ch), want = (PFh.wantVs && PFh.wantVs[o.ch]) || PFh.want;
     if (this.m.timer < 1800 && this.behind()) want -= D(30);
     var out = {};
     var tow = o.x > me.x ? 'right' : 'left', away = o.x > me.x ? 'left' : 'right';
