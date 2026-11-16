@@ -36,7 +36,10 @@
     // V2: x* = extra ramp (Claude `book`, DeepSeek `fin`), u* = DeepSeek `under` (Claude: cloth1)
     'x0', 'x1', 'x2', 'x3', 'xl', 'u0', 'u1', 'u2', 'u3', 'ul', 'eK', 'xP',
     // V2.5 (GPT): x* = `scale`, u* = `wing`, z* = `blob` (others: cloth2 / cloth1 / accent)
-    'z0', 'z1', 'z2', 'z3', 'zl'];
+    'z0', 'z1', 'z2', 'z3', 'zl',
+    // V2.6 (Gemini): g* = `eye2` (second eye colour, gK = its dark rim), q* = `star` facet hues
+    // (white, cyan, pink, yellow — not a ramp). Gemini also maps x* = `hair2`, u* = `lining`, z* = `ear`.
+    'g0', 'g1', 'g2', 'g3', 'gK', 'q0', 'q1', 'q2', 'q3'];
   var S = K.S = {};
   SLOT_NAMES.forEach(function (n, i) { S[n] = i + 1; });
   K.NSLOT = SLOT_NAMES.length + 1;
@@ -70,7 +73,10 @@
     c.K = mix(ol, '#000000', 0.3);
     c.gl0 = mix(p.accent[0], '#ffffff', 0.5); c.gl1 = p.accent[1];
     c.sk1 = mix(p.skin[1], p.skin[2], 0.5);
-    var xr = p.book || p.fin || p.scale || p.cloth2, ur = p.under || p.wing || p.cloth1, zr = p.blob || p.accent;
+    var xr = p.book || p.fin || p.scale || p.hair2 || p.cloth2, ur = p.under || p.wing || p.lining || p.cloth1, zr = p.blob || p.ear || p.accent;
+    var gr = p.eye2 || p.eye, qr = p.star || ['#ffffff', p.accent[0], p.accent[1], p.metal[0]];
+    for (var g = 0; g < 4; g++) { c['g' + g] = gr[g]; c['q' + g] = qr[g]; }
+    c.gK = mix(gr[3], ol, 0.5);
     for (var j = 0; j < 4; j++) { c['x' + j] = xr[j]; c['u' + j] = ur[j]; }
     for (var q = 0; q < 4; q++) c['z' + q] = zr[q];
     c.xl = mix(xr[3], ol, 0.5); c.ul = mix(ur[3], ol, 0.5); c.zl = mix(zr[3], ol, 0.5);

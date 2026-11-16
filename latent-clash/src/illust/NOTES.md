@@ -1,7 +1,11 @@
 # ILLUST — notes
 
 ## Gemini progress / next steps (V2.6 fourth fighter — truthful, current)
-- STARTED: reading docs/reference. Nothing written yet in code.
+- core.js: slots appended (old indices unchanged): `g0..g3,gK` = `eye2`, `q0..q3` = `star` hues;
+  for gemini `x*` = `hair2`, `u*` = `lining`, `z*` = `ear` (fallback chains; other chars unchanged).
+- tools/illust-hash.mjs: `save` / `check` pixel hashes of the other chars' portraits, icons, banners,
+  logo, title (baseline in `.shots/illust/hash-baseline.json`).
+- IN PROGRESS: gemini.js (bust first).
 
 ## GPT progress / next steps (V2.5 third fighter — truthful, current)
 DONE (zero console errors; init ≈ 430 ms with three chars; Claude/DeepSeek art, emblems, logo, banners
