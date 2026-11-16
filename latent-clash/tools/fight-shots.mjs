@@ -93,7 +93,7 @@ for (const w of [1, 8, 20, 30, 37, 41, 46, 60]) add(`gpt-call-${w}`, G(), [st(80
 add('gpt-call-whiff', G(), [st(60, 6), ...mot('214', 'M'), ...W(8)]);
 for (const [n, w] of [['L', 2], ['M', 2], ['H', 2], ['H', 12]]) add(`gpt-roar${n}-${w}`, G(), [st(84, 6), ...mot('252', n), ...W(9 + w)]);
 add('gpt-roar-vs-spark', { mode: 'versus', stage: 'training', seed: 5, intro: false, p1: { char: 'gpt' }, p2: { char: 'claude', control: 'human' }, pre: { fight: true, p2steps: [[2, { down: 1 }], [2, { down: 1, left: 1 }], [2, { left: 1, H: 1 }], [1, {}]] }, training: { hitboxes: !!args.boxes } },
-  [st(26, 5), ...mot('252', 'H'), ...W(12)]);
+  [st(8, 5), ...mot('252', 'H'), ...W(13)]);
 for (const w of [18, 24, 32, 38, 42, 52, 56, 64, 80, 96]) add(`gpt-super-${w}`, V('gpt', 'claude'), [...nearC.gpt, st(2, 5, 'HS'), ...W(w)]);
 add('gpt-superko', V('gpt', 'claude', { hp2: 150 }), [...nearC.gpt, st(2, 5, 'HS'), ...W(90)], 'ko12');
 add('gpt-superko-60', V('gpt', 'claude', { hp2: 150 }), [...nearC.gpt, st(2, 5, 'HS'), ...W(90)], 'ko60');
