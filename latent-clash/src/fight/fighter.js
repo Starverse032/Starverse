@@ -51,6 +51,7 @@
     this.tag = null; this.tagT = 0;
     this.anim = 'idle'; this.pseg = 'loop'; this.pu = 0;
     this.lastHitKind = null; this.recoverTick = -1; this.hidden = false;
+    this.hardKD = false; this.attnX = null; this.attnY = null; this.flameAt = null;
     this.inp.reset();
   };
 
@@ -246,6 +247,23 @@
     }
     if (mv.id === 'dive') F.diveSeg(this.m, this, sg.id);
     if (mv.riseFx && sg.id === 'rise') F.fx(mv.riseFx, this.x, GY, { facing: this.facing, palette: this.pal, power: this.str === 'H' ? 1 : this.str === 'L' ? 0.6 : 0.8 });
+    var pw = this.str === 'H' ? 1 : this.str === 'L' ? 0 : 0.5;
+    if (mv.startFx && sg.idx === 0) {   // e.g. gpt.breathCast at the mouth on startup f0
+      var sp = this.anchor('muzzle');
+      F.fx(mv.startFx, this.x + sp.x * this.facing, this.y + sp.y, { facing: this.facing, palette: this.pal, power: pw, 'char': this.ch });
+    }
+    if (sg.id === 'active') {
+      if (mv.activeSfx) F.sfx(mv.activeSfx, { pan: F.pan(this.x, this.m.camX) });
+      if (mv.activeFx && mv.roar) {   // gpt.roarRing at the shock-wave centre, power 0 / .5 / 1 = radius 56 / 70 / 84
+        var rc = F.roarCircle(this);
+        F.fx(mv.activeFx, rc.x, rc.y, { facing: this.facing, palette: this.pal, power: pw, 'char': this.ch });
+        this.m.addShake(2, 10);
+      }
+    }
+    if (sg.id === 'cast' && mv.kind === 'super') {
+      if (mv.castSfx) F.sfx(mv.castSfx, { pan: F.pan(this.x, this.m.camX) });
+      if (mv.attn) F.attnLatch(this.m, this, this.m.opp(this));
+    }
     if (sg.id === 'bounce') { this.vy = -3.8; this.vx = -1.8 * this.facing; this.air = true; }
   };
 
@@ -319,7 +337,9 @@
       F.fx('claude.pages', this.x + bp.x * this.facing, this.y + bp.y, { facing: this.facing, palette: this.pal, power: 1 });
     }
     if (mv.kind === 'throw' && sg.id === mv.grabSeg) F.tryGrab(this.m, this, o);
+    if (mv.cmdGrab && sg.id === mv.cmdGrab.seg && F.tryCmdGrab(this.m, this, o)) return;
     if (mv.id === 'throwHit') F.throwStep(this.m, this, o);
+    if (mv.grabDmg) F.callStep(this.m, this, o);
     if (this.mv && this.mv.kind === 'super') this.trail = Math.max(this.trail, 4);
   };
 
@@ -453,8 +473,8 @@
         break;
       case 'down':
         if (this.ko) break;
-        if (this.af <= 10 && this.inp.pressed && !this.quick) { this.quick = true; this.lie = T.QUICK_LIE; }
-        if (this.af >= 10 + this.lie) { this.setActionRaw('getup'); this.invAll = T.GETUP + 1; }
+        if (this.af <= 10 && this.inp.pressed && !this.quick && !this.hardKD) { this.quick = true; this.lie = T.QUICK_LIE; }
+        if (this.af >= 10 + this.lie) { this.setActionRaw('getup'); this.invAll = T.GETUP + 1; this.hardKD = false; }
         break;
       case 'getup':
         if (this.af >= T.GETUP) { this.invThrow = T.WAKE_THROW_INV; this.invAll = 0; this.recover(o); }
