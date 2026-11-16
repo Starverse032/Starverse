@@ -236,8 +236,8 @@
     // opponent knocked down: approach or set up
     if (o.action === 'down' || o.action === 'getup') {
       if (dx > D(90)) { if (C === 'claude' && me.proj === 0 && this.chance(0.04)) { this.push(this.special('spark', 'L'), 'oki'); return this.emit(); } return { right: o.x > me.x, left: o.x < me.x }; }
-      if (C === 'gpt' && o.action === 'getup' && dx < 62 && o.af >= T.GETUP - 7 && this.okiRolled !== o.recoverTick + ':' + this.m.round + ':' + o.af0) {
-        this.okiRolled = o.recoverTick + ':' + this.m.round + ':' + o.af0;
+      if (C === 'gpt' && o.action === 'getup' && dx < 62 && o.af >= T.GETUP - 7 && this.okiRolled !== this.m.round + ':' + (this.m.tick - o.af)) {
+        this.okiRolled = this.m.round + ':' + (this.m.tick - o.af);
         var ok = this.rng.next();   // meaty mix-up: command grab / low / tail lash / wait
         if (ok < 0.42 * (P.gOki != null ? P.gOki : 1)) { this.push([{ d: 5, n: 1 }].concat(this.special('call', 'M')), 'okiCall'); return this.emit(); }
         if (ok < 0.62) { this.push([{ d: 2, n: 4 }].concat(this.press('M', 2)), 'okiLow'); return this.emit(); }
@@ -316,27 +316,37 @@
     add('walkF', 0.6 + ag * 0.6, [{ d: 6, n: 10 + this.rng.int(20) }]);
     add('walkB', dx < D(120) ? 0.35 : 0.1, [{ d: 4, n: 8 + this.rng.int(14) }]);
     add('wait', 0.25 * (1 - ag), [{ d: dx < D(80) ? 1 : 4, n: 8 + this.rng.int(12) }]);
-    if (dx > D(70)) add('dashF', 0.25 + ag * 0.4 * (C === 'deepseek' ? 0.9 : 0.8), [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 1 }]);
+    var PF = prof(C), vsG = o.ch === 'gpt' && C !== 'gpt';
+    if (dx > D(70)) add('dashF', 0.25 + ag * 0.4 * PF.dashW, [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 1 }]);
     if (dx < D(70) && me.x > T.WALL + 60 && me.x < LC.STAGE_W - T.WALL - 60) add('dashB', 0.15, [{ d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }]);
-    var jr = C === 'claude' ? [D(70), D(130)] : [D(70), D(150)];
+    var jr = PF.jr;
     if (dx > jr[0] && dx < jr[1]) add('jumpIn', P.jump * 4 * (0.6 + ag) * (C === 'claude' ? P.cJump : 1), [{ d: 9, n: 3 }]);   // V2: DeepSeek's breach box anti-airs Claude's jump-ins well
     if (dx < D(70)) add('jumpN', P.jump * (C === 'claude' ? P.cJump / 0.55 : 1), [{ d: 8, n: 3 }]);
     // pokes at range
     if (dx <= r('5L')) { add('5L', 0.7, this.press('L')); add('2L', 0.7, this.press('L', 2)); }
     if (dx <= r('5M') && dx > r('5L') - 10) add('5M', 0.8, this.press('M'));
     if (dx <= r('2M') && dx > r('2L') - 10) add('2M', 0.8, this.press('M', 2));
-    if (dx <= r('5H') && dx > r('5M') - 8) add('5H', 0.35, this.press('H'));
-    if (dx <= r('2H') && dx > r('2M') - 8) add('2H', 0.3, this.press('H', 3));
+    var gT = C === 'gpt' ? (P.gTail != null ? P.gTail : 1.8) : 1;   // GPT: patient spacing with the long tail
+    if (dx <= r('5H') && dx > r('5M') - 8) add('5H', 0.35 * gT, this.press('H'));
+    if (dx <= r('2H') && dx > r('2M') - 8) add('2H', 0.3 * gT, this.press('H', 3));
     if (dx < me.C.throwRange - 2 && o.action !== 'blockstun') add('throw', (0.55 + ag * 0.3) * (C === 'claude' && P.cThrow != null ? P.cThrow : 1), [{ d: this.chance(0.3) ? 4 : 6, b: 'LM', n: 2 }, { d: 5, n: 1 }]);
     if (P.mash > 0 && dx < D(80)) add('mash', P.mash * 2 * (C === 'claude' && P.cMash != null ? P.cMash : 1), this.press(this.pick(['L', 'M', 'H', 'S']), this.pick([5, 2, 6])));
-    if (full && dx < (C === 'claude' ? D(200) : D(120)) && this.chance(P.sup * 0.15)) add('superRaw', 0.8, this.special('super', 'H'));
+    if (full && dx < PF.superR && this.chance(P.sup * 0.15)) add('superRaw', 0.8, this.special('super', 'H'));
+    var pk = vsG && dx < 150 ? 0.25 : 1;   // vs GPT: no projectiles into a point-blank roar
     if (C === 'claude') {
-      if (me.proj === 0 && dx > D(120)) add('spark', (0.9 + (dx > D(200) ? 0.8 : 0)) * P.cSpark, this.special('spark', dx > D(220) ? 'L' : this.pick(['M', 'H'])));
-      if (me.proj === 0 && dx > D(70) && dx <= D(120)) add('spark', 0.35, this.special('spark', 'H'));
+      if (me.proj === 0 && dx > D(120)) add('spark', (0.9 + (dx > D(200) ? 0.8 : 0)) * P.cSpark * pk, this.special('spark', dx > D(220) ? 'L' : this.pick(['M', 'H'])));
+      if (me.proj === 0 && dx > D(70) && dx <= D(120)) add('spark', 0.35 * pk, this.special('spark', 'H'));
       if (dx < D(80) && dx > D(30)) add('haiku', P.cHaiku, this.special('haiku', this.pick(['L', 'M'])));   // unsafe raw; mostly a combo ender
       if (dx < D(70) && this.level >= 3) add('guardrail', P.cGuard + (o.action === 'attack' ? 0.1 : 0), this.special('guardrail', this.pick(['L', 'M'])));
+    } else if (C === 'gpt') {
+      var og = this.oppGuard, gC = P.gCall != null ? P.gCall : 1, gB = P.gBreath != null ? P.gBreath : 1;
+      if (dx > 62 && dx < 145) add('breath', (0.45 + (dx > 95 ? 0.25 : 0)) * gB, this.special('breath', dx < 95 ? 'L' : dx < 120 ? 'M' : 'H'));
+      if (dx < 57 && o.action !== 'blockstun' && o.action !== 'hitstun' && !o.air) add('call', (0.22 + og * 1.6) * gC, this.special('call', dx < 52 ? this.pick(['M', 'H']) : 'H'));
+      if (dx > 57 && dx < 90 && og > 0.25) add('walkCall', og * 0.8 * gC, [{ d: 6, n: Math.round((dx - 50) / 1.4) }].concat(this.special('call', 'M')));
+      if (dx < 66 && o.action === 'attack') add('roar', 0.12 * (P.gRoar || 1), this.special('roar', 'M'));
+      if (dx > 120 && dx < 260) add('wait', 0.3, [{ d: 4, n: 6 + this.rng.int(10) }]);
     } else {
-      if (me.proj === 0 && dx > D(110)) add('wave', 0.7 + (dx > D(200) ? 0.4 : 0), this.special('wave', dx > D(200) ? 'H' : 'M'));
+      if (me.proj === 0 && dx > D(110)) add('wave', (0.7 + (dx > D(200) ? 0.4 : 0)) * pk, this.special('wave', dx > D(200) ? 'H' : 'M'));
       if (dx > D(50) && dx < D(110)) add('chain', (0.5 + ag * 0.25) * (P.dChain || 1), this.special('chain', dx > D(90) ? 'H' : 'M'));
       if (dx > D(90) && dx < D(240) && this.level >= 2) add('diveM', 0.07 + ag * 0.05, this.special('dive', 'M'));
       if (dx > D(60) && dx < D(200) && this.level >= 3) add('diveH', 0.07 + ag * 0.05, this.special('dive', 'H'));
@@ -361,6 +371,9 @@
     var toward = F.sign(o.x - me.x) === me.facing;
     if (this.jumpAtk === 'jumpKick' && me.ch === 'deepseek' && me.vy > -2 && h > D(30) && dx < D(150) && toward) {
       this.jumpAtk = false; this.push(this.special('diveKick', dx > D(100) ? 'H' : dx > D(60) ? 'M' : 'L'), 'diveKick'); return this.emit();
+    }
+    if (me.ch === 'gpt' && this.jumpAtk && me.vy > -1.5 && h > 44 && dx > 40 && dx < 120 && toward && !o.air && this.chance(0.12 * (this.P.gAir != null ? this.P.gAir : 1))) {
+      this.jumpAtk = false; this.push(this.special('airBreath', dx > 90 ? 'H' : dx > 65 ? 'M' : 'L'), 'airBreath'); return this.emit();
     }
     if (me.ch === 'claude' && this.jumpAtk && me.vy > -1 && h > D(30) && dx > D(110) && me.proj === 0 && this.chance(0.05)) {
       this.jumpAtk = false; this.push(this.special('airSpark', 'M'), 'airSpark'); return this.emit();
@@ -389,6 +402,11 @@
       if (P.depth <= 0 && !this.chance(0.3)) return {};
       var next = null;
       var stepOK = this.comboStep < P.depth + 1;
+      if (blk && C === 'gpt' && mv.rank === 1 && dx < 60 && this.chance(0.4 * (P.gCall != null ? P.gCall : 1))) {   // tick into the command grab
+        var rem = me.res.total - me.mf - 1;
+        this.q.length = 0; this.push([{ d: 5, n: Math.max(1, rem - 4) }].concat(this.special('call', 'M')), 'tickCall');
+        return {};
+      }
       if (blk && this.chance(0.5)) {
         if (mv.rank < 2 && this.chance(0.5)) next = this.press('M', mv.stance === 'crouch' ? 2 : 5);
         else if (C === 'claude' && me.proj === 0 && this.chance(0.4)) next = this.special('spark', 'M');
@@ -415,6 +433,7 @@
     var C = me.ch;
     if (full && this.P.depth >= 3 && this.chance(this.P.sup * 0.5)) return this.special('super', 'H');
     if (C === 'claude') return dx < D(70) ? this.special('haiku', this.level >= 4 ? 'H' : 'M') : (me.proj === 0 ? this.special('spark', 'H') : null);
+    if (C === 'gpt') return dx < 60 && this.chance(0.45) ? this.special('dragonRise', 'H') : (dx < 130 ? this.special('breath', dx < 90 ? 'M' : 'H') : null);
     return dx < D(80) ? (this.chance(0.7) ? this.special('chain', 'H') : this.special('breach', 'H')) : (me.proj === 0 ? this.special('wave', 'H') : null);
   };
 
@@ -428,8 +447,11 @@
     this.wakePlanned = true;
     var close = dx < D(70), oAtk = o.action === 'attack';
     var r = this.rng.next();
-    if (close && r < 0.08 + this.level * 0.03) { this.push(this.special(me.ch === 'claude' ? 'sonnet' : 'breach', 'H'), 'reversal'); return this.emit(); }
-    if (close && r < 0.18 + this.level * 0.03) { this.push([{ d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }], 'wakeBack'); return this.emit(); }
+    var vsG = o.ch === 'gpt' && me.ch !== 'gpt' && dx < 72 ? (this.P.vsWake != null ? this.P.vsWake : 0.1) : 0;   // her meaty command grab
+    if (close && r < 0.08 + this.level * 0.03) { this.push(this.special(prof(me.ch).dp, 'H'), 'reversal'); return this.emit(); }
+    if (me.ch === 'gpt' && close && !oAtk && r < 0.16 + this.level * 0.02) { this.push(this.special('roar', 'H'), 'wakeRoar'); return this.emit(); }
+    if (close && r < 0.18 + this.level * 0.03 + vsG) { this.push([{ d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }], 'wakeBack'); return this.emit(); }
+    if (vsG && r < 0.18 + this.level * 0.03 + 2 * vsG) { this.push([{ d: 7, n: 3 }], 'wakeJump'); return this.emit(); }
     if (close && !oAtk && r < 0.3) { this.push([{ d: 6, b: 'LM', n: 2 }, { d: 5, n: 1 }], 'wakeThrow'); return this.emit(); }
     this.guardT = 16; this.guardLow = this.chance(0.6);
     return this.holdGuard(me, o, null);
