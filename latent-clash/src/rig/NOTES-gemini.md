@@ -28,7 +28,7 @@ four gemini files exist), `anims/placeholders.js` (her segment table + aliases).
   sway, paw-lick loop), lose (ears flat, head hung, tail limp, sniffle loop).
 - ALL 44 required anims authored (no placeholders; segment-table check passes, no console errors).
 - Other fighters unchanged: claude/deepseek/gpt anchor hashes + render counts identical before/after (`--perf`).
-- Perf: `--perf` gemini_drawMs ≈ 1.06 (worst case, re-render every frame; claude 1.05, gpt 1.02 in the same run).
+- Perf: `--perf` gemini_drawMs ≈ 1.06–1.26 (worst case, re-render every frame; claude 1.05–1.14, gpt 1.02–1.24 across runs); anchors ≈ 6–7 µs, no canvas.
 - Second review round done on 5H/2H/jH (tail moved behind the kicking leg) and dashF (hair streams back, hd 50).
 - NEXT (polish, if budget): hair is heavy/dark in the mid-back; front sleeve reads as a block when the paw is high;
   tail overlaps the hair ends in the stance; throwHit/airJump flip frames whip the hair (acceptable at speed);
@@ -43,7 +43,7 @@ four gemini files exist), `anims/placeholders.js` (her segment table + aliases).
   (≈38,-80) from active+44 for the X beams). `grab` in throwHit (see above).
 - Mirrored drawings (`flip`): 5H startup+6 … recovery+5, 2H startup+6 … recovery, jH startup+7 … active, starRise
   rise+2 / rise+6 (corkscrew), super cast+4, win in+12. Anchors are already in screen space for those frames
-  (starRise's weapon stays over her head: x ≈ +8…+18 on all rise drawings).
+  (starRise's weapon stays over her head: x ≈ +6…+18 on all rise drawings).
 - Below the floor: grounded drawings are clipped 2 px under the origin; `air: true` poses (jump set, airJump, dashes,
   launch, starRise rise, blinkOut ball, throwHit hop, thrown, intro drop) are not clipped.
 - Extents (drawn pixels, all anims): x -72 … +73, y down to -128 (throwHit hop) / -170 (intro drop-in from 40 px up).
