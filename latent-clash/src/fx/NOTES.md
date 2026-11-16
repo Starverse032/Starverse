@@ -1,9 +1,9 @@
 # FX — `LC.fx` notes
 
 ## Status (truthful)
-- All CONTRACT §5.4 names exist and render, plus the V2 additions below: 40 spawn effects and 15 sprites.
-  An automated check (every effect × palette × facing × char, every sprite × phase) gives zero console
-  errors.
+- All CONTRACT §5.4 names exist and render, plus the V2 additions and GPT 娘's set: 46 spawn effects and
+  17 sprites. `node tools/fx-check.mjs` (every effect × char none/claude/deepseek/gpt × palette × facing ×
+  settings.flash, every sprite × phase × t; ~78k calls) gives zero console errors.
 - V2 (CONTRACT-V2 §V2.4) work is listed in "V2 progress" below. The integration guide for FIGHT is at the end.
 - Perf (headless Chromium, software 2D): the particle stress test (~360 live) has a `draw` median of
   0.3 ms and a p90 of 0.5–0.6 ms. Full super compositions (backdrop + beam + book, or backdrop + whale
@@ -21,8 +21,12 @@ sonnetTrail/beamHit/pages/shards · `claude-sprites.js` (only `I.mirrored` now) 
 beam v2 + book v2 · `deepseek.js` crowns/bubbles/waveCast/waveHit/breachTrail/poolIn/whaleSplash ·
 `deepseek-sprites.js` pool (+ v1 wave bake, unused) · **`whale.js`** whale v2 + tidal · **`screen.js`**
 full-screen overlays · **`backdrop.js`** superBackdrop · **`specials.js`** V2 specials · **`hits.js`**
-V2 hits/blocks/KO. A later file overrides an earlier definition with the same name.
-Tools: `dev/fx-viewer.html` (+`fx-viewer.js`), `tools/fx-sheet.mjs`.
+V2 hits/blocks/KO · **`gpt.js`** GPT colour sets, scale sprites, K_SCALE, `gpt.scales` · **`gpt-super.js`**
+`gpt.attention` · **`gpt-backdrop.js`** gpt branch of `screen.superBackdrop` (wraps the previous definition)
+· **`gpt-breath.js`** `gpt.breath` · **`gpt-specials.js`** clawHit/breathCast/riseTrail/callSlam/roarRing.
+A later file overrides an earlier definition with the same name.
+Tools: `dev/fx-viewer.html` (+`fx-viewer.js`), `tools/fx-sheet.mjs`, `tools/fx-check.mjs` (smoke check),
+`tools/fx-gpt-comp.mjs` (gpt super composition strip with fighter dummies, `--frames --tx --ty --facing --palette`).
 
 ## How it works
 - Every frame of every effect is drawn once in `init()` by code into a `Buf` (exact pixel-centre
@@ -44,8 +48,9 @@ Spawn (40): `hit.light/medium/heavy/special/counter`, `block.light/heavy`, `dust
 `ring`, `ring.ground`, `sparkle`, `throw.tech/slam`, `ko.burst`, `meter.full`, `super.charge`,
 `claude.sparkCast/sparkHit/sonnetTrail/beamHit/pages/haikuSlash/guardCatch/`**`sonnetPillar`**,
 `deepseek.waveCast/waveHit/breachTrail/poolIn/whaleSplash/bubbles/splash/chainHit/diveTrail/poolOut`,
-**`deepseek.breachCrescent`**, **`deepseek.geyser`** (poolOut = alias).
-Sprites (15): `claude.beam`, `claude.book`, `claude.guardrail`, `claude.spark`, `deepseek.wave`,
+**`deepseek.breachCrescent`**, **`deepseek.geyser`** (poolOut = alias),
+**`gpt.scales/clawHit/breathCast/riseTrail/callSlam/roarRing`**.
+Sprites (17): **`gpt.attention`**, **`gpt.breath`**, `claude.beam`, `claude.book`, `claude.guardrail`, `claude.spark`, `deepseek.wave`,
 `deepseek.pool`, `deepseek.whale`, **`deepseek.tidal`**, `screen.superBg`, `screen.speedLines`,
 `screen.koFlash`, **`screen.superBackdrop`**, **`screen.superFinish`**, **`screen.koBackdrop`**,
 **`screen.impact`**. Bold = new in V2. Upgraded in V2: beam, book, whale, guardrail, guardCatch, spark,

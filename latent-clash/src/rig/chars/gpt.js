@@ -122,7 +122,7 @@
     { id: 'hemB', n: 2, len: [26, 26], rest: [104, 97], stiff: [0.4, 0.34], damp: 0.8, grav: 0.2, drag: 0.32, limit: limB },
     { id: 'tas', n: 2, len: [5, 5], rest: [90, 90], stiff: 0.25, damp: 0.8, grav: 0.25, drag: 0.3 },
     { id: 'wing', n: 1, len: [6], rest: [-90], stiff: 0.3, damp: 0.8, grav: 0, drag: 0.3, slack: 1, hys: 0.6 },
-    { id: 'blob', n: 1, len: [14], rest: [-90], stiff: 0.1, damp: 0.86, grav: 0, drag: 0.22, slack: 1, hys: 0.65 }
+    { id: 'blob', n: 1, len: [14], rest: [-90], stiff: 0.16, damp: 0.84, grav: 0, drag: 0.22, slack: 1, hys: 0.65 }
   ];
   function own(ch) {
     if (!ch._own) { ch.def = Object.assign({}, ch.def, { rest: ch.def.rest.slice() }); ch._own = true; }
@@ -720,7 +720,7 @@
     var S = skirtSurf(d, sec, -Math.round(sk0.hemS != null ? sk0.hemS : (sk0.hem || 0)));
     var lockF = sk0.flip ? 0 : D.lock.F, lockB = sk0.flip ? 0 : D.lock.B;
     var steps = [
-      [z.blob != null ? z.blob : 4.8, function () { drawBlob(p, d, sec, ds); p.end(); }],
+      [z.blob != null ? z.blob : 1.5, function () { drawBlob(p, d, sec, ds); p.end(); }],
       [-11, function () { drawWing(p, d, sec, true); p.end(); }],
       [z.tail != null ? z.tail : -10, function () { drawTail(p, d, sec, ds); p.end(); }],
       [z.hair != null ? z.hair : -9, function () {
