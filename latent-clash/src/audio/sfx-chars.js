@@ -319,10 +319,10 @@
 
   def('gemini.rise', { cat: 'gemini', dur: 0.6, poly: 1, guard: 0.15, wet: 0.25,
     desc: 'rising spinning claw: fast upward whoosh + two detuned shimmering twin-star tones', when: 'starRise start-up → rise',
-    build: function (r, o, t, p) {
+    build: function (r, o, t, p, rnd) {
       S.noise(r, o, t, { c: 'white', bp: [[0, 900], [0.25, 7500, 'e']], q: 1.4, lp: 11000, g: [[0, 0], [0.08, 1], [0.3, 0.0001, 'e']], v: 0.6, rate: [[0, 0.8], [0.25, 1.3]] }, p);
       // spinning: tremolo whoosh layer
-      S.noise(r, o, t + 0.03, { c: 'pink', bp: [[0, 1500], [0.25, 4000, 'e']], q: 2, g: roar(0.02, 0.26, 1, 30, 0.8, Math.random).concat([[0.3, 0.0001, 'e']]), v: 0.35 }, p);
+      S.noise(r, o, t + 0.03, { c: 'pink', bp: [[0, 1500], [0.25, 4000, 'e']], q: 2, g: roar(0.02, 0.26, 1, 30, 0.8, rnd).concat([[0.3, 0.0001, 'e']]), v: 0.35 }, p);
       S.noise(r, o, t + 0.02, { c: 'white', hp: 3500, lp: 10000, g: S.ad(0.0005, 0.01), v: 0.45 });
       [N('E6'), N('B6')].forEach(function (f, i) {
         var w = S.bus(r, o, 1, { pan: i ? 0.35 : -0.35, t: t });

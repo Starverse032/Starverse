@@ -4,6 +4,8 @@
  * Claude 娘: lower, rounder, softer (a/o/u vowels, darker filter, gentle contours).
  * DeepSeek 娘: higher, brighter, peppier (a/e/i vowels, quicker syllables, bouncier contours).
  * GPT 娘: lowest and coolest — regal, measured (slower syllables, flatter contours, darker formants, more breath).
+ * Gemini 娘: highest and brightest — playful, quick, bouncy contours, with a cat-like upward flick
+ *   (`flick`: pitch ratio added over the last ~25% of every syllable, "nya~" tail).
  * Mixer.playVoice(charId, kind, t, opts) — one voice per character at a time (new chirp cuts the old). */
 (function () {
   'use strict';
@@ -16,7 +18,8 @@
   var CHAR = {
     claude:   { f0: 300, fs: 0.96, src: 'glottal', lp: 3200, breath: 0.1, speed: 1.0, bend: 1.0, vol: 1.0 },
     deepseek: { f0: 420, fs: 1.1, src: 'reed', lp: 4600, breath: 0.07, speed: 0.82, bend: 1.25, vol: 0.9 },
-    gpt:      { f0: 235, fs: 0.88, src: 'glottal', lp: 2500, breath: 0.13, speed: 1.15, bend: 0.7, vol: 1.0 }
+    gpt:      { f0: 235, fs: 0.88, src: 'glottal', lp: 2500, breath: 0.13, speed: 1.15, bend: 0.7, vol: 1.0 },
+    gemini:   { f0: 470, fs: 1.16, src: 'reed', lp: 5400, breath: 0.06, speed: 0.78, bend: 1.35, vol: 0.9, flick: 0.16 }
   };
   // syllables: c = consonant (h breath, t/k click, y glide), v = vowel or [from, to], d = duration (s),
   //            f = pitch contour (ratios of f0), vib = vibrato cents, a = amplitude
@@ -36,6 +39,7 @@
   var GAIN = {
     claude:   { light: 2.04, medium: 0.87, heavy: 0.7, special: 1.0, super: 0.56, hurt: 0.8, ko: 1.2, win: 0.5, intro: 0.82 },
     deepseek: { light: 4.0, medium: 1.32, heavy: 1.05, special: 0.74, super: 0.85, hurt: 1.62, ko: 1.64, win: 1.05, intro: 1.16 },
+    gemini:   { light: 4.0, medium: 1.32, heavy: 1.05, special: 0.74, super: 0.85, hurt: 1.62, ko: 1.64, win: 1.05, intro: 1.16 },
     gpt:      { light: 1.86, medium: 1.02, heavy: 0.64, special: 0.93, super: 0.56, hurt: 0.94, ko: 1.3, win: 0.47, intro: 0.82 }
   };
 
@@ -48,6 +52,11 @@
     for (var i = 0; i < n; i++) {
       var ratio = 1 + (fc[i] - 1) * ch.bend, tt = t + d * (n === 1 ? 0 : i / (n - 1));
       if (i === 0) src.frequency.setValueAtTime(f0 * ratio, tt); else src.frequency.exponentialRampToValueAtTime(f0 * ratio, tt);
+    }
+    if (ch.flick && kindOf !== 'ko' && kindOf !== 'hurt') {   // cat-like upward flick at the end of the syllable
+      var last = 1 + (fc[n - 1] - 1) * ch.bend;
+      if (n === 1) src.frequency.setValueAtTime(f0 * last, t + d * 0.7); else src.frequency.setValueAtTime(f0 * last, t + d);
+      src.frequency.exponentialRampToValueAtTime(f0 * last * (1 + ch.flick), (n === 1 ? t + d * 0.7 : t + d) + d * 0.3 + 0.03);
     }
     var end = t + d + 0.08;
     var srcs = [src];
