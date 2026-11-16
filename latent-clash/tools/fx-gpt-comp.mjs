@@ -3,7 +3,9 @@
  *   node tools/fx-gpt-comp.mjs [--char=gpt] [--frames=0,8,16,...] [--tx=260] [--ty=140] [--facing=1]
  *        [--palette=0] [--scale=2] [--cols=4] [--tag=t] [--flash=0]
  * Draws: superBackdrop (stage-like mock under the intro) -> gpt.attention back -> two fighter
- * dummies -> gpt.attention front, exactly like the FIGHT layering. Output .shots/fx/_comp-<char>[-tag].png */
+ * dummies -> gpt.attention front, exactly like the FIGHT layering. Output .shots/fx/_comp-<char>[-tag].png
+ * --char=gemini: gemini.meteor back -> her dummy (ax = 70 / 314 by facing), the twin (pink, opposite side), the
+ * victim at --tx -> gemini.meteor front; hands at GY-74. */
 import { createRequire } from 'node:module';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -44,8 +46,12 @@ const url = await page.evaluate((o) => {
     g.fillStyle = '#3a3448'; g.fillRect(0, 0, W, H);
     FX.drawSprite(g, 'screen.superBackdrop', 0, 0, t, { char: o.ch, facing: fx, palette: o.palette });
     if (o.ch === 'gpt') FX.drawSprite(g, 'gpt.attention', 0, 0, t, { tx: o.tx, ty: o.ty, facing: fx, palette: o.palette, part: 'back' });
-    dummy(me, '#f1f0f8', '#2a2540'); dummy(o.tx, '#c9a37a', '#2a1714');
+    const gm = { ax: fx > 0 ? 70 : W - 70, ay: GY - 74, bx: fx > 0 ? W - 70 : 70, by: GY - 74, facing: fx, palette: o.palette };
+    if (o.ch === 'gemini') FX.drawSprite(g, 'gemini.meteor', 0, 0, t, Object.assign({ part: 'back' }, gm));
+    if (o.ch === 'gemini') { dummy(gm.ax, '#5f78ea', '#1c1640'); g.globalAlpha = 0.6; dummy(gm.bx, '#ff8fe0', '#8a2a8a'); g.globalAlpha = 1; dummy(o.tx, '#c9a37a', '#2a1714'); }
+    else { dummy(me, '#f1f0f8', '#2a2540'); dummy(o.tx, '#c9a37a', '#2a1714'); }
     if (o.ch === 'gpt') FX.drawSprite(g, 'gpt.attention', 0, 0, t, { tx: o.tx, ty: o.ty, facing: fx, palette: o.palette, part: 'front' });
+    if (o.ch === 'gemini') FX.drawSprite(g, 'gemini.meteor', 0, 0, t, Object.assign({ part: 'front' }, gm));
     const cx = (i % o.cols) * (W * S + 4), cy = Math.floor(i / o.cols) * (H * S + 4);
     og.drawImage(gc, 0, 0, W, H, cx, cy, W * S, H * S);
     og.fillStyle = '#fff'; og.fillRect(cx, cy, 14, 8); og.fillStyle = '#000'; og.font = '8px monospace'; og.fillText(String(t), cx + 1, cy + 7);
