@@ -367,8 +367,8 @@
       if (wasAir) vic.juggle += (h.jug || 1);
       if (reset) vic.juggle = 99;
       vic.air = true;
-      var lvx = h.lvx != null ? h.lvx : (reset ? 1.4 : 1.8);
-      var lvy = h.lvy != null ? h.lvy : (reset ? -3.2 : -4.2);
+      var lvx = h.lvx != null ? F.v(h.lvx, s) : (reset ? 1.4 : 1.8);
+      var lvy = h.lvy != null ? F.v(h.lvy, s) : (reset ? -3.2 : -4.2);
       if (!h.kd && !wasAir) lvy = -3.4;
       var K = T.LAUNCH_K || 1;   // V2: taller arcs for taller bodies, same airtime
       vic.vx = lvx * dir * K; vic.vy = lvy * K;
