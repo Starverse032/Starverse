@@ -35,6 +35,7 @@ function pageRunner() {
     const F = LC.fight, T = F.T;
     F.headless = !opts.draw;
     F.AI_OFF = opts.off || null;
+    if (opts.mu && F.AI_PROF) for (const k in opts.mu) { const [c, v] = k.split('>'); const P = F.AI_PROF[c]; if (P) { P.vs = P.vs || {}; P.vs[v] = opts.mu[k]; } }   // --mu=gpt>deepseek:breath=1.5;tail=2
     const m = F.createMatch(cfg);
     const viol = [];
     const usage = [{}, {}], plans = [{}, {}];
@@ -121,7 +122,7 @@ async function main() {
   await Promise.all(pages.map(async p => {
     while (next < jobs.length) {
       const i = next++;
-      results[i] = await p.evaluate(([c, o]) => window.SIM(c, o), [jobs[i].cfg, { draw: !!args.draw, plans: !!args.plans, off: args.off ? Object.fromEntries(String(args.off).split(',').map(k => [k, 1])) : null }]);
+      results[i] = await p.evaluate(([c, o]) => window.SIM(c, o), [jobs[i].cfg, { draw: !!args.draw, plans: !!args.plans, mu: args.mu ? Object.fromEntries(String(args.mu).split(',').map(e => { const [k, kv] = e.split(':'); return [k, Object.fromEntries(kv.split(';').map(x => { const [a, b] = x.split('='); return [a, +b]; }))]; })) : null, off: args.off ? Object.fromEntries(String(args.off).split(',').map(k => [k, 1])) : null }]);
     }
   }));
   const secs = (Date.now() - t0) / 1000;

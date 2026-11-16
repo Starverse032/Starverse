@@ -25,12 +25,11 @@
     { react: 10, block: 0.88, guess: 0.8, aa: 0.78, punish: 0.86, depth: 3, confirm: 5, tech: 0.55, sup: 1.0, think: 4, aggr: 0.62, jump: 0.06, mash: 0, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 1, gWalk: 0.15 }
   ];
 
-  var VSDS = (typeof window !== 'undefined' && window.VSDS) || {};   // GPT vs DeepSeek plan multipliers (matchup tuning)
   // per-character neutral profile (distances in px; D() = V1 constants scaled for the V2 bodies)
   var PROF = {
     claude:   { dp: 'sonnet',     want: D(92), jr: [D(70), D(130)], dashW: 0.8,  superR: D(200) },
     deepseek: { dp: 'breach',     want: D(60), jr: [D(70), D(150)], dashW: 0.9,  superR: D(120) },
-    gpt:      { dp: 'dragonRise', want: 80,    jr: [D(70), D(125)], dashW: 0.55, superR: 0, vs: { deepseek: VSDS } }
+    gpt:      { dp: 'dragonRise', want: 80,    jr: [D(70), D(125)], dashW: 0.55, superR: 0, vs: { deepseek: {} } }   // vs: matchup plan multipliers (breath, tail, call)
   };
   function prof(ch) { return PROF[ch] || PROF.claude; }
   F.AI_PROF = PROF;
