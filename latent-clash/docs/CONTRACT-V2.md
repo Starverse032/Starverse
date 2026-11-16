@@ -230,3 +230,93 @@ plus `blob` (the companion's position).
 - **FIGHT**: move data, command-grab and roar logic, CPU plans for and against her, move list,
   balance across all six pairings.
 - **PLATFORM**: three tiles on character select, the new arcade ladder, move lists for three.
+
+---------------------------------------------------------------------------------------------------
+
+## V2.6 Fourth fighter: Gemini 娘 (`gemini`)
+
+`LC.CHARS` is now `['claude', 'deepseek', 'gpt', 'gemini']`. Palettes: `LC.PAL.gemini` (new slots
+`hair2`, `ear`, `eye2`, `lining`, `star`). Names, bio, dialogue, move names and the four-fighter
+arcade ladder (`LC.LORE.rivals` now lists three rivals each; `LC.LORE.arcade` has four entries,
+`foe: 'rival1' | 'rival2' | 'rival3' | 'mirror'`): the last block of `src/shared/lore.js`.
+Everything must work for any roster size — iterate `LC.CHARS`, index rivals generically.
+
+### Design (ZipZipPipe's cat-girl Gemini; reference art `.shots/ref/gemini-ref.png` — reference
+only, never trace, copy pixels or commit it)
+- Mischievous, playful, quick; a sly closed-mouth smile, finger-to-cheek poses, bouncy on her
+  toes; cat-like stretches and pounces. Youthful and a little shorter than the others: **96 px**
+  to the top of the head; the ears rise ≈ 8 px above that.
+- **Hair**: very long (to the calves), very voluminous and wavy; blue at the crown (`hair`)
+  shading to violet (`hair2`) and pink ends (`hairTip`); an ahoge; a small **side bun** with a
+  **four-pointed iridescent star clip** (`star`).
+- **Cat ears** (blue-violet outside, pink `ear` inside) and a long **fluffy tail** (blue base
+  to violet tip) that curls and flicks constantly.
+- **Eyes — heterochromia**: one rose-red (`eye`), one gold (`eye2`).
+- **Outfit**: navy-indigo (`cloth2`) cropped halter top with star gems, bare midriff;
+  **detached wide sleeves** (navy outside, white `cloth1` cuffs, violet `lining`, gold trim);
+  a short layered skirt — navy over a white frilled petticoat — with a gold chain belt and star
+  pendants; two long **coat-tail panels** hanging from the hips to the calves (navy outside,
+  violet lining, a star charm on each tip); a thigh strap; white **leg warmers** and chunky
+  navy-violet **platform shoes**.
+- **Stars**: two or three small four-pointed iridescent stars drift around her and take part
+  in her magic.
+- **Magic colour**: pink-violet with iridescent sparkle (`accent`, `star`) — the four fighters
+  read as orange / blue / teal-green / violet-pink.
+- **Silhouette keys**: cat ears, huge wavy hair, wide sleeves, coat-tail panels, fluffy tail,
+  chunky shoes.
+
+### Fighting style and metrics
+Trickster: the most mobile fighter, lowest damage per hit, wins with set-ups — a delayed
+"twin" that attacks on its own, a teleport, angled projectiles and a **double jump**.
+Fast cat-claw swipes (L), nimble kicks with the heavy platform shoes (M), spinning tail-and-heel
+attacks (H).
+
+| | Gemini 娘 |
+|---|---|
+| Standing / crouch height, body width | 96 / 64 / 24 px |
+| Walk forward / back | 1.8 / 1.5 px/f |
+| Dash / back-dash | 84 px in 16f / 70 px in 18f |
+| Jump apex / airtime; **double jump** | 86 px / 44f; one extra jump in the air (≈ 60 px more) |
+| Normals startup/active/recovery | 5L 4/3/7 · 5M 7/4/12 · 5H 10/5/20 · 2L 4/3/8 · 2M 7/4/13 · 2H 10/5/22 · jL 4/8/∞ · jM 6/6/∞ · jH 9/6/∞ |
+| Reach 5L / 5M / 5H | 30 / 48 / 58 px |
+| Reach 2L / 2M / 2H | 32 / 50 / 60 px (2H = sweep, knocks down) |
+| Reach jL / jM / jH | 28 / 38 / 46 px |
+
+Common animations: the full common set of CONTRACT §3.3 with DeepSeek's segment ids and frame
+counts (`dashF` go 16, `dashB` go 18; `super`: startup 6, cast 12, active 54, recovery 28), plus
+`airJump` (go 6: the flip that starts the double jump).
+
+| Move id | Input (simple) | What it is | Animation segments |
+|---|---|---|---|
+| `star` | 236+X (`5S`) | 星闪 — a four-pointed iridescent star projectile. L: fast, straight. M: flies ≈ 20° upward (catches jumps). H: big, slow, hits twice. One star on screen. | `star`: startup 11, active 3, recovery 24 (`muzzle` = flicking hand) |
+| `airStar` | air 236+X (`jS`) | the star thrown 45° down-forward | `airStar`: startup 9, active 3, recovery* 12 |
+| `starRise` | 623+X (`6S`) | 双子升星 — rising spinning claw with twin star trails; invulnerable start-up; anti-air; knocks down | `starRise`: startup 4, rise 12, fall* 12, land 14 |
+| `twin` | 214+X (`4S`) | 双子·分身 — she leaves a **light-twin** (a translucent pink-violet copy of herself) that claws on its own after a delay. L: where she stands, strikes after ≈ 36f. M: the twin dashes ≈ 110 px forward, then strikes. H: the twin appears **behind the opponent** and strikes after ≈ 44f. One twin at a time; it vanishes if she is hit. Its hit (70 damage) leaves enough stun to combo from. | `twin` (her gesture): startup 10, active 2, recovery 18 · `twinStrike` (performed by the twin): startup 8, active 4, recovery 14 |
+| `blink` | 22+X (`2S`) | 闪现 — short teleport, briefly invulnerable. L: ≈ 90 px back. M: ≈ 110 px forward, through the opponent. H: swaps places with her twin if one is out, otherwise up-forward into the air (she can act as she falls). | `blinkOut`: startup 5, vanish 5 · `blinkIn`: appear 5, recovery 9 |
+| `super` | 236236+X (`H+S`) | 双子座·流星雨 GEMINI: METEOR SHOWER — she and her twin take opposite sides of the screen, the Gemini constellation lights up overhead, a full-screen rain of iridescent stars comes down, and two beams cross in an X for the finish. Full-screen, multi-hit, blockable. | `super` as above |
+
+Anchors as CONTRACT §5.3 (`weapon` = claw tip / toe / heel / tail tip of the current attack;
+`muzzle` = flicking hand in `star`/`airStar`, raised hand in `super`; `grab` in `throwHit`),
+plus `tail` and `star` (where her nearest drifting star sits).
+
+### What each module adds for her
+- **RIG**: sprite + every animation above (and the common set + `airJump`, `twinStrike`,
+  `blinkOut`, `blinkIn`). The twin is the same puppet drawn by the engine with tint/alpha.
+- **FX** (pink-violet + iridescent; palette 1 = yellow-green): spawn `gemini.starCast`,
+  `gemini.starHit`, `gemini.riseTrail`, `gemini.twinSpawn`, `gemini.twinVanish`,
+  `gemini.blinkOut`, `gemini.blinkIn`, `gemini.clawHit`, `gemini.sparkles`; sprites
+  `gemini.star` (projectile; `opts.power` 0.3/0.6/1 sizes, `opts.angle`), `gemini.meteor` (the
+  super, drawn at 0,0; `opts.ax, opts.ay` = her position, `opts.bx, opts.by` = the twin's;
+  `spriteInfo().frames[t]` hit boxes in screen space and `events`); and `char: 'gemini'`
+  variants of `screen.superBackdrop` (a deep cosmic sky with the Gemini constellation drawn in
+  glowing lines, blue → violet → pink aurora, drifting four-pointed stars), `screen.superFinish`,
+  `screen.koBackdrop`, `screen.superBg`, `screen.impact` and the tinted generic effects.
+- **ILLUST**: `portrait('gemini', …)` for every kind and both palettes; `emblem.gemini`
+  (+ `.lg`): a four-pointed star with two small cat ears.
+- **AUDIO**: SFX `gemini.star`, `gemini.starHit`, `gemini.rise`, `gemini.twin`,
+  `gemini.twinStrike`, `gemini.blink`, `gemini.super` (≈ 1.5 s); `voice('gemini', kind)` —
+  bright, playful, the highest of the four, with a cat-like upward flick.
+- **FIGHT**: move data; double jump; the twin entity; blink/swap; star variants; super; CPU plans
+  for and against her; move list; balance across all pairings.
+- **PLATFORM**: four fighters (+ random) on character select, the four-fight arcade ladder,
+  move lists for four.
