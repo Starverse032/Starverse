@@ -25,11 +25,12 @@
     { react: 10, block: 0.88, guess: 0.8, aa: 0.78, punish: 0.86, depth: 3, confirm: 5, tech: 0.55, sup: 1.0, think: 4, aggr: 0.62, jump: 0.06, mash: 0, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 1, gWalk: 0.15 }
   ];
 
+  var VSDS = (typeof window !== 'undefined' && window.VSDS) || {};   // GPT vs DeepSeek plan multipliers (matchup tuning)
   // per-character neutral profile (distances in px; D() = V1 constants scaled for the V2 bodies)
   var PROF = {
     claude:   { dp: 'sonnet',     want: D(92), jr: [D(70), D(130)], dashW: 0.8,  superR: D(200) },
     deepseek: { dp: 'breach',     want: D(60), jr: [D(70), D(150)], dashW: 0.9,  superR: D(120) },
-    gpt:      { dp: 'dragonRise', want: 80,    jr: [D(70), D(125)], dashW: 0.55, superR: 0 }
+    gpt:      { dp: 'dragonRise', want: 80,    jr: [D(70), D(125)], dashW: 0.55, superR: 0, vs: { deepseek: VSDS } }
   };
   function prof(ch) { return PROF[ch] || PROF.claude; }
   F.AI_PROF = PROF;
@@ -343,7 +344,8 @@
     if (dx <= r('5L')) { add('5L', 0.7, this.press('L')); add('2L', 0.7, this.press('L', 2)); }
     if (dx <= r('5M') && dx > r('5L') - 10) add('5M', 0.8, this.press('M'));
     if (dx <= r('2M') && dx > r('2L') - 10) add('2M', 0.8, this.press('M', 2));
-    var gT = C === 'gpt' ? (P.gTail != null ? P.gTail : 1.8) : 1;   // GPT: patient spacing with the long tail
+    var MU = (PF.vs && PF.vs[o.ch]) || {};   // matchup multipliers
+    var gT = C === 'gpt' ? (P.gTail != null ? P.gTail : 1.8) * (MU.tail || 1) : 1;   // GPT: patient spacing with the long tail
     if (dx <= r('5H') && dx > r('5M') - 8) add('5H', 0.35 * gT, this.press('H'));
     if (dx <= r('2H') && dx > r('2M') - 8) add('2H', 0.3 * gT, this.press('H', 3));
     if (dx < me.C.throwRange - 2 && o.action !== 'blockstun') add('throw', (0.55 + ag * 0.3) * (C === 'claude' && P.cThrow != null ? P.cThrow : isG ? (P.gThrow != null ? P.gThrow : 0.35) : 1), [{ d: this.chance(0.3) ? 4 : 6, b: 'LM', n: 2 }, { d: 5, n: 1 }]);
@@ -356,7 +358,7 @@
       if (dx < D(80) && dx > D(30)) add('haiku', P.cHaiku, this.special('haiku', this.pick(['L', 'M'])));   // unsafe raw; mostly a combo ender
       if (dx < D(70) && this.level >= 3) add('guardrail', P.cGuard + (o.action === 'attack' ? 0.1 : 0), this.special('guardrail', this.pick(['L', 'M'])));
     } else if (C === 'gpt') {
-      var og = this.oppGuard, gC = P.gCall != null ? P.gCall : 1, gB = P.gBreath != null ? P.gBreath : 1;
+      var og = this.oppGuard, gC = (P.gCall != null ? P.gCall : 1) * (MU.call || 1), gB = (P.gBreath != null ? P.gBreath : 1) * (MU.breath || 1);
       if (dx > 62 && dx < 145) add('breath', (0.45 + (dx > 95 ? 0.25 : 0)) * gB, this.special('breath', dx < 95 ? 'L' : dx < 120 ? 'M' : 'H'));
       if (dx < 57 && o.action !== 'blockstun' && o.action !== 'hitstun' && !o.air) add('call', (0.22 + og * 1.6) * gC, this.special('call', dx < 52 ? this.pick(['M', 'H']) : 'H'));
       if (dx > 57 && dx < 90 && og > 0.25) add('walkCall', og * 0.8 * gC, [{ d: 6, n: Math.round((dx - 50) / 1.4) }].concat(this.special('call', 'M')));
