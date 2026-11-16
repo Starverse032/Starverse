@@ -109,7 +109,7 @@ function okiPage() {
         if (opt === 'backdash') i2 = (w >= 20 && w <= 21) || (w >= 25 && w <= 26) ? o({ [bk]: 1 }) : {};
         else if (opt === 'jump') i2 = w >= 18 && w <= 34 ? { up: 1 } : {};
         else if (opt === 'reversal') i2 = [o({ [fw]: 1 }), o({ [fw]: 1 }), { down: 1 }, { down: 1 }, o({ down: 1, [fw]: 1 }), o({ down: 1, [fw]: 1, H: 1 }), { H: 1 }][w - 17] || {};
-        else if (opt === 'block') i2 = w >= 10 ? o({ [bk]: 1 }) : {};
+        else if (opt === 'block') i2 = w >= 10 ? o({ down: 1, [bk]: 1 }) : {};   // crouch-block (does not walk away)
       }
       m.update(i1, i2);
       if (A.mv && A.mv.id === 'callHit' && A.moveInst !== lastInst) { lastInst = A.moveInst; grabs++; }
