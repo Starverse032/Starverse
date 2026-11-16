@@ -1,7 +1,7 @@
 # PLATFORM — notes
 
 ## Progress / next steps (truthful as of this pass)
-Done and smoke-tested (`npm test`: index.html + dist, real FIGHT CPU-vs-CPU match to result, no errors; roster checks: every char's arcade ladder, GPT pick via real select input, GPT ladder/VS/result/ending/how-to shots, GPT CPU match when FIGHT+RIG support her, else logged skip + degraded-match check):
+Done and smoke-tested (`npm test`: index.html + dist, real FIGHT CPU-vs-CPU match to result, no errors; roster checks: every char's arcade ladder step by step (rivalN, foeHome, mirror boss + taunt, every rival met), GPT and Gemini picked via real key presses on select, Gemini select/ladder/VS/result/ending/how-to/training/stage shots, pause move list ←→ over all tabs, a CPU match per newer fighter when FIGHT+RIG support her, else logged skip + degraded-match check):
 - font bake + runtime (pixel-identical to Chromium's own rendering of the woff2: `npm run font`)
 - input (keyboard 2P, gamepads, menu edges, pointer, overrides, rebinding), touch overlay, display, save
 - loop + scene stack + transitions (wipe / dissolve / iris / slash), LC.debug + LC_OPTS, build, smoke test
@@ -9,25 +9,33 @@ Done and smoke-tested (`npm test`: index.html + dist, real FIGHT CPU-vs-CPU matc
   with move list / training options), result, ladder, continue, ending, howto (4 pages), options, keys, credits
 Next (not done): options list is cramped (12 px rows) — paginate or scroll; portrait-phone polish (bigger
 buttons, decorative panel); per-scene screenshot pass after ILLUST icons/title + AUDIO music land (and
-GPT art: re-shoot select/ladder/vs once ILLUST/RIG know her); menu tap targets for the result/ladder screens.
+Gemini art: re-shoot select/ladder/vs once ILLUST/RIG know her — `npm run shots gemini`); menu tap targets for the result/ladder screens.
 
-## Roster (three fighters, V2.1)
+## Roster (four fighters, V2.2)
 Nothing in PLATFORM names a fighter except cosmetic fallbacks; everything iterates `LC.CHARS`.
 - `flow.js`: `app.other(ch)` = first rival; `app.rivalsOf`, `app.randomChar(except)`, `app.homeOf` (prefers
-  `LORE.homeStage`), `app.arcadeStep(A, k)` resolves a ladder step (`foe: rival1|rival2|mirror`, legacy `rival`;
-  `stage: foeHome|<id>`, legacy `rivalHome/ownHome`; mirror forced to the other palette) — the ladder screen
-  and `arcadeFightParams` both use it. Taunts: mirror → `arcadeTaunt.mirror[char]`, else boss →
-  `arcadeTaunt.boss[foe]`, passed as `introLines`.
+  `LORE.homeStage`), `app.arcadeStep(A, k)` resolves a ladder step (`foe: rivalN` for any N = `rivals[N-1]`,
+  `mirror`, legacy `rival`, or a char id; `stage: foeHome|<id>`, legacy `rivalHome/ownHome`; mirror forced
+  to the other palette) — the ladder screen and `arcadeFightParams` both use it. Taunts: mirror →
+  `arcadeTaunt.mirror[char]`, else boss → `arcadeTaunt.boss[foe]`, passed as `introLines`.
 - Feature detection: `app.fightSupports(ch)` (`LC.fight.chars[ch]`, else non-empty `getMoveList`) and
   `app.rigSupports(ch)` (`LC.rig.hasAnim(ch,'idle')`). `ui.puppet` uses the fallback puppet when RIG has no
   idle for ch and switches to it if a rig puppet throws; `ui.portrait` skips ILLUST for chars absent from
   `LC.illust.ART` (fallback busts are tagged `lcFallback`; tiles crop them lower). FIGHT itself substitutes
-  an unknown char, so a GPT match plays (as a stand-in) without errors until FIGHT ships her.
-- Select: tiles in a grid (`COLS = ceil(sqrt(n+1))`, 2×2 for three + 随机) centred between the live
-  puppets (x 128 / 256); ←→ cycles all tiles with wrap, ↑↓ palette. Random rolls a visible preview every 24
-  frames and re-rolls on lock. Cursor tags sit above the top row / below lower rows.
-- How-to: two fixed pages + one move-list tab per char (tab width shrinks with roster size; long zh names
-  fall back to the latin name). Pause move list ←→ cycles `LC.CHARS`. Move lists from
+  an unknown char, so a Gemini match plays (as a stand-in) without errors until FIGHT ships her. The attract
+  demo only picks fighters FIGHT+RIG support (all of them if fewer than two).
+- Fallback art: GPT = dragon horns, Gemini = cat ears + star clip (bust) / ears + tail (puppet).
+- Select: 4 + 随机 = five tiles in a 2-wide column (`COLS = max(2, ceil(n/3))`, rows filled left→right,
+  short last row centred: 2·2·1), 36×32 tiles at x 154–229 between the live puppets (x 128 / 256) and above
+  the panels (y 148). Cursor tags: above row 0, below later rows (rows ≥ 2 get a 12-px gap for them). Tile
+  labels = zh name minus 娘 (Claude / DeepSeek / GPT / Gemini) at size 8, latin name if too wide. Puppets
+  draw under the busts, so tails/weapons tuck behind the bust edge. ←→ walks all tiles in reading order with
+  wrap, ↑↓ palette. Random rolls a visible preview every 24 frames and re-rolls on lock. The arcade
+  "challenger" panel counts `LORE.arcade.length` opponents.
+- Ladder: node pitch = min(56, 144/(n−1)) so any ladder length fits between y 28 and 204.
+- How-to: two fixed pages + one move-list tab per char; tab widths follow their labels (same short-name
+  style as select; size 8 if the row would not fit) and pointer hit-tests use the real tab rects. Pause move
+  list shows the same fighter tabs (`ui.rosterTabs`) and ←→ cycles `LC.CHARS`. Move lists from
   `LC.fight.getMoveList` (cached only when non-empty) else `LORE.moves`.
 - Menu showcase cycles all fighters; attract demo picks any two (25% mirror).
 
@@ -74,8 +82,8 @@ Nothing in PLATFORM names a fighter except cosmetic fallbacks; everything iterat
 ## Known issues
 - With FIGHT absent, the stub match is crude by design (attack buttons chip HP; keys 1/2/0 decide rounds).
 - Options screen: 14 rows at 12 px pitch is tight.
-- Select: DeepSeek's tail on the right live puppet slightly overlaps the inner edge of the P2 bust; the
-  latin name "DEEPSEEK" is ~1 px wider than its 38 px tile.
-- GPT fallback bust/puppet are crude placeholders until ILLUST/RIG add her.
+- Gemini fallback bust/puppet are crude placeholders until ILLUST/RIG add her (ILLUST's own warm-up logs
+  `[illust] no art for gemini …` to the console meanwhile; not a PLATFORM error).
+- `dist/` is only as fresh as the last successful `npm run build`.
 - The fullscreen option in Options runs outside the gesture event; it works in Chrome (transient
   activation) but may be refused elsewhere — the DOM button is the reliable path.
