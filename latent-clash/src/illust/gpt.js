@@ -390,18 +390,18 @@
     P.part(br, S.m1, S.ml); P.recol(br.band(0, 1), [S.m1], S.m0); P.recol(br.band(0, -1), [S.m1], S.m2);
     P.px(100, 91, S.a1); P.px(101, 91, S.a0);
     // beckoning hand: palm toward us, index finger raised and crooking toward her, the rest folded
-    var palm = P.spoly([95, 89, 94, 84, 95.5, 79, 100, 77, 104.5, 78, 106.5, 82, 106, 87, 102, 90]);
-    var thumb = P.sr([96, 86, 92.5, 83, 90.5, 79.5], 3.8, 2.8);
-    var idx = P.sr([98, 79, 97.6, 72, 98.4, 67, 97.4, 63.6, 95, 62.8, 93.6, 64.2], 3.6, 2.4);
-    var curl = P.ell(101.2, 77.6, 2, 2).or(P.ell(103.8, 78.6, 2, 2)).or(P.ell(106, 81.4, 1.7, 1.8));
+    // (the hand is tilted: crooked index finger points up-right at the blob, others curled on the right)
+    var palm = P.spoly([95, 89, 94, 84, 95.5, 79.5, 100, 77.5, 104, 78.5, 106, 82, 105.5, 87, 101.5, 90]);
+    var thumb = P.sr([96, 84, 93, 80, 92, 75.5], 3.8, 2.8);
+    var idx = P.sr([100, 79.5, 103, 75, 106, 72, 108.6, 71, 109.8, 73.2], 3.6, 2.4);
+    var curl = P.ell(105.6, 80.6, 2, 1.9).or(P.ell(106.2, 84, 1.9, 1.9)).or(P.ell(105, 87.2, 1.7, 1.7));
     var hand = palm.or(thumb).or(idx).or(curl);
     P.part(hand, S.s1, S.sl);
     P.recol(hand.band(2, -1), [S.s1], S.s2);
     P.recol(hand.band(-1, 1), [S.s1], S.s0);
-    P.line([99.8, 80, 99.8, 77], S.s2);
-    P.line([101, 80, 102.5, 80.5], S.s2); P.line([104, 81, 105, 82.5], S.s2);
-    P.line([96, 86, 99, 87.5, 103, 86.5], S.s2, true);
-    P.px(94, 64, S.bl);
+    P.line([102.5, 79.5, 104.5, 79.5], S.s2); P.line([103.5, 82.5, 105, 82.5], S.s2); P.line([103.5, 85.5, 104.5, 85.5], S.s2);
+    P.line([96, 86, 98.5, 87.5, 101, 87], S.s2, true);
+    P.px(109, 73, S.bl);
   }
   function drawLowArm(P) {
     farSleeve(P);
