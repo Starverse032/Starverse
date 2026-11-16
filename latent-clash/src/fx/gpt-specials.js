@@ -105,14 +105,18 @@
     var g = G[O.pal], f = O.facing;
     var e = I.emitter(function (p) {
       if (p.age > 9) return;
-      for (var k = 0; k < 2; k++) {
-        var a = (f > 0 ? 0 : PI) + I.RS() * 1.6, r = I.RR(18, 30), v = I.RR(2.6, 3.6);
-        var s = I.spark(p.x + Math.cos(a) * r, p.y + Math.sin(a) * r, a + PI, v, Math.max(3, Math.floor((r - 3) / v)), p.ref, I.FRONT, { drag: 1, max: 6, len: 1.8 });
+      for (var k = 0; k < 3; k++) {
+        var a = (f > 0 ? 0 : PI) + I.RS() * 1.5, r = I.RR(20, 34), v = I.RR(2.8, 3.8);
+        var s = I.spark(p.x + Math.cos(a) * r, p.y + Math.sin(a) * r, a + PI, v, Math.max(3, Math.floor((r - 4) / v)), p.ref, I.FRONT, { drag: 1, max: 9, len: 2.4, size: k ? 1 : 2 });
         s.age = 1;
       }
-      if (p.age % 3 === 0) { var b = (f > 0 ? 0 : PI) + I.RS() * 1.2; I.twinkle(p.x + Math.cos(b) * I.RR(8, 16), p.y + Math.sin(b) * I.RR(6, 12), 2, 8, g.twk, I.FRONT); }
+      if (p.age % 2 === 0) {     // glints drifting in
+        var b = (f > 0 ? 0 : PI) + I.RS() * 1.3, rr = I.RR(10, 18), tw = I.twinkle(p.x + Math.cos(b) * rr, p.y + Math.sin(b) * rr, I.RI(2, 3), 8, g.twk, I.FRONT);
+        tw.vx = -Math.cos(b) * rr / 8; tw.vy = -Math.sin(b) * rr / 8;
+      }
     }, x, y, 12, I.FRONT);
-    e.ref = g.L;
+    e.ref = g.fire.slice(1);
+    I.twinkle(x + f * 2, y, 3, 12, g.twk, I.FRONT, 0);
     var tw = I.twinkle(x + f * 2, y, 5, 10, g.twk, I.FRONT, 10); tw.pri = 1;
     I.twinkle(x + f * 2, y, 3, 8, g.twk, I.FRONT, 12);
     if (A.ringC && A.ringC['gpt' + O.pal]) I.anim1(A.ringC['gpt' + O.pal][0], x + f * 2, y, 1, I.FRONT, 1, 10);

@@ -199,7 +199,8 @@
   // the little blue blob companion; mood: 'n' | 'win' | 'lose'
   function blob(P, x, y, mood) {
     var m = P.ell(x, y + 1, 7, 5.5).or(P.ell(x - 4, y - 3, 3.6, 3.6)).or(P.ell(x + 1, y - 4.5, 4.2, 3.6)).or(P.ell(x + 5, y - 2, 3.4, 3.4));
-    if (mood === 'win') m = P.ell(x, y, 6, 6.5).or(P.ell(x - 3.5, y - 5, 3.4, 3.4)).or(P.ell(x + 3, y - 6, 3.6, 3.4));
+    if (mood === 'win') m = P.ell(x, y, 6, 6.5).or(P.ell(x - 3.5, y - 5, 3.4, 3.4)).or(P.ell(x + 3, y - 6, 3.6, 3.4))
+      .or(P.sr([x - 5, y - 1, x - 8, y - 5, x - 8.5, y - 8], 2.6, 2)).or(P.sr([x + 5, y - 1, x + 8, y - 5, x + 8.5, y - 8], 2.6, 2));
     P.part(m, S.z1, S.zl);
     P.recol(m.band(3, -2), [S.z1], S.z2);
     P.recol(m.band(-1, 2), [S.z1], S.z0);
@@ -209,6 +210,9 @@
       P.map(x - 2, y + 2, ['ZzZ'], EL);
     } else if (mood === 'lose') {
       P.map(x - 5, y - 3, ['.ZZ..ZZ.', 'Z.Z.Z.Z.', 'ZZ...ZZ.'], EL);
+      [[x - 6, y - 11], [x, y - 13], [x + 6, y - 10]].forEach(function (q, i) {
+        P.px(q[0], q[1], i === 1 ? S.W : S.a0); P.px(q[0] - 1, q[1], S.a1); P.px(q[0] + 1, q[1], S.a1); P.px(q[0], q[1] - 1, S.a1); P.px(q[0], q[1] + 1, S.a1);
+      });
     } else {
       P.map(x - 3, y - 3, ['Z..Z', 'Z..Z', 'Z..Z'], EL);
       P.px(x - 3, y - 3, S.W); P.px(x, y - 3, S.W);
