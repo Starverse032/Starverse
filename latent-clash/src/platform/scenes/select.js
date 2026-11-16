@@ -12,12 +12,14 @@
   // (y 148). Rows are filled left to right; a short last row is centred (4 + 随机 -> 2·2·1).
   var RND = CH.length, NT = CH.length + 1, TG = 3;
   var COLS = Math.max(2, Math.ceil(NT / 3)), ROWS = Math.ceil(NT / COLS);
-  var TW = Math.min(36, Math.floor((78 - (COLS - 1) * TG) / COLS)), TH = Math.min(34, Math.floor((110 - (ROWS - 1) * TG) / ROWS));
+  // tags of row 0 sit above it, tags of later rows below them, so rows after the second get a 12-px gap
+  var TAGGAP = 12, XGAP = Math.max(0, ROWS - 2) * (TAGGAP - TG);
+  var TW = Math.min(36, Math.floor((78 - (COLS - 1) * TG) / COLS)), TH = Math.min(34, Math.floor((112 - (ROWS - 1) * TG - XGAP) / ROWS));
   var GX = (W - (COLS * TW + (COLS - 1) * TG)) >> 1, GY = ROWS > 2 ? 24 : 26;
   function tilePos(k) {
     var r = Math.floor(k / COLS), inRow = Math.min(COLS, NT - r * COLS);
     var off = ((COLS - inRow) * (TW + TG)) >> 1;
-    return { x: GX + off + (k % COLS) * (TW + TG), y: GY + r * (TH + TG), row: r };
+    return { x: GX + off + (k % COLS) * (TW + TG), y: GY + r * (TH + TG) + Math.max(0, r - 1) * (TAGGAP - TG), row: r };
   }
   // tile label: the zh name without "娘" (Claude / DeepSeek / GPT / Gemini), shrunk to size 8 latin if needed
   function tileName(ch) {
@@ -168,6 +170,14 @@
           }
           c.globalAlpha = 1;
         });
+        // puppets (drawn under the busts so a tail or weapon tucks behind the bust edge)
+        sides.forEach(function (s, i) {
+          if (i === 1 && (!twoSided || (!s.active && !pvp))) return;
+          var p = s.puppet();
+          var x = i ? 256 : 128, y = 147;   // beside the tile row: V2 fighters are ~104 px tall
+          ui.box(c, x - 14, y, 28, 2, 'rgba(5,4,10,0.6)');
+          try { p.draw(c, x, y, { facing: i ? -1 : 1 }); } catch (e) { console.error('[platform] puppet.draw', e); }
+        });
         // busts
         sides.forEach(function (s, i) {
           var ch = s.ch(), pal = palFor(i);
@@ -231,14 +241,6 @@
           ui.box(c, tagX, tagY, tw, 9, col);
           LC.font.draw(c, tag, tagX + 3, tagY + 1, { size: 8, color: U.bg0 });
           if (s.locked) { var ic = ui.icon('lock'); if (ic) c.drawImage(ic, i ? tx + 2 : tx + TW - ic.width - 2, ty + 2); }
-        });
-        // puppets
-        sides.forEach(function (s, i) {
-          if (i === 1 && (!twoSided || (!s.active && !pvp))) return;
-          var p = s.puppet();
-          var x = i ? 256 : 128, y = 147;   // beside the tile row: V2 fighters are ~104 px tall
-          ui.box(c, x - 14, y, 28, 2, 'rgba(5,4,10,0.6)');
-          try { p.draw(c, x, y, { facing: i ? -1 : 1 }); } catch (e) { console.error('[platform] puppet.draw', e); }
         });
         // info panels
         sides.forEach(function (s, i) {
