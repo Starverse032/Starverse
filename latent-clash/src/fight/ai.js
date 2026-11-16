@@ -174,6 +174,12 @@
 
   AI.prototype.neutral = function (me, o, pv, dx) {
     var P = this.P, C = me.ch, m = this.m;
+    // GPT vs a blocked rekka (DeepSeek's chain): the invulnerable rising claw goes through the next step
+    if (C === 'gpt' && pv && pv.act === 'attack' && (pv.mv === 'chain' || pv.mv === 'chain2') && dx < 66 && this.blkLog.length &&
+      m.tick - this.blkLog[this.blkLog.length - 1] < 24 && this.rekRolled !== this.blkLog[this.blkLog.length - 1]) {
+      this.rekRolled = this.blkLog[this.blkLog.length - 1];
+      if (this.chance(P.block * (P.gRekka != null ? P.gRekka : 0.7))) { this.push(this.special('dragonRise', this.level >= 4 ? 'H' : 'M'), 'antiRekka'); return this.emit(); }
+    }
     // keep guarding briefly once committed
     if (this.guardT > 0) {
       var tn = this.threat(me, pv, dx);
@@ -224,12 +230,6 @@
         if (!pp && whiffCall && dx < this.reachOf(me, '5H') + 70) pp = [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 12 }].concat(this.press('H'));
         if (pp) { this.push(pp, 'punish'); this.comboStep = 0; return this.emit(); }
       }
-    }
-    // GPT vs a blocked rekka (DeepSeek's chain): the invulnerable rising claw goes through the next step
-    if (C === 'gpt' && pv && pv.act === 'attack' && (pv.mv === 'chain' || pv.mv === 'chain2') && dx < 66 && this.blkLog.length &&
-      m.tick - this.blkLog[this.blkLog.length - 1] < 24 && this.rekRolled !== this.blkLog[this.blkLog.length - 1]) {
-      this.rekRolled = this.blkLog[this.blkLog.length - 1];
-      if (this.chance(P.block * (P.gRekka != null ? P.gRekka : 0.7))) { this.push(this.special('dragonRise', this.level >= 4 ? 'H' : 'M'), 'antiRekka'); return this.emit(); }
     }
     // vs GPT up close while blocking a lot: leave command-grab range (jump back / back-dash)
     if (o.ch === 'gpt' && dx < 74 && C !== 'gpt' && this.recentBlocks(150) >= 2 && o.action !== 'attack' && this.escRolled !== this.blkLog[this.blkLog.length - 1]) {
