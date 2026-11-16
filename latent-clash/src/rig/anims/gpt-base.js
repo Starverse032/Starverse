@@ -151,4 +151,79 @@
       [14, P(S, { hip: [0, -44], lean: 14, bend: 2, tilt: 4, hF: [16, -58], hB: [4, -52], handF: 'relax', eyes: 'half', skirt: 0.3, wing: 0.5, wf: 10, hs: 0.2 }), 'inout'],
       [19, P(S, { hip: [0, -51], lean: -1, tilt: -4, hF: [15, -64], hB: [-6, -52], handB: 'flat', eyes: 'open', wing: 0.15 }), 'out'], [23, S]]
   });
+  // ---------------------------------------------------------------- throws
+  // whiff: reaches with the open claw and closes on air
+  var TH = P(S, { hip: [3, -48], lean: 16, bend: 2, hF: [34, -66], hB: [-8, -62], handF: 'open', handB: 'claw', fF: [16, 0], eyes: 'focus', wing: 0.3, wf: 10 });
+  def('throw', {
+    segs: [['startup', 5], ['active', 2], ['recovery', 22]], step: 2,
+    keys: [['startup', P(S, { lean: 8, hF: [12, -70], eyes: 'focus' })], ['startup+3', TH, 'out'],
+      ['active', P(TH, { hF: [35, -66], handF: 'fist' }), 'snap'],
+      ['recovery+4', P(TH, { handF: 'fist', eyes: 'half', mouth: 'frown' })], ['recovery+14', P(S, { lean: 8, eyes: 'half' })], ['recovery+21', S]]
+  });
+  // throwHit: seizes the collar, lifts the victim one-handed at arm's length, then turns and hurls them past her
+  // with a wing beat (victim released at the end of `toss`; grab anchor = where the victim's chest goes)
+  var TG = P(S, { lean: 12, hip: [3, -49], hF: [30, -68], hB: [-8, -62], handF: 'fist', handB: 'claw', grab: [32, -66], fF: [15, 0],
+    eyes: 'focus', mouth: 'neutral', wing: 0.3 });
+  var TU = P(TG, { lean: -6, bend: -8, tilt: -12, hip: [-2, -50], fF: [14, 0], fB: [-11, 0], hF: [24, -92], hB: [-12, -66], grab: [25, -94],
+    tail: 16, arch: 6, wing: 0.7, wf: -8, skirt: 0.15 });
+  var TS = P(TG, { lean: 30, bend: 8, tilt: 10, hip: [7, -42], fF: [21, 0], fB: [-12, 0], faB: 30, hF: [42, -48], hB: [-16, -58], handF: 'open', handB: 'claw',
+    grab: [46, -46], mouth: 'teeth', tail: -24, arch: 5, wing: 1, wf: 20, skirt: 0.45 });
+  def('throwHit', {
+    segs: [['hold', 16], ['toss', 14], ['recovery', 18]], step: 2,
+    keys: [['hold', TG],
+      ['hold+5', P(TG, { lean: 4, hip: [1, -50], hF: [28, -76], grab: [30, -76], wing: 0.4 }), 'out'],
+      ['hold+11', TU, 'inout'], ['hold+15', P(TU, { hF: [22, -94], grab: [23, -96], eyes: 'half' })],
+      ['toss+2', P(TS, { hs: 0.6, smear: { part: 'hF', from: 'hold+15', n: 4 } }), 'snap'],
+      ['toss+5', P(TS, { hip: [7, -41], sq: 1, wf: 30 }), 'snap'],
+      ['toss+10', P(TS, { mouth: 'neutral', eyes: 'half', wing: 0.7, wf: 10 })],
+      ['recovery+6', P(S, { lean: 10, hip: [2, -48], mouth: 'neutral', wing: 0.3 }), 'out'], ['recovery+17', S]]
+  });
+  // thrown: held by the collar, limp — arms and legs dangle, head lolls, wings and tail hang
+  var TW = P(S, { root: [0, -4], hip: [-2, -52], lean: -6, bend: 4, tilt: 28, hF: [5, -40], hB: [-5, -39], handF: 'relax', handB: 'relax', elF: 1, elB: 1,
+    fF: [3, 0], fB: [-3, -1], faF: 55, faB: 60, eyes: 'dizzy', mouth: 'hurt', tail: -4, arch: 2, tsw: 0.4, skirt: -0.1, wing: 0, wf: 30, bf: 'wide' });
+  def('thrown', {
+    segs: [['loop', 20, true]], step: 4,
+    keys: [[0, TW],
+      [6, P(TW, { lean: -2, tilt: 32, hF: [8, -40], hB: [-2, -39], fF: [5, 0], fB: [-1, -1], tail: 2 }), 'inout'],
+      [14, P(TW, { lean: -9, tilt: 24, hF: [3, -41], hB: [-7, -40], fF: [1, 0], fB: [-5, -1], tail: -8 }), 'inout']]
+  });
+
+  // ---------------------------------------------------------------- intro: descends on spread wings, folds them, a flick of the hair,
+  // the blob pops up beside her; a cool glance → stance
+  var ST = P(S, { hip: [0, -52], lean: 0, bend: -3, tilt: -4, fF: [5, 0], fB: [-5, 0], hF: [8, -50], hB: [-6, -50], handF: 'relax', handB: 'relax' });
+  var HV = P(ST, { root: [0, -14], hip: [0, -52], fF: [5, -2], fB: [-4, -6], faF: 40, faB: 55, hF: [14, -60], hB: [-12, -60], handF: 'open', handB: 'open',
+    wing: 1.1, wf: -10, skirt: 0.5, hem: -6, eyes: 'closed', tail: 20, arch: 5, air: true, blob: [-6, 30], bf: 'shut' });
+  def('intro', {
+    segs: [['act', 100]], step: 2,
+    keys: [[0, HV], [8, P(HV, { root: [0, -11], wf: 14 })], [16, P(HV, { root: [0, -8], wf: -12 })], [24, P(HV, { root: [0, -4], wf: 12 })],
+      [32, P(ST, { hip: [0, -46], lean: 8, sq: 1, wing: 0.7, wf: 20, skirt: 0.35, eyes: 'closed', blob: [-6, 30], bf: 'shut' }), 'in'],
+      [38, P(ST, { wing: 0.3, wf: 10, eyes: 'half', blob: [-4, 22], bf: 'shut' }), 'out'],
+      [48, P(ST, { hF: [6, -86], handF: 'open', tilt: -8, eyes: 'closed', wing: 0.1, hd: 14, blob: [0, 6], bf: 'open' }), 'inout'],
+      [56, P(ST, { hF: [-4, -88], handF: 'flat', tilt: -10, eyes: 'closed', hd: 26, blob: [0, 0], bf: 'happy' }), 'out'],
+      [64, P(ST, { hF: [10, -56], tilt: -6, eyes: 'half', mouth: 'neutral', blob: [0, -2], bf: 'happy' }), 'inout'],
+      [76, P(S, { eyes: 'half', tilt: -6, hF: [14, -64], blob: [0, -2], bf: 'open' }), 'inout'],
+      [86, P(S, { eyes: 'open', tilt: -2 }), 'out'], [96, S]]
+  });
+  // ---------------------------------------------------------------- win: wings spread in a slow display, hand to her chest,
+  // a small satisfied smile; the blob bounces happily
+  var WN = P(ST, { hip: [0, -52], hF: [6, -70], hB: [-10, -56], handF: 'relax', handB: 'relax', tilt: -8, eyes: 'closed', mouth: 'smile',
+    wing: 1, wf: -6, tail: 12, arch: 7, skirt: 0.25, bf: 'happy' });
+  var wb = function (k) { return P(WN, { wf: k & 1 ? 8 : -10, wing: k & 1 ? 0.92 : 1.05, blob: [0, k & 1 ? -6 : 0], hip: [0, k & 1 ? -51 : -52], tail: k & 1 ? 8 : 16 }); };
+  def('win', {
+    segs: [['in', 30], ['loop', 60, true]], step: 2,
+    keys: [['in', P(S, { eyes: 'closed' })], ['in+8', P(ST, { eyes: 'closed', wing: 0.2, wf: 24, hip: [0, -49], sq: 1 }), 'in'],
+      ['in+16', P(WN, { wing: 1.15, wf: -20, skirt: 0.4, hd: 10, blob: [0, -8] }), 'out'], ['in+24', wb(0)],
+      ['loop', wb(0)], ['loop+15', wb(1)], ['loop+30', wb(0)], ['loop+45', P(wb(1), { eyes: 'half' })]]
+  });
+  // ---------------------------------------------------------------- lose (time over): hand to her brow, head bowed, wings drooping,
+  // tail flat; the blob floats close and pats her head
+  var LS = P(ST, { hip: [0, -50], lean: 6, bend: 6, head: [1, 1], tilt: 18, hF: [14, -84], hB: [-6, -54], handF: 'flat', handB: 'relax', shr: -1,
+    eyes: 'sad', mouth: 'frown', wing: 0, wf: 40, tail: -20, arch: 3, tsw: 0.15, skirt: -0.05, blob: [12, -4], bf: 'sad' });
+  def('lose', {
+    segs: [['in', 30], ['loop', 60, true]], step: 3,
+    keys: [['in', P(S, { eyes: 'wide', mouth: 'o', bf: 'wide' })], ['in+6', P(S, { eyes: 'wide', mouth: 'o', hip: [-1, -51], lean: -4, wing: 0.4, bf: 'wide' }), 'out'],
+      ['in+18', P(LS, { tail: -10 }), 'inout'], ['in+26', LS],
+      ['loop', LS], ['loop+15', P(LS, { blob: [14, -8] })], ['loop+21', P(LS, { blob: [12, -4] })],
+      ['loop+36', P(LS, { hip: [0, -49], sq: 1, eyes: 'closed', tilt: 20, blob: [14, -8] })], ['loop+48', P(LS, { eyes: 'closed', blob: [12, -4] })]]
+  });
 })();

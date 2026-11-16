@@ -720,7 +720,7 @@
     var S = skirtSurf(d, sec, -Math.round(sk0.hemS != null ? sk0.hemS : (sk0.hem || 0)));
     var lockF = sk0.flip ? 0 : D.lock.F, lockB = sk0.flip ? 0 : D.lock.B;
     var steps = [
-      [z.blob != null ? z.blob : -8.8, function () { drawBlob(p, d, sec, ds); p.end(); }],
+      [z.blob != null ? z.blob : 4.8, function () { drawBlob(p, d, sec, ds); p.end(); }],
       [-11, function () { drawWing(p, d, sec, true); p.end(); }],
       [z.tail != null ? z.tail : -10, function () { drawTail(p, d, sec, ds); p.end(); }],
       [z.hair != null ? z.hair : -9, function () {
