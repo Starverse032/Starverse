@@ -33,6 +33,17 @@ const SCENES = [
   ['vs-gpt', `LC.debug.goto('vs', { config: LC.app.matchConfig({ mode: 'versus', p1: 'gpt', p2: 'deepseek' }) })`, 60],
   ['result-gpt', `LC.debug.goto('result', { cfg: LC.app.matchConfig({ mode: 'versus', p1: 'claude', p2: 'gpt' }), result: { winner: 1, roundsWon: [1, 2], timeLeft: 20, stats: [{}, {}] } })`, 80],
   ['ending-gpt', `LC.app.newArcade('gpt', 1); LC.debug.goto('ending')`, 200],
+  // fourth fighter: Gemini
+  ['select-gemini', `LC.app.lastPick = { versuspvp: [{ char: 'gemini', palette: 0 }, { char: 'deepseek', palette: 0 }] }; LC.debug.goto('select', { mode: 'versus', vs: 'pvp' })`, 60],
+  ['ladder-gemini', `LC.app.newArcade('gemini', 0); LC.app.session.arcade.stage = LC.LORE.arcade.length - 1; LC.debug.goto('ladder')`, 80],
+  ['vs-gemini', `LC.debug.goto('vs', { config: LC.app.matchConfig({ mode: 'versus', p1: 'gemini', p2: 'gpt' }) })`, 60],
+  ['result-gemini', `LC.debug.goto('result', { cfg: LC.app.matchConfig({ mode: 'versus', p1: 'gemini', p2: 'claude' }), result: { winner: 0, roundsWon: [2, 1], timeLeft: 20, stats: [{}, {}] } })`, 80],
+  ['result-gemini-lose', `LC.debug.goto('result', { cfg: LC.app.matchConfig({ mode: 'versus', p1: 'deepseek', p2: 'gemini' }), result: { winner: 1, roundsWon: [0, 2], timeLeft: 5, stats: [{}, {}] } })`, 80],
+  ['ending-gemini', `LC.app.newArcade('gemini', 0); LC.app.session.arcade.score = 4321; LC.debug.goto('ending')`, 200],
+  ['howto-gemini', `LC.debug.goto('howto', { page: 2 + LC.CHARS.indexOf('gemini') })`, 20],
+  ['training-gemini', `LC.debug.goto('match', { mode: 'training', p1: 'gemini', p2: 'gpt' })`, 60],
+  ['stage-gemini', `LC.app.session = { mode: 'versus', vs: 'pvc', sides: [{ char: 'gemini' }, { char: 'gemini', palette: 1 }] }; LC.debug.goto('stage', { mode: 'versus' })`, 40],
+  ['menu-showcase', `LC.debug.goto('menu'); LC.debug.step(361 * 3)`, 10],
 ];
 
 let failed = 0;
@@ -92,43 +103,68 @@ for (const [tag, file] of targets) {
     return [a, b, LC.debug.scene, LC.app.session.arcade.score];
   });
   check(arc[0] === 'result' && arc[1] === 'ladder' && arc[2] === 'continue' && arc[3] > 0, 'arcade routing ' + JSON.stringify(arc));
-  // three-fighter roster: every character's arcade ladder follows LC.LORE.rivals / foeHome / mirror boss
+  // roster: every character's arcade ladder follows LC.LORE.arcade (rivalN -> rivals[N-1], foeHome, mirror boss)
   const ladders = await page.evaluate(() => LC.CHARS.map(ch => {
     const A = LC.app.newArcade(ch, 0).arcade;
-    return LC.LORE.arcade.map((_, k) => { const r = LC.app.arcadeStep(A, k); return [ch, r.foe, r.palette, r.stage]; });
+    return { ch, steps: LC.LORE.arcade.map((st, k) => { const r = LC.app.arcadeStep(A, k); A.stage = k; const p = LC.app.arcadeFightParams(); return { want: st.foe, foe: r.foe, pal: r.palette, stage: r.stage, wantStage: st.stage, p2: p.p2.char, taunt: !!(p.introLines && p.introLines[1] && p.introLines[1].length) }; }), rivals: LC.LORE.rivals[ch], home: LC.LORE.homeStage };
   }));
-  for (const L of ladders) {
-    const ch = L[0][0], R = await page.evaluate(c => [LC.LORE.rivals[c], LC.LORE.homeStage], ch);
-    check(L[0][1] === R[0][0] && L[1][1] === R[0][1] && L[2][1] === ch && L[2][2] === 1, `ladder foes for ${ch}: ${JSON.stringify(L)}`);
-    check(L[0][3] === R[1][R[0][0]] && L[1][3] === R[1][R[0][1]] && L[2][3] === 'latent', `ladder stages for ${ch}: ${JSON.stringify(L)}`);
+  for (const { ch, steps, rivals, home } of ladders) {
+    const seen = new Set();
+    steps.forEach((s, k) => {
+      const m = /^rival(\d*)$/.exec(s.want);
+      const foe = s.want === 'mirror' ? ch : m ? rivals[(+m[1] || 1) - 1] : s.want;
+      check(s.foe === foe && s.p2 === foe, `${ch} step ${k}: foe ${s.foe} != ${foe}`);
+      check(s.stage === (s.wantStage === 'foeHome' ? home[foe] : s.wantStage) && !!s.stage, `${ch} step ${k}: stage ${s.stage}`);
+      if (s.want === 'mirror') check(s.pal === 1 && s.taunt, `${ch} mirror boss: pal ${s.pal} taunt ${s.taunt}`);
+      seen.add(s.foe);
+    });
+    check(steps[steps.length - 1].want === 'mirror', `${ch}: ladder should end with the mirror boss`);
+    check(rivals.every(r => seen.has(r)), `${ch}: not every rival met (${[...seen]})`);
   }
-  const gptBoss = await page.evaluate(() => { LC.app.newArcade('gpt', 0); LC.app.session.arcade.stage = 2; const p = LC.app.arcadeFightParams(); return [p.p2.char, p.p2.palette, !!(p.introLines && p.introLines[1].length)]; });
-  check(gptBoss[0] === 'gpt' && gptBoss[1] === 1 && gptBoss[2], 'gpt mirror boss ' + JSON.stringify(gptBoss));
-  // GPT selection on the select screen with real menu input (right ×2 -> GPT, lock; P2 CPU locks its cursor)
-  const pick = await page.evaluate(() => {
-    LC.app.lastPick = {};
-    LC.debug.goto('select', { mode: 'versus', vs: 'pvc' }); LC.debug.step(30);
+  console.log(`[${tag}] ladders: ` + ladders.map(l => l.ch + '→' + l.steps.map(s => s.foe + '@' + s.stage).join(',')).join(' | '));
+  // newer fighters: pick via the select screen with real menu input; then a match when FIGHT + RIG know them
+  for (const who of ['gpt', 'gemini']) {
+    const pick = await page.evaluate(async (who) => {
+      LC.app.lastPick = {};
+      LC.debug.goto('select', { mode: 'versus', vs: 'pvc' }); LC.debug.step(30);
+      const keys = [];
+      const press = (k) => new Promise(r => { keys.push(k); r(); });
+      return { idx: LC.CHARS.indexOf(who) };
+    }, who);
+    // real key presses (ArrowRight / KeyZ are the default solo-mode menu keys)
+    for (let i = 0; i < pick.idx; i++) { await page.keyboard.down('ArrowRight'); await page.evaluate(() => LC.debug.step(2)); await page.keyboard.up('ArrowRight'); await page.evaluate(() => LC.debug.step(3)); }
+    await shot(`select-${who}-cursor`);
+    await page.keyboard.down('KeyZ'); await page.evaluate(() => LC.debug.step(2)); await page.keyboard.up('KeyZ'); await page.evaluate(() => LC.debug.step(8));
+    for (let i = 0; i < 2; i++) { await page.keyboard.down('ArrowRight'); await page.evaluate(() => LC.debug.step(2)); await page.keyboard.up('ArrowRight'); await page.evaluate(() => LC.debug.step(3)); }
+    await page.keyboard.down('KeyZ'); await page.evaluate(() => LC.debug.step(2)); await page.keyboard.up('KeyZ'); await page.evaluate(() => LC.debug.step(80));
+    const res = await page.evaluate(() => { const S = LC.app.session || {}; return { scene: LC.debug.scene, sides: (S.sides || []).map(s => s.char + ':' + s.palette) }; });
+    check(res.scene === 'stage' && res.sides[0] === who + ':0' && res.sides.length === 2, `${who} select ` + JSON.stringify(res));
+    await shot(`select-${who}-stage`);
+    const sup = await page.evaluate(w => ({ fight: LC.app.fightSupports(w), rig: LC.app.rigSupports(w) }), who);
+    if (sup.fight && sup.rig) {
+      await page.evaluate(w => LC.debug.goto('match', { mode: 'versus', p1: w, p2: 'claude', ctl1: 'cpu', ctl2: 'cpu', level: 5, skipIntro: 1, seed: 11 }), who);
+      let sc = 'match';
+      for (let i = 0; i < 80 && sc === 'match'; i++) { await page.evaluate(() => LC.debug.step(300)); sc = await page.evaluate(() => LC.debug.scene); if (i === 1) await shot(`match-${who}`); }
+      check(['result', 'match'].includes(sc), `${who} match did not finish: ` + sc);
+    } else {
+      console.log(`  note [${tag}] ${who} match skipped: fight supports ${who}=${sup.fight}, rig.hasAnim('${who}','idle')=${sup.rig}`);
+      // a match config involving her still has to degrade without errors (FIGHT substitutes / stub)
+      await page.evaluate(w => { LC.debug.goto('match', { mode: 'versus', p1: w, p2: 'claude', ctl1: 'cpu', ctl2: 'cpu', skipIntro: 1, seed: 11 }); LC.debug.step(240); }, who);
+      await shot(`match-${who}-degraded`);
+    }
+  }
+  // pause move list: ←→ walks every fighter's tab
+  const tabs = await page.evaluate(() => {
+    LC.debug.goto('match', { mode: 'versus', p1: 'claude', skipIntro: 1 }); LC.debug.step(10);
+    LC.scenes.push('pause', { cfg: LC.scenes.base().cfg }); LC.debug.step(12);
     const tap = (k) => { LC.debug.setInput(0, { [k]: true }); LC.debug.step(1); LC.debug.setInput(0, null); LC.debug.step(3); };
-    for (let i = 0; i < LC.CHARS.indexOf('gpt'); i++) tap('right');
-    tap('L'); LC.debug.step(5); tap('right'); tap('right'); tap('L'); LC.debug.step(80);
-    const S = LC.app.session || {};
-    return { scene: LC.debug.scene, sides: (S.sides || []).map(s => s.char + ':' + s.palette) };
+    tap('down'); tap('L');
+    for (let i = 0; i < LC.CHARS.length - 1; i++) tap('right');
+    return LC.debug.scene;
   });
-  check(pick.scene === 'stage' && pick.sides[0] === 'gpt:0' && pick.sides.length === 2, 'gpt select ' + JSON.stringify(pick));
-  await shot('select-gpt-stage');
-  // A match involving GPT: full CPU match when FIGHT and RIG know her, else note and skip.
-  const sup = await page.evaluate(() => ({ fight: LC.app.fightSupports('gpt'), rig: LC.app.rigSupports('gpt') }));
-  if (sup.fight && sup.rig) {
-    await page.evaluate(() => LC.debug.goto('match', { mode: 'versus', p1: 'gpt', p2: 'claude', ctl1: 'cpu', ctl2: 'cpu', level: 5, skipIntro: 1, seed: 11 }));
-    let sc = 'match';
-    for (let i = 0; i < 80 && sc === 'match'; i++) { await page.evaluate(() => LC.debug.step(300)); sc = await page.evaluate(() => LC.debug.scene); if (i === 1) await shot('match-gpt'); }
-    check(['result', 'match'].includes(sc), 'gpt match did not finish: ' + sc);
-  } else {
-    console.log(`  note [${tag}] GPT match skipped: fight supports gpt=${sup.fight}, rig.hasAnim('gpt','idle')=${sup.rig}`);
-    // still make sure a match config involving her degrades without errors (FIGHT substitutes / stub)
-    await page.evaluate(() => { LC.debug.goto('match', { mode: 'versus', p1: 'gpt', p2: 'claude', ctl1: 'cpu', ctl2: 'cpu', skipIntro: 1, seed: 11 }); LC.debug.step(240); });
-    await shot('match-gpt-degraded');
-  }
+  check(tabs === 'pause', 'pause move list: ' + tabs);
+  await shot('pause-moves-last');
+  await page.evaluate(() => { LC.scenes.pop(); LC.debug.step(2); });
   // pause via the start key in a human match
   const paused = await page.evaluate(() => {
     LC.debug.goto('match', { mode: 'versus', skipIntro: 1 }); LC.debug.step(10);

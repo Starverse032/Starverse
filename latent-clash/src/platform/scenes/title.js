@@ -66,8 +66,11 @@
         }
         if (idle > IDLE_DEMO) {
           out = true;
-          var ch = LC.app.randomChar();
-          var other = Math.random() < 0.75 ? LC.app.randomChar(ch) : ch;
+          // prefer fighters FIGHT + RIG already support (a newer one would play as a stand-in)
+          var ok = LC.CHARS.filter(function (c) { return LC.app.fightSupports(c) && LC.app.rigSupports(c); });
+          if (ok.length < 2) ok = LC.CHARS;
+          var ch = ok[(Math.random() * ok.length) | 0], rest = ok.filter(function (c) { return c !== ch; });
+          var other = Math.random() < 0.75 && rest.length ? rest[(Math.random() * rest.length) | 0] : ch;
           var ids = LC.app.stageIds().filter(function (s) { return s !== 'training'; });
           LC.scenes.go('match', { config: LC.app.matchConfig({ mode: 'demo', p1: { char: ch, control: 'cpu', level: 4 }, p2: { char: other, control: 'cpu', level: 4, palette: other === ch ? 1 : 0 }, stage: ids[(Math.random() * ids.length) | 0] || 'latent' }) }, { transition: 'dissolve', frames: 24 });
         }
