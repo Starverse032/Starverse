@@ -464,11 +464,10 @@
     FR.forEach(function (c) { fr = fr.or(Q.sr(c[0], c[1], c[2], c[3])); });
     Q.recol(fr.shift(-2, 6).or(fr.shift(0, 6)), [S.s1, S.s0], S.s2);
     FR.forEach(function (c) { H.hairClump(Q, c, S.h1); });
-    // horns slicing up through the top of the frame (near one from behind the side lock)
-    horn(Q, [30, 64, 24, 55, 18.5, 47, 14.5, 40.5, 12, 34], 7.2, 4);
+    // far horn rising behind the far side; the near horn is drawn over the finished band (cutinOver)
     H.hairClump(Q, [[34, 40, 29, 54, 31, 66, 26, 78], 10, 6, 11, 0, [0.1, 0.6]], S.h1);
     H.hairClump(Q, [[76, 30, 80, 44, 79, 56, 83, 68], 9, 6, 10, 0, [0.1, 0.6]], S.h1);
-    horn(Q, [79, 58, 83, 51, 86, 44, 87.5, 36], 6, 3);
+    horn(Q, [80, 60, 83.5, 52, 86, 44.5, 87.2, 36], 6.4, 3);
   }
   // band motif: dragon-scale crescents + teal flame tongues along the bottom (px coords)
   function cutinMotif(P) {
@@ -485,6 +484,11 @@
   }
   // drawn over the finished band: drifting scale shards / sparks at the left
   function cutinOver(P) {
+    // the near horn breaks the panel: from below the frame across the cheek line and the slanted cut
+    P.s = 2.8; P.ox = -4; P.oy = -103.6;
+    var hm = horn(P, [37, 68, 31.5, 57, 26.5, 48.5, 22.5, 42, 19.5, 35], 7.6, 4);
+    P.s = 1; P.ox = 0; P.oy = 0;
+    P.fill(hm.grow(1).sub(hm), S.ol);
     [[22, 14], [48, 56], [12, 44], [60, 20], [36, 30]].forEach(function (p, i) {
       P.px(p[0], p[1], S.W); P.px(p[0] - 1, p[1], S.a0); P.px(p[0] + 1, p[1], S.a0); P.px(p[0], p[1] - 1, S.a0); P.px(p[0], p[1] + 1, S.a0);
       if (i & 1) { P.px(p[0] - 2, p[1], S.a1); P.px(p[0] + 2, p[1], S.a1); }
