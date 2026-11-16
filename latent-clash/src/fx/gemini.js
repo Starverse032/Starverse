@@ -94,7 +94,7 @@
       // particle stars: tiny (R 2.5, no outline), small (3.6), mid (5.2), big (7)
       g.ps = [starAnim(pal, 2.6, { outline: false, core: 0.5 }), starAnim(pal, 3.6, { core: 0.4 }), starAnim(pal, 5.2, { core: 0.32 }), starAnim(pal, 7, { rim: true })];
       // projectile: L / M / H
-      g.proj = [starAnim(pal, 7.5, { rim: true, p: 0.6, core: 0.22 }), starAnim(pal, 10, { rim: true, p: 0.6, core: 0.2 }), starAnim(pal, 13.5, { rim: true, p: 0.62, core: 0.18 })];
+      g.proj = [starAnim(pal, 7.5, { rim: true, p: 0.6, core: 0.22 }), starAnim(pal, 10, { rim: true, p: 0.56, core: 0.2 }), starAnim(pal, 13.5, { rim: true, p: 0.56, core: 0.18 })];
       // halo for the big star: dithered glow disc, 2 pulse frames
       g.halo = I.anim(48, 48, 2, 24, 24, function (b, f) {
         var m = new I.Buf(48, 48);
