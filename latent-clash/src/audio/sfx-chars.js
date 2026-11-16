@@ -2,7 +2,9 @@
  * Claude 娘: warm — FM bells, chimes, paper/ink, major-key sparkle (D major / lydian colours).
  * DeepSeek 娘: cool — water, bubbles, splashes, sonar; quick and bouncy (E minor pentatonic).
  * GPT 娘: regal dragon — cold teal fire (airy roar + icy shimmer), claws (metal ring), wing beats,
- *         low growls and heavy floor impacts (A minor / open fifths). */
+ *         low growls and heavy floor impacts (A minor / open fifths).
+ * Gemini 娘: mischievous cat-girl star magic — glassy tings, sparkle arpeggios, detuned twin tones,
+ *         phasey "ghost" tails and echoes (E major / lydian, high register). */
 (function () {
   'use strict';
   var LC = window.LC = window.LC || {};
@@ -277,5 +279,127 @@
       var wide = S.bus(r, o, 1, { pan: [[0, -0.5], [0.8, 0.5]], t: t + X + B - 0.1 });
       icyShimmer(r, wide, t + X + B - 0.1, 0.5, 0.06, p, rnd);
       S.noise(r, o, t + X + B - 0.05, { c: 'crackle', hp: 4000, lp: 10000, g: [[0, 0], [0.05, 1], [0.6, 0.0001, 'e']], v: 0.3 });
+    } });
+
+  // ---- Gemini 娘 ---------------------------------------------------------------------
+  function ting(r, o, t, f, v, dec, p) {   // glassy struck tone: sine + inharmonic glass partials
+    S.bell(r, o, t, f, v, dec, [1, 2.32, 4.25, 6.63], [1, 0.5, 0.25, 0.12], p);
+  }
+  function sparkle(r, o, t, notes, step, v, p, rnd) {   // quick plink arpeggio
+    notes.forEach(function (n, i) {
+      var tt = t + i * step + rnd() * 0.006;
+      S.osc(r, o, tt, { w: 'sine', f: N(n), g: [[0, 0], [0.002, 1], [0.14, 0.0001, 'e']], v: v * (1 - i * 0.08), fm: { r: 3.01, i: [[0, 1.2], [0.08, 0.05, 'e']] } }, p);
+    });
+  }
+  function twinTone(r, o, t, f, len, v, p, det) {   // two detuned shimmering sines (the twin stars)
+    [-1, 1].forEach(function (s) {
+      S.osc(r, o, t, { w: 'sine', f: f, det: s * (det || 9), g: [[0, 0], [0.01, 1], [len * 0.6, 0.6], [len, 0.0001, 'e']], v: v, vib: [7 + s, 12, 0.03] }, p);
+    });
+  }
+
+  def('gemini.star', { cat: 'gemini', dur: 0.45, poly: 2, guard: 0.1, wet: 0.3,
+    desc: 'star throw: quick glassy "ting" + rising sparkle arpeggio', when: 'star / airStar leaves the hand (first active frame)',
+    build: function (r, o, t, p, rnd) {
+      S.noise(r, o, t, { c: 'white', bp: [[0, 3000], [0.08, 7000, 'e']], q: 1.2, g: S.ad(0.004, 0.07), v: 0.35 }, p);
+      ting(r, o, t, N('E6'), 0.32, 0.3, p);
+      sparkle(r, o, t + 0.04, ['B6', 'E7', 'G#7', 'B7'], 0.035, 0.12, p, rnd);
+    } });
+
+  def('gemini.starHit', { cat: 'gemini', dur: 0.5, poly: 3, guard: 0.05, jitter: 0.03, prio: 3, wet: 0.25,
+    desc: 'star shatters: bright crystalline burst', when: 'star hits (blocked: vol 0.6)',
+    build: function (r, o, t, p, rnd) {
+      punch(r, o, t, p, 1.3);
+      S.noise(r, o, t, { c: 'metal', hp: 4000, lp: 12000, g: S.ad(0.0005, 0.12), v: 0.35 }, p);
+      S.noise(r, o, t, { c: 'white', hp: 6000, g: S.ad(0.0005, 0.05), v: 0.3 });
+      ['E7', 'A#7', 'C#8', 'G#7', 'D#8', 'B7'].forEach(function (n) {
+        S.osc(r, o, t + rnd() * 0.06, { w: 'sine', f: N(n) * (1 + (rnd() - 0.5) * 0.01), g: [[0, 0], [0.001, 1], [0.12 + rnd() * 0.12, 0.0001, 'e']], v: 0.09 }, p);
+      });
+      ting(r, o, t, N('B6'), 0.18, 0.25, p);
+    } });
+
+  def('gemini.rise', { cat: 'gemini', dur: 0.6, poly: 1, guard: 0.15, wet: 0.25,
+    desc: 'rising spinning claw: fast upward whoosh + two detuned shimmering twin-star tones', when: 'starRise start-up → rise',
+    build: function (r, o, t, p) {
+      S.noise(r, o, t, { c: 'white', bp: [[0, 900], [0.25, 7500, 'e']], q: 1.4, lp: 11000, g: [[0, 0], [0.08, 1], [0.3, 0.0001, 'e']], v: 0.6, rate: [[0, 0.8], [0.25, 1.3]] }, p);
+      // spinning: tremolo whoosh layer
+      S.noise(r, o, t + 0.03, { c: 'pink', bp: [[0, 1500], [0.25, 4000, 'e']], q: 2, g: roar(0.02, 0.26, 1, 30, 0.8, Math.random).concat([[0.3, 0.0001, 'e']]), v: 0.35 }, p);
+      S.noise(r, o, t + 0.02, { c: 'white', hp: 3500, lp: 10000, g: S.ad(0.0005, 0.01), v: 0.45 });
+      [N('E6'), N('B6')].forEach(function (f, i) {
+        var w = S.bus(r, o, 1, { pan: i ? 0.35 : -0.35, t: t });
+        S.osc(r, w, t + 0.02, { w: 'sine', f: [[0, f * 0.6], [0.2, f, 'e']], det: i ? 11 : -11, g: [[0, 0], [0.02, 1], [0.22, 0.7], [0.5, 0.0001, 'e']], v: 0.12, vib: [9, 15, 0.1] }, p);
+        S.osc(r, w, t + 0.02, { w: 'sine', f: [[0, f * 0.6], [0.2, f, 'e']], det: i ? -4 : 4, g: [[0, 0], [0.02, 1], [0.22, 0.7], [0.5, 0.0001, 'e']], v: 0.09, fm: { r: 2, i: [[0, 0.6], [0.3, 0.1, 'e']] } }, p);
+      });
+    } });
+
+  def('gemini.twin', { cat: 'gemini', dur: 1.0, poly: 1, guard: 0.2, wet: 0.35, stereo: true,
+    desc: 'twin summoned: soft magical two-note chime, played twice (echo of itself)', when: 'twin gesture: the light-twin appears',
+    build: function (r, o, t, p, rnd) {
+      S.noise(r, o, t, { c: 'white', bp: [[0, 2000], [0.3, 6000, 'e']], q: 2, g: [[0, 0], [0.15, 1], [0.4, 0.0001, 'e']], v: 0.12 }, p);
+      [[0, 1, -0.35], [0.32, 0.55, 0.35]].forEach(function (x) {
+        var w = S.bus(r, o, x[1], { pan: x[2], t: t + x[0], lp: x[0] ? 6000 : 12000 });
+        fmBell(r, w, t + x[0], N('G#6'), 0.22, 0.45, p, 2.0, 1.2);
+        fmBell(r, w, t + x[0] + 0.1, N('C#7'), 0.22, 0.55, p, 2.0, 1.2);
+        twinTone(r, w, t + x[0], N('G#5'), 0.4, 0.035, p, 7);
+      });
+      sparkle(r, o, t + 0.2, ['E7', 'G#7', 'B7'], 0.05, 0.05, p, rnd);
+    } });
+
+  def('gemini.twinStrike', { cat: 'gemini', dur: 0.55, poly: 2, guard: 0.08, jitter: 0.02, wet: 0.3,
+    desc: "twin's claw: light slash with a ghostly phasey tail", when: 'twinStrike active (the twin claws)',
+    build: function (r, o, t, p) {
+      S.noise(r, o, t, { c: 'white', bp: [[0, 6000], [0.07, 2200, 'e']], q: 1.5, lp: 11000, g: S.ad(0.003, 0.08), v: 0.65 }, p);
+      S.noise(r, o, t + 0.04, { c: 'white', bp: [[0, 5500], [0.07, 2000, 'e']], q: 1.5, lp: 9000, g: S.ad(0.003, 0.07), v: 0.4 }, p);
+      // ghost tail: two band-passed noises sweeping against each other (phasing) + detuned whisper tones
+      S.noise(r, o, t + 0.04, { c: 'pink', bp: [[0, 1200], [0.4, 3200, 'e']], q: 6, g: [[0, 0], [0.04, 1], [0.42, 0.0001, 'e']], v: 0.4 }, p);
+      S.noise(r, o, t + 0.04, { c: 'pink', bp: [[0, 3400], [0.4, 1300, 'e']], q: 6, g: [[0, 0], [0.04, 1], [0.42, 0.0001, 'e']], v: 0.4 }, p);
+      twinTone(r, o, t + 0.03, N('D#6'), 0.42, 0.05, p, 14);
+    } });
+
+  def('gemini.blink', { cat: 'gemini', dur: 0.4, poly: 1, guard: 0.1, wet: 0.2,
+    desc: 'teleport: short reversed-sounding suck-in, then a pop with sparkle', when: 'blinkOut start (vanish); optionally again at blinkIn',
+    build: function (r, o, t, p, rnd) {
+      var X = 0.14;
+      S.noise(r, o, t, { c: 'white', bp: [[0, 6000], [X, 1200, 'e']], q: 1.6, g: [[0, 0.0001], [X, 1, 'e'], [X + 0.005, 0.0001, 'e']], v: 0.5 }, p);
+      S.osc(r, o, t, { w: 'sine', f: [[0, 2400], [X, 500, 'e']], g: [[0, 0.0001], [X, 1, 'e'], [X + 0.005, 0.0001, 'e']], v: 0.12 }, p);
+      S.osc(r, o, t + X, { w: 'sine', f: [[0, 900], [0.04, 260, 'e']], g: S.ad(0.0008, 0.05), v: 0.5 }, p);
+      S.noise(r, o, t + X, { c: 'white', hp: 2500, lp: 9000, g: S.ad(0.0005, 0.02), v: 0.35 });
+      sparkle(r, o, t + X + 0.02, ['B7', 'G#7', 'E8'], 0.03, 0.07, p, rnd);
+    } });
+
+  def('gemini.super', { cat: 'gemini', dur: 2.1, poly: 1, guard: 0.5, prio: 5, wet: 0.4, irDur: 1.5, stereo: true,
+    desc: '≈1.5 s: twinkling build-up, cascade of falling-star plinks, two crossing beam swells, big bright burst', when: 'Gemini super: constellation lights up (after the super flash)',
+    build: function (r, o, t, p, rnd) {
+      var C = 0.35, X = 1.0, B = 1.32;
+      // twinkling build-up (rising, random-panned plinks)
+      for (var i = 0; i < 9; i++) {
+        var tt = t + i * (C / 9), w = S.bus(r, o, 1, { pan: rnd() * 1.4 - 0.7, t: tt });
+        S.osc(r, w, tt, { w: 'sine', f: N(['E6', 'B6', 'G#6', 'E7', 'C#7', 'B7', 'G#7', 'D#8', 'E8'][i]), g: [[0, 0], [0.002, 1], [0.12, 0.0001, 'e']], v: 0.04 + i * 0.008, fm: { r: 3.01, i: [[0, 1], [0.08, 0.05, 'e']] } }, p);
+      }
+      S.noise(r, o, t, { c: 'white', bp: [[0, 3000], [C, 8000, 'e']], q: 2, g: [[0, 0.0001], [C, 1, 'e'], [C + 0.1, 0.0001, 'e']], v: 0.15 }, p);
+      // cascade of falling-star plinks (each glides down a little), left↔right
+      var fall = ['E8', 'B7', 'G#7', 'F#7', 'E7', 'D#7', 'B6', 'A#6', 'G#6', 'E6', 'B5', 'G#5'];
+      fall.forEach(function (n, i) {
+        var tt = t + C + i * 0.05 + rnd() * 0.015, f = N(n), w = S.bus(r, o, 1, { pan: (i % 2 ? 0.6 : -0.6) * (1 - i / 16), t: tt });
+        S.osc(r, w, tt, { w: 'sine', f: [[0, f], [0.18, f * 0.85, 'e']], g: [[0, 0], [0.002, 1], [0.22, 0.0001, 'e']], v: 0.09, fm: { r: 2.32, i: [[0, 1.4], [0.12, 0.1, 'e']] } }, p);
+        S.noise(r, w, tt, { c: 'white', hp: 7000, g: S.ad(0.0005, 0.015), v: 0.08 });
+      });
+      // two crossing beam swells (L→R and R→L)
+      [[-0.9, 0.9, 'E4', -7], [0.9, -0.9, 'B4', 7]].forEach(function (x) {
+        var w = S.bus(r, o, 1, { pan: [[0, x[0]], [B - 0.72, x[1]]], t: t + 0.72, lp: [[0, 900], [B - 0.72, 5000, 'e']] });
+        S.osc(r, w, t + 0.72, { w: 's25', f: N(x[2]), det: x[3], g: [[0, 0.0001], [B - 0.72, 1, 'e'], [B - 0.7, 0.0001, 'e']], v: 0.12 }, p);
+        S.osc(r, w, t + 0.72, { w: 'sawtooth', f: N(x[2]) * 2, det: -x[3], g: [[0, 0.0001], [B - 0.72, 1, 'e'], [B - 0.7, 0.0001, 'e']], v: 0.05 }, p);
+        S.noise(r, w, t + 0.72, { c: 'white', bp: [[0, 800], [B - 0.72, 5000, 'e']], q: 1.5, g: [[0, 0.0001], [B - 0.72, 1, 'e'], [B - 0.7, 0.0001, 'e']], v: 0.25 }, p);
+      });
+      // big bright burst
+      S.osc(r, o, t + B, { w: 'sine', f: [[0, 150], [0.3, 55, 'e']], g: [[0, 0], [0.003, 1], [0.6, 0.0001, 'e']], v: 0.75, drive: 1.5 }, p);
+      S.noise(r, o, t + B, { c: 'white', hp: 1800, lp: 10000, g: S.ad(0.0005, 0.03), v: 0.6 });
+      S.noise(r, o, t + B, { c: 'white', bp: 2500, q: 0.5, lp: 9000, g: S.ad(0.003, 0.45), v: 0.45 }, p);
+      S.noise(r, o, t + B, { c: 'brown', lp: 400, g: S.ad(0.005, 0.6), v: 0.5 }, p);
+      var body = S.bus(r, o, 1, { lp: [[0, 6000], [0.7, 1500, 'e']], t: t + B });
+      ['E4', 'B4', 'E5', 'G#5', 'B5', 'E6'].forEach(function (n, i) {
+        S.osc(r, body, t + B, { w: 's25', f: N(n), det: (i % 2 ? 6 : -6), g: [[0, 0], [0.005, 1], [0.7, 0.0001, 'e']], v: 0.06 }, p);
+      });
+      var wide = S.bus(r, o, 1, { pan: [[0, 0.5], [0.6, -0.5]], t: t + B + 0.05 });
+      sparkle(r, wide, t + B + 0.05, ['E8', 'B7', 'G#7', 'E7', 'B6'], 0.06, 0.06, p, rnd);
     } });
 })();
