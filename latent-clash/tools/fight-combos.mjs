@@ -28,8 +28,9 @@ export const COMBOS = {
   gpt: [
     { name: 'jH > 5L > 5M > 5H > 236H (breath)', dist: 120, steps: ['j9', 'jH', '5L', '5M', '5H', '236H'], hits: 7 },
     { name: '2L > 2M > 2H (tail sweep)', dist: 44, steps: ['2L', '2M', '2H'], hits: 3 },
-    { name: '5M > 5H > 623H (dragonRise)', dist: 52, steps: ['5M', '5H', '623H'], hits: 3 },
-    { name: '5M > 5H > 236H > SUPER', dist: 52, steps: ['5M', '5H', '236H', 'SUPER'], hits: 10, meter: true }
+    { name: '5L > 5M > 623H (dragonRise)', dist: 36, steps: ['5L', '5M', '623H'], hits: 3 },
+    { name: 'jH > 5M > 623H (dragonRise)', dist: 110, steps: ['j9', 'jH', '5M', '623H'], hits: 3 },
+    { name: '5M > 5H > 236H (3 hits) > SUPER', dist: 52, steps: ['5M', '5H', '236H', 'w14', 'SUPER'], hits: 10, meter: true }
   ]
 };
 // --vs=claude|deepseek|gpt : dummy character (default: the next one in the roster)
@@ -59,6 +60,7 @@ function inPage() {
         const st = c.steps[si];
         const ready = (!waitHit || (A.connected === 'hit' && A.moveInst !== acted) || (acted === -2 && !A.air)) && !(A.air && /^[25]/.test(st));
         if (st === 'j9') { queue([{ d: 9 }, { d: 9 }, { d: 9 }]); si++; }
+        else if (/^w\d+$/.test(st)) { if (ready) { for (let k = +st.slice(1); k > 0; k--) q.push({}); si++; } }
         else if (st === 'jH') { if (A.air && A.vy > 0 && (LC.GROUND_Y - A.y) < (c.jh || 76)) { queue([{ b: 'H' }, { b: 'H' }]); si++; waitHit = true; acted = -2; } }
         else if (ready) {
           acted = A.moveInst;
