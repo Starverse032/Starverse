@@ -124,7 +124,7 @@
   // forward: pounce — gathers low, then a long stretched leap, both paws reaching, legs and tail streaming back
   var DF = P(S, { root: [0, -6], hip: [4, -46], lean: 52, bend: 0, tilt: -36, fF: [-12, -14], fB: [-22, -10], faF: 70, faB: 80, knF: -1, knB: -1,
     hF: [34, -50], hB: [28, -46], handF: 'claw', handB: 'claw', skirt: 0.3, hem: -4, tw: 10, tail: -36, arch: 4, coat: 0.9, cl: 20,
-    eyes: 'focus', mouth: 'cat', air: true, hd: 20 });
+    eyes: 'focus', mouth: 'cat', air: true, hd: 50 });
   def('dashF', {
     segs: [['go', 16]], step: 2,
     keys: [[0, P(CR, { hip: [2, -30], lean: 34, tilt: -24, fF: [10, 0], hF: [26, -34], hB: [18, -36], eyes: 'focus' })], [2, DF, 'out'],
