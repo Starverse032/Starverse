@@ -44,7 +44,7 @@ Tools: `dev/fx-viewer.html` (+`fx-viewer.js`), `tools/fx-sheet.mjs`, `tools/fx-c
 - `LC.settings.flash === false`: no white-outs, softened tints, and fewer lines on every `screen.*`.
 
 ## Names
-Spawn (40): `hit.light/medium/heavy/special/counter`, `block.light/heavy`, `dust.jump/land/dash/skid/down`,
+Spawn (46): `hit.light/medium/heavy/special/counter`, `block.light/heavy`, `dust.jump/land/dash/skid/down`,
 `ring`, `ring.ground`, `sparkle`, `throw.tech/slam`, `ko.burst`, `meter.full`, `super.charge`,
 `claude.sparkCast/sparkHit/sonnetTrail/beamHit/pages/haikuSlash/guardCatch/`**`sonnetPillar`**,
 `deepseek.waveCast/waveHit/breachTrail/poolIn/whaleSplash/bubbles/splash/chainHit/diveTrail/poolOut`,
@@ -108,8 +108,15 @@ Next / known weaknesses:
 - [x] 3. specials: `gpt.scales` (`gpt.js`, K_SCALE), `gpt.breath` (`gpt-breath.js`), `gpt.clawHit`,
   `gpt.breathCast`, `gpt.riseTrail`, `gpt.callSlam`, `gpt.roarRing` (`gpt-specials.js`) — all reviewed in strips
   on dark/light (+warm for breath), pal 1 and facing -1 for breath/riseTrail.
-- [ ] 4. strips / review / viewer / bench
-- [ ] 5. "GPT integration" section below
+- [x] 4. strips in `.shots/fx/gpt.*.png`, `screen.superBackdrop-gpt.png`, `_comp-gpt.png`; viewer: char `gpt`,
+  cells for every gpt name, `gpt.attention` drawn full-screen with the marker as target; `--bench` has `gptSuper`.
+- [x] 5. "GPT integration" section (end of this file).
+Next / known weaknesses (GPT):
+- Heads are flat-shaded planes; the top head (B) is always cut by the screen top (horns hidden) and the right
+  head (C) is partly off-screen when the target is near the right edge. Aim is quantised to 10° steps.
+- `gpt.breath` front edge is still a little cloud-like (round puffs); no heat-shimmer.
+- `gpt.breathCast` is small; `gpt.callSlam` uses the neutral dust puffs.
+- Not yet checked with the real GPT rig sprite or on the four real stages.
 
 ## V2 integration (for FIGHT)
 Coordinates: `spawn` uses world coordinates, `drawSprite` uses screen coordinates
@@ -182,3 +189,39 @@ draw `stage.drawBack` first on those frames.
 | `deepseek.geyser` | spawn at the exit point (floor) on the first frame of `diveOut` (`deepseek.poolOut` does the same). The column (~170 px, 26f) is in the back layer, the splash in front |
 | `deepseek.chainHit` | unchanged call (`index` 0/1/2), bigger burst + spray + ring |
 | `deepseek.diveTrail` | unchanged call (every active frame of `diveKick` at `weapon`), thicker ribbon |
+
+## GPT integration (for FIGHT)
+Same conventions as above: `spawn` = world coords, `drawSprite` = screen coords, boxes rel. the origin and
+facing right (facing −1: `x' = −(x + w)`), `palette` 0 = teal-white "Platinum", 1 = violet "Black dragon".
+`char: 'gpt'` now works on every char-tinted generic: `hit.special`, `ring`, `ring.ground`, `sparkle`,
+`meter.full`, `super.charge`, `screen.superBg`, `screen.superFinish`, `screen.koBackdrop`, `screen.impact`.
+
+### Super 注意力即一切 ATTENTION IS ALL YOU NEED (startup 6 → flash → cast 12, active 50, recovery 30)
+Target point `tx, ty` = the victim's chest ON SCREEN. Latch it at cast f0 (or keep the victim pinned):
+the head layout follows tx/ty, so a target that moves makes the heads slide.
+| when (t = frames since cast f0) | what |
+|---|---|
+| flash (freeze) | [B] `screen.superBg {char:'gpt', palette, cx, cy}` (chest); spawn `super.charge {char:'gpt'}` at the chest |
+| t 0 … 69 | [A] `screen.superBackdrop {char:'gpt', palette, facing}` from t 0 (8f staircase-cell reveal from her side; draw `stage.drawBack` under it while t < 8). Keep drawing it until the outro |
+| t 0 … 69 | [C] `gpt.attention` at (0,0) `{tx, ty, facing, palette, part:'back'}` (necks + heads, behind the fighters) and [D] the same with `part:'front'` (lines, beams, orb, burst, scales) after the fighters. Omit `part` to draw both at once |
+| t 0–13 | heads sweep in from the left, the top and the right (staggered 2f) |
+| t 12 = `events.lock` (= active f0) | dashed targeting lines + closing reticle + Q/K/V tags |
+| t 18 = `events.open` | jaws open, mouths charge |
+| t 24 = `events.fire` | three beams converge on the target (orb at tx,ty). Suggested hit ticks `events.hits` = 25, 30, 35, 40 |
+| t 44 = `events.burst` | the orb swells; t 48–49 white flash, t 49–54 full-screen teal burst (it covers the fighters for ~4f; softened when `settings.flash === false`). Last hit here |
+| t 52 = `events.dissolve` … 69 | heads fade out in 0.2 alpha steps and break into falling scales; the sprite draws nothing from t 70 (= recovery f8) |
+| recovery f10–17 | `screen.superBackdrop {char:'gpt', phase:'out'}` t = 0..7 over the stage (cells close back toward her side), then the stage |
+| hit boxes | `spriteInfo('gpt.attention').frames[t]` rel. (tx,ty): t 25–43 `{x:-16,y:-20,w:32,h:40}` (the beam orb), t 44–49 `{x:-48,y:-48,w:96,h:96}` (burst), else `w = 0`. Blockable / multi-hit as per V2.5 — damage per tick is FIGHT's call |
+| KO by the super | `screen.superFinish {char:'gpt', palette, cx, cy}` as for the others |
+Palette-1 heads are baked ~0.1 s after `init` (idle `setTimeout`), or synchronously on first use (~40 ms).
+
+### Specials
+| name | call |
+|---|---|
+| `gpt.breathCast` | spawn at the `muzzle` (mouth) on breath / airBreath startup f0, facing = hers. 10f inhale + glint at ~f10, ~22f total |
+| `gpt.breath` (sprite) | every active frame at the `muzzle`, [D] front: `drawSprite(ctx,'gpt.breath',mx,my,t,{length, angle, phase, facing, palette})`. `length` 60 / 85 / 110 (L/M/H), `angle` 0 (`breath`) or 45 (`airBreath`, down-forward). `phase:'start'` for active f0–5 (t from 0, grows from the mouth), `'loop'` after (t keeps counting), `'end'` for 10f from the end of active (t from 0; the source cuts off, the rest flies on). Hit area: `spriteInfo('gpt.breath').box(length, angle)` rel. the mouth, facing right — L110/0° `{x:6,y:-23,w:104,h:45}`, M85/0° `{x:6,y:-18,w:79,h:37}`, L60/45° `{x:-6,y:-10,w:58,h:63}`. On each of the 3 hits spawn `hit.special {char:'gpt'}` at the contact point |
+| `gpt.riseTrail` | every frame of `dragonRise` "rise" at `weapon` (claw tip), facing = hers. Back layer by default (`layer:'front'` to draw over her). Each call adds 1 arc (12f) + a scale every 2nd frame |
+| `gpt.clawHit` | on hit of her claw attacks (5L/2L/jL, dragonRise hit) at the contact point, facing = attacker; 14f, ~56 px. Use with or instead of `hit.light`/`hit.medium` |
+| `gpt.callSlam` | callHit: on the last frame of `slam` (victim released) at the victim's landing point on the floor (x, GROUND_Y), facing = hers. ~45f; crater + cracks go to the back layer, debris front. Pair with `screen.impact {cx, cy, char:'gpt'}` (8f) and shake |
+| `gpt.roarRing` | roar active f0 at her chest/mouth, facing = hers, `power` 0 / 0.5 / 1 → ring radius 56 / 70 / 84 (= 56 + 28·power, the V2.5 ranges); ~24f, front layer. The visual reaches full radius at ~t 15 |
+| `gpt.scales` | free accent (wing buffets, tail lashes on hit, landings, intro/win), ~60f |
