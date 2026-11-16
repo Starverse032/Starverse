@@ -262,8 +262,13 @@
     }
     // hair
     var hA = headPt(d, 6, 18), hB = headPt(d, 9, 21), lk = headPt(d, 14, 24), lf = headPt(d, 27, 21), ah = headPt(d, 15, 11);
-    sec.attach('hairA', hA[0], hA[1], a * 0.4);
-    sec.attach('hairB', hB[0], hB[1], a * 0.4);
+    var hd = ds.hd || 0, airy = ds.air ? 0.35 : 1;
+    ['hairA', 'hairB', 'lockN', 'sFa', 'sFe', 'sBa', 'sBe', 'hemF', 'hemB'].forEach(function (id) {
+      var ch = own(by[id]); if (ch._g0 == null) ch._g0 = ch.def.grav == null ? 0.25 : ch.def.grav;
+      ch.def.grav = ch._g0 * airy;
+    });
+    sec.attach('hairA', hA[0], hA[1], a * 0.4 + hd);
+    sec.attach('hairB', hB[0], hB[1], a * 0.4 + hd);
     sec.attach('lockN', lk[0], lk[1], a * 0.35);
     sec.attach('lockF', lf[0], lf[1], a * 0.35);
     sec.attach('ahoge', ah[0], ah[1], a);

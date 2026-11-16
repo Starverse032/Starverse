@@ -31,7 +31,7 @@
     for (var t = 0; t <= maxF; t++) {
       p.setPose(anim, t);
       x += speed;
-      p.tick({ x: x, y: 0, vx: speed, vy: 0, facing: 1, grounded: true });
+      p.tick({ x: x, y: 0, vx: speed, vy: 0, facing: 1, grounded: !(char === 'gpt' && p.pose.ds && p.pose.ds.air) });
       if (want[t]) {
         var c = document.createElement('canvas'); c.width = CW; c.height = CHH;
         var g = c.getContext('2d'); g.imageSmoothingEnabled = false;

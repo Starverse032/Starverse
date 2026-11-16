@@ -50,7 +50,7 @@
   def('walkB', { segs: [['loop', 36, true]], step: 2, walk: -1.1, keys: G.walk(WKB, -1.1, 36, { lift: 5, bob: 1.2, leg: 52, swingF: 2, swingB: 3, extra: gait(-1, 5, 6) }) });
 
   // ---------------------------------------------------------------- crouch (head top ≈ -68)
-  var CR = POSE.crouch = P(S, { hip: [1, -22], lean: 24, bend: 4, tilt: -4, fF: [13, 0], fB: [-11, 0], faB: 28, hF: [27, -48], hB: [16, -40], head: [1, 0],
+  var CR = POSE.crouch = P(S, { hip: [1, -22], lean: 24, bend: 4, tilt: -4, fF: [13, 0], fB: [-11, 0], faB: 28, hF: [30, -44], hB: [16, -38], head: [1, 0],
     handF: 'claw', handB: 'relax', tail: 8, arch: 9, pool: 1, skirt: 0.3, wing: 0.05 });
   def('crouchIn', { segs: [['go', 4]], step: 1, keys: [[0, P(S, { hip: [0, -42], lean: 12 })], [2, P(CR, { hip: [1, -20], sq: 1 }), 'out'], [3, CR]] });
   def('crouch', {
@@ -120,7 +120,7 @@
 
   // ---------------------------------------------------------------- launch / down / getup
   var LA = P(S, { hip: [0, -50], lean: -50, bend: -12, tilt: -40, fF: [14, -14], fB: [5, -6], faF: 40, faB: 30,
-    hF: [-8, -78], hB: [-24, -66], handF: 'open', handB: 'open', eyes: 'shut', mouth: 'open', skirt: 0.15, tail: -30, arch: 6, air: true, wing: 0.6, wf: 30 });
+    hF: [-8, -78], hB: [-24, -66], handF: 'open', handB: 'open', eyes: 'shut', mouth: 'open', skirt: 0.15, tail: -30, arch: 6, air: true, hd: -40, wing: 0.6, wf: 30 });
   var LA2 = function (lean, tilt, hF, hB, fF, fB, sk, tail, pen, wg) {
     return P(LA, { lean: lean, tilt: tilt, hF: hF, hB: hB, fF: fF, fB: fB, skirt: sk, tail: tail, pen: pen, tsw: 2, wing: wg });
   };
