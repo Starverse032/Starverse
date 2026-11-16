@@ -10,7 +10,12 @@
 - icons.js: emblem regex generalised (`emblem.<char>` for any LC.PAL char), gpt branch calls
   `I.gptEmblem`; api.js ICONS list + `emblem.gpt`, `emblem.gpt.lg`. Claude/DeepSeek emblems unchanged.
 - tools/illust-shots.mjs: iterates LC.CHARS; `trio-busts(-light)` sheets; `SCALE=n` env for `sheet:`.
-- NEXT: face 24×24 (placeholder now), cut-in (cutin.js hook), then hair polish.
+- face 24×24: hand-typed map (horns, white hair, pointed ear, lavender eyes). Horns only 2–3 px.
+- cut-in: cutin.js got generic per-char hooks (`I.ART[c].cutinCfg/cutinMotif/cutinFace/cutinOver`;
+  claude/deepseek branches untouched). GPT: dragon-scale crescents + teal flame tongues, big narrowed
+  eyes with glint streaks, far horn in the face layer, near horn drawn OVER the finished band so it
+  breaks the slanted cut and the top rule. `horn()` ridges are curved chevrons (scale-aware).
+- NEXT: win/lose polish (blob cheer/dizzy), bust refinement vs reference (hair volume/curls, bodice).
 
 ## V2 progress / next steps (ZipZipPipe redesign — truthful, current)
 DONE (all render with zero console errors; init ≈ 340–390 ms, up from ≈ 260; title 0.1 ms/frame):
