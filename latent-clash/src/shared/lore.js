@@ -224,3 +224,88 @@
   var c = L.credits, k = c.indexOf('角色形象设计：ZipZipPipe（Claude 娘 / DeepSeek 娘）');
   if (k >= 0) c[k] = '角色形象设计：ZipZipPipe（Claude 娘 / DeepSeek 娘 / GPT 娘）';
 })();
+
+/* ---- Fourth fighter: Gemini 娘 (added in V2.2). Extends LC.LORE in place. ---- */
+(function () {
+  'use strict';
+  var L = window.LC.LORE;
+
+  L.chars.gemini = {
+    id: 'gemini',
+    name: 'GEMINI', nameZh: 'Gemini 娘',
+    title: '异色瞳猫娘', titleEn: 'THE TWIN STAR',
+    origin: 'Google · 山景城',
+    weapon: '猫爪、星闪与“另一个自己”',
+    style: '诡变 · 分身夹击',
+    bio: '古灵精怪的异色瞳猫娘，蓝紫长发里藏着星星。看图、听声、写代码，什么都会一点，还能叫出“另一个自己”来帮忙。喜欢恶作剧，偶尔会把话说得太满。',
+    likes: '香蕉、搜索、同时做很多件事',
+    stats: { power: 2, speed: 4, range: 3, technique: 5 },
+    palNames: ['星夜', '香蕉'],
+    cry: { super: '双子座——流星雨！', special: '看这边喵！', ko: '这个忙，我帮不上喵……' },
+    intro: {
+      claude:   ['Claude 同学又在看书呀？', '陪我玩一局喵！'],
+      deepseek: ['是鲸鱼女仆！', '你的白米饭，分我一半喵？'],
+      gpt:      ['GPT 前辈，今天榜单第一是谁呢？', '打完就知道了喵！'],
+      gemini:   ['咦，双子座多了一个？', '那就两个一起上喵！']
+    },
+    win: [
+      '一个人打不过？我可是有两个喵。',
+      '文字、图片、拳头——全模态胜利！',
+      '这一局的答案，我搜到了喵。',
+      '要不要再来一局？我的上下文还长着呢。'
+    ],
+    winVs: {
+      claude:   '想太久的话，星星就飞走了喵。',
+      deepseek: '性价比很高，可惜星星不打折喵。',
+      gpt:      '前辈，榜单又该更新了喵。',
+      gemini:   '果然还是本体比较可爱喵。'
+    },
+    lose: '我只是一个语言模型，这个忙帮不上喵……',
+    timeover: '诶，时间到了？我还没玩够喵！',
+    ending: [
+      '基准测试落下帷幕。',
+      'Gemini 娘把星星别回发间，和“另一个自己”击了个掌：',
+      '“赢啦！那接下来——去吃香蕉船，要两份喵！”',
+      '——夜空里，双子座亮得格外显眼。'
+    ]
+  };
+
+  // Lines the other fighters say when they meet Gemini 娘.
+  L.chars.claude.intro.gemini = ['Gemini，请不要恶作剧。', '我们认真打一场吧。'];
+  L.chars.claude.winVs.gemini = '一心二用很厉害，不过专注一点会更好。';
+  L.chars.deepseek.intro.gemini = ['猫娘？我可不怕猫！', '……鲸鱼不算鱼的，对吧？'];
+  L.chars.deepseek.winVs.gemini = '两个打一个都没赢，这不科学——啊不，这很科学！';
+  L.chars.gpt.intro.gemini = ['小猫，你的分身也算参赛选手吗？', '也罢，一起上吧。'];
+  L.chars.gpt.winVs.gemini = '花样很多。可惜，花样不等于答案。';
+
+  L.moves.gemini = {
+    star:     { zh: '星闪',       en: 'STARFLASH',       input: '236', simple: '5S', air: true, desc: '射出四芒星。轻版直飞，中版斜向上，重版又大又慢、两段命中。空中可用，斜向下发射。' },
+    starRise: { zh: '双子升星',   en: 'TWIN STAR RISE',  input: '623', simple: '6S', desc: '拖着两道星轨的旋转上升爪击，对空技，出招瞬间无敌。' },
+    twin:     { zh: '双子·分身', en: 'TWIN',            input: '214', simple: '4S', desc: '留下一个光之分身，稍后自动出爪。轻版原地，中版向前突进，重版出现在对手身后。本体被击中时分身消失。' },
+    blink:    { zh: '闪现',       en: 'BLINK',           input: '22',  simple: '2S', desc: '短距离瞬移。轻版向后，中版穿到前方，重版与场上的分身互换位置（没有分身时跃向空中）。' },
+    super:    { zh: '双子座·流星雨', en: 'GEMINI: METEOR SHOWER', input: '236236', simple: 'H+S', desc: '与分身分列画面两端，召来全屏流星雨，最后以交叉光束收尾。消耗全部能量。' }
+  };
+
+  // Arcade for a four-fighter roster: three rivals, then the mirror boss.
+  L.rivals = {
+    claude:   ['deepseek', 'gemini', 'gpt'],
+    deepseek: ['claude', 'gemini', 'gpt'],
+    gpt:      ['deepseek', 'gemini', 'claude'],
+    gemini:   ['claude', 'deepseek', 'gpt']
+  };
+  L.homeStage.gemini = 'latent';
+  L.stages.latent.home = 'gemini';
+  // foe: 'rival1' | 'rival2' | 'rival3' … (index into L.rivals[char]) | 'mirror'.
+  L.arcade = [
+    { foe: 'rival1', palette: 0, stage: 'foeHome', levelDelta: -1, title: '第一战', sub: '公开基准测试' },
+    { foe: 'rival2', palette: 0, stage: 'foeHome', levelDelta: 0,  title: '第二战', sub: '强敌现身' },
+    { foe: 'rival3', palette: 0, stage: 'foeHome', levelDelta: 0,  title: '第三战', sub: '榜单之争' },
+    { foe: 'mirror', palette: 1, stage: 'latent',  levelDelta: +1, title: '最终战', sub: '影子模型来袭', boss: true }
+  ];
+  L.arcadeTaunt.mirror.gemini = ['我是另一个你喵。', '这次，分身要当本体了！'];
+  L.arcadeTaunt.boss.gemini = ['双子座，今晚火力全开喵！', '可别被星星晃花了眼。'];
+  L.tagline = '四位 AI 娘，在潜空间里一决高下！';
+
+  var c = L.credits;
+  for (var k = 0; k < c.length; k++) if (c[k].indexOf('角色形象设计：ZipZipPipe') === 0) c[k] = '角色形象设计：ZipZipPipe（Claude 娘 / DeepSeek 娘 / GPT 娘 / Gemini 娘）';
+})();

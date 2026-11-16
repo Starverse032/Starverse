@@ -4,7 +4,7 @@
   'use strict';
   var LC = window.LC = window.LC || {};
 
-  LC.VERSION = '2.1.0';
+  LC.VERSION = '2.2.0';
   LC.TITLE_ZH = '潜空间激斗';
   LC.TITLE_EN = 'LATENT CLASH';
 
@@ -16,7 +16,7 @@
   LC.STAGE_W = 640;      // world width; camera x ranges over [0, STAGE_W - W]
   LC.BLEED = 8;          // backgrounds must cover an extra 8px on every side (screen shake)
 
-  LC.CHARS = ['claude', 'deepseek', 'gpt'];
+  LC.CHARS = ['claude', 'deepseek', 'gpt', 'gemini'];
   LC.STAGES = ['library', 'abyss', 'latent', 'training'];
 
   // ---- Default settings (PLATFORM overwrites from saved data at boot) --------
@@ -138,6 +138,46 @@
         metal:   ['#fff3b8', '#edbd4f', '#b07e2a', '#7a5218'],
         blob:    ['#ffd6f0', '#ff8fc0', '#e0508f', '#8a2a5c'],
         ui:      '#a84fe0', uiLight: '#e0b0ff', uiDark: '#3f2c72'
+      }
+    ],
+    gemini: [
+      { // 0 — "Starry night": blue-to-violet hair, navy outfit, iridescent stars, pink-violet magic
+        id: 'starrynight',
+        outline: '#1c1640',
+        skin:    ['#fff2ea', '#fcdccc', '#e4ac9c', '#b87a76'],
+        blush:   '#ff9fb8',
+        hair:    ['#9fb4ff', '#5f78ea', '#4254c0', '#2a3288'],   // blue: crown, ears, tail base
+        hair2:   ['#e6b8ff', '#b77af2', '#8650cc', '#573090'],   // violet: lower hair, tail tip
+        hairTip: ['#ffc8f4', '#f09ae6'],                          // pink ends
+        ear:     ['#ffd0dc', '#ff9fb8', '#d86a8a', '#8a3a58'],   // inner ear
+        eye:     ['#ffe6ee', '#ff7fa0', '#d8406a', '#7a1f3c'],   // near eye: rose red
+        eye2:    ['#fff6c8', '#ffc840', '#c88a18', '#6a4410'],   // far eye: gold (heterochromia)
+        cloth1:  ['#ffffff', '#f0eefa', '#cbc7e6', '#9792c0'],   // white: sleeve cuffs, petticoat, leg warmers
+        cloth2:  ['#4a4a9a', '#2c2c6a', '#1c1c48', '#10102c'],   // navy-indigo: top, skirt, coat panels, shoes
+        lining:  ['#c9a6ff', '#9a70ea', '#6f4cc4', '#472c8a'],   // violet lining of sleeves and coat panels
+        accent:  ['#ffd6f6', '#ff8fe0', '#d455c0', '#8a2a8a'],   // pink-violet: magic, claw glow
+        star:    ['#ffffff', '#a8f0ff', '#ffb0e6', '#ffe680'],   // iridescent star facets (white, cyan, pink, yellow) — hues, not a ramp
+        metal:   ['#fff3b8', '#edbd4f', '#b07e2a', '#7a5218'],   // gold trim, chain belt
+        ui:      '#b77af2', uiLight: '#e6b8ff', uiDark: '#472c8a'
+      },
+      { // 1 — "Banana": golden hair, brown outfit, green lining, yellow-green magic
+        id: 'banana',
+        outline: '#261a0c',
+        skin:    ['#fff2ea', '#fcdccc', '#e4ac9c', '#b87a76'],
+        blush:   '#ff9fb8',
+        hair:    ['#fff6b0', '#ffd84a', '#d8a018', '#8a6410'],
+        hair2:   ['#fff0c0', '#ffc060', '#e08a28', '#8a4a10'],
+        hairTip: ['#e8ffb0', '#b8e860'],
+        ear:     ['#ffd0dc', '#ff9fb8', '#d86a8a', '#8a3a58'],
+        eye:     ['#e8ffd0', '#8ae060', '#3f9a30', '#1f5a1c'],
+        eye2:    ['#ffe6ee', '#ff7fa0', '#d8406a', '#7a1f3c'],
+        cloth1:  ['#ffffff', '#fbf4dc', '#dccfa6', '#a89a70'],
+        cloth2:  ['#6a5a3a', '#3c3220', '#261f14', '#14100a'],
+        lining:  ['#c8f0a0', '#8ad060', '#4f9a38', '#2c6020'],
+        accent:  ['#f6ffb0', '#d6f050', '#9ac020', '#587808'],
+        star:    ['#ffffff', '#fff080', '#b8f070', '#ffb060'],
+        metal:   ['#fff3b8', '#edbd4f', '#b07e2a', '#7a5218'],
+        ui:      '#e0b020', uiLight: '#fff0a0', uiDark: '#6a4a10'
       }
     ]
   };
