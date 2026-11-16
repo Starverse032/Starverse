@@ -202,6 +202,14 @@ window.fightStubs = function () {
           var k = Math.min(1, t / 30), hgt = Math.round(Math.sin(Math.min(1, t / 60) * Math.PI) * 110);
           ctx.fillStyle = P.cloth2[1]; var wx = f > 0 ? sx - 10 + k * 60 : sx - 160 - k * 60;
           ctx.fillRect(Math.round(wx), sy - hgt, 170, Math.max(4, Math.min(60, hgt))); ctx.fillStyle = P.cloth1[1]; ctx.fillRect(Math.round(wx) + 20, sy - hgt + 30, 120, 10); break;
+        case 'gpt.breath':   // cone as a box (FIGHT uses its own box from spriteInfo / fallback)
+          var BL = o.length || 85, ang = o.angle || 0, bw = ang ? BL * 0.7 : BL, bh = ang ? BL * 0.7 : BL * 0.4;
+          if (o.phase === 'end' && t > 6) break;
+          ctx.fillStyle = P.accent[1]; ctx.fillRect(f > 0 ? sx + 4 : sx - 4 - bw, sy - (ang ? 4 : bh / 2), bw, bh);
+          ctx.fillStyle = '#fff'; ctx.fillRect(f > 0 ? sx + 4 : sx - 4 - bw * 0.4, sy - 3, bw * 0.4, 6); break;
+        case 'gpt.attention':
+          if (o.part === 'back' || t < 24 || t > 49 || o.tx == null) break;
+          ctx.fillStyle = P.accent[1]; ctx.fillRect(o.tx - 16, o.ty - 16, 32, 32); ctx.fillStyle = '#fff'; ctx.fillRect(o.tx - 6, o.ty - 6, 12, 12); break;
         case 'screen.superBg': ctx.fillStyle = 'rgba(5,4,10,0.65)'; ctx.fillRect(-8, -8, LC.W + 16, LC.H + 16);
           ctx.fillStyle = o.color || '#fff'; for (var i = 0; i < 14; i++) ctx.fillRect(0, (i * 31 + t * 7) % LC.H, LC.W, 1); break;
         case 'screen.koFlash': ctx.fillStyle = '#ffffff'; ctx.globalAlpha = Math.max(0, 0.6 - t / 40); ctx.fillRect(0, 0, LC.W, LC.H); break;
