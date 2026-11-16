@@ -90,7 +90,7 @@
     ]
   };
   var MOUTHS = {
-    sly: ['n....', '.n.nn', '..n..'],
+    sly: ['.....n', 'n...n.', '.nnn..'],
     grin: ['nnnnnn', '.Wmmn.', '..nn..'],
     pout: ['.nnn.', 'n...n']
   };
@@ -193,13 +193,15 @@
   // the light-twin: a translucent pink-violet copy peeking in behind her (win)
   function twin(P, dx, dy) {
     var Q = K.painter(P.w, P.h); Q.ox = dx; Q.oy = dy;
-    var m = Q.spoly([54, 10, 36, 12, 26, 20, 20, 34, 18, 50, 22, 64, 34, 72, 50, 78, 70, 78, 86, 70, 92, 54, 92, 36, 86, 22, 70, 10])
-      .or(Q.spoly([29, 28, 25, 16, 25, 6, 27, 1, 33, 4, 40, 8, 46, 13])).or(Q.spoly([62, 13, 68, 8, 76, 4, 82, 1, 84, 7, 82, 16, 79, 25]))
-      .or(Q.spoly([40, 80, 72, 80, 96, 92, 104, 132, 8, 132, 16, 92]));
-    var sol = P.solid();
-    P.fill(m.sub(sol), S.a1);
+    var m = Q.ell(53, 37, 25, 26).or(Q.ell(47, 42, 21, 23))
+      .or(Q.spoly([29, 28, 25, 16, 25, 6, 27, 1, 34, 4, 41, 8, 47, 13, 38, 16])).or(Q.spoly([62, 14, 68, 8, 75, 4, 81, 1, 84, 7, 83, 16, 80, 25, 72, 22]))
+      .or(Q.spoly([30, 40, 24, 60, 26, 80, 20, 100, 24, 132, 94, 132, 98, 100, 92, 80, 94, 60, 84, 36]));
+    P.fill(m, S.a1);
+    for (var y = 0; y < P.h; y++) for (var x = 0; x < P.w; x++) if (((x + y * 2) % 4) === 0 && m.has(x, y)) P.px(x, y, S.a0);
     P.recol(m.band(-2, 2), [S.a1], S.a0);
-    for (var y = 0; y < P.h; y++) for (var x = 0; x < P.w; x++) if (((x + y * 3) % 4) === 0 && P.get(x, y) === S.a1 && m.has(x, y)) P.px(x, y, S.a0);
+    P.fill(m.edge(), S.a2);
+    // glinting eyes
+    [[44, 46], [66, 46]].forEach(function (e) { var x = Math.round(e[0] + dx), y = Math.round(e[1] + dy); P.px(x, y, S.W); P.px(x, y + 1, S.W); P.px(x + 1, y + 1, S.a0); P.px(x, y + 2, S.a0); });
   }
 
   // ---------------------------------------------------------------- bust
@@ -225,8 +227,8 @@
     ].forEach(function (c) { var m = P.sr(c[0], c[1], c[2]); P.part(m, S.h2, S.hl); P.recol(m.band(-1, 1), [S.h2], S.h1); });
 
     // ---- tail tip curling in at the right, behind the sleeve
-    if (lose) tail(P, [114, 96, 108, 104, 104, 114, 103, 124, 104, 132], 10);
-    else tail(P, [116, 120, 108, 110, 105, 96, 108, 84, 106, 74, 100, 71], 10);
+    var tl = lose ? tail(P, [116, 92, 110, 100, 106, 110, 105, 120, 106, 130], 10)
+      : tail(P, [116, 122, 108, 110, 104, 96, 106, 84, 104, 74, 98, 70], 10);
 
     // ---- body: bare shoulders, navy halter top
     var neck = P.poly([50, 60, 62, 60, 63, 84, 50, 84]);
@@ -236,15 +238,20 @@
     P.recol(sh.band(4, -1), [S.s1], S.s2);
     P.recol(sh.band(-1, 2), [S.s1], S.s0);
     P.line([30, 96, 38, 99, 46, 99], S.s2, true, true);   // collarbone hint
-    var top = P.spoly([48, 82, 66, 82, 70, 94, 75, 106, 78, 132, 36, 132, 39, 106, 43, 94]);
+    var top = P.spoly([48, 82, 66, 82, 71, 94, 76, 106, 79, 132, 35, 132, 38, 106, 43, 94]);
     P.recol(top.shift(-2, 1).sub(top), [S.s1, S.s0], S.s2);
     P.part(top, S.d1, S.dl);
     P.recol(top.band(5, 0), [S.d1], S.d2);
     P.recol(top.band(-2, 1), [S.d1], S.d0);
-    // white front panel in a V down to the star gem, gold piping
-    var pan = P.poly([51, 84, 63, 84, 60, 98, 57, 103, 54, 98]);
+    P.recol(K.inner(top).edge().and(P.rect(0, 88, 112, 40)), [S.d1, S.d0], S.m1);
+    P.recol(K.inner(top).edge().and(P.rect(0, 88, 112, 40)), [S.d2], S.m2);
+    // white front panel in a V down to the star gem, violet inset, gold piping
+    var pan = P.poly([50, 84, 64, 84, 62, 96, 57, 108, 52, 96]);
     P.part(pan, S.c1, S.m2);
     P.recol(pan.band(3, 0), [S.c1], S.c2);
+    P.recol(pan.band(-1, 1), [S.c1], S.c0);
+    var ins = P.poly([55, 86, 59, 86, 57, 100]);
+    P.part(ins, S.u1, S.u2); P.recol(ins.band(-1, 0), [S.u1], S.u0);
     // violet under-bust band peeking at the bottom
     var ub = P.sr([37, 124, 48, 127, 58, 127.5, 68, 127, 78, 124], 4, 4).and(top);
     P.part(ub, S.u1, S.ul); P.recol(ub.band(0, 1), [S.u1], S.u0);
@@ -257,7 +264,8 @@
     P.recol(col.band(-1, 1), [S.d1], S.d0);
     P.recol(col.band(0, -2), [S.d1, S.d0, S.d2], S.m1);
     P.recol(col.band(0, 2).and(P.rect(0, 0, 112, 80)), [S.d1, S.d0, S.d2], S.m2);
-    star4(P, 57, 101, 5, { line: S.m2 });
+    star4(P, 57, 107, 6, { line: S.m2 });
+    star4(P, 57, 80, 2, { line: S.m3 });
 
     // ---- near arm: top of the wide detached sleeve (white frill, navy, gold trim)
     var slv = P.spoly([4, 118, 12, 110, 26, 110, 34, 116, 38, 132, 0, 132]);
@@ -333,7 +341,7 @@
     if (!lose) farArm(P, win);
     else farSleeveLow(P);
 
-    hairShift(P, 62, 112);
+    hairShift(P, 70, 124, tl);
     P.outer(S.ol);
 
     if (win) {
@@ -352,20 +360,23 @@
   // raised far arm: the bell sleeve falls open toward the elbow (violet lining inside, white cuff,
   // gold trim); bare forearm; hand with the index finger to the cheek, or a peace sign (win)
   function farArm(P, win) {
-    var bell = P.spoly([78, 98, 84, 92, 94, 90, 104, 92, 109, 98, 112, 112, 114, 132, 74, 132, 75, 112]);
+    var bell = P.spoly([80, 88, 87, 85, 95, 86, 100, 90, 105, 100, 110, 112, 114, 132, 70, 132, 73, 114, 77, 98]);
     P.part(bell, S.d1, S.dl);
     P.recol(bell.band(5, -1), [S.d1], S.d2);
     P.recol(bell.band(-1, 2), [S.d1], S.d0);
-    P.line([86, 102, 84, 118, 86, 132], S.d2, true, true); P.line([100, 102, 103, 118, 102, 132], S.d2, true, true);
-    var open = P.ell(93, 95, 15, 5.5, -0.12), inside = P.ell(93, 95.5, 12.5, 3.8, -0.12);
-    P.part(open, S.c1, S.m2);
-    P.fill(inside, S.u2); P.recol(inside.band(0, 2), [S.u2], S.u3); P.recol(inside.band(0, -2), [S.u2], S.u1);
-    var fa = P.sr([92, 98, 89, 88, 86, 78], 7.4, 6.6);
+    P.line([84, 94, 80, 112, 82, 132], S.d2, true, true); P.line([92, 94, 92, 112, 95, 132], S.d2, true, true);
+    // the flared back edge turns over: violet lining wedge with a white cuff edge and gold trim
+    var lin = P.spoly([97, 88, 102, 96, 107, 108, 112, 122, 113, 132, 103, 132, 102, 116, 99, 102, 96, 92]).and(bell);
+    P.part(lin, S.u1, S.ul); P.recol(lin.band(3, 0), [S.u1], S.u2); P.recol(lin.band(-1, 1), [S.u1], S.u0);
+    P.line([96, 90, 99, 102, 102, 116, 103, 132], S.c1, true);
+    P.line([97, 90, 100, 102, 103, 116, 104, 132], S.m1, true);
+    var open = P.ell(88.5, 87, 9, 3.4, -0.18), inside = P.ell(88.5, 87.4, 6.6, 2, -0.18);
+    P.part(open, S.c1, S.m2); P.fill(inside, S.u3);
+    var fa = P.sr([89, 89, 87.5, 84, 85.5, 78], 7, 6.4);
     P.part(fa, S.s1, S.sl); P.recol(fa.band(3, 0), [S.s1], S.s2); P.recol(fa.band(-1, 0), [S.s1], S.s0);
-    var front = open.and(P.rect(0, 96, 112, 10));
-    P.part(front.sub(inside.sub(P.rect(0, 0, 112, 98))), S.c1, S.m2);
-    P.recol(front.band(0, -1), [S.c1], S.c0);
-    P.line([79, 98, 86, 101, 94, 102, 102, 100, 107, 96], S.m1, true, true);
+    var front = open.and(P.rect(0, 87, 112, 6)).sub(fa.and(P.rect(0, 0, 112, 87)));
+    P.part(front, S.c1, S.m2); P.recol(front.band(0, -1), [S.c1], S.c0);
+    P.line([80, 89, 85, 91, 91, 91, 97, 88], S.m1, true, true);
     if (win) {
       // peace sign: index + middle finger spread up, the rest folded
       var palm = P.spoly([81, 79, 80, 73, 83, 69, 88, 69, 91, 73, 90, 78, 86, 80]);
@@ -425,7 +436,7 @@
 
   I.ART.gemini = {
     bust: function () { var P = K.painter(112, 128); drawBust(P, {}); return P; },
-    bustWin: function () { var P = K.painter(112, 128); twin(P, 14, -6); var Q = K.painter(112, 128); drawBust(Q, { expr: 'win' }); P.blit(Q, 0, 0); return P; },
+    bustWin: function () { var P = K.painter(112, 128); twin(P, 30, 2); var Q = K.painter(112, 128); drawBust(Q, { expr: 'win' }); P.blit(Q, 0, 0); return P; },
     bustLose: function () { var P = K.painter(112, 128); drawBust(P, { expr: 'lose' }); return P; },
     titleFrame: function (o) { var P = K.painter(112, 128); drawBust(P, o); return P; },
     cutin: function () { return I.cutin ? I.cutin('gemini') : K.painter(240, 72); },
