@@ -82,7 +82,7 @@
   LC.scenes.define('ladder', function () {
     var A = LC.app.session.arcade, fp = LC.app.arcadeFightParams(), step = LORE.arcade[A.stage];
     var foe = fp.p2.char, lines = fp.introLines ? fp.introLines[1] : null;
-    var tw = lines ? new ui.Typewriter(lines.join('\n'), { speed: 0.4, font: { size: 12, color: U.text, lineGap: 3 }, pitch: ({ deepseek: 1.25, gpt: 0.9 })[foe] || 1 }) : null;
+    var tw = lines ? new ui.Typewriter(lines.join('\n'), { speed: 0.4, font: { size: 12, color: U.text, lineGap: 3 }, pitch: ({ deepseek: 1.25, gpt: 0.9, gemini: 1.15 })[foe] || 1 }) : null;
     var leaving = false;
     function go() { if (leaving) return; leaving = true; LC.scenes.go('vs', { config: LC.app.matchConfig(fp) }, { transition: 'slash' }); }
     return {
@@ -97,9 +97,11 @@
         ui.backdrop(c, t, { accent: col.ui, speed: 0.8 });
         ui.header(c, '街机模式', 'ARCADE  SCORE ' + String(A.score).padStart(7, '0'), t, col.ui);
         // ladder nodes (left)
+        // any ladder length: bottom node at y 172, top node no higher than y 28, pitch ≤ 56
+        var NL = LORE.arcade.length, PITCH = NL > 1 ? Math.min(56, Math.floor((172 - 28) / (NL - 1))) : 0;
         LORE.arcade.forEach(function (s, i) {
-          var y = 170 - i * 56, x = 40, cur = i === A.stage, done = i < A.stage;
-          if (i < LORE.arcade.length - 1) { for (var yy = y - 44; yy < y - 4; yy += 3) ui.box(c, x + 15, yy, 2, 2, done ? U.gold : U.line); }
+          var y = 172 - i * PITCH, x = 40, cur = i === A.stage, done = i < A.stage;
+          if (i < NL - 1) { for (var yy = y - PITCH + 34; yy < y - 2; yy += 3) ui.box(c, x + 15, yy, 2, 2, done ? U.gold : U.line); }
           var pulse = cur ? ((t >> 3) & 1) : 0;
           ui.box(c, x - 1 - pulse, y - 1 - pulse, 34 + pulse * 2, 34 + pulse * 2, cur ? U.gold : done ? U.dim : U.line);
           ui.box(c, x, y, 32, 32, U.bg1);

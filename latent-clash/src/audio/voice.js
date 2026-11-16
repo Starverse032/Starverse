@@ -39,7 +39,7 @@
   var GAIN = {
     claude:   { light: 2.04, medium: 0.87, heavy: 0.7, special: 1.0, super: 0.56, hurt: 0.8, ko: 1.2, win: 0.5, intro: 0.82 },
     deepseek: { light: 4.0, medium: 1.32, heavy: 1.05, special: 0.74, super: 0.85, hurt: 1.62, ko: 1.64, win: 1.05, intro: 1.16 },
-    gemini:   { light: 4.0, medium: 1.32, heavy: 1.05, special: 0.74, super: 0.85, hurt: 1.62, ko: 1.64, win: 1.05, intro: 1.16 },
+    gemini:   { light: 2.61, medium: 1.7, heavy: 1.21, special: 0.79, super: 0.93, hurt: 2.54, ko: 1.95, win: 1.34, intro: 0.93 },
     gpt:      { light: 1.86, medium: 1.02, heavy: 0.64, special: 0.93, super: 0.56, hurt: 0.94, ko: 1.3, win: 0.47, intro: 0.82 }
   };
 
