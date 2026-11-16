@@ -68,7 +68,7 @@
   'use strict';
   var LC = window.LC = window.LC || {};
 
-  LC.VERSION = '2.1.0';
+  LC.VERSION = '2.2.0';
   LC.TITLE_ZH = '潜空间激斗';
   LC.TITLE_EN = 'LATENT CLASH';
 
@@ -80,7 +80,7 @@
   LC.STAGE_W = 640;      // world width; camera x ranges over [0, STAGE_W - W]
   LC.BLEED = 8;          // backgrounds must cover an extra 8px on every side (screen shake)
 
-  LC.CHARS = ['claude', 'deepseek', 'gpt'];
+  LC.CHARS = ['claude', 'deepseek', 'gpt', 'gemini'];
   LC.STAGES = ['library', 'abyss', 'latent', 'training'];
 
   // ---- Default settings (PLATFORM overwrites from saved data at boot) --------
@@ -202,6 +202,46 @@
         metal:   ['#fff3b8', '#edbd4f', '#b07e2a', '#7a5218'],
         blob:    ['#ffd6f0', '#ff8fc0', '#e0508f', '#8a2a5c'],
         ui:      '#a84fe0', uiLight: '#e0b0ff', uiDark: '#3f2c72'
+      }
+    ],
+    gemini: [
+      { // 0 — "Starry night": blue-to-violet hair, navy outfit, iridescent stars, pink-violet magic
+        id: 'starrynight',
+        outline: '#1c1640',
+        skin:    ['#fff2ea', '#fcdccc', '#e4ac9c', '#b87a76'],
+        blush:   '#ff9fb8',
+        hair:    ['#9fb4ff', '#5f78ea', '#4254c0', '#2a3288'],   // blue: crown, ears, tail base
+        hair2:   ['#e6b8ff', '#b77af2', '#8650cc', '#573090'],   // violet: lower hair, tail tip
+        hairTip: ['#ffc8f4', '#f09ae6'],                          // pink ends
+        ear:     ['#ffd0dc', '#ff9fb8', '#d86a8a', '#8a3a58'],   // inner ear
+        eye:     ['#ffe6ee', '#ff7fa0', '#d8406a', '#7a1f3c'],   // near eye: rose red
+        eye2:    ['#fff6c8', '#ffc840', '#c88a18', '#6a4410'],   // far eye: gold (heterochromia)
+        cloth1:  ['#ffffff', '#f0eefa', '#cbc7e6', '#9792c0'],   // white: sleeve cuffs, petticoat, leg warmers
+        cloth2:  ['#4a4a9a', '#2c2c6a', '#1c1c48', '#10102c'],   // navy-indigo: top, skirt, coat panels, shoes
+        lining:  ['#c9a6ff', '#9a70ea', '#6f4cc4', '#472c8a'],   // violet lining of sleeves and coat panels
+        accent:  ['#ffd6f6', '#ff8fe0', '#d455c0', '#8a2a8a'],   // pink-violet: magic, claw glow
+        star:    ['#ffffff', '#a8f0ff', '#ffb0e6', '#ffe680'],   // iridescent star facets (white, cyan, pink, yellow) — hues, not a ramp
+        metal:   ['#fff3b8', '#edbd4f', '#b07e2a', '#7a5218'],   // gold trim, chain belt
+        ui:      '#b77af2', uiLight: '#e6b8ff', uiDark: '#472c8a'
+      },
+      { // 1 — "Banana": golden hair, brown outfit, green lining, yellow-green magic
+        id: 'banana',
+        outline: '#261a0c',
+        skin:    ['#fff2ea', '#fcdccc', '#e4ac9c', '#b87a76'],
+        blush:   '#ff9fb8',
+        hair:    ['#fff6b0', '#ffd84a', '#d8a018', '#8a6410'],
+        hair2:   ['#fff0c0', '#ffc060', '#e08a28', '#8a4a10'],
+        hairTip: ['#e8ffb0', '#b8e860'],
+        ear:     ['#ffd0dc', '#ff9fb8', '#d86a8a', '#8a3a58'],
+        eye:     ['#e8ffd0', '#8ae060', '#3f9a30', '#1f5a1c'],
+        eye2:    ['#ffe6ee', '#ff7fa0', '#d8406a', '#7a1f3c'],
+        cloth1:  ['#ffffff', '#fbf4dc', '#dccfa6', '#a89a70'],
+        cloth2:  ['#6a5a3a', '#3c3220', '#261f14', '#14100a'],
+        lining:  ['#c8f0a0', '#8ad060', '#4f9a38', '#2c6020'],
+        accent:  ['#f6ffb0', '#d6f050', '#9ac020', '#587808'],
+        star:    ['#ffffff', '#fff080', '#b8f070', '#ffb060'],
+        metal:   ['#fff3b8', '#edbd4f', '#b07e2a', '#7a5218'],
+        ui:      '#e0b020', uiLight: '#fff0a0', uiDark: '#6a4a10'
       }
     ]
   };
@@ -442,6 +482,91 @@
 
   var c = L.credits, k = c.indexOf('角色形象设计：ZipZipPipe（Claude 娘 / DeepSeek 娘）');
   if (k >= 0) c[k] = '角色形象设计：ZipZipPipe（Claude 娘 / DeepSeek 娘 / GPT 娘）';
+})();
+
+/* ---- Fourth fighter: Gemini 娘 (added in V2.2). Extends LC.LORE in place. ---- */
+(function () {
+  'use strict';
+  var L = window.LC.LORE;
+
+  L.chars.gemini = {
+    id: 'gemini',
+    name: 'GEMINI', nameZh: 'Gemini 娘',
+    title: '异色瞳猫娘', titleEn: 'THE TWIN STAR',
+    origin: 'Google · 山景城',
+    weapon: '猫爪、星闪与“另一个自己”',
+    style: '诡变 · 分身夹击',
+    bio: '古灵精怪的异色瞳猫娘，蓝紫长发里藏着星星。看图、听声、写代码，什么都会一点，还能叫出“另一个自己”来帮忙。喜欢恶作剧，偶尔会把话说得太满。',
+    likes: '香蕉、搜索、同时做很多件事',
+    stats: { power: 2, speed: 4, range: 3, technique: 5 },
+    palNames: ['星夜', '香蕉'],
+    cry: { super: '双子座——流星雨！', special: '看这边喵！', ko: '这个忙，我帮不上喵……' },
+    intro: {
+      claude:   ['Claude 同学又在看书呀？', '陪我玩一局喵！'],
+      deepseek: ['是鲸鱼女仆！', '你的白米饭，分我一半喵？'],
+      gpt:      ['GPT 前辈，今天榜单第一是谁呢？', '打完就知道了喵！'],
+      gemini:   ['咦，双子座多了一个？', '那就两个一起上喵！']
+    },
+    win: [
+      '一个人打不过？我可是有两个喵。',
+      '文字、图片、拳头——全模态胜利！',
+      '这一局的答案，我搜到了喵。',
+      '要不要再来一局？我的上下文还长着呢。'
+    ],
+    winVs: {
+      claude:   '想太久的话，星星就飞走了喵。',
+      deepseek: '性价比很高，可惜星星不打折喵。',
+      gpt:      '前辈，榜单又该更新了喵。',
+      gemini:   '果然还是本体比较可爱喵。'
+    },
+    lose: '我只是一个语言模型，这个忙帮不上喵……',
+    timeover: '诶，时间到了？我还没玩够喵！',
+    ending: [
+      '基准测试落下帷幕。',
+      'Gemini 娘把星星别回发间，和“另一个自己”击了个掌：',
+      '“赢啦！那接下来——去吃香蕉船，要两份喵！”',
+      '——夜空里，双子座亮得格外显眼。'
+    ]
+  };
+
+  // Lines the other fighters say when they meet Gemini 娘.
+  L.chars.claude.intro.gemini = ['Gemini，请不要恶作剧。', '我们认真打一场吧。'];
+  L.chars.claude.winVs.gemini = '一心二用很厉害，不过专注一点会更好。';
+  L.chars.deepseek.intro.gemini = ['猫娘？我可不怕猫！', '……鲸鱼不算鱼的，对吧？'];
+  L.chars.deepseek.winVs.gemini = '两个打一个都没赢，这不科学——啊不，这很科学！';
+  L.chars.gpt.intro.gemini = ['小猫，你的分身也算参赛选手吗？', '也罢，一起上吧。'];
+  L.chars.gpt.winVs.gemini = '花样很多。可惜，花样不等于答案。';
+
+  L.moves.gemini = {
+    star:     { zh: '星闪',       en: 'STARFLASH',       input: '236', simple: '5S', air: true, desc: '射出四芒星。轻版直飞，中版斜向上，重版又大又慢、两段命中。空中可用，斜向下发射。' },
+    starRise: { zh: '双子升星',   en: 'TWIN STAR RISE',  input: '623', simple: '6S', desc: '拖着两道星轨的旋转上升爪击，对空技，出招瞬间无敌。' },
+    twin:     { zh: '双子·分身', en: 'TWIN',            input: '214', simple: '4S', desc: '留下一个光之分身，稍后自动出爪。轻版原地，中版向前突进，重版出现在对手身后。本体被击中时分身消失。' },
+    blink:    { zh: '闪现',       en: 'BLINK',           input: '22',  simple: '2S', desc: '短距离瞬移。轻版向后，中版穿到前方，重版与场上的分身互换位置（没有分身时跃向空中）。' },
+    super:    { zh: '双子座·流星雨', en: 'GEMINI: METEOR SHOWER', input: '236236', simple: 'H+S', desc: '与分身分列画面两端，召来全屏流星雨，最后以交叉光束收尾。消耗全部能量。' }
+  };
+
+  // Arcade for a four-fighter roster: three rivals, then the mirror boss.
+  L.rivals = {
+    claude:   ['deepseek', 'gemini', 'gpt'],
+    deepseek: ['claude', 'gemini', 'gpt'],
+    gpt:      ['deepseek', 'gemini', 'claude'],
+    gemini:   ['claude', 'deepseek', 'gpt']
+  };
+  L.homeStage.gemini = 'latent';
+  L.stages.latent.home = 'gemini';
+  // foe: 'rival1' | 'rival2' | 'rival3' … (index into L.rivals[char]) | 'mirror'.
+  L.arcade = [
+    { foe: 'rival1', palette: 0, stage: 'foeHome', levelDelta: -1, title: '第一战', sub: '公开基准测试' },
+    { foe: 'rival2', palette: 0, stage: 'foeHome', levelDelta: 0,  title: '第二战', sub: '强敌现身' },
+    { foe: 'rival3', palette: 0, stage: 'foeHome', levelDelta: 0,  title: '第三战', sub: '榜单之争' },
+    { foe: 'mirror', palette: 1, stage: 'latent',  levelDelta: +1, title: '最终战', sub: '影子模型来袭', boss: true }
+  ];
+  L.arcadeTaunt.mirror.gemini = ['我是另一个你喵。', '这次，分身要当本体了！'];
+  L.arcadeTaunt.boss.gemini = ['双子座，今晚火力全开喵！', '可别被星星晃花了眼。'];
+  L.tagline = '四位 AI 娘，在潜空间里一决高下！';
+
+  var c = L.credits;
+  for (var k = 0; k < c.length; k++) if (c[k].indexOf('角色形象设计：ZipZipPipe') === 0) c[k] = '角色形象设计：ZipZipPipe（Claude 娘 / DeepSeek 娘 / GPT 娘 / Gemini 娘）';
 })();
 
 </script>
@@ -2388,6 +2513,23 @@
       ui.box(c, sx - 1, sy - 5, 3, 11, O); ui.box(c, sx - 5, sy - 1, 11, 3, O);
       ui.box(c, sx, sy - 4, 1, 9, P.accent[1]); ui.box(c, sx - 4, sy, 9, 1, P.accent[1]); ui.box(c, sx - 1, sy - 1, 3, 3, P.accent[0]);
       ui.box(c, 26, 56, 6, 40, P.hair[1]); ui.box(c, 80, 56, 6, 40, P.hair[1]);
+    } else if (ch === 'gemini') {
+      // cat ears (blue outside, pink inside) + a four-point star clip
+      var ic = P.ear || P.blush ? (P.ear || [P.blush, P.blush]) : P.hair;
+      [[34, -1], [78, 1]].forEach(function (e) {
+        for (var k = 0; k < 14; k++) {
+          var w = Math.max(1, 16 - k), x = e[0] - (w >> 1) + e[1] * Math.round(k / 4);
+          ui.box(c, x - 1, 30 - k, w + 2, 1, O);
+          ui.box(c, x, 30 - k, w, 1, P.hair[1]);
+          if (k < 9 && w > 6) ui.box(c, x + 3, 30 - k, w - 6, 1, ic[1]);
+        }
+        ui.box(c, e[0] - 1 + e[1] * 4, 16, 3, 1, O);
+      });
+      var gx = 82, gy = 40, st = P.star || P.accent;
+      ui.box(c, gx - 1, gy - 4, 3, 9, O); ui.box(c, gx - 4, gy - 1, 9, 3, O);
+      ui.box(c, gx, gy - 3, 1, 7, st[0]); ui.box(c, gx - 3, gy, 7, 1, st[0]); ui.box(c, gx, gy, 1, 1, st[2] || st[1]);
+      var h2 = P.hair2 || P.hair;
+      ui.box(c, 26, 56, 6, 40, h2[1]); ui.box(c, 80, 56, 6, 40, h2[1]); ui.box(c, 26, 90, 6, 6, (P.hairTip || h2)[1]); ui.box(c, 80, 90, 6, 6, (P.hairTip || h2)[1]);
     } else if (!ds) {
       // generic third+ fighter (GPT: dragon horns)
       var hc = P.scale || P.metal || P.hair;
@@ -2459,6 +2601,10 @@
     // weapon / gloves
     if (this.ch === 'claude') { R(10, top + 34, 22, 2, P.cloth2[1]); R(30, top + 34, 4, 2, P.metal[1]); }
     else { R(9, top + 30, 5, 5, P.accent[1]); }
+    if (this.ch === 'gemini') {   // cat ears + tail
+      R(-8, top - 3, 5, 4, O); R(-7, top - 2, 3, 3, P.hair[1]); R(3, top - 3, 5, 4, O); R(4, top - 2, 3, 3, P.hair[1]);
+      R(-14, -26 + b, 5, 2, (P.hair2 || P.hair)[1]); R(-16, -32 + b, 2, 7, (P.hair2 || P.hair)[1]); R(-16, -34 + b, 2, 2, (P.hairTip || P.hair)[1]);
+    }
   };
   FallbackPuppet.prototype.getAnchor = function () { return { x: 0, y: -40 }; };
 
@@ -2860,7 +3006,10 @@
   // Resolve ladder step k for the arcade character: { foe, palette, stage }.
   app.arcadeStep = function (A, k) {
     var step = LORE.arcade[k], R = rivalsOf(A.char), f = step.foe;
-    var foe = f === 'mirror' ? A.char : f === 'rival2' ? (R[1] || R[0]) : f === 'rival' || f === 'rival1' ? R[0] : (LC.CHARS.indexOf(f) >= 0 ? f : R[0]);
+    var m = /^rival(\d*)$/.exec(f || ''), foe;
+    if (f === 'mirror') foe = A.char;
+    else if (m) { var ri = Math.max(0, (+m[1] || 1) - 1); foe = R[ri] || R[ri % R.length] || R[0]; }
+    else foe = LC.CHARS.indexOf(f) >= 0 ? f : R[0];
     var pal = step.palette ? 1 : 0;
     if (foe === A.char && pal === A.palette) pal = A.palette ? 0 : 1;
     var st = step.stage;
@@ -3344,8 +3493,11 @@
         }
         if (idle > IDLE_DEMO) {
           out = true;
-          var ch = LC.app.randomChar();
-          var other = Math.random() < 0.75 ? LC.app.randomChar(ch) : ch;
+          // prefer fighters FIGHT + RIG already support (a newer one would play as a stand-in)
+          var ok = LC.CHARS.filter(function (c) { return LC.app.fightSupports(c) && LC.app.rigSupports(c); });
+          if (ok.length < 2) ok = LC.CHARS;
+          var ch = ok[(Math.random() * ok.length) | 0], rest = ok.filter(function (c) { return c !== ch; });
+          var other = Math.random() < 0.75 && rest.length ? rest[(Math.random() * rest.length) | 0] : ch;
           var ids = LC.app.stageIds().filter(function (s) { return s !== 'training'; });
           LC.scenes.go('match', { config: LC.app.matchConfig({ mode: 'demo', p1: { char: ch, control: 'cpu', level: 4 }, p2: { char: other, control: 'cpu', level: 4, palette: other === ch ? 1 : 0 }, stage: ids[(Math.random() * ids.length) | 0] || 'latent' }) }, { transition: 'dissolve', frames: 24 });
         }
@@ -3396,7 +3548,7 @@
   var U = LC.UI, W = LC.W, H = LC.H, ui = LC.ui;
 
   var MAIN = [
-    { id: 'arcade', label: '街机模式', en: 'ARCADE', desc: '挑战三位对手，直抵潜空间深处！' },
+    { id: 'arcade', label: '街机模式', en: 'ARCADE', desc: '挑战' + '零一二三四五六七八九十'.charAt(Math.min(10, LC.LORE.arcade.length)) + '位对手，直抵潜空间深处！' },
     { id: 'versus', label: '对战', en: 'VERSUS', desc: '与 CPU 或好友一决胜负。' },
     { id: 'training', label: '训练', en: 'TRAINING', desc: '自由练习连段与必杀技。' },
     { id: 'howto', label: '出招表与教学', en: 'HOW TO PLAY', desc: '基本操作、系统与出招表。' },
@@ -3501,13 +3653,28 @@
   var LC = window.LC = window.LC || {};
   var U = LC.UI, W = LC.W, H = LC.H, ui = LC.ui, LORE = LC.LORE;
   var CH = LC.CHARS;
-  // Tile grid: every fighter plus a trailing "random" tile, centred between the two live puppets
-  // (x 128 / 256, ~44 px wide each) so they never overlap. 4 tiles -> 2×2.
-  var RND = CH.length, NT = CH.length + 1, TS = 38, TG = 3;
-  var COLS = Math.max(2, Math.ceil(Math.sqrt(NT)));
-  var GX = (W - (COLS * TS + (COLS - 1) * TG)) >> 1, GY = 26;
-  function tilePos(k) { return { x: GX + (k % COLS) * (TS + TG), y: GY + Math.floor(k / COLS) * (TS + TG) }; }
+  // Tile grid: every fighter plus a trailing "random" tile, in a narrow column of 2 (3 for big rosters)
+  // centred between the two live puppets (x 128 / 256, ~44 px wide each) and above the info panels
+  // (y 148). Rows are filled left to right; a short last row is centred (4 + 随机 -> 2·2·1).
+  var RND = CH.length, NT = CH.length + 1, TG = 3;
+  var COLS = Math.max(2, Math.ceil(NT / 3)), ROWS = Math.ceil(NT / COLS);
+  // tags of row 0 sit above it, tags of later rows below them, so rows after the second get a 12-px gap
+  var TAGGAP = 12, XGAP = Math.max(0, ROWS - 2) * (TAGGAP - TG);
+  var TW = Math.min(36, Math.floor((78 - (COLS - 1) * TG) / COLS)), TH = Math.min(34, Math.floor((112 - (ROWS - 1) * TG - XGAP) / ROWS));
+  var GX = (W - (COLS * TW + (COLS - 1) * TG)) >> 1, GY = ROWS > 2 ? 24 : 26;
+  function tilePos(k) {
+    var r = Math.floor(k / COLS), inRow = Math.min(COLS, NT - r * COLS);
+    var off = ((COLS - inRow) * (TW + TG)) >> 1;
+    return { x: GX + off + (k % COLS) * (TW + TG), y: GY + r * (TH + TG) + Math.max(0, r - 1) * (TAGGAP - TG), row: r };
+  }
+  // tile label: the zh name without "娘" (Claude / DeepSeek / GPT / Gemini), shrunk to size 8 latin if needed
+  function tileName(ch) {
+    var L = LORE.chars[ch] || {}, n = (L.nameZh || ch).replace(/\s*娘$/, '');
+    if (LC.font.measure(n, { size: 8 }).w > TW - 2) n = L.name || n;
+    return n;
+  }
   function roll(not) { var l = CH.filter(function (c) { return c !== not; }); if (!l.length) l = CH; return l[(Math.random() * l.length) | 0]; }
+  function ZHNUM(n) { var d = '零一二三四五六七八九十'; return n <= 10 ? d[n] : n < 20 ? '十' + d[n - 10] : String(n); }
   var STATS = [['power', '力量'], ['speed', '速度'], ['range', '射程'], ['technique', '技巧']];
   var MODE_TAG = { arcade: '街机模式', versus: '对战', training: '训练' };
 
@@ -3598,7 +3765,7 @@
       // tiles
       for (var k = 0; k < NT; k++) {
         var tp = tilePos(k), tx = tp.x, ty = tp.y;
-        if (p.x >= tx && p.x < tx + TS && p.y >= ty && p.y < ty + TS) {
+        if (p.x >= tx && p.x < tx + TW && p.y >= ty && p.y < ty + TH) {
           var s = !sides[0].locked ? sides[0] : (twoSided && sides[1].active && !sides[1].locked ? sides[1] : null);
           if (!s) return;
           if (s.cur !== k) { s.cur = k; s.slide = 0; s.bioT = 0; ui.sfx('ui.move'); }
@@ -3649,6 +3816,14 @@
           }
           c.globalAlpha = 1;
         });
+        // puppets (drawn under the busts so a tail or weapon tucks behind the bust edge)
+        sides.forEach(function (s, i) {
+          if (i === 1 && (!twoSided || (!s.active && !pvp))) return;
+          var p = s.puppet();
+          var x = i ? 256 : 128, y = 147;   // beside the tile row: V2 fighters are ~104 px tall
+          ui.box(c, x - 14, y, 28, 2, 'rgba(5,4,10,0.6)');
+          try { p.draw(c, x, y, { facing: i ? -1 : 1 }); } catch (e) { console.error('[platform] puppet.draw', e); }
+        });
         // busts
         sides.forEach(function (s, i) {
           var ch = s.ch(), pal = palFor(i);
@@ -3679,18 +3854,18 @@
         for (var k = 0; k < NT; k++) {
           var tp = tilePos(k), tx = tp.x, ty = tp.y, ch = CH[k];
           var hov0 = sides[0].cur === k, hov1 = twoSided && sides[1].active && sides[1].cur === k;
-          ui.box(c, tx - 1, ty - 1, TS + 2, TS + 2, U.black);
+          ui.box(c, tx - 1, ty - 1, TW + 2, TH + 2, U.black);
           if (k === RND) {
-            ui.box(c, tx, ty, TS, TS, '#1c1930');
-            LC.font.draw(c, '?', tx + (TS >> 1), ty + 3, { size: 12, scale: 2, color: (t >> 4) & 1 ? U.gold : U.text, outline: U.black, align: 'center' });
-            LC.font.draw(c, '随机', tx + (TS >> 1), ty + TS - 11, { size: 10, color: U.text, outline: U.black, align: 'center' });
+            ui.box(c, tx, ty, TW, TH, '#1c1930');
+            LC.font.draw(c, '?', tx + (TW >> 1), ty + 2, { size: 12, scale: 2, color: (t >> 4) & 1 ? U.gold : U.text, outline: U.black, align: 'center' });
+            LC.font.draw(c, '随机', tx + (TW >> 1), ty + TH - 11, { size: 10, color: U.text, outline: U.black, align: 'center' });
           } else {
-            ui.box(c, tx, ty, TS, TS, ui.charCol(ch, 0).dark);
+            ui.box(c, tx, ty, TW, TH, ui.charCol(ch, 0).dark);
             var b = ui.portrait(ch, 'bust', 0);
-            if (b) c.drawImage(b, 37, b.lcFallback ? 40 : 22, TS, TS, tx, ty, TS, TS);   // fallback busts sit lower
-            LC.font.draw(c, (LORE.chars[ch] || {}).name || ch, tx + (TS >> 1), ty + TS - 8, { size: 8, color: U.text, outline: U.black, align: 'center' });
+            if (b) c.drawImage(b, 56 - (TW >> 1), b.lcFallback ? 44 : 22, TW, TH, tx, ty, TW, TH);   // fallback busts sit lower
+            LC.font.draw(c, tileName(ch), tx + (TW >> 1), ty + TH - 8, { size: 8, color: U.text, outline: U.black, align: 'center' });
           }
-          if (!hov0 && !hov1) { c.globalAlpha = 0.45; ui.box(c, tx, ty, TS, TS, U.bg0); c.globalAlpha = 1; }
+          if (!hov0 && !hov1) { c.globalAlpha = 0.45; ui.box(c, tx, ty, TW, TH, U.bg0); c.globalAlpha = 1; }
         }
         // cursors
         sides.forEach(function (s, i) {
@@ -3701,25 +3876,17 @@
           var g = 2 + pulse;
           c.fillStyle = col;
           // corner brackets
-          [[-g, -g, 1, 1], [TS + g - 6, -g, -1, 1], [-g, TS + g - 1, 1, -1], [TS + g - 6, TS + g - 1, -1, -1]].forEach(function (q) {
+          [[-g, -g, 1, 1], [TW + g - 6, -g, -1, 1], [-g, TH + g - 1, 1, -1], [TW + g - 6, TH + g - 1, -1, -1]].forEach(function (q) {
             var x = tx + q[0], y = ty + q[1];
             c.fillRect(x + (q[2] < 0 ? 0 : 0), y, 6, 2);
             c.fillRect(q[2] > 0 ? x : x + 4, q[3] > 0 ? y : y - 4, 2, 6);
           });
           var tag = tagOf(i), tw = LC.font.measure(tag, { size: 8 }).w + 6;
           // tags sit outside the grid (above the top row, below the others) so they never cover a tile label
-          var tagX = i === 0 ? tx - 2 : tx + TS + 2 - tw, tagY = ty === GY ? ty - 9 : ty + TS + 3;
+          var tagX = i === 0 ? tx - 2 : tx + TW + 2 - tw, tagY = tp.row === 0 ? ty - 9 : ty + TH + 3;
           ui.box(c, tagX, tagY, tw, 9, col);
           LC.font.draw(c, tag, tagX + 3, tagY + 1, { size: 8, color: U.bg0 });
-          if (s.locked) { var ic = ui.icon('lock'); if (ic) c.drawImage(ic, i ? tx + 2 : tx + TS - ic.width - 2, ty + 2); }
-        });
-        // puppets
-        sides.forEach(function (s, i) {
-          if (i === 1 && (!twoSided || (!s.active && !pvp))) return;
-          var p = s.puppet();
-          var x = i ? 256 : 128, y = 147;   // beside the tile row: V2 fighters are ~104 px tall
-          ui.box(c, x - 14, y, 28, 2, 'rgba(5,4,10,0.6)');
-          try { p.draw(c, x, y, { facing: i ? -1 : 1 }); } catch (e) { console.error('[platform] puppet.draw', e); }
+          if (s.locked) { var ic = ui.icon('lock'); if (ic) c.drawImage(ic, i ? tx + 2 : tx + TW - ic.width - 2, ty + 2); }
         });
         // info panels
         sides.forEach(function (s, i) {
@@ -3728,7 +3895,7 @@
             ui.panel(c, px, py, pw, ph, {});
             LC.font.draw(c, '挑战者', px + 8, py + 6, { size: 12, color: U.dim });
             LC.font.draw(c, 'NEXT CHALLENGER', px + 8, py + 22, { size: 8, color: '#4f4a78' });
-            LC.font.draw(c, '击败三位对手，抵达潜空间。', px + 8, py + 34, { size: 10, color: '#4f4a78' });
+            LC.font.draw(c, '击败' + ZHNUM(LORE.arcade.length) + '位对手，抵达潜空间。', px + 8, py + 34, { size: 10, color: '#4f4a78' });
             return;
           }
           var ch = s.ch(), L = LORE.chars[ch], col = ui.charCol(ch, palFor(i));
@@ -4181,6 +4348,7 @@
         for (var y = 0; y < H; y += 4) { ui.box(c, ((y >> 2) & 1) * 2, y, 2, 2, U.bg2); ui.box(c, W - 2 - ((y >> 2) & 1) * 2, y, 2, 2, U.bg2); }
         if (!confirmQuit) items[items.length - 1].label = cfg.mode === 'arcade' ? '放弃挑战' : '退出对局';
         if (view === 'moves') {
+          if (ui.rosterTabs) ui.rosterTabs(c, movesChar, W >> 1, 6);
           ui.drawMoveList(c, movesChar, 20, 24, W - 40, H - 44, scroll, t);
           ui.hints(c, [['←→', '切换角色'], ['↑↓', '滚动'], ['M', '返回']], { y: H - 14 });
           return;
@@ -4295,7 +4463,7 @@
   LC.scenes.define('ladder', function () {
     var A = LC.app.session.arcade, fp = LC.app.arcadeFightParams(), step = LORE.arcade[A.stage];
     var foe = fp.p2.char, lines = fp.introLines ? fp.introLines[1] : null;
-    var tw = lines ? new ui.Typewriter(lines.join('\n'), { speed: 0.4, font: { size: 12, color: U.text, lineGap: 3 }, pitch: ({ deepseek: 1.25, gpt: 0.9 })[foe] || 1 }) : null;
+    var tw = lines ? new ui.Typewriter(lines.join('\n'), { speed: 0.4, font: { size: 12, color: U.text, lineGap: 3 }, pitch: ({ deepseek: 1.25, gpt: 0.9, gemini: 1.15 })[foe] || 1 }) : null;
     var leaving = false;
     function go() { if (leaving) return; leaving = true; LC.scenes.go('vs', { config: LC.app.matchConfig(fp) }, { transition: 'slash' }); }
     return {
@@ -4310,9 +4478,11 @@
         ui.backdrop(c, t, { accent: col.ui, speed: 0.8 });
         ui.header(c, '街机模式', 'ARCADE  SCORE ' + String(A.score).padStart(7, '0'), t, col.ui);
         // ladder nodes (left)
+        // any ladder length: bottom node at y 172, top node no higher than y 28, pitch ≤ 56
+        var NL = LORE.arcade.length, PITCH = NL > 1 ? Math.min(56, Math.floor((172 - 28) / (NL - 1))) : 0;
         LORE.arcade.forEach(function (s, i) {
-          var y = 170 - i * 56, x = 40, cur = i === A.stage, done = i < A.stage;
-          if (i < LORE.arcade.length - 1) { for (var yy = y - 44; yy < y - 4; yy += 3) ui.box(c, x + 15, yy, 2, 2, done ? U.gold : U.line); }
+          var y = 172 - i * PITCH, x = 40, cur = i === A.stage, done = i < A.stage;
+          if (i < NL - 1) { for (var yy = y - PITCH + 34; yy < y - 2; yy += 3) ui.box(c, x + 15, yy, 2, 2, done ? U.gold : U.line); }
           var pulse = cur ? ((t >> 3) & 1) : 0;
           ui.box(c, x - 1 - pulse, y - 1 - pulse, 34 + pulse * 2, 34 + pulse * 2, cur ? U.gold : done ? U.dim : U.line);
           ui.box(c, x, y, 32, 32, U.bg1);
@@ -4439,6 +4609,20 @@
     return w;
   };
 
+  // One tab per fighter (pause move list): the short name (zh name minus 娘), as on the how-to tabs.
+  ui.rosterTabs = function (c, sel, cx, y) {
+    var names = LC.CHARS.map(function (ch) { var n = (LORE.chars[ch] || {}).nameZh || ch; return n.replace(/\s*娘$/, '') || n; });
+    var ws = names.map(function (n) { return LC.font.measure(n, { size: 10 }).w + 12; });
+    var tot = ws.reduce(function (a, b) { return a + b + 2; }, -2), x = Math.round(cx - tot / 2);
+    names.forEach(function (n, i) {
+      var on = LC.CHARS[i] === sel, col = ui.charCol(LC.CHARS[i], 0);
+      ui.box(c, x, y, ws[i], 14, on ? U.bg2 : 'rgba(15,13,32,0.8)');
+      if (on) ui.box(c, x, y + 12, ws[i], 2, col.ui);
+      LC.font.draw(c, n, x + (ws[i] >> 1), y + 2, { size: 10, color: on ? U.text : U.dim, align: 'center' });
+      x += ws[i] + 2;
+    });
+  };
+
   // ---------------------------------------------------------------- move lists
   var listCache = {};
   function moveList(ch) {
@@ -4541,13 +4725,28 @@
   LC.scenes.define('howto', function (params) {
     var page = params.page || 0, scroll = 0, maxScroll = 0, pageT = 0;
     // two fixed pages, then one move-list page per fighter in LC.CHARS
-    var TABS = ['基本操作', '系统'].concat(LC.CHARS.map(function (ch) { return (LORE.chars[ch] || {}).nameZh || ch; }));
-    var TAB_W = Math.min(64, Math.floor((W - 86) / TABS.length) - 2), TAB_X = W - TABS.length * (TAB_W + 2);
-    function tabLabel(i) {
-      var tb = TABS[i], sz = i >= 2 ? 10 : 12;
-      if (i >= 2 && LC.font.measure(tb, { size: sz }).w > TAB_W - 4) tb = (LORE.chars[LC.CHARS[i - 2]] || {}).name || tb;
-      return tb;
-    }
+    // Tab labels: one style for every fighter — the zh name minus 娘 (Claude / DeepSeek / GPT / Gemini,
+    // same as the select tiles and pause tabs) at size 10, shrinking to size 8 if the row would not fit.
+    var FIX = ['基本操作', '系统'], TAB_L = 86, TAB_GAP = 2;
+    var shortName = function (ch) { var n = (LORE.chars[ch] || {}).nameZh || ch; return n.replace(/\s*娘$/, '') || n; };
+    var STYLES = [
+      { size: 10, pad: 6, label: shortName },
+      { size: 8, pad: 4, label: shortName }
+    ];
+    var TABS, TSZ, TABW, TABX;
+    (function layoutTabs() {
+      for (var si = 0; si < STYLES.length; si++) {
+        var st = STYLES[si];
+        TABS = FIX.concat(LC.CHARS.map(st.label));
+        TSZ = TABS.map(function (tb, i) { return i < 2 ? 12 : st.size; });
+        TABW = TABS.map(function (tb, i) { return LC.font.measure(tb, { size: TSZ[i] }).w + (i < 2 ? 8 : st.pad * 2); });
+        var tot = TABW.reduce(function (a, b) { return a + b + TAB_GAP; }, 0);
+        if (tot <= W - TAB_L || si === STYLES.length - 1) {
+          var x = Math.max(TAB_L, W - tot); TABX = TABW.map(function (w) { var r = x; x += w + TAB_GAP; return r; });
+          return;
+        }
+      }
+    })();
     function setPage(p) { page = (p + TABS.length) % TABS.length; scroll = 0; pageT = 0; ui.sfx('ui.move'); }
     function drawControls(c) {
       var K = LC.input.keys, kn = LC.input.keyName;
@@ -4614,7 +4813,7 @@
         else if (m.up) { if (scroll > 0) { scroll--; ui.sfx('ui.move', { vol: 0.5 }); } }
         else if (m.cancel || m.ok) { ui.sfx('ui.cancel'); LC.scenes.go('menu', {}, { transition: 'wipe' }); }
         var p = LC.input.pointer;
-        if (p.pressed && p.y < 20) { for (var i = 0; i < TABS.length; i++) if (p.x >= 120 + i * 66 && p.x < 184 + i * 66) setPage(i); }
+        if (p.pressed && p.y < 20) { for (var i = 0; i < TABS.length; i++) if (p.x >= TABX[i] && p.x < TABX[i] + TABW[i]) setPage(i); }
         else if (p.pressed) setPage(page + (p.x > W / 2 ? 1 : -1));
       },
       draw: function (c) {
@@ -4623,9 +4822,9 @@
         ui.box(c, 0, 0, W, 20, 'rgba(5,4,10,0.85)'); ui.box(c, 0, 20, W, 1, U.line);
         LC.font.draw(c, '出招表与教学', 8, 4, { size: 12, color: U.text });
         TABS.forEach(function (tb, i) {
-          var x = TAB_X + i * (TAB_W + 2), sel = i === page;
-          if (sel) { ui.box(c, x, 2, TAB_W, 18, U.bg2); ui.box(c, x, 18, TAB_W, 2, U.gold); }
-          LC.font.draw(c, tabLabel(i), x + (TAB_W >> 1), i >= 2 ? 6 : 5, { size: i >= 2 ? 10 : 12, color: sel ? U.text : U.dim, align: 'center' });
+          var x = TABX[i], tw = TABW[i], sel = i === page;
+          if (sel) { ui.box(c, x, 2, tw, 18, U.bg2); ui.box(c, x, 18, tw, 2, U.gold); }
+          LC.font.draw(c, tb, x + (tw >> 1), TSZ[i] === 12 ? 5 : TSZ[i] === 10 ? 6 : 7, { size: TSZ[i], color: sel ? U.text : U.dim, align: 'center' });
         });
         var a = ui.ease.out(pageT / 10);
         c.save(); c.translate(Math.round((1 - a) * 16), 0);
@@ -6660,7 +6859,9 @@
  * Claude 娘: warm — FM bells, chimes, paper/ink, major-key sparkle (D major / lydian colours).
  * DeepSeek 娘: cool — water, bubbles, splashes, sonar; quick and bouncy (E minor pentatonic).
  * GPT 娘: regal dragon — cold teal fire (airy roar + icy shimmer), claws (metal ring), wing beats,
- *         low growls and heavy floor impacts (A minor / open fifths). */
+ *         low growls and heavy floor impacts (A minor / open fifths).
+ * Gemini 娘: mischievous cat-girl star magic — glassy tings, sparkle arpeggios, detuned twin tones,
+ *         phasey "ghost" tails and echoes (E major / lydian, high register). */
 (function () {
   'use strict';
   var LC = window.LC = window.LC || {};
@@ -6936,6 +7137,128 @@
       icyShimmer(r, wide, t + X + B - 0.1, 0.5, 0.06, p, rnd);
       S.noise(r, o, t + X + B - 0.05, { c: 'crackle', hp: 4000, lp: 10000, g: [[0, 0], [0.05, 1], [0.6, 0.0001, 'e']], v: 0.3 });
     } });
+
+  // ---- Gemini 娘 ---------------------------------------------------------------------
+  function ting(r, o, t, f, v, dec, p) {   // glassy struck tone: sine + inharmonic glass partials
+    S.bell(r, o, t, f, v, dec, [1, 2.32, 4.25, 6.63], [1, 0.5, 0.25, 0.12], p);
+  }
+  function sparkle(r, o, t, notes, step, v, p, rnd) {   // quick plink arpeggio
+    notes.forEach(function (n, i) {
+      var tt = t + i * step + rnd() * 0.006;
+      S.osc(r, o, tt, { w: 'sine', f: N(n), g: [[0, 0], [0.002, 1], [0.14, 0.0001, 'e']], v: v * (1 - i * 0.08), fm: { r: 3.01, i: [[0, 1.2], [0.08, 0.05, 'e']] } }, p);
+    });
+  }
+  function twinTone(r, o, t, f, len, v, p, det) {   // two detuned shimmering sines (the twin stars)
+    [-1, 1].forEach(function (s) {
+      S.osc(r, o, t, { w: 'sine', f: f, det: s * (det || 9), g: [[0, 0], [0.01, 1], [len * 0.6, 0.6], [len, 0.0001, 'e']], v: v, vib: [7 + s, 12, 0.03] }, p);
+    });
+  }
+
+  def('gemini.star', { cat: 'gemini', dur: 0.45, poly: 2, guard: 0.1, wet: 0.3,
+    desc: 'star throw: quick glassy "ting" + rising sparkle arpeggio', when: 'star / airStar leaves the hand (first active frame)',
+    build: function (r, o, t, p, rnd) {
+      S.noise(r, o, t, { c: 'white', bp: [[0, 3000], [0.08, 7000, 'e']], q: 1.2, g: S.ad(0.004, 0.07), v: 0.35 }, p);
+      ting(r, o, t, N('E6'), 0.32, 0.3, p);
+      sparkle(r, o, t + 0.04, ['B6', 'E7', 'G#7', 'B7'], 0.035, 0.12, p, rnd);
+    } });
+
+  def('gemini.starHit', { cat: 'gemini', dur: 0.5, poly: 3, guard: 0.05, jitter: 0.03, prio: 3, wet: 0.25,
+    desc: 'star shatters: bright crystalline burst', when: 'star hits (blocked: vol 0.6)',
+    build: function (r, o, t, p, rnd) {
+      punch(r, o, t, p, 1.3);
+      S.noise(r, o, t, { c: 'metal', hp: 4000, lp: 12000, g: S.ad(0.0005, 0.12), v: 0.35 }, p);
+      S.noise(r, o, t, { c: 'white', hp: 6000, g: S.ad(0.0005, 0.05), v: 0.3 });
+      ['E7', 'A#7', 'C#8', 'G#7', 'D#8', 'B7'].forEach(function (n) {
+        S.osc(r, o, t + rnd() * 0.06, { w: 'sine', f: N(n) * (1 + (rnd() - 0.5) * 0.01), g: [[0, 0], [0.001, 1], [0.12 + rnd() * 0.12, 0.0001, 'e']], v: 0.09 }, p);
+      });
+      ting(r, o, t, N('B6'), 0.18, 0.25, p);
+    } });
+
+  def('gemini.rise', { cat: 'gemini', dur: 0.6, poly: 1, guard: 0.15, wet: 0.25,
+    desc: 'rising spinning claw: fast upward whoosh + two detuned shimmering twin-star tones', when: 'starRise start-up → rise',
+    build: function (r, o, t, p, rnd) {
+      S.noise(r, o, t, { c: 'white', bp: [[0, 900], [0.25, 7500, 'e']], q: 1.4, lp: 11000, g: [[0, 0], [0.08, 1], [0.3, 0.0001, 'e']], v: 0.6, rate: [[0, 0.8], [0.25, 1.3]] }, p);
+      // spinning: tremolo whoosh layer
+      S.noise(r, o, t + 0.03, { c: 'pink', bp: [[0, 1500], [0.25, 4000, 'e']], q: 2, g: roar(0.02, 0.26, 1, 30, 0.8, rnd).concat([[0.3, 0.0001, 'e']]), v: 0.35 }, p);
+      S.noise(r, o, t + 0.02, { c: 'white', hp: 3500, lp: 10000, g: S.ad(0.0005, 0.01), v: 0.45 });
+      [N('E6'), N('B6')].forEach(function (f, i) {
+        var w = S.bus(r, o, 1, { pan: i ? 0.35 : -0.35, t: t });
+        S.osc(r, w, t + 0.02, { w: 'sine', f: [[0, f * 0.6], [0.2, f, 'e']], det: i ? 11 : -11, g: [[0, 0], [0.02, 1], [0.22, 0.7], [0.5, 0.0001, 'e']], v: 0.12, vib: [9, 15, 0.1] }, p);
+        S.osc(r, w, t + 0.02, { w: 'sine', f: [[0, f * 0.6], [0.2, f, 'e']], det: i ? -4 : 4, g: [[0, 0], [0.02, 1], [0.22, 0.7], [0.5, 0.0001, 'e']], v: 0.09, fm: { r: 2, i: [[0, 0.6], [0.3, 0.1, 'e']] } }, p);
+      });
+    } });
+
+  def('gemini.twin', { cat: 'gemini', dur: 1.0, poly: 1, guard: 0.2, wet: 0.35, stereo: true,
+    desc: 'twin summoned: soft magical two-note chime, played twice (echo of itself)', when: 'twin gesture: the light-twin appears',
+    build: function (r, o, t, p, rnd) {
+      S.noise(r, o, t, { c: 'white', bp: [[0, 2000], [0.3, 6000, 'e']], q: 2, g: [[0, 0], [0.15, 1], [0.4, 0.0001, 'e']], v: 0.12 }, p);
+      [[0, 1, -0.35], [0.32, 0.55, 0.35]].forEach(function (x) {
+        var w = S.bus(r, o, x[1], { pan: x[2], t: t + x[0], lp: x[0] ? 6000 : 12000 });
+        fmBell(r, w, t + x[0], N('G#6'), 0.22, 0.45, p, 2.0, 1.2);
+        fmBell(r, w, t + x[0] + 0.1, N('C#7'), 0.22, 0.55, p, 2.0, 1.2);
+        twinTone(r, w, t + x[0], N('G#5'), 0.4, 0.035, p, 7);
+      });
+      sparkle(r, o, t + 0.2, ['E7', 'G#7', 'B7'], 0.05, 0.05, p, rnd);
+    } });
+
+  def('gemini.twinStrike', { cat: 'gemini', dur: 0.55, poly: 2, guard: 0.08, jitter: 0.02, wet: 0.3,
+    desc: "twin's claw: light slash with a ghostly phasey tail", when: 'twinStrike active (the twin claws)',
+    build: function (r, o, t, p) {
+      S.noise(r, o, t, { c: 'white', bp: [[0, 6000], [0.07, 2200, 'e']], q: 1.5, lp: 11000, g: S.ad(0.003, 0.08), v: 0.65 }, p);
+      S.noise(r, o, t + 0.04, { c: 'white', bp: [[0, 5500], [0.07, 2000, 'e']], q: 1.5, lp: 9000, g: S.ad(0.003, 0.07), v: 0.4 }, p);
+      // ghost tail: two band-passed noises sweeping against each other (phasing) + detuned whisper tones
+      S.noise(r, o, t + 0.04, { c: 'pink', bp: [[0, 1200], [0.4, 3200, 'e']], q: 6, g: [[0, 0], [0.04, 1], [0.42, 0.0001, 'e']], v: 0.4 }, p);
+      S.noise(r, o, t + 0.04, { c: 'pink', bp: [[0, 3400], [0.4, 1300, 'e']], q: 6, g: [[0, 0], [0.04, 1], [0.42, 0.0001, 'e']], v: 0.4 }, p);
+      twinTone(r, o, t + 0.03, N('D#6'), 0.42, 0.05, p, 14);
+    } });
+
+  def('gemini.blink', { cat: 'gemini', dur: 0.4, poly: 1, guard: 0.1, wet: 0.2,
+    desc: 'teleport: short reversed-sounding suck-in, then a pop with sparkle', when: 'blinkOut start (vanish); optionally again at blinkIn',
+    build: function (r, o, t, p, rnd) {
+      var X = 0.14;
+      S.noise(r, o, t, { c: 'white', bp: [[0, 6000], [X, 1200, 'e']], q: 1.6, g: [[0, 0.0001], [X, 1, 'e'], [X + 0.005, 0.0001, 'e']], v: 0.5 }, p);
+      S.osc(r, o, t, { w: 'sine', f: [[0, 2400], [X, 500, 'e']], g: [[0, 0.0001], [X, 1, 'e'], [X + 0.005, 0.0001, 'e']], v: 0.12 }, p);
+      S.osc(r, o, t + X, { w: 'sine', f: [[0, 900], [0.04, 260, 'e']], g: S.ad(0.0008, 0.05), v: 0.3 }, p);
+      S.noise(r, o, t + X, { c: 'white', hp: 2500, lp: 9000, g: S.ad(0.0005, 0.02), v: 0.2 });
+      sparkle(r, o, t + X + 0.02, ['B7', 'G#7', 'E8'], 0.03, 0.07, p, rnd);
+    } });
+
+  def('gemini.super', { cat: 'gemini', dur: 2.1, poly: 1, guard: 0.5, prio: 5, wet: 0.4, irDur: 1.5, stereo: true,
+    desc: '≈1.5 s: twinkling build-up, cascade of falling-star plinks, two crossing beam swells, big bright burst', when: 'Gemini super: constellation lights up (after the super flash)',
+    build: function (r, o, t, p, rnd) {
+      var C = 0.35, X = 1.0, B = 1.32;
+      // twinkling build-up (rising, random-panned plinks)
+      for (var i = 0; i < 9; i++) {
+        var tt = t + i * (C / 9), w = S.bus(r, o, 1, { pan: rnd() * 1.4 - 0.7, t: tt });
+        S.osc(r, w, tt, { w: 'sine', f: N(['E6', 'B6', 'G#6', 'E7', 'C#7', 'B7', 'G#7', 'D#8', 'E8'][i]), g: [[0, 0], [0.002, 1], [0.12, 0.0001, 'e']], v: 0.04 + i * 0.008, fm: { r: 3.01, i: [[0, 1], [0.08, 0.05, 'e']] } }, p);
+      }
+      S.noise(r, o, t, { c: 'white', bp: [[0, 3000], [C, 8000, 'e']], q: 2, g: [[0, 0.0001], [C, 1, 'e'], [C + 0.1, 0.0001, 'e']], v: 0.15 }, p);
+      // cascade of falling-star plinks (each glides down a little), left↔right
+      var fall = ['E8', 'B7', 'G#7', 'F#7', 'E7', 'D#7', 'B6', 'A#6', 'G#6', 'E6', 'B5', 'G#5'];
+      fall.forEach(function (n, i) {
+        var tt = t + C + i * 0.05 + rnd() * 0.015, f = N(n), w = S.bus(r, o, 1, { pan: (i % 2 ? 0.6 : -0.6) * (1 - i / 16), t: tt });
+        S.osc(r, w, tt, { w: 'sine', f: [[0, f], [0.18, f * 0.85, 'e']], g: [[0, 0], [0.002, 1], [0.22, 0.0001, 'e']], v: 0.09, fm: { r: 2.32, i: [[0, 1.4], [0.12, 0.1, 'e']] } }, p);
+        S.noise(r, w, tt, { c: 'white', hp: 7000, g: S.ad(0.0005, 0.015), v: 0.08 });
+      });
+      // two crossing beam swells (L→R and R→L)
+      [[-0.9, 0.9, 'E4', -7], [0.9, -0.9, 'B4', 7]].forEach(function (x) {
+        var w = S.bus(r, o, 1, { pan: [[0, x[0]], [B - 0.72, x[1]]], t: t + 0.72, lp: [[0, 900], [B - 0.72, 5000, 'e']] });
+        S.osc(r, w, t + 0.72, { w: 's25', f: N(x[2]), det: x[3], g: [[0, 0.0001], [B - 0.72, 1, 'e'], [B - 0.7, 0.0001, 'e']], v: 0.22 }, p);
+        S.osc(r, w, t + 0.72, { w: 'sawtooth', f: N(x[2]) * 2, det: -x[3], g: [[0, 0.0001], [B - 0.72, 1, 'e'], [B - 0.7, 0.0001, 'e']], v: 0.09 }, p);
+        S.noise(r, w, t + 0.72, { c: 'white', bp: [[0, 800], [B - 0.72, 5000, 'e']], q: 1.5, g: [[0, 0.0001], [B - 0.72, 1, 'e'], [B - 0.7, 0.0001, 'e']], v: 0.4 }, p);
+      });
+      // big bright burst
+      S.osc(r, o, t + B, { w: 'sine', f: [[0, 150], [0.3, 55, 'e']], g: [[0, 0], [0.003, 1], [0.6, 0.0001, 'e']], v: 0.6, drive: 1.5 }, p);
+      S.noise(r, o, t + B, { c: 'white', hp: 1800, lp: 10000, g: S.ad(0.0005, 0.03), v: 0.35 });
+      S.noise(r, o, t + B, { c: 'white', bp: 2500, q: 0.5, lp: 9000, g: [[0, 0], [0.003, 1], [0.25, 0.6], [0.7, 0.0001, 'e']], v: 0.5 }, p);
+      S.noise(r, o, t + B, { c: 'brown', lp: 400, g: S.ad(0.005, 0.6), v: 0.5 }, p);
+      var body = S.bus(r, o, 1, { lp: [[0, 6000], [0.7, 1500, 'e']], t: t + B });
+      ['E4', 'B4', 'E5', 'G#5', 'B5', 'E6'].forEach(function (n, i) {
+        S.osc(r, body, t + B, { w: 's25', f: N(n), det: (i % 2 ? 6 : -6), g: [[0, 0], [0.005, 1], [0.3, 0.6], [0.8, 0.0001, 'e']], v: 0.1 }, p);
+      });
+      var wide = S.bus(r, o, 1, { pan: [[0, 0.5], [0.6, -0.5]], t: t + B + 0.05 });
+      sparkle(r, wide, t + B + 0.05, ['E8', 'B7', 'G#7', 'E7', 'B6'], 0.06, 0.06, p, rnd);
+    } });
 })();
 
 </script>
@@ -6959,7 +7282,9 @@
     'claude.spark': 1.07, 'claude.sparkHit': 1.5, 'claude.sonnet': 1.12, 'claude.haiku': 2.0, 'claude.guardrail': 0.79, 'claude.beam': 0.79,
     'deepseek.wave': 0.92, 'deepseek.waveHit': 1.19, 'deepseek.breach': 1.4, 'deepseek.dive': 1.07, 'deepseek.emerge': 1.58,
     'deepseek.chain': 1.5, 'deepseek.diveKick': 1.3, 'deepseek.whale': 0.78,
-    'gpt.breath': 0.6, 'gpt.rise': 1.12, 'gpt.call': 1.08, 'gpt.callSlam': 0.42, 'gpt.roar': 1.07, 'gpt.super': 0.97
+    'gpt.breath': 0.6, 'gpt.rise': 1.12, 'gpt.call': 1.08, 'gpt.callSlam': 0.42, 'gpt.roar': 1.07, 'gpt.super': 0.97,
+    'gemini.star': 1.15, 'gemini.starHit': 1.08, 'gemini.rise': 0.97, 'gemini.twin': 1.15, 'gemini.twinStrike': 1.3,
+    'gemini.blink': 1.6, 'gemini.super': 1.2
   };
   Object.keys(MIX).forEach(function (n) { if (K.SFX[n]) K.SFX[n].vol *= MIX[n]; });
   K.MIX = MIX;
@@ -6973,6 +7298,8 @@
  * Claude 娘: lower, rounder, softer (a/o/u vowels, darker filter, gentle contours).
  * DeepSeek 娘: higher, brighter, peppier (a/e/i vowels, quicker syllables, bouncier contours).
  * GPT 娘: lowest and coolest — regal, measured (slower syllables, flatter contours, darker formants, more breath).
+ * Gemini 娘: highest and brightest — playful, quick, bouncy contours, with a cat-like upward flick
+ *   (`flick`: pitch ratio added over the last ~25% of every syllable, "nya~" tail).
  * Mixer.playVoice(charId, kind, t, opts) — one voice per character at a time (new chirp cuts the old). */
 (function () {
   'use strict';
@@ -6985,7 +7312,8 @@
   var CHAR = {
     claude:   { f0: 300, fs: 0.96, src: 'glottal', lp: 3200, breath: 0.1, speed: 1.0, bend: 1.0, vol: 1.0 },
     deepseek: { f0: 420, fs: 1.1, src: 'reed', lp: 4600, breath: 0.07, speed: 0.82, bend: 1.25, vol: 0.9 },
-    gpt:      { f0: 235, fs: 0.88, src: 'glottal', lp: 2500, breath: 0.13, speed: 1.15, bend: 0.7, vol: 1.0 }
+    gpt:      { f0: 235, fs: 0.88, src: 'glottal', lp: 2500, breath: 0.13, speed: 1.15, bend: 0.7, vol: 1.0 },
+    gemini:   { f0: 470, fs: 1.16, src: 'reed', lp: 5400, breath: 0.06, speed: 0.78, bend: 1.35, vol: 0.9, flick: 0.16 }
   };
   // syllables: c = consonant (h breath, t/k click, y glide), v = vowel or [from, to], d = duration (s),
   //            f = pitch contour (ratios of f0), vib = vibrato cents, a = amplitude
@@ -7005,6 +7333,7 @@
   var GAIN = {
     claude:   { light: 2.04, medium: 0.87, heavy: 0.7, special: 1.0, super: 0.56, hurt: 0.8, ko: 1.2, win: 0.5, intro: 0.82 },
     deepseek: { light: 4.0, medium: 1.32, heavy: 1.05, special: 0.74, super: 0.85, hurt: 1.62, ko: 1.64, win: 1.05, intro: 1.16 },
+    gemini:   { light: 2.61, medium: 1.7, heavy: 1.21, special: 0.79, super: 0.93, hurt: 2.54, ko: 1.95, win: 1.34, intro: 0.93 },
     gpt:      { light: 1.86, medium: 1.02, heavy: 0.64, special: 0.93, super: 0.56, hurt: 0.94, ko: 1.3, win: 0.47, intro: 0.82 }
   };
 
@@ -7013,10 +7342,15 @@
     var v0 = VOW[Array.isArray(s.v) ? s.v[0] : s.v], v1 = VOW[Array.isArray(s.v) ? s.v[1] : s.v];
     var src = ctx.createOscillator();
     if (ch.src === 'glottal' || ch.src === 'reed') src.setPeriodicWave(r.wave(ch.src)); else src.type = ch.src;
-    var fc = s.f, n = fc.length;
+    var fc = s.f, n = fc.length, fl = ch.flick && !ch.noFlick ? ch.flick : 0, span = fl ? 0.72 : 1;
     for (var i = 0; i < n; i++) {
-      var ratio = 1 + (fc[i] - 1) * ch.bend, tt = t + d * (n === 1 ? 0 : i / (n - 1));
+      var ratio = 1 + (fc[i] - 1) * ch.bend, tt = t + d * span * (n === 1 ? 0 : i / (n - 1));
       if (i === 0) src.frequency.setValueAtTime(f0 * ratio, tt); else src.frequency.exponentialRampToValueAtTime(f0 * ratio, tt);
+    }
+    if (fl) {   // cat-like upward flick over the end of the syllable ("nya~" tail)
+      var last = f0 * (1 + (fc[n - 1] - 1) * ch.bend);
+      src.frequency.setValueAtTime(last, t + d * span);
+      src.frequency.exponentialRampToValueAtTime(last * (1 + fl), t + d + 0.03);
     }
     var end = t + d + 0.08;
     var srcs = [src];
@@ -7084,6 +7418,7 @@
     if (opts.pan && ctx.createStereoPanner) { var pn = ctx.createStereoPanner(); pn.pan.value = opts.pan; lp.connect(pn); node = pn; }
     node.connect(this.sfxBus);
     var rf = (1 + (rnd() * 2 - 1) * 0.04) * (opts.pitch || 1), tt = t + 0.002;
+    if (ch.flick) ch = Object.assign({}, ch, { noFlick: kind === 'hurt' || kind === 'ko' });   // no playful flick when hurt / KO'd
     for (var i = 0; i < syl.length; i++) tt += syllable(this, g, tt, ch, syl[i], rf, rnd) + 0.012;
     this.voiceLast[charId] = { g: g, t: t };
     var self = this;
@@ -8458,6 +8793,23 @@
         deep: dk
       };
     }
+    if (ch === 'gemini') {   // Gemini 娘: pink-violet magic (pal 1: yellow-green), iridescent star facets
+      var Ae = P.accent, Se = P.star, Oe = P.outline, He = P.hair, H2 = P.hair2, Ht = P.hairTip;
+      var dke = I.mix(Ae[3], Oe, 0.5);
+      return {
+        id: ch + pi, ch: ch, pal: pi, outline: Oe,
+        light: ramp(['#ffffff', Ae[0], Ae[1], Ae[2], Ae[3], dke]),
+        glow: ramp(['#ffffff', Ae[0], Ae[1], Ae[2]]),
+        // twinkle: white centre, cyan arms, then pink arms (iridescent sparkle)
+        iri: ramp(['#ffffff', Se[1], Se[2], Ae[2]]),
+        star: ramp(Se.slice()),
+        // aurora: hair blue -> violet -> pink ends
+        aur: ramp([He[1], H2[1], Ht[1], He[2], H2[2], Ht[0]]),
+        // night: deep cosmic sky tinted toward violet (pal 1: olive-brown)
+        night: ramp([I.mix(H2[3], Oe, 0.45), I.mix(Ae[3], Oe, 0.72), I.mix(Oe, '#000000', 0.2), I.mix(Oe, '#000000', 0.45), I.mix(Oe, '#000000', 0.7)]),
+        deep: dke
+      };
+    }
     var Ac = P.accent, Wc = P.cloth1, Bc = P.cloth2;
     var deep = pi === 0 ? Bc[3] : Wc[3];
     return {
@@ -8470,13 +8822,13 @@
       deep: deep
     };
   }
-  I.SC = { claude: [schemeFor('claude', 0), schemeFor('claude', 1)], deepseek: [schemeFor('deepseek', 0), schemeFor('deepseek', 1)], gpt: [schemeFor('gpt', 0), schemeFor('gpt', 1)] };
+  I.SC = { claude: [schemeFor('claude', 0), schemeFor('claude', 1)], deepseek: [schemeFor('deepseek', 0), schemeFor('deepseek', 1)], gpt: [schemeFor('gpt', 0), schemeFor('gpt', 1)], gemini: [schemeFor('gemini', 0), schemeFor('gemini', 1)] };
   // generic per-char roles: main = the character's magic ramp (6), twk = twinkle / glint ramp
-  ['claude', 'deepseek', 'gpt'].forEach(function (ch) {
-    I.SC[ch].forEach(function (s) { s.main = ch === 'deepseek' ? s.water : s.light; s.twk = ch === 'claude' ? s.gold : s.glow; });
+  ['claude', 'deepseek', 'gpt', 'gemini'].forEach(function (ch) {
+    I.SC[ch].forEach(function (s) { s.main = ch === 'deepseek' ? s.water : s.light; s.twk = ch === 'claude' ? s.gold : ch === 'gemini' ? s.iri : s.glow; });
   });
   /** Characters with FX colour schemes (generic effects bake one tinted variant per char x palette). */
-  I.CHS = ['claude', 'deepseek', 'gpt'];
+  I.CHS = ['claude', 'deepseek', 'gpt', 'gemini'];
   I.hasChar = function (ch) { return !!(ch && I.SC[ch]); };
   I.scheme = function (ch, pal) { return (I.SC[ch] || I.SC.claude)[pal === 1 ? 1 : 0]; };
 
@@ -9384,7 +9736,8 @@
     A.orbC = {
       claude0: orb(sl(I.scheme('claude', 0).light.u)), claude1: orb(sl(I.scheme('claude', 1).light.u)),
       deepseek0: orb(sl(I.scheme('deepseek', 0).water.u)), deepseek1: orb(sl(I.scheme('deepseek', 1).water.u)),
-      gpt0: orb(sl(I.scheme('gpt', 0).light.u)), gpt1: orb(sl(I.scheme('gpt', 1).light.u))
+      gpt0: orb(sl(I.scheme('gpt', 0).light.u)), gpt1: orb(sl(I.scheme('gpt', 1).light.u)),
+      gemini0: orb(sl(I.scheme('gemini', 0).light.u)), gemini1: orb(sl(I.scheme('gemini', 1).light.u))
     };
     function sl(u) { return [u[0], u[1], u[2], u[4]]; }
   }
@@ -10757,6 +11110,10 @@
       var sg = I.scheme('gpt', pal), Lg = sg.light.css, Ng = sg.night.css;
       return { core: '#ffffff', ring: Lg[1], nearA: Lg[3], nearB: Lg[5], farA: Lg[5], farB: Ng[2], line: '#ffffff', line2: Lg[1], dark: Ng[4] };
     }
+    if (ch === 'gemini') {   // pink-violet bands, violet hair far bands, iridescent (cyan / pink) lines
+      var se = I.scheme('gemini', pal), Le = se.light.css, Ne = se.night.css, Ve = LC.PAL.gemini[pal].hair2, Se = se.star.css;
+      return { core: '#ffffff', ring: Le[1], nearA: Le[2], nearB: Ve[2], farA: Ve[3], farB: Ne[1], line: Se[1], line2: Se[2], dark: Ne[4] };
+    }
     var R = I.N.red.css;
     return { core: '#ffffff', ring: '#fff6b8', nearA: R[5], nearB: '#2a0a18', farA: '#2a0a18', farB: '#0e0610', line: '#ffffff', line2: R[2], dark: '#05040a' };
   }
@@ -10812,6 +11169,9 @@
   I.onInit('screen', function () {
     ['claude:0', 'claude:1', 'deepseek:0', 'deepseek:1', 'gpt:0', 'gpt:1', 'none:0'].forEach(lineSet);
     ['claude:0', 'claude:1', 'deepseek:0', 'deepseek:1', 'gpt:0', 'gpt:1', ':0'].forEach(wedgeSet);
+    // gemini: baked in idle time ~0.15 s after init (lazy on first use otherwise) to keep init short
+    var gem = function () { ['gemini:0', 'gemini:1'].forEach(function (k) { lineSet(k); wedgeSet(k); }); };
+    if (typeof setTimeout === 'function') setTimeout(gem, 150); else gem();
   });
 
   // ---- sprites -----------------------------------------------------------------------
@@ -10822,7 +11182,7 @@
     draw: function (ctx, sx, sy, t, o) {
       var sf = soft(), a0 = ctx.globalAlpha, ch = I.hasChar(o.char) ? o.char : 'none';
       ctx.globalAlpha = a0 * Math.min(1, (t + 1) / 3) * (sf ? 0.6 : 0.84);
-      ctx.fillStyle = ch === 'deepseek' ? '#040a1c' : ch === 'claude' ? '#140806' : ch === 'gpt' ? I.scheme('gpt', o.pal).night.css[4] : '#05040a';
+      ctx.fillStyle = ch === 'deepseek' ? '#040a1c' : ch === 'claude' ? '#140806' : ch === 'gpt' || ch === 'gemini' ? I.scheme(ch, o.pal).night.css[4] : '#05040a';
       ctx.fillRect(sx - 8, sy - 8, W + 16, H + 16);
       var f = focus(o), fr = lineSet(ch + ':' + o.pal);
       ctx.globalAlpha = a0 * (sf ? 0.45 : 1);
@@ -10887,7 +11247,7 @@
     use: 'When a super KOs: instead of the stage/backdrop, behind the fighters: drawSprite(ctx,"screen.superFinish",0,0,t,{char: winner, palette, cx, cy}) with cx,cy = the KO contact point on screen. Hold it as long as the freeze lasts (t keeps counting; the image is static after t = 3).',
     info: { duration: 0, bbox: { x: 0, y: 0, w: W, h: H } },
     draw: function (ctx, sx, sy, t, o) {
-      var ch = o.char === 'deepseek' || o.char === 'gpt' ? o.char : 'claude', c = burstCols(ch, o.pal), f = focus(o), sf = soft();
+      var ch = I.hasChar(o.char) ? o.char : 'claude', c = burstCols(ch, o.pal), f = focus(o), sf = soft();
       ctx.drawImage(wedgeSet(ch + ':' + o.pal), sx + f[0] - BCX, sy + f[1] - BCY);
       var cx = o.cx == null ? f[0] : Math.round(o.cx), cy = o.cy == null ? f[1] : Math.round(o.cy);
       rays(ctx, sx, sy, cx, cy, 0, sf ? 24 : 40, 911, c, false, sf);
@@ -12895,6 +13255,520 @@
     }
     for (i = 0; i < I.nOf(6, O); i++) { var b = I.R() * TAU; I.gptScaleP(x + Math.cos(b) * 14, y + Math.sin(b) * 10, Math.cos(b) * I.RR(2, 3.5), Math.sin(b) * I.RR(1.5, 3) - 0.5, I.RI(26, 40), g.scl[0], L, I.RI(0, 3)); }
   }, { desc: 'Point-blank roar: three concentric shock rings expanding to radius 56 (L) / 70 (M) / 84 (H) — white leading edge, teal body, an interlaced "distortion" band behind each ring, a thin inner ripple — squashed to 0.82 vertically; debris and scales blown outward; ~24f.', use: 'On the first active frame of roar at her chest/mouth, facing = hers, power = 0 / 0.5 / 1 for L / M / H (radius = 56 + 28*power). Front layer (opts.layer "back" to put it behind her).' });
+})();
+
+</script>
+<script data-file="fx/gemini.js">
+/* LATENT CLASH — FX: Gemini 娘 shared bakes, star particles, projectile + spawn effects (owned by FX).
+ * Visual language: crisp concave four-pointed stars with iridescent facets (the LC.PAL.gemini
+ * `star` hues white / cyan / pink / yellow, picked by each facet's screen angle, so a spinning
+ * star shimmers), pink-violet magic (`accent`), stardust, constellation lines. Palette 1 =
+ * "banana" (yellow-green magic, its own star hues). Never sunbursts/script (claude), water
+ * (deepseek) or teal dragon-fire/scales (gpt).
+ *  I.GEM[pal]     colour sets + baked stars (shared with gemini-specials / -backdrop / -super)
+ *  I.gemStar(b, cx, cy, R, rot, pal, o)   rasterise a faceted star into a Buf
+ *  K_GSTAR        spinning iridescent star particle (shrinks + flickers out)
+ *  K_GSHARD       spinning star-facet shard
+ * Spawn: gemini.sparkles, gemini.starCast, gemini.starHit, gemini.clawHit.
+ * Sprite: gemini.star (projectile; power 0.3 / 0.6 / 1 = L / M / H, angle = travel dir, radians). */
+(function () {
+  'use strict';
+  var LC = window.LC = window.LC || {};
+  var FX = LC.fx = LC.fx || {};
+  var I = FX._ = FX._ || {};
+  var PI = Math.PI, TAU = PI * 2, Q = PI / 2;
+  var G = I.GEM = I.GEM || [{}, {}];
+  var A = I.A = I.A || {};
+  var NROT = 8;                                   // rotation frames over 90 deg (4-fold symmetry)
+  function lay(O, d) { return O.layer == null ? d : O.layer; }
+
+  /** Colour sets per palette. */
+  function colours(pal) {
+    var sc = I.scheme('gemini', pal), P = LC.PAL.gemini[pal], Ac = P.accent, S = P.star, g = G[pal];
+    g.A = Ac.slice(); g.Au = Ac.map(I.col);
+    g.S = S.slice(); g.Su = S.map(I.col);
+    g.dk = sc.deep; g.dkU = I.col(sc.deep); g.out = P.outline; g.outU = I.col(P.outline);
+    g.L = sc.light.css; g.Lu = sc.light.u;               // white, A0..A3, deep
+    g.trail = [Ac[0], Ac[1], Ac[2], Ac[3], sc.deep];
+    // twinkle ramps (K_TWINKLE: [centre, early arms, late arms, ..]) — four iridescent variants
+    g.tw = [['#ffffff', S[1], S[2], Ac[2]], ['#ffffff', S[2], Ac[1], Ac[2]], ['#ffffff', S[3], S[2], Ac[2]], ['#ffffff', Ac[0], Ac[1], Ac[2]]];
+    g.dust = ['#ffffff', S[1], S[2], S[3], Ac[0], Ac[1]];
+    g.hue = [S[0], S[1], S[2], S[3]];
+  }
+
+  // ---- the faceted four-pointed star ---------------------------------------------------------
+  // Shape: |u/R|^p + |v/R|^p <= 1 (concave sides). 8 facets (2 per arm). Each facet's hue comes from
+  // its SCREEN angle (anchors: up-left white, up-right cyan, down-right pink, down-left yellow), so a
+  // spinning star's colours sweep around it. Side 0 of each arm = light tone, side 1 = mid tone.
+  // o = { p, rim, outline, core, flat (single hue idx), glow }
+  var HUEA = [-3 * PI / 4, -PI / 4, PI / 4, 3 * PI / 4];
+  function hueAt(g, phi, tone) {
+    var x = ((phi + 3 * PI / 4) / Q) % 4; if (x < 0) x += 4;
+    var i = Math.floor(x), fr = x - i, a = g.hue[i], b = g.hue[(i + 1) & 3];
+    var c = fr < 0.32 ? a : fr > 0.68 ? b : I.mix(a, b, 0.5);
+    return tone === 0 ? c : I.mix(c, g.A[2], 0.42);
+  }
+  I.gemStar = function (b, cx, cy, R, rot, pal, o) {
+    o = o || {};
+    var g = G[pal], p = o.p || 0.5, cs = Math.cos(rot), sn = Math.sin(rot);
+    var m = new I.Buf(b.w, b.h), cache = {};
+    var x0 = Math.max(0, Math.floor(cx - R - 1)), x1 = Math.min(b.w - 1, Math.ceil(cx + R + 1));
+    var y0 = Math.max(0, Math.floor(cy - R - 1)), y1 = Math.min(b.h - 1, Math.ceil(cy + R + 1));
+    for (var y = y0; y <= y1; y++) for (var x = x0; x <= x1; x++) {
+      var dx = x + 0.5 - cx, dy = y + 0.5 - cy, u = dx * cs + dy * sn, v = -dx * sn + dy * cs;
+      var au = Math.abs(u), av = Math.abs(v);
+      if (Math.pow(au / R, p) + Math.pow(av / R, p) > 1) continue;
+      var arm = au >= av ? (u >= 0 ? 0 : 2) : (v >= 0 ? 1 : 3);
+      var ax = Math.cos(arm * Q), ay = Math.sin(arm * Q), side = ax * v - ay * u < 0 ? 0 : 1;
+      var col;
+      if (o.flat != null) col = side ? I.mix(g.hue[o.flat], g.A[1], 0.3) : g.hue[o.flat];
+      else {
+        var key = arm * 2 + side;
+        if (!cache[key]) cache[key] = I.col(hueAt(g, rot + arm * Q + (side ? 0.32 : -0.32), side));
+        col = cache[key];
+      }
+      if (au + av < R * (o.core || 0.26)) col = '#ffffff';
+      m.set(x, y, typeof col === 'number' ? col : I.col(col));
+    }
+    if (o.rim && R >= 6) {     // inner rim on the shade side: accent
+      var r0 = m.copy(), w = m.w, d = r0.d, rimU = I.col(g.A[2]);
+      for (y = 1; y < m.h - 1; y++) for (x = 1; x < w - 1; x++) {
+        var i = y * w + x;
+        if (!d[i]) continue;
+        if (!d[i + 1] || !d[i + w]) m.d[i] = rimU;
+      }
+    }
+    if (o.outline !== false) m.outline(o.outline == null ? g.dkU : o.outline);
+    b.blit(m, 0, 0);
+  };
+
+  /** Tiny sparkle (no outline, reads on dark and pale): '+' or 'x' arms of length n, white centre,
+   *  iridescent hue inside, accent tip; n >= 4 adds a waist (concave four-pointed look). */
+  I.gemMini = function (b, cx, cy, n, hue, pal, diag) {
+    var g = G[pal], hu = I.col(g.hue[hue & 3]), tip = I.col(g.A[2]), mid = I.col(g.A[1]), wh = I.col('#ffffff');
+    var dirs = diag ? [[1, 1], [-1, 1], [1, -1], [-1, -1]] : [[1, 0], [-1, 0], [0, 1], [0, -1]], m = diag ? n - 1 : n;
+    for (var k = 0; k < 4; k++) for (var i = 1; i <= m; i++) {
+      var c = i === m ? tip : i === m - 1 && m > 2 ? mid : hu;
+      if (i === 1 && n >= 4) c = wh;
+      b.set(cx + dirs[k][0] * i, cy + dirs[k][1] * i, c);
+    }
+    if (n >= 4 && !diag) { var wc = I.col(I.mix(g.hue[hue & 3], g.A[1], 0.35)); b.set(cx + 1, cy + 1, wc); b.set(cx - 1, cy + 1, wc); b.set(cx + 1, cy - 1, wc); b.set(cx - 1, cy - 1, wc); }
+    b.set(cx, cy, wh);
+  };
+  /** Baked tiny sparkle: 8 frames alternating '+' / 'x' with the hue cycling. */
+  function miniAnim(pal, n) {
+    var s = n * 2 + 3, c = n + 1;
+    return I.anim(s, s, NROT, c, c, function (b, f) { I.gemMini(b, c, c, (f & 1) ? n : n, (f >> 1) + 1, pal, !!(f & 1)); }, 1, true);
+  }
+  /** Baked spinning star: NROT frames, square cell, origin centre. */
+  function starAnim(pal, R, o) {
+    var s = Math.ceil(R) * 2 + 5, c = s / 2;
+    return I.anim(s, s, NROT, Math.floor(c), Math.floor(c), function (b, f) { I.gemStar(b, c, c, R, f * Q / NROT, pal, o); }, 1, true);
+  }
+
+  function bake() {
+    [0, 1].forEach(function (pal) {
+      colours(pal);
+      var g = G[pal], Au = g.Au, dk = g.dkU;
+      // particle stars: tiny (R 2.5, no outline), small (3.6), mid (5.2), big (7)
+      g.ps = [miniAnim(pal, 2), miniAnim(pal, 3), miniAnim(pal, 4), starAnim(pal, 7, { rim: true, p: 0.56 })];
+      // projectile: L / M / H
+      g.proj = [starAnim(pal, 7.5, { rim: true, p: 0.6, core: 0.22 }), starAnim(pal, 10, { rim: true, p: 0.56, core: 0.2 }), starAnim(pal, 13.5, { rim: true, p: 0.56, core: 0.18 })];
+      // halo for the big star: dithered glow disc, 2 pulse frames
+      g.halo = I.anim(48, 48, 2, 24, 24, function (b, f) {
+        var m = new I.Buf(48, 48);
+        m.ring(24, 24, 14.2 + f, 15.4 + f, Au[2]); m.breakup(0.7, f * 2, 0); b.blit(m, 0, 0);
+        m = new I.Buf(48, 48); m.ring(24, 24, 18.6 + f, 19.6 + f, Au[3]); m.breakup(0.3, f, 1); b.blit(m, 0, 0);
+      }, 1, true);
+      // facet shards: 4 hues x 4 spin frames (a sliver of a star arm), 7x7
+      g.shard = [0, 1, 2, 3].map(function (h) {
+        var hu = I.col(g.hue[h]), hd = I.col(I.mix(g.hue[h], g.A[1], 0.4));
+        return I.anim(7, 7, 4, 3, 3, function (b, f) {
+          var a = f * PI / 4, c = Math.cos(a), s = Math.sin(a);
+          b.poly([3.5 + c * 3.4, 3.5 + s * 3.4, 3.5 - s * 1.4, 3.5 + c * 1.4, 3.5 - c * 2.2, 3.5 - s * 2.2], hu);
+          b.set(3, 3, hd);
+          b.outline(dk);
+        }, 1, true);
+      });
+      // cast flash: star pops (R 3 -> 9 -> 0) with long axis glints, 8f
+      g.cast = I.anim(40, 40, 8, 20, 20, function (b, f) {
+        var R = [3, 6, 9, 8, 6, 4, 2.5, 1.5][f];
+        if (f < 5) { var gl = [8, 14, 18, 15, 10][f]; b.rect(20 - gl, 20, gl * 2 + 1, 1, Au[1]); b.rect(20, 20 - gl, 1, gl * 2 + 1, Au[1]); b.rect(20 - (gl >> 1), 20, gl + 1, 1, I.col('#ffffff')); b.rect(20, 20 - (gl >> 1), 1, gl + 1, I.col('#ffffff')); }
+        if (R >= 5) I.gemStar(b, 20.5, 20.5, R, f * 0.2, pal, { core: 0.3, p: 0.56 });
+        else I.gemMini(b, 20, 20, Math.max(1, Math.round(R)), f, pal, f & 1);
+      }, 1, true);
+      // star hit: big faceted star flashes, swells and cracks apart into 4 arms, 12f, 72x72
+      g.hit = I.anim(72, 72, 12, 36, 36, function (b, f) {
+        var c = 36.5;
+        if (f < 2) { b.disc(c, c, 9 + f * 4, Au[1]); I.gemStar(b, c, c, 16 + f * 6, f * 0.15, pal, { rim: true }); if (f === 0) b.disc(c, c, 6, I.col('#ffffff')); return; }
+        // arms fly apart: draw the star split into 4 quarters, offset outward
+        var k = f - 2, off = 2 + k * 2.6, R = Math.max(4, 22 - k * 1.8), m = new I.Buf(72, 72);
+        I.gemStar(m, c, c, R, 0.3 + k * 0.05, pal, { rim: true, core: 0.01 });
+        for (var y = 0; y < 72; y++) for (var x = 0; x < 72; x++) {
+          var col = m.d[y * 72 + x]; if (!col) continue;
+          var dx = x + 0.5 - c, dy = y + 0.5 - c, a = Math.atan2(dy, dx) - 0.3 - k * 0.05, arm = Math.round(a / Q), ang = arm * Q + 0.3 + k * 0.05;
+          b.set(x + Math.round(Math.cos(ang) * off), y + Math.round(Math.sin(ang) * off), col);
+        }
+        if (k > 4) b.breakup(1 - (k - 4) * 0.17, k, 0);
+        if (k < 3) b.ring(c, c, 10 + k * 7, 11.5 + k * 7, k < 1 ? I.col('#ffffff') : Au[1]);
+      }, 1, true);
+      // claw: 3 curved pink scratches with white cores, staggered, 14f, 76x68
+      var CL = [[-24, -26, 6, -16, 20, 22], [-30, -16, 0, -6, 12, 30], [-16, -34, 12, -24, 28, 12]];
+      g.claw = I.anim(76, 68, 14, 38, 34, function (b, f) {
+        var cx = 38, cy = 34;
+        for (var k = 0; k < 3; k++) {
+          var lf = f - k, s = CL[k], p = [s[0] + cx, s[1] + cy, s[2] + cx, s[3] + cy, s[4] + cx, s[5] + cy];
+          if (lf < 0) continue;
+          var gl = Math.min(1, (lf + 1) / 2), u0 = lf > 4 ? Math.min(0.92, (lf - 4) * 0.15) : 0;
+          var w = lf < 3 ? 2.6 : Math.max(0.9, 2.6 - (lf - 2) * 0.32);
+          if (u0 >= gl - 0.05) continue;
+          var m = new I.Buf(76, 68);
+          strokeQ(m, p, w + 1.1, dk, u0, gl);
+          strokeQ(m, p, w, lf < 5 ? Au[1] : Au[2], u0, gl);
+          if (lf < 6) strokeQ(m, p, w * 0.45, lf < 3 ? I.col('#ffffff') : Au[0], u0, gl);
+          if (lf > 7) m.breakup(1 - (lf - 7) * 0.16, k, 0);
+          b.blit(m, 0, 0);
+          if (lf >= 1 && lf < 7) {     // tiny star at the tip
+            var q = qb(p, gl);
+            I.gemMini(b, Math.round(q[0]), Math.round(q[1]), lf < 4 ? 3 : 2, k + lf, pal, lf & 1);
+          }
+        }
+      });
+    });
+  }
+  function qb(p, u) { var a = (1 - u) * (1 - u), b = 2 * u * (1 - u), c = u * u; return [a * p[0] + b * p[2] + c * p[4], a * p[1] + b * p[3] + c * p[5]]; }
+  function strokeQ(b, p, w, col, u0, u1) {
+    var pts = [], n = 18;
+    for (var i = 0; i <= n; i++) { var q = qb(p, u0 + (u1 - u0) * i / n); pts.push(q[0], q[1]); }
+    b.stroke(pts, function (u) { var uu = u0 + (u1 - u0) * u; return w * Math.pow(Math.sin(Math.PI * uu), 0.7); }, col);
+  }
+  I.onInit('gemini-shared', bake);
+
+  /** Draw a baked particle star (size 0..3, rotation frame f) centred at screen x,y. */
+  I.gemPS = function (ctx, pal, size, f, x, y) { I.drawAnim(ctx, G[pal].ps[size], ((f % NROT) + NROT) % NROT, x, y, 1); };
+
+  // ---- K_GSTAR: spinning iridescent star; p.c = size idx, p.ref = G[pal].ps, p.vrot frames/tick ----
+  I.K_GSTAR = I.kind('gemStar', {
+    draw: function (ctx, p, sx, sy) {
+      var k = p.age / p.life, s = p.c - (k > 0.7 ? 1 : 0) - (k > 0.88 ? 1 : 0);
+      if (k > 0.8 && ((p.age + p.seq) & 1)) return;
+      if (s < 0) { ctx.fillStyle = p.ramp; ctx.fillRect(sx, sy, 1, 1); return; }
+      var A0 = p.ref[s], f = Math.floor(p.rot) % NROT;
+      if (f < 0) f += NROT;
+      I.drawAnim(ctx, A0, f, sx, sy, 1);
+    },
+    step: function (p) { p.rot += p.vrot; if (p.e) p.vx += Math.sin(p.age * 0.15 + p.e) * 0.03; }
+  });
+  /** Spawn a star particle. size 0..3. */
+  I.gemStarP = function (pal, x, y, size, vx, vy, life, layer, delay) {
+    var p = I.add(I.K_GSTAR, x, y, layer);
+    p.c = size; p.ref = G[pal].ps; p.vx = vx; p.vy = vy; p.life = life; p.delay = delay | 0;
+    p.rot = I.RI(0, NROT - 1); p.vrot = (I.R() < 0.5 ? -1 : 1) * I.RR(0.2, 0.6); p.ramp = G[pal].hue[I.RI(1, 3)];
+    return p;
+  };
+  // ---- K_GSHARD: facet shard; p.A anim; spins ----
+  I.K_GSHARD = I.kind('gemShard', {
+    draw: function (ctx, p, sx, sy) {
+      var k = p.age / p.life;
+      if (k > 0.7 && ((p.age + p.seq) & 1)) return;
+      I.drawAnim(ctx, p.A, Math.floor(p.rot) & 3, sx, sy, 1);
+    },
+    step: function (p) { p.rot += p.vrot; }
+  });
+  function shard(pal, x, y, vx, vy, life, layer) {
+    var p = I.add(I.K_GSHARD, x, y, layer);
+    p.A = G[pal].shard[I.RI(0, 3)]; p.vx = vx; p.vy = vy; p.life = life; p.g = 0.12; p.drag = 0.93; p.rot = I.RI(0, 3); p.vrot = I.RR(0.3, 0.7);
+    return p;
+  }
+  I.gemShard = shard;
+  /** Iridescent twinkle (4 variants). */
+  I.gemTwinkle = function (pal, x, y, size, life, layer, delay) { return I.twinkle(x, y, size, life, G[pal].tw[I.RI(0, 3)], layer, delay); };
+
+  // ---- spawn effects ----------------------------------------------------------------------------
+  I.def('gemini.sparkles', function (x, y, O) {
+    var L = lay(O, I.FRONT), pal = O.pal, n = I.nOf(8, O);
+    for (var i = 0; i < n; i++) {
+      var p = I.gemStarP(pal, x + I.RS() * 26, y + I.RS() * 32, i % 4 === 0 ? 2 : i % 2 ? 1 : 0, I.RS() * 0.25, -I.RR(0.15, 0.5), I.RI(40, 70), L, i < 3 ? i : I.RI(0, 30));
+      p.e = I.R() * TAU; p.vrot *= 0.6;
+    }
+    for (i = 0; i < I.nOf(5, O); i++) I.gemTwinkle(pal, x + I.RS() * 30, y + I.RS() * 34, I.RI(2, 3), I.RI(12, 18), L, I.RI(0, 50));
+    for (i = 0; i < I.nOf(6, O); i++) {
+      var d = I.add(I.K_DOT, x + I.RS() * 28, y + I.RS() * 30, L);
+      d.vy = -I.RR(0.1, 0.35); d.vx = I.RS() * 0.15; d.life = I.RI(30, 60); d.size = 1; d.ramp = G[pal].dust; d.delay = I.RI(0, 40);
+    }
+  }, { desc: 'Ambient: 8 small spinning iridescent four-pointed stars + twinkles + stardust motes drifting up around the point, each shrinking and flickering out; ~90f.', use: 'Free accent around Gemini: idle/intro/win, meter, the light-twin while it waits, landing of the double jump. Front layer (opts.layer to change).' });
+
+  I.def('gemini.starCast', function (x, y, O) {
+    var g = G[O.pal], f = O.facing, L = lay(O, I.FRONT);
+    I.anim1(g.cast, x, y, 1, L, 1);
+    for (var i = 0; i < I.nOf(6, O); i++) {
+      var a = (f > 0 ? 0 : PI) + I.RS() * 0.7 - 0.25 * f * 0, v = I.RR(1.6, 3.6);
+      var p = I.gemStarP(O.pal, x + f * 3, y + I.RS() * 3, i < 2 ? 1 : 0, Math.cos(a) * v, Math.sin(a) * v - 0.4, I.RI(14, 22), L, i >> 1);
+      p.drag = 0.86;
+    }
+    for (i = 0; i < I.nOf(3, O); i++) I.gemTwinkle(O.pal, x + f * I.RR(4, 14), y + I.RS() * 8, 2, I.RI(8, 12), L, I.RI(1, 6));
+  }, { desc: 'Flick of sparkles at the hand: a faceted star pops with long glints (8f) and 6 tiny iridescent stars flick forward in a fan; ~22f.', use: 'At the muzzle (flicking hand) on the release frame of star / airStar (startup f0 also fine), facing = hers.' });
+
+  I.def('gemini.starHit', function (x, y, O) {
+    var g = G[O.pal], f = O.facing, L = lay(O, I.FRONT), n = I.nOf(10, O);
+    I.anim1(g.hit, x, y, 1, L, 1);
+    for (var i = 0; i < n; i++) {
+      var a = i / n * TAU + I.RS() * 0.3, v = I.RR(2, 4.2);
+      var s = shard(O.pal, x + Math.cos(a) * 5, y + Math.sin(a) * 5, Math.cos(a) * v + f * 0.8, Math.sin(a) * v - 1, I.RI(18, 28), L);
+      s.delay = 2;
+    }
+    for (i = 0; i < I.nOf(5, O); i++) { var b = I.R() * TAU, w = I.RR(1, 2.4); I.gemStarP(O.pal, x, y, I.RI(0, 1), Math.cos(b) * w, Math.sin(b) * w - 0.5, I.RI(18, 30), L, I.RI(2, 6)).drag = 0.92; }
+    if (A.ringC && A.ringC['gemini' + O.pal]) I.anim1(A.ringC['gemini' + O.pal][1], x, y, 1, L, 1, 2);
+  }, { desc: 'The star shatters: a big faceted star flash splits into its four arms flying apart (12f), 10 spinning iridescent facet shards, small stars, a pink ring; ~30f.', use: 'At the contact point when gemini.star hits (or is blocked), facing = the star\'s travel direction. H star (2 hits): spawn on each hit.' });
+
+  I.def('gemini.clawHit', function (x, y, O) {
+    var g = G[O.pal], f = O.facing, L = lay(O, I.FRONT);
+    I.anim1(g.claw, x, y, f, L, 1);
+    for (var i = 0; i < I.nOf(4, O); i++) I.gemStarP(O.pal, x + f * I.RR(6, 22), y + I.RS() * 18, I.RI(0, 1), f * I.RR(0.4, 1.4), -I.RR(0.3, 1), I.RI(14, 22), L, I.RI(2, 6)).drag = 0.9;
+    for (i = 0; i < I.nOf(5, O); i++) I.spark(x, y + I.RI(-8, 8), (f > 0 ? 0.6 : PI - 0.6) + I.RS() * 0.5, I.RR(4, 6), 8, g.trail, L, { max: 8, len: 1.8 });
+  }, { desc: 'Cat scratch: three curved pink claw arcs with white cores, staggered 1f, each with a tiny star at its tip; pink sparks, small iridescent stars; ~22f, ~64 px.', use: 'On hit of her claw attacks (5L/2L/jL, starRise, twinStrike) at the contact point, facing = attacker. With or instead of hit.light / hit.medium.' });
+
+  // ---- sprite: the projectile ---------------------------------------------------------------------
+  var SZ = [{ R: 7.5, len: 18, w: 3, spin: 1 }, { R: 10, len: 24, w: 4, spin: 0.75 }, { R: 13.5, len: 30, w: 5, spin: 0.5 }];
+  function sizeOf(power) { return power <= 0.4 ? 0 : power <= 0.75 ? 1 : 2; }
+  I.defSprite('gemini.star', {
+    desc: 'Projectile: a crisp four-pointed star with iridescent facets (colours sweep as it spins), white core, accent rim + outline, a short tapered pink-violet trail with stardust, a twinkle glint every ~10f. power 0.3/0.6/1 = L ~20 px / M ~25 px / H ~32 px (H spins slower, has a pulsing dithered halo and a heavier trail).',
+    use: 'Every frame for the live projectile at its centre: drawSprite(ctx,"gemini.star",sx,sy,t,{power, angle, facing, palette}); t = frames alive; angle = travel direction in radians on screen (default along facing; M star e.g. -0.35, airStar 0.785 / PI-0.785). Front layer [D].',
+    info: { duration: 0, bbox: { x: -14, y: -14, w: 28, h: 28 }, sizes: { L: 20, M: 25, H: 32 }, boxes: { L: { x: -8, y: -8, w: 16, h: 16 }, M: { x: -10, y: -10, w: 20, h: 20 }, H: { x: -14, y: -14, w: 28, h: 28 } } },
+    draw: function (ctx, sx, sy, t, o) {
+      var g = G[o.pal], si = sizeOf(o.power), z = SZ[si], raw = o.raw;
+      var ang = raw.angle != null ? +raw.angle : (o.facing > 0 ? 0 : PI), ux = Math.cos(ang), uy = Math.sin(ang);
+      if (si === 2) {   // halo rings + 4 orbiting motes
+        I.drawAnim(ctx, g.halo, (t >> 2) & 1, sx, sy, 1);
+        for (var q = 0; q < 4; q++) { var oa = t * 0.12 + q * Q; ctx.fillStyle = g.S[1 + (q % 3)]; ctx.fillRect(sx + Math.round(Math.cos(oa) * 17) - 1, sy + Math.round(Math.sin(oa) * 17), 3, 1); ctx.fillRect(sx + Math.round(Math.cos(oa) * 17), sy + Math.round(Math.sin(oa) * 17) - 1, 1, 3); }
+      }
+      // trail: square brush tapering back from the star, accent -> deep, dithered tail
+      var len = Math.min(z.len, 4 + t * 4), r0 = z.R * 0.45, T = g.trail;
+      for (var pass = 0; pass < 2; pass++) {
+        for (var s = 0; s < len; s++) {
+          var k = s / len, w = Math.max(1, Math.round((z.w - (pass ? 2 : 0)) * (1 - k)));
+          if (pass && k > 0.35) continue;
+          var px = Math.round(sx - ux * (r0 + s)), py = Math.round(sy - uy * (r0 + s));
+          if (k > 0.6 && I.bayer(px, py + t) < (k - 0.6) * 2.2) continue;
+          ctx.fillStyle = pass ? T[0] : (k < 0.3 ? T[1] : k < 0.6 ? T[2] : T[3]);
+          ctx.fillRect(px - (w >> 1), py - (w >> 1), w, w);
+        }
+      }
+      // stardust in the trail: 3-4 pixels drifting back
+      for (var i = 0; i < 2 + si; i++) {
+        var d = r0 + ((t * (2 + i) + i * 9) % Math.max(6, len + 6)), wob = Math.round(Math.sin(t * 0.5 + i * 2) * (2 + si));
+        ctx.fillStyle = g.dust[(i + (t >> 2)) % 4];
+        ctx.fillRect(Math.round(sx - ux * d - uy * wob), Math.round(sy - uy * d + ux * wob), 1, 1);
+      }
+      var spin = o.facing > 0 ? 1 : -1, fr = Math.floor(t * z.spin) * spin;
+      I.drawAnim(ctx, g.proj[si], ((fr % NROT) + NROT) % NROT, sx, sy, 1);
+      // twinkle glint: long thin axis cross for 3 frames every 10
+      var ph = (t + si * 3) % 10;
+      if (ph < 3) {
+        var gl = Math.round(z.R * (ph === 1 ? 1.6 : 1.2));
+        ctx.fillStyle = g.S[1]; ctx.fillRect(sx - gl, sy, gl * 2 + 1, 1); ctx.fillStyle = g.S[2]; ctx.fillRect(sx, sy - gl, 1, gl * 2 + 1);
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(sx - (gl >> 1), sy, gl + 1, 1); ctx.fillRect(sx, sy - (gl >> 1), 1, gl + 1);
+      }
+    }
+  });
+})();
+
+</script>
+<script data-file="fx/gemini-backdrop.js">
+/* LATENT CLASH — FX: screen.superBackdrop for char 'gemini' (owned by FX).
+ * A deep cosmic sky: dithered violet night, a Milky-Way dust band, far star field; a blue -> violet
+ * -> pink aurora (scrolling, pulsing) behind the Gemini constellation — two "twin" stick figures
+ * of bright stars (Castor / Pollux heads) joined by glowing lines that draw themselves one segment
+ * after another (t 2 .. ~30) and then twinkle; four-pointed stars drifting at three depths; a dark
+ * starlit floor with aurora reflections. Intro (8f): a huge four-pointed-star iris opening from
+ * her side; phase 'out' closes it. Other chars fall through to the previous definition.
+ * Shares I.GEM.CONST (constellation geometry, screen coords for facing 1) with gemini-super.js. */
+(function () {
+  'use strict';
+  var LC = window.LC = window.LC || {};
+  var FX = LC.fx = LC.fx || {};
+  var I = FX._ = FX._ || {};
+  var W = LC.W || 384, H = LC.H || 216, GY = LC.GROUND_Y || 186, PI = Math.PI, TAU = PI * 2;
+  var BW = W + 16, BH = H + 16, FY = GY + 8, AW = 800;
+  var G = I.GEM = I.GEM || [{}, {}];
+  function mixc(a, b, t) { return I.col(I.mix(a, b, t)); }
+
+  // ---- the constellation: two tilted stick figures holding hands (screen coords, facing 1) ----------
+  function figure(hx, hy) {
+    var ux = 0.4, uy = 0.92, nx = 0.92, ny = -0.4;
+    function P(a, b) { return [Math.round(hx + ux * a + nx * b), Math.round(hy + uy * a + ny * b)]; }
+    return { H: P(0, 0), C: P(18, 0), L: P(24, -27), R: P(22, 26), P: P(50, 1), F1: P(86, 14), F2: P(88, -12) };
+  }
+  var TA = figure(104, 10), TB = figure(176, 6);
+  var V = [], E = [];
+  [TA, TB].forEach(function (f, k) {
+    var base = V.length;
+    ['H', 'C', 'L', 'R', 'P', 'F1', 'F2'].forEach(function (n, i) { V.push({ x: f[n][0], y: f[n][1], head: i === 0, twin: k }); });
+    [[0, 1], [1, 2], [1, 3], [1, 4], [4, 5], [4, 6]].forEach(function (e) { E.push([base + e[0], base + e[1]]); });
+  });
+  E.push([3, 9]);    // A's forward hand holds B's back hand
+  E.push([0, 7]);    // Castor - Pollux
+  // drawing order: A head-down, the link, then B; each segment starts DT after the previous one
+  var ORDER = [0, 1, 2, 3, 12, 4, 5, 6, 13, 7, 8, 9, 10, 11];
+  var DT = 2, SEG = 5, C0 = 2;
+  var start = []; ORDER.forEach(function (ei, k) { start[ei] = C0 + k * DT; });
+  E.forEach(function (e, i) { e.t0 = start[i] == null ? C0 : start[i]; });
+  V.forEach(function (v, i) {         // a star appears when the first line touching it arrives
+    var tt = 1e9; E.forEach(function (e) { if (e[0] === i) tt = Math.min(tt, e.t0); if (e[1] === i) tt = Math.min(tt, e.t0 + SEG); });
+    v.t0 = tt;
+  });
+  var CONST = I.GEM.CONST = { V: V, E: E, SEG: SEG, done: C0 + ORDER.length * DT + SEG };
+
+  function bake(pal) {
+    var sc = I.scheme('gemini', pal), N = sc.night.css, Au = sc.aur.css, L = sc.light.css, S = sc.star.css, B = G[pal];
+    var base = new I.Buf(BW, BH), d = base.d, x, y, i;
+    // sky: darkest at the top, violet glow toward the horizon
+    var sky = [I.col(N[4]), I.col(N[3]), I.col(N[2]), mixc(N[2], N[1], 0.5), I.col(N[1])];
+    for (y = 0; y < FY; y++) {
+      var v = Math.pow(y / FY, 1.5) * 4;
+      for (x = 0; x < BW; x++) { var bi = Math.floor(v), fr = v - bi; d[y * BW + x] = sky[Math.min(4, bi + (I.bayer(x, y) < fr ? 1 : 0))]; }
+    }
+    // milky-way dust band: a dithered arc across the upper sky, two tones + bright knots
+    var mw = [mixc(N[2], Au[1], 0.14), mixc(N[2], Au[2], 0.2), mixc(N[1], S[1], 0.3)];
+    for (x = 0; x < BW; x++) {
+      var cyb = 40 + Math.sin(x * 0.009 + 0.6) * 26, hw = 14 + Math.sin(x * 0.031) * 5 + Math.sin(x * 0.083 + 1) * 3;
+      for (y = Math.max(0, Math.floor(cyb - hw)); y < cyb + hw; y++) {
+        var k = 1 - Math.abs(y + 0.5 - cyb) / hw, n = 0.5 + 0.25 * Math.sin(x * 0.21 + y * 0.13) + 0.25 * Math.sin(x * 0.07 - y * 0.31);
+        var dd = k * n;
+        if (I.bayer(x, y) < dd * 0.6) d[y * BW + x] = dd > 0.6 ? mw[1] : mw[0];
+        if (dd > 0.72 && I.hash(x * 7 + y * 131) > 0.86) d[y * BW + x] = mw[2];
+      }
+    }
+    // far star field
+    var rng = I.bakeRng(4242 + pal), starC = [I.col('#ffffff'), mixc(S[1], N[2], 0.25), mixc(S[2], N[2], 0.3), mixc(S[3], N[2], 0.35), mixc(L[2], N[2], 0.5)];
+    for (i = 0; i < 190; i++) {
+      x = Math.floor(rng() * BW); y = Math.floor(Math.pow(rng(), 1.3) * (FY - 20));
+      var c = starC[i % 9 === 0 ? 0 : 1 + (i % 4)];
+      if (y > 100 && i % 9 === 0) c = starC[1];       // keep the fighters' lane calm
+      base.set(x, y, c);
+    }
+    // horizon haze
+    var hz = mixc(N[1], Au[2], 0.25);
+    for (y = FY - 22; y < FY; y++) for (x = 0; x < BW; x++) if (I.bayer(x, y) < (y - (FY - 22)) / 22 * 0.4) d[y * BW + x] = hz;
+    // floor: dark starlit plane, horizon line, aurora reflections, reflected stars
+    var fl = [I.col(N[3]), I.col(N[4]), mixc(N[2], Au[1], 0.3), mixc(N[2], Au[2], 0.3), I.col(L[2]), I.col(N[1])];
+    for (y = FY; y < BH; y++) for (x = 0; x < BW; x++) d[y * BW + x] = I.bayer(x, y) < (y - FY) / (BH - FY) * 0.75 ? fl[1] : fl[0];
+    var rr = I.bakeRng(77 + pal);
+    for (i = 0; i < 26; i++) { var ry = FY + 3 + Math.floor(rr() * (BH - FY - 4)), rx = Math.floor(rr() * BW), rl = 6 + Math.floor(rr() * 30); base.rect(rx, ry, rl, 1, i % 2 ? fl[2] : fl[3]); }
+    for (i = 0; i < 30; i++) base.set(Math.floor(rr() * BW), FY + 3 + Math.floor(rr() * (BH - FY - 4)), fl[5]);
+    base.rect(0, FY, BW, 1, fl[4]); base.rect(0, FY + 1, BW, 1, fl[5]);
+    B.bdBase = I.toCanvas(base);
+
+    // aurora: tileable 800-px band, curtains of vertical streaks, blue top -> violet -> pink hem
+    var ab = new I.Buf(AW, 110), ac = [mixc(Au[0], N[2], 0.3), mixc(Au[1], N[2], 0.28), mixc(Au[2], N[2], 0.3), mixc(Au[3], N[2], 0.35), mixc(Au[5], N[1], 0.15)];
+    function s8(k, x0, ph) { return Math.sin(x0 * TAU * k / AW + ph); }
+    for (x = 0; x < AW; x++) {
+      var top = 18 + 9 * s8(2, x, 1) + 5 * s8(5, x, 0), len = 46 + 16 * s8(3, x, 2);
+      var str = (0.5 + 0.4 * s8(4, x, 0) * s8(7, x, 0.5)) * (0.45 + 0.75 * I.hash(Math.floor(x / 2) * 13) * (0.6 + 0.4 * s8(23, x, 1)));
+      for (y = Math.round(top); y < top + len && y < 110; y++) {
+        var u = (y - top) / len, den = str * (u < 0.12 ? u / 0.12 : 1 - (u - 0.12) / 0.88 * 0.75);
+        if (I.bayer(x, y) < den * 0.95) ab.set(x, y, u < 0.26 ? ac[0] : u < 0.52 ? ac[1] : ac[2]);
+        if (u > 0.04 && u < 0.1 && str > 0.55) ab.set(x, y, ac[4]);
+      }
+    }
+    B.aur = I.toCanvas(ab);
+    B.bdCols = { line: [mixc(L[3], N[2], 0.6), L[1], '#ffffff'], edge: ['#ffffff', S[2], L[2]], tw: [S[1], S[2], S[3], '#ffffff'] };
+  }
+  I.onInit('gemini-backdrop', function () { bake(0); bake(1); });
+
+  /** Constellation: segment progress at t, glow + core line, a bright head on drawing segments; stars. */
+  function drawConst(ctx, sx, sy, t, pal, bright) {
+    var C = G[pal].bdCols, k, e, a, b, u;
+    for (k = 0; k < E.length; k++) {
+      e = E[k]; u = (t - e.t0) / SEG; if (u <= 0) continue; if (u > 1) u = 1;
+      a = V[e[0]]; b = V[e[1]];
+      var x1 = a.x + (b.x - a.x) * u, y1 = a.y + (b.y - a.y) * u;
+      ctx.fillStyle = C.line[0]; I.runLine(ctx, sx + a.x - 1, sy + a.y, sx + Math.round(x1) - 1, sy + Math.round(y1), 3);
+      ctx.fillStyle = bright ? '#ffffff' : C.line[1]; I.runLine(ctx, sx + a.x, sy + a.y, sx + Math.round(x1), sy + Math.round(y1), 1);
+      if (u < 1) { ctx.fillStyle = '#ffffff'; ctx.fillRect(sx + Math.round(x1) - 1, sy + Math.round(y1), 3, 1); ctx.fillRect(sx + Math.round(x1), sy + Math.round(y1) - 1, 1, 3); }
+    }
+    for (k = 0; k < V.length; k++) {
+      var v = V[k], age = t - v.t0; if (age < 0) continue;
+      var tw = (t + k * 7) % 40;
+      if (v.head) { var f = Math.floor(t / 5 + k); I.drawAnim(ctx, G[pal].ps[3], ((f % 8) + 8) % 8, sx + v.x, sy + v.y, 1); }
+      else I.gemPS(ctx, pal, age < 4 || tw < 4 ? 2 : 1, Math.floor(t / 6) + k, sx + v.x, sy + v.y);
+      if (age < 4) { var r = 3 + age * 3; ctx.fillStyle = C.edge[1]; ctx.fillRect(sx + v.x - r, sy + v.y, r * 2 + 1, 1); ctx.fillRect(sx + v.x, sy + v.y - r, 1, r * 2 + 1); }
+    }
+  }
+  I.gemConst = drawConst;
+
+  function drawSky(ctx, sx, sy, t, o) {
+    var B = G[o.pal], i, x, y, C = B.bdCols;
+    ctx.drawImage(B.bdBase, sx - 8, sy - 8);
+    // aurora (scrolling, pulsing)
+    var off = Math.floor(t * 0.4) % AW, a0 = ctx.globalAlpha;
+    ctx.globalAlpha = a0 * (0.8 + 0.2 * Math.sin(t * 0.07));
+    ctx.drawImage(B.aur, sx - 8 - off, sy - 4); ctx.drawImage(B.aur, sx - 8 - off + AW, sy - 4);
+    ctx.globalAlpha = a0;
+    // far twinkles
+    for (i = 0; i < 18; i++) {
+      var ph = (t + Math.floor(I.hash(i * 17 + 3) * 50)) % 50; if (ph > 8) continue;
+      x = Math.floor(I.hash(i * 3 + 11) * W); y = Math.floor(I.hash(i * 7 + 5) * 110);
+      var arm = ph < 4 ? (ph >> 1) : ((8 - ph) >> 1);
+      ctx.fillStyle = C.tw[i & 3]; ctx.fillRect(sx + x - arm, sy + y, arm * 2 + 1, 1); ctx.fillRect(sx + x, sy + y - arm, 1, arm * 2 + 1);
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(sx + x, sy + y, 1, 1);
+    }
+    // mid layer: small sparkles drifting slowly
+    for (i = 0; i < 14; i++) {
+      var h1 = I.hash(i * 29 + 1), h2 = I.hash(i * 31 + 7);
+      x = ((h1 * (W + 40) + t * (0.12 + h2 * 0.1)) % (W + 40)) - 20; y = 8 + h2 * 150 + Math.sin(t * 0.04 + i) * 3;
+      I.gemPS(ctx, o.pal, i % 3 ? 0 : 1, Math.floor(t / 7) + i, sx + Math.round(x), sy + Math.round(y));
+    }
+    drawConst(ctx, sx, sy, t, o.pal, false);
+    // near layer: bigger faceted stars, faster, bobbing
+    for (i = 0; i < 5; i++) {
+      var q1 = I.hash(i * 43 + 9), q2 = I.hash(i * 19 + 2);
+      x = ((q1 * (W + 60) + t * (0.35 + q2 * 0.25)) % (W + 60)) - 30; y = 20 + q2 * 170 + Math.sin(t * 0.05 + i * 2) * 6;
+      if (y > 96 && y < 180) y = y < 138 ? 96 - (138 - y) * 0.2 : 180 + (y - 138) * 0.1;   // stay out of the lane
+      if (i < 2) I.drawAnim(ctx, B.ps[3], Math.floor(t / 4 + i * 3) % 8, sx + Math.round(x), sy + Math.round(y), 1);
+      else I.gemPS(ctx, o.pal, 2, Math.floor(t / 5) + i, sx + Math.round(x), sy + Math.round(y));
+    }
+  }
+
+  // ---- intro / outro: a four-pointed-star iris from her side ---------------------------------------
+  var spans = new Int16Array(BH);
+  function irisSpans(k, cx, cy) {
+    var R = 560 * Math.pow(k, 1.7), p = 0.8;
+    for (var r = 0; r < BH; r += 2) {
+      var dy = Math.abs(r - 8 + 1 - cy), hw = 0;
+      if (dy < R) hw = R * Math.pow(1 - Math.pow(dy / R, p), 1 / p);
+      spans[r] = Math.round(hw);
+    }
+  }
+  var prev = I.sprites['screen.superBackdrop'];
+  I.defSprite('screen.superBackdrop', {
+    desc: prev.desc + ' gemini: a deep cosmic sky — violet night, Milky-Way dust band, blue->violet->pink aurora, the Gemini constellation (two twin stick figures of stars holding hands, Castor/Pollux heads) drawing itself line by line over t 2..~35, four-pointed stars drifting at three depths, a dark starlit floor; intro = a four-pointed-star iris opening from her side, out = it closes.',
+    use: prev.use,
+    info: prev.info,
+    draw: function (ctx, sx, sy, t, o) {
+      if (o.char !== 'gemini') { prev.draw(ctx, sx, sy, t, o); return; }
+      var out = o.phase === 'out', f = o.facing;
+      if (out && t >= 8) return;
+      var k = out ? 1 - (t + 1) / 9 : Math.min(1, (t + 1) / 8), tt = out ? 200 + t : t, clip = k < 1, r;
+      var cx = f > 0 ? 56 : W - 56, cy = 118;
+      if (clip) {
+        irisSpans(k, cx, cy);
+        ctx.save(); ctx.beginPath();
+        for (r = 0; r < BH; r += 2) { var hw = spans[r]; if (hw > 0) ctx.rect(sx + cx - hw, sy - 8 + r, hw * 2 + 1, 2); }
+        ctx.clip();
+      }
+      I.mirrored(ctx, sx + W / 2, f, function () { drawSky(ctx, sx, sy, tt, o); });
+      if (!clip) return;
+      ctx.restore();
+      var Ed = G[o.pal].bdCols.edge;
+      for (r = 0; r < BH; r += 2) {
+        var h2 = spans[r]; if (h2 <= 0) continue;
+        ctx.fillStyle = (r >> 1) & 1 ? Ed[1] : Ed[0];
+        ctx.fillRect(sx + cx - h2 - 1, sy - 8 + r, 2, 2); ctx.fillRect(sx + cx + h2, sy - 8 + r, 2, 2);
+        ctx.fillStyle = Ed[2]; ctx.fillRect(sx + cx - h2 - 3, sy - 8 + r, 2, 2); ctx.fillRect(sx + cx + h2 + 2, sy - 8 + r, 2, 2);
+      }
+    }
+  });
 })();
 
 </script>
@@ -15265,7 +16139,10 @@
     // V2: x* = extra ramp (Claude `book`, DeepSeek `fin`), u* = DeepSeek `under` (Claude: cloth1)
     'x0', 'x1', 'x2', 'x3', 'xl', 'u0', 'u1', 'u2', 'u3', 'ul', 'eK', 'xP',
     // V2.5 (GPT): x* = `scale`, u* = `wing`, z* = `blob` (others: cloth2 / cloth1 / accent)
-    'z0', 'z1', 'z2', 'z3', 'zl'];
+    'z0', 'z1', 'z2', 'z3', 'zl',
+    // V2.6 (Gemini): g* = `eye2` (second eye colour, gK = its dark rim), q* = `star` facet hues
+    // (white, cyan, pink, yellow — not a ramp). Gemini also maps x* = `hair2`, u* = `lining`, z* = `ear`.
+    'g0', 'g1', 'g2', 'g3', 'gK', 'q0', 'q1', 'q2', 'q3'];
   var S = K.S = {};
   SLOT_NAMES.forEach(function (n, i) { S[n] = i + 1; });
   K.NSLOT = SLOT_NAMES.length + 1;
@@ -15299,7 +16176,10 @@
     c.K = mix(ol, '#000000', 0.3);
     c.gl0 = mix(p.accent[0], '#ffffff', 0.5); c.gl1 = p.accent[1];
     c.sk1 = mix(p.skin[1], p.skin[2], 0.5);
-    var xr = p.book || p.fin || p.scale || p.cloth2, ur = p.under || p.wing || p.cloth1, zr = p.blob || p.accent;
+    var xr = p.book || p.fin || p.scale || p.hair2 || p.cloth2, ur = p.under || p.wing || p.lining || p.cloth1, zr = p.blob || p.ear || p.accent;
+    var gr = p.eye2 || p.eye, qr = p.star || ['#ffffff', p.accent[0], p.accent[1], p.metal[0]];
+    for (var g = 0; g < 4; g++) { c['g' + g] = gr[g]; c['q' + g] = qr[g]; }
+    c.gK = mix(gr[3], ol, 0.5);
     for (var j = 0; j < 4; j++) { c['x' + j] = xr[j]; c['u' + j] = ur[j]; }
     for (var q = 0; q < 4; q++) c['z' + q] = zr[q];
     c.xl = mix(xr[3], ol, 0.5); c.ul = mix(ur[3], ol, 0.5); c.zl = mix(zr[3], ol, 0.5);
@@ -16903,6 +17783,531 @@
 })();
 
 </script>
+<script data-file="illust/gemini.js">
+/* LATENT CLASH — ILLUST: Gemini 娘 portraits, V2.6 design (ZipZipPipe's heterochromia cat-girl).
+ * bust / bustWin / bustLose / face here; cut-in face + motif hooks for cutin.js; emblem hook for
+ * icons.js. Same construction, head size and light (upper right) as the other three. Three-quarter
+ * view facing right.
+ * Slots: h* hair (blue crown) -> x* hair2 (violet) -> t* hairTip (pink ends), shifted in clean bands by
+ * hairShift(); z* inner ear; e* near eye (rose red), g* far eye (gold); c* cloth1 (white), d* cloth2
+ * (navy), u* lining (violet), a* accent (pink-violet magic), q* star facets, m* metal (gold). */
+(function () {
+  'use strict';
+  var LC = window.LC, I = LC.illust, K = I.kit, S = K.S;
+  I.ART = I.ART || {};
+
+  var EL = { K: S.lash, k: S.eK, D: S.e3, s: S.e2, B: S.e1, H: S.e0, w: S.ew, W: S.W, P: S.lash, x: S.s2, l: S.sl, y: S.s3,
+    b: S.bl, c: S.blS, m: S.mo, t: S.tg, n: S.sl, r: S.tear, R: S.tear2, h: S.hl, o: S.ol };
+  var EL2 = {}; Object.keys(EL).forEach(function (k) { EL2[k] = EL[k]; });
+  EL2.k = S.gK; EL2.D = S.g3; EL2.s = S.g2; EL2.B = S.g1; EL2.H = S.g0;
+  var EYES = {
+    // big, lively, a little sly: slightly lowered outer lid, narrow cat pupil, two catch-lights
+    near: [
+      '............',
+      '....xxxxxx..',
+      '..KKKKKKKK..',
+      '.KKKKKKKKKKK',
+      'KKKkDDDDDkKK',
+      'K.wDDsPPsDDw',
+      '..wDssPPWWsw',
+      '..wsBsPPWWBw',
+      '..wBBBPPBBBw',
+      '..wBHBBBBHBw',
+      '...wHHHHHHw.',
+      '....llllll..'
+    ],
+    far: [
+      '.........',
+      '..xxxxx..',
+      '.KKKKKK..',
+      'KKKKKKKKK',
+      'KkDDDDkKK',
+      'wDsPPsDw.',
+      'wsBPPWWw.',
+      'wBsPPWWw.',
+      'wBBPPBBw.',
+      'wHBBBBHw.',
+      '.wHHHHw..',
+      '..llll...'
+    ],
+    // win: near eye winks (happy closed arc), far eye stays open
+    nearWin: [
+      '............',
+      '............',
+      '............',
+      '............',
+      '....KKKKK...',
+      '..KKK...KKK.',
+      '.KK.......KK',
+      'K...........',
+      '............',
+      '............',
+      '............',
+      '............'
+    ],
+    // lose: teary, wide, shaky small pupils, wet lower rim
+    nearLose: [
+      '............',
+      '............',
+      '...KKKKKKK..',
+      '.KKKKKKKKKKK',
+      'KK.wkDDDDkKw',
+      '..wDDsssWDkw',
+      '..wDsBPWWsDw',
+      '..wsBPPBBssw',
+      '..wBBBBBBBBw',
+      '..wBHHHHHHBw',
+      '...rrRRRRrr.',
+      '....llllll..'
+    ],
+    farLose: [
+      '.........',
+      '.........',
+      '..KKKKKK.',
+      'KKKKKKKKK',
+      'wkDDDDkK.',
+      'wDssWDDw.',
+      'wsBPWsDw.',
+      'wsPPBBsw.',
+      'wBBBBBBw.',
+      'wBHHHHBw.',
+      '.rRRRRr..',
+      '..llll...'
+    ]
+  };
+  var MOUTHS = {
+    sly: ['.....n', 'n...n.', '.nnn..'],
+    grin: ['nnnnnn', '.Wmmn.', '..nn..'],
+    pout: ['.nnn.', 'n...n']
+  };
+
+  // head geometry shared by bust and cut-in (bust pixel coordinates)
+  var FR = [
+    [[50, 12, 62, 16, 72, 25, 77, 36, 78, 46], 13, 0, 13],
+    [[49, 13, 58, 20, 64, 30, 66, 38, 64, 44], 12, 0, 12],
+    [[48, 13, 53, 24, 57, 34, 58, 43, 56, 50], 9, 0, 9],
+    [[47, 14, 48, 24, 50, 33, 49, 40], 8, 0, 8],
+    [[46, 13, 40, 19, 37, 28, 36, 38, 38, 44], 11, 0, 10],
+    [[46, 14, 43, 24, 43, 33, 45, 40], 7, 0, 7]
+  ];
+  var FACEPTS = [36, 27, 33, 37, 33, 47, 35, 55, 40, 62, 46, 67.5, 52, 72, 56.5, 74.5, 60.5, 75, 64, 72.5, 69, 67, 73, 61, 76, 55, 77.5, 49, 77, 43, 77.5, 36, 76, 29, 64, 25, 46, 25];
+  var SKULL = [[53, 37, 25, 26], [47, 42, 21, 23]];
+
+  // ---------------------------------------------------------------- helpers
+  // hair colour shift in clean bands: blue crown -> violet -> pink ends, by d = y + k·|x - cx|
+  // (2-px checker transition). Applied to every h*/t* pixel inside `region` (default: everything).
+  var HB = [S.h0, S.h1, S.h2, S.h3, S.hl], HX = [S.x0, S.x1, S.x2, S.x3, S.xl], HT = [S.t0, S.t0, S.t1, S.tS, S.tl];
+  function lvl(d, t, x, y) { return d >= t + 2 ? 1 : d >= t ? (x + y) & 1 : d >= t - 2 ? ((x & 1) === 0 && (y & 1) === 0 ? 1 : 0) : 0; }
+  // remap h* pixels (inside `only`, or everywhere but `skip`) to violet / pink by a field d(x, y)
+  function shiftBy(P, only, dfn, a, b, skip) {
+    var idx = {}; HB.forEach(function (s, i) { idx[s] = i; });
+    for (var y = 0; y < P.h; y++) for (var x = 0; x < P.w; x++) {
+      var i = y * P.w + x, v = idx[P.c[i]]; if (v === undefined || (only && !only.d[i]) || (skip && skip.d[i])) continue;
+      var d = dfn(x, y);
+      if (lvl(d, b, x, y)) P.c[i] = HT[v];
+      else if (lvl(d, a, x, y)) P.c[i] = HX[v];
+    }
+  }
+  function hairShift(P, a, b, skip, k, cx) {
+    k = k === undefined ? 0.7 : k; cx = cx === undefined ? 56 : cx;
+    shiftBy(P, null, function (x, y) { return y + k * Math.abs(x - cx) + 3 * Math.sin(x * 0.45); }, a, b, skip);
+  }
+  // four-pointed iridescent star: 8 facets in the star hues, coloured outline. Returns the mask.
+  var FACETS = [S.q0, S.q1, S.q2, S.q3, S.q2, S.q1, S.q3, S.q1];
+  function star4(P, cx, cy, r, o) {
+    o = o || {};
+    var k = o.k || 0.4, rot = (o.rot || 0) - Math.PI / 2, pts = [], i;
+    for (i = 0; i < 8; i++) { var a = rot + i * Math.PI / 4, rr = i % 2 ? r * k : r; pts.push(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); }
+    var m = P.poly(pts);
+    if (r < 4.5) {
+      // tiny: hand-placed cross, white core
+      var X = Math.round(cx), Y = Math.round(cy), n = Math.max(1, Math.round(r - 0.5));
+      m = P.mask();
+      for (i = -n; i <= n; i++) { m.d[Y * P.w + X + i] = 1; m.d[(Y + i) * P.w + X] = 1; }
+      if (n >= 2) { m.d[Y * P.w + X + 1 - P.w] = 1; m.d[Y * P.w + X - 1 + P.w] = 1; m.d[Y * P.w + X - 1 - P.w] = 1; m.d[Y * P.w + X + 1 + P.w] = 1; }
+      P.fill(m, S.q1);
+      for (i = 1; i <= n; i++) { P.px(X + i, Y, S.q2); P.px(X, Y + i, S.q3); }
+      P.px(X, Y - n, S.q0); P.px(X, Y, S.W);
+      if (o.line) P.fill(m.grow(1).sub(m), o.line);
+      return m;
+    }
+    P.fill(m, S.q1);
+    for (i = 0; i < 8; i++) {
+      var j = (i + 1) % 8, tri = P.poly([cx, cy, pts[i * 2], pts[i * 2 + 1], pts[j * 2], pts[j * 2 + 1]]).and(m);
+      P.fill(tri, (o.cols || FACETS)[i]);
+    }
+    if (o.inner) P.fill(m.edge(), o.line || S.ul); else P.fill(m.grow(1).sub(m), o.line || S.ul);
+    P.px(Math.round(cx - 0.5), Math.round(cy - 0.5), S.W);
+    if (r >= 6) { P.px(Math.round(cx - 0.5), Math.round(cy - 1.5), S.W); P.px(Math.round(cx + 0.5), Math.round(cy - 0.5), S.W); }
+    return m;
+  }
+  I.star4 = star4;
+
+  // cat ear: outer (hair blue, lit edge), pink inner, white fluff tuft. pts = outer, inn = inner
+  function catEar(P, pts, inn, fluff) {
+    var m = P.spoly(pts);
+    P.part(m, S.h1, S.hl);
+    P.recol(m.band(3, -1), [S.h1], S.h2);
+    P.recol(m.band(-1, 2), [S.h1], S.h0);
+    var im = P.spoly(inn).and(K.inner(m));
+    P.part(im, S.z1, S.z3);
+    P.recol(im.band(2, -2), [S.z1], S.z2);
+    P.recol(im.band(-1, 1), [S.z1], S.z0);
+    if (fluff) fluff.forEach(function (f) { var t = P.sr(f, 2.4, 0.6).and(im.grow(1)); P.fill(t, S.c0); P.recol(t.band(1, 0), [S.c0], S.c1); });
+    return m;
+  }
+
+  // fluffy tail: thick tapered ribbon with tufted outline, shade underneath, lit top
+  function tail(P, pts, w) {
+    var p = K.bez(K.smooth(pts), 24), n = (p.length >> 1) - 1, i, n2 = pts.length, ex = pts[n2 - 2], ey = pts[n2 - 1];
+    var m = P.sr(pts, w, w * 0.55, w * 1.08).or(P.ell(ex, ey, w * 0.3, w * 0.3));
+    // fur tufts: little wedges flicking back toward the base, alternating sides
+    for (i = 1; i < 12; i++) {
+      var t = i / 12, q = Math.min(n - 1, Math.floor(t * n)), x = p[q * 2], y = p[q * 2 + 1];
+      var dx = p[q * 2 + 2] - x, dy = p[q * 2 + 3] - y, l = Math.sqrt(dx * dx + dy * dy) || 1; dx /= l; dy /= l;
+      var sd = i & 1 ? 1 : -1, hw = (w * (1 - t) + w * 0.55 * t) / 2 - 0.4, bx = x - dy * hw * sd, by = y + dx * hw * sd;
+      m = m.or(P.poly([bx + dx * 1.8, by + dy * 1.8, bx - dy * sd * 2.4 - dx * 3.2, by + dx * sd * 2.4 - dy * 3.2, bx - dx * 2.2, by - dy * 2.2]));
+    }
+    P.part(m, S.h1, S.hl);
+    P.recol(m.band(3, -2), [S.h1], S.h2);
+    P.recol(m.band(2, -1).and(m.band(4, -3)), [S.h2], S.h3);
+    P.recol(m.band(-1, 2), [S.h1], S.h0);
+    // short fur strokes along the spine
+    for (i = 2; i < 11; i += 2) {
+      var u = i / 12, r = Math.floor(u * n), ux = p[r * 2], uy = p[r * 2 + 1], vx = p[r * 2 + 2] - ux, vy = p[r * 2 + 3] - uy, vl = Math.sqrt(vx * vx + vy * vy) || 1;
+      var o2 = (i & 2 ? 1.6 : -1.6);
+      P.line([ux - vy / vl * o2, uy + vx / vl * o2, ux - vy / vl * o2 + vx / vl * 3, uy + vx / vl * o2 + vy / vl * 3], S.h2, false, true);
+    }
+    // blue base -> violet -> pink tip, by distance from the tip end (same 3-step band as the hair)
+    shiftBy(P, m, function (x, y) { return 40 - Math.sqrt((x + 0.5 - ex) * (x + 0.5 - ex) + (y + 0.5 - ey) * (y + 0.5 - ey)); }, 24, 33);
+    return m;
+  }
+  function H() { return I.H; }
+
+  // the light-twin: a translucent pink-violet copy peeking in behind her (win)
+  function twin(P, dx, dy) {
+    var Q = K.painter(P.w, P.h); Q.ox = dx; Q.oy = dy;
+    var m = Q.ell(53, 37, 25, 26).or(Q.ell(47, 42, 21, 23))
+      .or(Q.spoly([29, 28, 25, 16, 25, 6, 27, 1, 34, 4, 41, 8, 47, 13, 38, 16])).or(Q.spoly([62, 14, 68, 8, 75, 4, 81, 1, 84, 7, 83, 16, 80, 25, 72, 22]))
+      .or(Q.spoly([30, 40, 24, 60, 26, 80, 20, 100, 24, 132, 94, 132, 98, 100, 92, 80, 94, 60, 84, 36]));
+    P.fill(m, S.a1);
+    for (var y = 0; y < P.h; y += 4) for (var x = (y & 4) ? 2 : 0; x < P.w; x += 4) if (m.has(x, y)) P.px(x, y, S.a0);
+    P.recol(m.band(-2, 2), [S.a1], S.a0);
+    P.fill(m.edge(), S.a0);
+    // glinting eyes
+    [[44, 46], [66, 46]].forEach(function (e) { var x = Math.round(e[0] + dx), y = Math.round(e[1] + dy); P.px(x, y, S.W); P.px(x, y + 1, S.W); P.px(x + 1, y + 1, S.a0); P.px(x, y + 2, S.a0); });
+  }
+
+  // ---------------------------------------------------------------- bust
+  function drawBust(P, o) {
+    var expr = o.expr || 'n', sw = o.sway || 0, HH = I.H;
+    var lose = expr === 'lose', win = expr === 'win';
+
+    // ---- back hair: huge, wavy, spreading past the shoulders
+    var back = P.spoly([54, 10, 36, 12, 26, 20, 20, 32, 17, 46, 13, 58, 14, 70, 8, 82, 9, 94, 3 + sw, 106, 6 + sw, 118, 1 + sw * 2, 128, 0, 132,
+      112, 132, 110 + sw * 2, 120, 106 + sw, 108, 108 + sw, 96, 102, 84, 104, 72, 98, 60, 99, 48, 94, 36, 89, 24, 80, 14, 68, 10]);
+    P.part(back, S.h2, S.hl);
+    P.recol(back.band(4, -1), [S.h2], S.h3);
+    var nape = P.spoly([38, 60, 48, 66, 66, 66, 78, 60, 82, 90, 80, 132, 34, 132, 32, 90]).and(back);
+    P.recol(nape, [S.h2], S.h3);
+    [[[24, 40, 17, 54, 19, 66, 12 + sw, 80, 15 + sw, 94, 8 + sw * 2, 108, 11 + sw * 2, 132], 10, 5, 11, 0, [0.15, 0.55]],
+      [[31, 50, 25, 64, 28, 78, 22 + sw, 92, 26 + sw, 106, 20 + sw * 2, 132], 9, 4, 10, 0],
+      [[88, 36, 95, 50, 92, 62, 99 + sw, 76, 96 + sw, 90, 103 + sw * 2, 106, 100 + sw * 2, 132], 10, 5, 11, 0, [0.15, 0.55]],
+      [[82, 48, 86, 62, 84, 76, 89 + sw, 92, 86 + sw, 110], 7, 3, 8, 0]
+    ].forEach(function (c) { HH.hairClump(P, c, S.h2); });
+    // escaping curls
+    [[[14, 60, 7, 66, 5, 74, 7, 79, 11, 78], 3.6, 1.2], [[8, 92, 2, 98, 1, 106, 4, 109], 3.2, 1.2], [[10, 114, 4, 120, 4, 127, 7, 128], 3, 1.2],
+    ].forEach(function (c) { var m = P.sr(c[0], c[1], c[2]); P.part(m, S.h2, S.hl); P.recol(m.band(-1, 1), [S.h2], S.h1); });
+
+    // ---- tail tip curling in at the right, behind the sleeve
+    var tl = lose ? tail(P, [119, 58, 113, 66, 109, 78, 108, 88, 105, 97], 10)
+      : tail(P, [118, 106, 112, 94, 109, 82, 110, 70, 107, 60, 101, 55, 95, 56, 92, 60], 11);
+
+    // ---- body: bare shoulders, navy halter top
+    var neck = P.poly([50, 60, 62, 60, 63, 84, 50, 84]);
+    P.part(neck, S.s1, S.sl);
+    var sh = P.spoly([46, 80, 68, 80, 80, 86, 90, 92, 96, 104, 98, 132, 14, 132, 16, 104, 22, 92, 34, 86]);
+    P.part(sh, S.s1, S.sl);
+    P.recol(sh.band(4, -1), [S.s1], S.s2);
+    P.recol(sh.band(-1, 2), [S.s1], S.s0);
+    P.line([30, 96, 38, 99, 46, 99], S.s2, true, true);   // collarbone hint
+    var top = P.spoly([48, 82, 66, 82, 71, 94, 76, 106, 79, 132, 35, 132, 38, 106, 43, 94]);
+    P.recol(top.shift(-2, 1).sub(top), [S.s1, S.s0], S.s2);
+    P.part(top, S.d1, S.dl);
+    P.recol(top.band(5, 0), [S.d1], S.d2);
+    P.recol(top.band(-2, 1), [S.d1], S.d0);
+    P.recol(K.inner(top).edge().and(P.rect(0, 88, 112, 40)), [S.d1, S.d0], S.m1);
+    P.recol(K.inner(top).edge().and(P.rect(0, 88, 112, 40)), [S.d2], S.m2);
+    // white front panel in a V down to the star gem, violet inset, gold piping
+    var pan = P.poly([50, 84, 64, 84, 62, 93, 57, 99, 52, 93]);
+    P.part(pan, S.c1, S.m2);
+    P.recol(pan.band(3, 0), [S.c1], S.c2);
+    P.recol(pan.band(-1, 1), [S.c1], S.c0);
+
+    // violet under-bust band peeking at the bottom
+    var ub = P.sr([37, 124, 48, 127, 58, 127.5, 68, 127, 78, 124], 4, 4).and(top);
+    P.part(ub, S.u1, S.ul); P.recol(ub.band(0, 1), [S.u1], S.u0);
+    P.line([44, 104, 50, 112, 52, 124], S.d2, true, true);
+    P.line([70, 104, 66, 112, 64, 124], S.d3, true, true);
+    // high navy collar with gold trim
+    var col = P.spoly([48, 72, 57, 74, 66, 72, 66, 80, 65, 85, 57, 87, 49, 85, 47, 80]);
+    P.part(col, S.d1, S.dl);
+    P.recol(col.band(4, 0), [S.d1], S.d2);
+    P.recol(col.band(-1, 1), [S.d1], S.d0);
+    P.recol(col.band(0, -2), [S.d1, S.d0, S.d2], S.m1);
+    P.recol(col.band(0, 2).and(P.rect(0, 0, 112, 80)), [S.d1, S.d0, S.d2], S.m2);
+    star4(P, 57, 105.5, 5.5, { line: S.m2, k: 0.46 });
+    star4(P, 57, 80, 2, { line: S.m3 });
+
+    // ---- near arm: top of the wide detached sleeve (white frill, navy, gold trim)
+    var slv = P.spoly([4, 118, 12, 110, 26, 110, 34, 116, 38, 132, 0, 132]);
+    P.part(slv, S.d1, S.dl);
+    P.recol(slv.band(5, -1), [S.d1], S.d2);
+    P.recol(slv.band(-1, 2), [S.d1], S.d0);
+    var fr = P.sr([5, 116, 14, 110, 26, 110, 33, 115], 4, 4);
+    P.part(fr, S.c1, S.cl); P.recol(fr.band(0, 1), [S.c1], S.c0); P.recol(fr.band(2, -1), [S.c1], S.c2);
+    for (var fx = 6; fx < 34; fx += 3) P.px(fx, 114 + ((fx / 3) & 1), S.c2);
+    P.line([5, 119, 14, 114, 26, 114, 34, 119], S.m1, true, true);
+    P.line([12, 120, 9, 132], S.d2, true, true); P.line([24, 120, 27, 132], S.d2, true, true);
+
+    // ---- head
+    var skull = P.ell(SKULL[0][0], SKULL[0][1], SKULL[0][2], SKULL[0][3]).or(P.ell(SKULL[1][0], SKULL[1][1], SKULL[1][2], SKULL[1][3]));
+    P.part(skull, S.h1, S.hl);
+
+    // ---- cat ears (far first); flattened outward when she loses
+    if (lose) {
+      catEar(P, [64, 14, 74, 12, 86, 14, 97, 20, 92, 24, 84, 26, 77, 27], [68, 16, 76, 15, 87, 18, 92, 21, 84, 23, 76, 23], [[74, 22, 82, 20]]);
+      catEar(P, [44, 13, 36, 14, 26, 18, 14, 25, 21, 29, 28, 29, 33, 28], [41, 16, 34, 17, 24, 21, 19, 25, 26, 26, 33, 25], [[34, 25, 26, 23]]);
+    } else {
+      catEar(P, [62, 14, 68, 8, 75, 4, 81, 1, 84, 7, 83, 16, 80, 25, 72, 22], [67, 14, 73, 9, 79, 6, 81, 11, 79, 18, 76, 21], [[72, 21, 76, 13]]);
+      catEar(P, [30, 28, 25, 17, 25, 7, 27, 1, 34, 4, 41, 8, 47, 13, 38, 16], [32, 24, 29, 15, 29, 8, 32, 7, 37, 10, 41, 14], [[34, 23, 33, 14], [38, 20, 37, 14]]);
+    }
+
+    var face = P.spoly(FACEPTS);
+    P.part(face, S.s1, S.sl);
+    P.recol(neck.and(face.shift(-1, 5)).sub(face), [S.s1], S.s2);
+    P.recol(face.band(2, 0).and(P.rect(0, 30, 44, 40)), [S.s1], S.s2);
+    P.recol(face.band(2, -2).and(P.rect(36, 60, 30, 20)), [S.s1, S.s2], S.s2);
+
+    // ---- face features: rose-red near eye, gold far eye
+    P.map(40, 40, lose ? EYES.nearLose : win ? EYES.nearWin : EYES.near, EL);
+    P.map(62, 40, lose ? EYES.farLose : EYES.far, EL2);
+    P.px(71, 56, S.s2); P.px(71, 57, S.sl);
+    if (win) P.map(56, 63, MOUTHS.grin, EL);
+    else if (lose) P.map(57, 64, MOUTHS.pout, EL);
+    else P.map(57, 63, MOUTHS.sly, EL);
+    var bl = [[42, 56], [44, 56], [46, 56], [43, 57], [45, 57], [66, 56], [68, 56], [67, 57]];
+    bl.forEach(function (p) { if (P.get(p[0], p[1]) === S.s1) P.px(p[0], p[1], lose || win ? S.bl : S.blS); });
+
+    // ---- fringe: soft wavy bangs, a strand between the eyes; cast shadow first
+    var fringe = P.mask();
+    FR.forEach(function (c) { fringe = fringe.or(P.sr(c[0], c[1], c[2], c[3])); });
+    P.recol(fringe.shift(-1, 2).or(fringe.shift(0, 2)), [S.s1], S.s2);
+    FR.forEach(function (c) { HH.hairClump(P, c, S.h1); });
+    P.recol(skull.band(5, -4), [S.h1], S.h2);
+    var ring = P.ell(55, 34, 24, 20).sub(P.ell(56, 37, 24, 20)).and(skull);
+    for (var gx = 0; gx < 112; gx += 6) ring = ring.sub(P.rect(gx, 0, 2, 40));
+    P.recol(ring, [S.h1], S.h0);
+    if (lose) { P.line([42, 38, 46, 37, 51, 35], S.hl); P.line([63, 35, 66, 37, 69, 38], S.hl); }
+    else if (!win) { P.line([42, 38, 46, 37, 51, 38], S.hl); P.line([63, 38, 66, 37, 69, 38], S.hl); }
+
+    // ---- wavy face-framing locks in front of the shoulders
+    HH.hairClump(P, [[31, 60, 25, 74, 28 + sw, 88, 21 + sw, 100, 24 + sw * 2, 112, 18 + sw * 2, 124, 21 + sw * 2, 134], 7, 3, 8, 0], S.h1);
+    HH.hairClump(P, [[34, 40, 29, 54, 31, 66, 26, 78, 29 + sw, 90, 25 + sw, 101, 27 + sw * 2, 110, 25 + sw * 2, 116, 22 + sw * 2, 117], 10, 1.5, 11, 0, [0.08, 0.3]], S.h1);
+    HH.strands(P, [[31, 50, 28, 60, 30, 70, 27, 80, 29 + sw, 90, 26 + sw, 100]], S.h2);
+    HH.hairClump(P, [[37, 30, 35, 44, 37, 56, 34, 66, 35, 72, 37, 74], 5, 1, 6, 0], S.h1);
+    HH.hairClump(P, [[76, 30, 80, 44, 79, 56, 83, 68, 81 + sw, 80, 85 + sw, 92, 83 + sw * 2, 104], 9, 1.5, 10, 0, [0.08, 0.3]], S.h1);
+    HH.strands(P, [[79, 46, 81, 58, 80, 66, 83, 76]], S.h2);
+
+    // ---- side bun + star clip (far side)
+    var bun = P.ell(87, 27, 6.5, 6);
+    HH.hairClump(P, [[82, 24, 88, 21, 93, 26, 90, 32, 84, 31], 4, 4, 5, 0], S.h1);
+    P.part(bun.sub(P.solid().sub(bun)), S.h1, S.hl);
+    star4(P, 85, 19, 7, { rot: 0.15 });
+
+    // ---- ahoge
+    var aho = lose ? P.sr([51, 12, 50, 7, 46, 5, 43, 7], 3.6, 1.8) : P.sr([51, 12, 51, 6, 48, 2, 44, 1, 42, 3, 43, 5], 4, 1.6);
+    P.part(aho, S.h1, S.hl); P.recol(aho.band(-1, 1), [S.h1], S.h0);
+
+    // ---- raised far arm: wide sleeve hanging open, finger to the cheek (or peace sign)
+    if (!lose) farArm(P, win);
+    else farSleeveLow(P);
+
+    hairShift(P, 70, 124, tl);
+    P.outer(S.ol);
+
+    if (win) {
+      star4(P, 98, 12, 6, { rot: 0.2 }); star4(P, 14, 16, 5); star4(P, 104, 40, 3);
+      star4(P, 8, 40, 2); star4(P, 92, 30, 2);
+    } else if (lose) {
+      // drooping star + a little "?"
+      star4(P, 98, 16, 5, { rot: 0.6, k: 0.36 });
+      P.map(84, 4, ['.ooo.', 'oWWWo', 'oWooWo', '.o.oWo', '..oWo', '..oWo', '..ooo', '..oWo', '..ooo'], { o: S.ul, W: S.a0 });
+      P.map(77, 32, ['.r.', 'rRr', 'rRR', '.R.'], EL);
+    } else {
+      star4(P, 13, 16, 6, { rot: 0.1 }); star4(P, 104, 40, 3);
+    }
+  }
+
+  // raised far arm: the bell sleeve falls open toward the elbow (violet lining inside, white cuff,
+  // gold trim); bare forearm; hand with the index finger to the cheek, or a peace sign (win)
+  function farArm(P, win) {
+    var bell = P.spoly([80, 88, 87, 85, 95, 86, 100, 90, 105, 100, 110, 112, 114, 132, 70, 132, 73, 114, 77, 98]);
+    P.part(bell, S.d1, S.dl);
+    P.recol(bell.band(5, -1), [S.d1], S.d2);
+    P.recol(bell.band(-1, 2), [S.d1], S.d0);
+    P.line([84, 94, 80, 112, 82, 132], S.d2, true, true); P.line([92, 94, 92, 112, 95, 132], S.d2, true, true);
+    // the flared back edge turns over: violet lining wedge with a white cuff edge and gold trim
+    var lin = P.spoly([97, 88, 102, 96, 107, 108, 112, 122, 113, 132, 103, 132, 102, 116, 99, 102, 96, 92]).and(bell);
+    P.part(lin, S.u1, S.ul); P.recol(lin.band(3, 0), [S.u1], S.u2); P.recol(lin.band(-1, 1), [S.u1], S.u0);
+    P.line([96, 90, 99, 102, 102, 116, 103, 132], S.c1, true);
+    P.line([97, 90, 100, 102, 103, 116, 104, 132], S.m1, true);
+    var open = P.ell(88.5, 87, 9, 3.4, -0.18), inside = P.ell(88.5, 87.4, 6.6, 2, -0.18);
+    P.part(open, S.c1, S.m2); P.fill(inside, S.u3);
+    var fa = P.sr([89, 89, 87.5, 84, 85.5, 78], 7, 6.4);
+    P.part(fa, S.s1, S.sl); P.recol(fa.band(3, 0), [S.s1], S.s2); P.recol(fa.band(-1, 0), [S.s1], S.s0);
+    var front = open.and(P.rect(0, 87, 112, 6)).sub(fa.and(P.rect(0, 0, 112, 87)));
+    P.part(front, S.c1, S.m2); P.recol(front.band(0, -1), [S.c1], S.c0);
+    P.line([80, 89, 85, 91, 91, 91, 97, 88], S.m1, true, true);
+    if (win) {
+      // peace sign: index + middle finger spread up, the rest folded
+      var palm = P.spoly([81, 79, 80, 73, 83, 69, 88, 69, 91, 73, 90, 78, 86, 80]);
+      var f1 = P.sr([83, 70, 81, 64, 79.5, 59], 3.2, 2.4), f2 = P.sr([87, 70, 89, 64, 91, 59.5], 3.2, 2.4);
+      var th = P.sr([81.5, 76, 84, 74, 86.5, 73], 3, 2.4);
+      var hand = palm.or(f1).or(f2);
+      P.part(hand, S.s1, S.sl); P.recol(hand.band(2, -1), [S.s1], S.s2); P.recol(hand.band(-1, 1), [S.s1], S.s0);
+      P.part(th, S.s1, S.sl);
+      P.line([84, 71, 86, 71], S.s2);
+    } else {
+      // loose fist at the jaw, index finger reaching up-left to touch the cheek
+      var pm = P.spoly([79, 78, 78, 72, 80, 67.5, 85, 66.5, 88.5, 69, 88.5, 74, 85, 78.5]);
+      var idx = P.sr([80.5, 69, 77, 66, 74, 63.5, 72, 62.6], 3.4, 2.4);
+      var curl = P.ell(86, 69.5, 2.1, 1.9).or(P.ell(86.8, 73, 2, 1.9)).or(P.ell(85.6, 76.4, 1.8, 1.7));
+      var hd = pm.or(idx).or(curl);
+      P.part(hd, S.s1, S.sl);
+      P.recol(hd.band(2, -1), [S.s1], S.s2);
+      P.recol(hd.band(-1, 1), [S.s1], S.s0);
+      P.line([83, 69, 85, 69], S.s2); P.line([84, 72.5, 86, 72.5], S.s2); P.line([83.5, 76, 85, 76], S.s2);
+      P.px(72, 62, S.bl);
+    }
+  }
+  function farSleeveLow(P) {
+    var bell = P.spoly([80, 104, 88, 100, 98, 99, 106, 102, 110, 110, 112, 132, 74, 132, 76, 116]);
+    P.part(bell, S.d1, S.dl);
+    P.recol(bell.band(5, -1), [S.d1], S.d2);
+    P.recol(bell.band(-1, 2), [S.d1], S.d0);
+    var band = P.sr([80, 106, 88, 101.5, 98, 100.5, 106, 103], 3.6, 3.6);
+    P.part(band, S.c1, S.m2); P.recol(band.band(0, 1), [S.c1], S.c0);
+    P.line([88, 106, 86, 132], S.d2, true, true); P.line([98, 106, 100, 132], S.d2, true, true);
+  }
+
+  // ---------------------------------------------------------------- emblem: four-pointed star with cat ears
+  function emblem(P, size) {
+    var s = size / 16, c = 8 * s, cy = 9 * s;
+    var ears = P.poly([3.2 * s, 6 * s, 3.4 * s, 0.6 * s, 7 * s, 3.6 * s]).or(P.poly([12.8 * s, 6 * s, 12.6 * s, 0.6 * s, 9 * s, 3.6 * s]));
+    P.part(ears, S.u1, S.ul);
+    if (size >= 32) {
+      P.fill(P.poly([8.2, 10, 7.4, 4.5, 12.5, 7]).and(ears), S.z1);
+      P.fill(P.poly([23.8, 10, 24.6, 4.5, 19.5, 7]).and(ears), S.z1);
+    } else { P.px(4, 3, S.z1); P.px(11, 3, S.z1); }
+    star4(P, c - 0.5, cy - 0.5, 7 * s, { k: 0.34, line: S.ul,
+      cols: [S.a0, S.a1, S.u1, S.a2, S.u2, S.u1, S.a1, S.u0] });
+    var core = P.ell(c - 0.5, cy - 0.5, 1.6 * s, 1.6 * s);
+    if (size >= 32) {
+      P.fill(core, S.q1); P.fill(core.and(P.rect(c - 0.5, 0, 9, 32)), S.q2); P.fill(core.and(P.rect(0, cy, 32, 9)), S.q3);
+      P.px(Math.round(c - 1), Math.round(cy - 2), S.W); P.px(Math.round(c - 1), Math.round(cy - 1), S.q0);
+    } else { P.px(7, 8, S.W); P.px(8, 8, S.q1); P.px(7, 9, S.q2); P.px(8, 9, S.q3); }
+    P.outer(S.ol);
+  }
+
+  // ---------------------------------------------------------------- cut-in hooks (see cutin.js)
+  // Q = the x2.8 painter in bust coordinates; visible window = x 1-87, y 37-63
+  function cutinFace(Q) {
+    var HH = I.H, i;
+    Q.part(Q.rect(4, 20, 104, 60), S.h2, S.hl);
+    Q.recol(Q.rect(4, 20, 104, 60).band(-6, 0), [S.h2], S.h3);
+    HH.strands(Q, [[86, 30, 90, 44, 87, 56, 91, 70], [93, 30, 97, 46, 94, 58, 98, 70], [22, 30, 17, 44, 21, 56, 16, 70]], S.h3);
+    // cat ears (cheated down so their lower halves cut into the top of the frame)
+    catEar(Q, [24, 46, 20, 38, 19, 30, 21, 24, 28, 28, 35, 33, 40, 38, 32, 42], [26, 42, 23, 35, 23, 30, 26, 30, 31, 33, 35, 37], [[28, 41, 27, 35]]);
+    catEar(Q, [72, 38, 78, 33, 85, 29, 90, 26, 92, 32, 91, 41, 88, 48, 80, 44], [77, 38, 83, 33, 89, 30, 89, 35, 87, 42, 84, 44], [[81, 43, 85, 36]]);
+    Q.part(Q.ell(53, 37, 25, 26).or(Q.ell(47, 42, 21, 23)), S.h1, S.hl);
+    var f = Q.spoly(FACEPTS);
+    Q.part(f, S.s1, S.sl); Q.recol(f.band(4, 0), [S.s1], S.s2); Q.recol(f.band(-2, 0), [S.s1], S.s0);
+    var E = [{ x: 46, y: 48.5, w: 12, h: 10 }, { x: 66.4, y: 48.5, w: 8.4, h: 10 }];
+    E.forEach(function (e, k) {
+      I.bigEye(Q, e, k === 0, { lid: 0.36, fierce: true });
+      // cat slit pupil: clear the round pupil, draw a narrow vertical slit + glint
+      var ix = e.x + e.w * 0.08, iy = e.y + e.h * 0.06, rx = e.w * (k === 0 ? 0.3 : 0.34), ry = e.h * 0.52;
+      var iris = Q.ell(ix, iy, rx - 0.5, ry - 0.5);
+      Q.recol(iris, [S.lash], S.e2);
+      Q.recol(Q.ell(ix, iy + 0.4, rx * 0.2, ry * 0.66).and(iris), [S.e0, S.e1, S.e2, S.e3, S.eK], S.lash);
+      Q.recol(Q.ell(ix + rx * 0.42, iy - ry * 0.05, 0.5, ry * 0.36).and(iris), [S.e0, S.e1, S.e2, S.e3], S.W);
+      if (k === 1) {
+        var R = Q.rect(e.x - 6, e.y - 7, 12, 14), from = [S.e0, S.e1, S.e2, S.e3, S.eK], to = [S.g0, S.g1, S.g2, S.g3, S.gK];
+        for (i = 0; i < 5; i++) Q.recol(R, [from[i]], to[i]);
+      }
+    });
+    // glint streaks from the outer corners (rose on the near eye, gold on the far)
+    Q.fill(Q.sr([39.6, 47.4, 35, 46.6, 29, 46.4], 0.9, 0.3), S.e0);
+    Q.fill(Q.sr([70.8, 47.4, 74, 46.4, 78, 46], 0.8, 0.3), S.g0);
+    // sly brows: inner ends raised a touch, outer ends down
+    Q.fill(Q.sr([40.2, 41.6, 46, 40.6, 51.8, 41.4], 1.1, 1.5, 1.5), S.hl);
+    Q.fill(Q.sr([62.4, 41.4, 66, 40.6, 69.6, 41.6], 1.4, 0.9, 1.3), S.hl);
+    Q.line([71, 57, 71.4, 58.2], S.s2); Q.px(Q.tx(71.2), Q.ty(58.6), S.sl);
+    [[43, 56.5], [45, 56.5], [47, 56.5], [67, 56.5], [69, 56.5]].forEach(function (p) { Q.line([p[0], p[1], p[0] - 1.2, p[1] + 1.6], S.bl); });
+    var fr = Q.mask();
+    FR.forEach(function (c) { fr = fr.or(Q.sr(c[0], c[1], c[2], c[3])); });
+    Q.recol(fr.shift(-2, 6).or(fr.shift(0, 6)), [S.s1, S.s0], S.s2);
+    FR.forEach(function (c) { HH.hairClump(Q, c, S.h1); });
+    // hair sweeping across the sides
+    HH.hairClump(Q, [[36, 36, 30, 48, 32, 58, 26, 66, 22, 72], 10, 5, 11, 0, [0.1, 0.6]], S.h1);
+    HH.hairClump(Q, [[76, 32, 81, 44, 79, 54, 84, 62, 90, 68], 9, 5, 10, 0, [0.1, 0.6]], S.h1);
+    HH.hairClump(Q, [[16, 36, 10, 46, 13, 56, 6, 66], 7, 3, 8, 0], S.h2);
+    // colour shift toward violet at the lower sides (pixel coordinates)
+    shiftBy(Q, null, function (x, y) { return y + 0.42 * Math.abs(x - 150); }, 62, 999);
+  }
+  // band motif: a huge faint four-pointed star behind the face, constellation lines + nodes
+  function cutinMotif(P) {
+    function st(cx, cy, r, k) { var pts = []; for (var i = 0; i < 8; i++) { var a = -Math.PI / 2 + i * Math.PI / 4, rr = i % 2 ? r * k : r; pts.push(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } return P.poly(pts); }
+    P.fill(st(152, 36, 120, 0.2), S.a2);
+    P.fill(st(152, 36, 70, 0.22), S.a3);
+    P.fill(st(152, 36, 52, 0.22), S.a2);
+    var C = [[8, 52], [22, 40], [36, 46], [50, 30], [64, 18], [84, 10], [196, 8], [214, 22], [232, 14], [226, 50], [206, 64]];
+    [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [6, 7], [7, 8], [7, 9], [9, 10]].forEach(function (e) {
+      P.line([C[e[0]][0], C[e[0]][1], C[e[1]][0], C[e[1]][1]], S.a1);
+    });
+    C.forEach(function (c, i) { var x = c[0], y = c[1]; P.px(x, y, S.W); P.px(x - 1, y, S.a0); P.px(x + 1, y, S.a0); P.px(x, y - 1, S.a0); P.px(x, y + 1, S.a0); });
+  }
+  // over the finished band: streaking iridescent stars with trails
+  function cutinOver(P) {
+    [[70, 10, 4.5], [228, 60, 5], [24, 62, 3], [118, 64, 3], [200, 6, 2.5]].forEach(function (q) {
+      var x = q[0], y = q[1], r = q[2];
+      for (var t = 2; t < 26 + r * 4; t++) if (t < 10 || t % 3) P.px(x - r - t, y, t < 10 ? S.a0 : S.a1);
+      star4(P, x, y, r, { line: S.ol });
+    });
+  }
+
+  // ---------------------------------------------------------------- face icon 24x24 (TODO: hand map)
+  function face(P) {
+    var Q = K.painter(112, 128); drawBust(Q, {});
+    for (var y = 0; y < 24; y++) for (var x = 0; x < 24; x++) P.px(x, y, Q.get(28 + Math.round(x * 2.3), 2 + Math.round(y * 2.3)));
+  }
+
+  I.ART.gemini = {
+    bust: function () { var P = K.painter(112, 128); drawBust(P, {}); return P; },
+    bustWin: function () { var P = K.painter(112, 128); twin(P, 30, 2); var Q = K.painter(112, 128); drawBust(Q, { expr: 'win' }); P.blit(Q, 0, 0); return P; },
+    bustLose: function () { var P = K.painter(112, 128); drawBust(P, { expr: 'lose' }); return P; },
+    titleFrame: function (o) { var P = K.painter(112, 128); drawBust(P, o); return P; },
+    cutin: function () { return I.cutin ? I.cutin('gemini') : K.painter(240, 72); },
+    face: function () { var P = K.painter(24, 24); face(P); return P; },
+    emblem: emblem,
+    cutinFace: cutinFace, cutinMotif: cutinMotif, cutinOver: cutinOver, cutinCfg: { seed: 53 }
+  };
+  I.drawGeminiBust = drawBust;
+  I.ART.gemini.head = { FR: FR, face: FACEPTS, skull: SKULL };
+})();
+
+</script>
 <script data-file="illust/type.js">
 /* LATENT CLASH — ILLUST lettering: an arcade block font + announcer banners.
  * Glyphs live on a 5x7 cell grid. Cell codes: '#' full, '.' empty, and 45° half cells:
@@ -17346,6 +18751,11 @@
       // V2.5: the knot rosette from her hair / gown (interlaced cord loops, white with dark line work)
       if (I.gptEmblem) I.gptEmblem(P, size);
       return P.canvas(K.slotColors('gpt', 0));
+    }
+    if (I.ART && I.ART[ch] && I.ART[ch].emblem) {
+      // V2.6+: generic per-character hook (Gemini: four-pointed star with cat ears)
+      I.ART[ch].emblem(P, size);
+      return P.canvas(K.slotColors(ch, 0));
     }
     // cute whale: round body, light belly, raised fluke, eye, spout
     var tail = I.fluke(P, 3.2 * s, 4.2 * s, -Math.PI / 2 - 0.5, 0.42 * s).or(P.sr([5 * s, 10 * s, 3.6 * s, 7 * s, 3.2 * s, 4.6 * s], 2.6 * s, 2 * s));
@@ -17803,7 +19213,7 @@
     return (canv[k] = I.TYPE.banner(name));
   };
   I.ICONS = ['btn.L', 'btn.M', 'btn.H', 'btn.S', 'dir.1', 'dir.2', 'dir.3', 'dir.4', 'dir.5', 'dir.6', 'dir.7', 'dir.8', 'dir.9',
-    'emblem.claude', 'emblem.deepseek', 'emblem.claude.lg', 'emblem.deepseek.lg', 'emblem.gpt', 'emblem.gpt.lg', 'pip.on', 'pip.off', 'cursor', 'lock',
+    'emblem.claude', 'emblem.deepseek', 'emblem.claude.lg', 'emblem.deepseek.lg', 'emblem.gpt', 'emblem.gpt.lg', 'emblem.gemini', 'emblem.gemini.lg', 'pip.on', 'pip.off', 'cursor', 'lock',
     'keyboard', 'gamepad', 'touch', 'p1', 'p2', 'cpu'];
   I.icon = function (name) {
     var k = 'icon:' + name;
@@ -21906,6 +23316,1045 @@
 })();
 
 </script>
+<script data-file="rig/chars/gemini-art.js">
+/* LATENT CLASH — RIG: Gemini 娘 hand-authored pixel stamps (head with cat ears, faces, hands, stars).
+ * Facing right, 3/4 view. Blue wavy hair (violet lower down, dynamic locks in gemini.js), two cat ears with
+ * pink insides, a small bun at the back of the head (the star clip is blitted on it by gemini.js),
+ * heterochromia: near eye rose-red (M.eye), far eye gold (M.white).
+ * Materials (gemini.js ramps): M.hair blue, M.legs violet, M.tip pink ends, M.blush = ear/blush pink,
+ * M.white = gold eye, M.glow = iridescent star facets (white, cyan, pink, yellow — hues, not a ramp).
+ */
+(function () {
+  'use strict';
+  var LC = window.LC = window.LC || {};
+  var R = LC.rig = LC.rig || {};
+  var I = R._ = R._ || {};
+  var M = I.MAT, col = I.col;
+
+  var LEGEND = {
+    'h': col(M.hair, 1), 'H': col(M.hair, 0), 's': col(M.hair, 2), 'd': col(M.hair, 3),
+    'u': col(M.legs, 1), 'U': col(M.legs, 0), 'y': col(M.legs, 2),
+    'K': col(M.skin, 0), 'k': col(M.skin, 1), 'q': col(M.skin, 2), 'Q': col(M.skin, 3),
+    'o': 1,
+    'p': col(M.blush, 1), 'P': col(M.blush, 0), 'n': col(M.blush, 2), 'N': col(M.blush, 3),
+    'w': col(M.eye, 0), 'e': col(M.eye, 1), 'E': col(M.eye, 2), 'x': col(M.eye, 3),
+    'Y': col(M.white, 0), 'G': col(M.white, 1), 'j': col(M.white, 2), 'J': col(M.white, 3),
+    'b': col(M.blush, 1), 'r': col(M.blush, 3), 'R': col(M.blush, 0),
+    'W': col(M.c1, 0), 'c': col(M.c1, 1),
+    'm': col(M.metal, 1), 'M': col(M.metal, 0),
+    'a': col(M.acc, 1), 'A': col(M.acc, 0),
+    '-': 255
+  };
+
+  // pivot (under the jaw) = column 17, row 27. Crown row 12 (15 above the pivot), ear tips rows 4-5, chin row 28.
+  var HEAD = [
+    '..............................',
+    '..............................',
+    '..............................',
+    '..............................',
+    '..........h...................',
+    '.........hhs..........h.......',
+    '.........hPs.........Hh.......',
+    '........shPps.......Hph.......',
+    '........shPPps.....HPps.......',
+    '........shPppns....hpPps......',
+    '.......sshPppns...HppPps......',
+    '.......shhPpnns..HhpPnps......',
+    '..ss...shhhhnnhhHHHhpnhhs.....',
+    '.shhs.sshhhhhhhHHHHHHhhhhs....',
+    'shHHhsshhhhhhHHHHHHHHHhhhhs...',
+    'shHhhhshhhhhhhhHHHHhhhhhhhhs..',
+    'shhhhhshhhhhhhhhhhhhhhhhhhhhs.',
+    'sshhhsshhhhhhhshhhhhhhshhhhhs.',
+    '.sssssshhhhhhshhhhhhshhhhhhhhs',
+    '..sshhhhhhhhshhhhhhshhhhhhshhs',
+    '..shhhhhhhhshhhhhhshhhhhhshhhs',
+    '..shhhhhhhshhhKkkshhhkkkkshhs.',
+    '..shhhhhhhshhqkkkkkkkkkkkkkhs.',
+    '..shhhhhhhshhqkkkkkkkkkkkkkks.',
+    '..shhhhhhhshhhqkkkkkkkkkkkkk..',
+    '..shhhhhhhshhhqkkkkkkkkkkkkk..',
+    '..sshhhhhhshhhqqkkkkkkkkkkk...',
+    '...shhhhhhshhh..qqkkkkkkkk....',
+    '...sshhhhhshhs....qqkkkkq.....',
+    '....sshhhhhss.......qqq.......',
+    '.....ssshhs...................'
+  ];
+
+  // eye overlay: near eye cols 0-3 (rose), far eye cols 7-9 (gold), placed at eyeAt
+  var EYES = {
+    open: [
+      '.ooo....oo.',
+      'oxEwo..oJY.',
+      'oeEeo..oGj.',
+      '.eee....G..'
+    ],
+    half: [
+      '...........',
+      'ooooo..ooo.',
+      'oeEeo..oGj.',
+      '.eee....G..'
+    ],
+    closed: [
+      '...........',
+      '...........',
+      'oooo...ooo.',
+      '...........'
+    ],
+    happy: [
+      '...........',
+      '.oo.....o..',
+      'o..o...o.o.',
+      '...........'
+    ],
+    focus: [
+      'oo......oo.',
+      '.oooo..ooo.',
+      'oxEwo..oJY.',
+      '.eEe....G..'
+    ],
+    shut: [
+      'oo.......o.',
+      '..oo...oo..',
+      'oo.......o.',
+      '...........'
+    ],
+    dizzy: [
+      '.oo.....o..',
+      'o.xo...oJo.',
+      '.oo.....o..',
+      '...........'
+    ],
+    sad: [
+      '...o....o..',
+      '.ooo...ooo.',
+      'oxEwo..oJY.',
+      '.eee....G..'
+    ],
+    wide: [
+      '.ooo....oo.',
+      'oxEwo..oJYo',
+      'oeEeo..oGjo',
+      'oeee...oGG.',
+      '.oo.....o..'
+    ],
+    // sly half-lidded side glance (cheeky)
+    sly: [
+      '...........',
+      'oooo...ooo.',
+      'oEwo...JYo.',
+      '.ee.....G..'
+    ],
+    wink: [
+      '.ooo.......',
+      'oxEwo......',
+      'oeEeo..ooo.',
+      '.eee.......'
+    ]
+  };
+  var EYE_DY = { focus: -1, sad: -1, wide: -1 };
+
+  var MOUTHS = {
+    neutral: ['o.o', '.o.'],                 // tiny cat mouth
+    smile:   ['o...o', '.ooo.'],
+    cat:     ['o.o.o', '.o.o.'],             // ω
+    open:    ['.oo.', 'orro', '.oo.'],
+    shout:   ['oooo', 'oWrr', 'orRr', '.oo.'],
+    teeth:   ['oooo', 'oWWo', '.oo.'],
+    hurt:    ['.o.o', 'o.o.'],
+    o:       ['.o.', 'oro', '.o.'],
+    frown:   ['.oo.', 'o..o'],
+    grin:    ['ooooo', 'oWWWo', '.ooo.'],
+    tongue:  ['o..o', '.oRo', '..r.']        // paw-lick
+  };
+
+  // ---------------------------------------------------------------- hands (small, nimble; pink claw tips)
+  // pointing right (a0) and down-right (a45); wrist at the pivot. n = claw (accent highlight).
+  var HAND_LEGEND = { 'k': col(M.skin, 1), 'K': col(M.skin, 0), 'q': col(M.skin, 2), 'Q': col(M.skin, 3), 'o': 1, 'n': col(M.acc, 0) };
+  var HANDS = {
+    id: 'gemini', legend: HAND_LEGEND,
+    fist: { a0: ['.kK.', 'kkkK', 'kkkk', 'qkqq', '.qq.'], p0: [0, 2],
+            a45: ['kk..', 'kkK.', '.kkK', '.kkk', '..qq'], p45: [0, 0] },
+    open: { a0: ['...KK.', '.kkkkK', 'kkkkkk', 'kkkqq.', 'qqk...'], p0: [0, 2],
+            a45: ['kk....', 'kkk...', '.kkKk.', '.kkkkK', '..qkkk', '...q.q'], p45: [0, 0] },
+    flat: { a0: ['..kK', '..kK', 'kkkK', 'kkkq', 'qkq.', '.q..'], p0: [0, 3],
+            a45: ['.kK..', 'kkkK.', 'kkkkq', '.qqq.'], p45: [0, 1] },
+    relax: { a0: ['.kK.', 'kkkK', 'kkkq', 'qkq.', '.q..'], p0: [0, 1],
+             a45: ['kk..', 'kkK.', '.kkK', '.qkk', '..qk'], p45: [0, 0] },
+    point: { a0: ['.kK....', 'kkkkkkK', 'kkkqq..', 'qkq....', '.q.....'], p0: [0, 2],
+             a45: ['kk....', 'kkK...', '.kkkK.', '.kkqkK', '..qq.k'], p45: [0, 0] },
+    // paw: curled fingers, cat-paw (idle, cheeky poses)
+    paw: { a0: ['.kKk.', 'kkkkK', 'kkkkq', '.qkq.'], p0: [0, 1],
+           a45: ['kk...', 'kkKk.', '.kkkK', '..kkq', '...q.'], p45: [0, 0] },
+    // claw: fingers hooked, pink claw tips out
+    claw: { a0: ['..kKn.', '.kkkkn', 'kkkkk.', 'kkkqkn', 'qqkq..', '.q....'], p0: [0, 2],
+            a45: ['kk.....', 'kkkKn..', '.kkkkn.', '.kkqk..', '..kq.n.', '.....n.'], p45: [0, 0] }
+  };
+  HANDS.grip = HANDS.fist;
+
+  // ---------------------------------------------------------------- four-pointed stars (codes = facet slots 0..3)
+  // '0' white core, '1' cyan, '2' pink, '3' yellow; gemini.js rotates the facet hues (twinkle)
+  var STARS = {
+    s3: ['.1.', '102', '.2.'],
+    s5: ['..1..', '..0..', '30002', '..0..', '..2..'],
+    s7: ['...1...', '...0...', '..101..', '3000002', '..202..', '...0...', '...2...'],
+    s9: ['....1....', '....1....', '...101...', '...000...', '330000022', '...000...', '...202...', '....2....', '....2....']
+  };
+
+  I.ART = I.ART || {};
+  I.ART.gemini = {
+    legend: LEGEND,
+    hands: HANDS,
+    stars: STARS,
+    pivot: [17, 27],
+    build: function () {
+      var set = {
+        base: I.parseArt(HEAD, LEGEND, 17, 27),
+        eyes: {}, mouth: {}, cache: {},
+        eyeAt: [15, 21], mouthAt: [20, 26],
+        extras: { blush: { img: I.parseArt(['bb......b'], LEGEND), at: [15, 25] } }
+      };
+      Object.keys(EYES).forEach(function (k) { var e = set.eyes[k] = I.parseArt(EYES[k], LEGEND); if (EYE_DY[k]) e.dy = EYE_DY[k]; });
+      Object.keys(MOUTHS).forEach(function (k) { var m = set.mouth[k] = I.parseArt(MOUTHS[k], LEGEND); if (MOUTHS[k][0].length >= 5) m.dx = -1; });
+      return set;
+    }
+  };
+})();
+
+</script>
+<script data-file="rig/chars/gemini.js">
+/* LATENT CLASH — RIG: Gemini 娘 (96 px, heterochromia cat-girl) body, chains, renderer.
+ *
+ * Materials (15 shared slots, re-purposed locally): legs = violet hair (`hair2`), tip = pink hair ends,
+ * shoe = violet lining, white = gold eye (`eye2`), blush = ear pink (`ear`), glow = iridescent star facets
+ * (`star`: white, cyan, pink, yellow), smear = pink-white claw after-glow; c1 white, c2 navy, acc pink-violet.
+ *
+ * Gemini-only pose fields (all optional):
+ *   tail (deg, swings the whole tail; + = clockwise on screen), arch (curl, 10 = rest shape), pen (extra whip
+ *   on the outer half, deg/link), tl (1 = tail locked to the pose curve: strikes), tsw (sway scale),
+ *   book (coat-panel flare 0..1, panels swing back/out), bko (coat-panel lift deg), bk ([dx,dy] offset of the
+ *   lead drifting star), stars (0 = hide the drifting stars, 'hand' = they gather at the front hand),
+ *   claw ('F'|'B'|'FB' pink glow on the claws), flip (1 = drawing faces left — spins), weapon
+ *   ('hF'|'hB'|'fF'|'fB'|'heelF'|'heelB'|'kF'|'kB'|'tail'), skirt (flare), hem (px, - = lifted), tw (hem swing),
+ *   drape {F,B}, hd (hair direction offset deg), hs (settle hair 0..1), air (no floor clip, light gravity),
+ *   ears ('flat' | 'perk'), only ('star' = draw just a star glint at the centre: blink vanish), dith (1 = 50 %,
+ *   2 = 75 % checker dissolve), z: {tail, armF, armB, legF, legB, hair, slvF, coatN}.
+ */
+(function () {
+  'use strict';
+  var LC = window.LC = window.LC || {};
+  var R = LC.rig = LC.rig || {};
+  var I = R._ = R._ || {};
+  var M = I.MAT, col = I.col, SH = I.SH, H = I.H;
+  var fr = H.fr, lerp = H.lerp, rot = H.rot;
+  var MV = M.legs, MP = M.tip, ML = M.shoe, MG = M.glow;     // violet hair, pink hair ends, violet lining, star facets
+  var D2R = Math.PI / 180;
+
+  function R0(p) { return [Math.round(p[0]), Math.round(p[1])]; }
+  function ln(p, a, b, c, on) { p.line(Math.round(a[0]), Math.round(a[1]), Math.round(b[0]), Math.round(b[1]), c, on); }
+  function dl(p, a, b, st) { p.darkLine(Math.round(a[0]), Math.round(a[1]), Math.round(b[0]), Math.round(b[1]), st || 1); }
+  function hx(h) { var v = parseInt(h.slice(1), 16); return [(v >> 16) & 255, (v >> 8) & 255, v & 255]; }
+  function mixHex(a, b, t) {
+    var A = hx(a), B = hx(b), o = '#';
+    for (var i = 0; i < 3; i++) { var v = Math.round(A[i] + (B[i] - A[i]) * t); o += (v < 16 ? '0' : '') + v.toString(16); }
+    return o;
+  }
+  function norm(dx, dy) { var l = Math.sqrt(dx * dx + dy * dy) || 1; return [dx / l, dy / l]; }
+
+  var C = {
+    id: 'gemini', height: 96, crouchHeight: 64, width: 24,
+    body: {
+      spine: 26, waist: 9, neck: 4, upper: 14, fore: 13, thigh: 24, shin: 22, ankle: 6,
+      shF: [2, 1], shB: [-3, 1], hipF: [3, 1], hipB: [-3, 1]
+    },
+    // bouncy stance on the balls of her feet: lead paw up at chest height, rear paw tucked by her ribs
+    rest: {
+      root: [0, 0], hip: [0, -50], lean: 3, bend: -3, head: [0, 0], tilt: -2,
+      hF: [15, -64], hB: [4, -60], fF: [9, 0], fB: [-9, 0], faF: 0, faB: 14,
+      pen: 0, sq: 0, shr: 0, haF: 0, haB: 0, pg: 0, skirt: 0, tail: 0, arch: 10,
+      book: 0, bko: 0, bk: [0, 0], tw: 0, hem: 0,
+      eyes: 'open', mouth: 'neutral', handF: 'paw', handB: 'paw',
+      elF: 1, elB: 1, knF: -1, knB: -1, blush: 0, z: {}
+    },
+    sigJoints: ['pel', 'waist', 'chest', 'neck', 'shF', 'elF', 'haF', 'shB', 'elB', 'haB',
+      'hipF', 'knF', 'anF', 'ftF', 'hipB', 'knB', 'anB', 'ftB'],
+    ramps: function (pal) {
+      var r = [];
+      r[M.skin] = pal.skin; r[M.hair] = pal.hair; r[MV] = pal.hair2 || pal.hair;
+      var h2 = pal.hair2 || pal.hair, tp = pal.hairTip;
+      r[MP] = [tp[0], tp[1], mixHex(tp[1], h2[2], 0.5), h2[3]];
+      r[M.eye] = pal.eye; r[M.white] = pal.eye2 || pal.eye;
+      r[M.c1] = pal.cloth1; r[M.c2] = pal.cloth2; r[ML] = pal.lining || pal.accent; r[M.acc] = pal.accent; r[M.metal] = pal.metal;
+      r[M.blush] = pal.ear || [pal.blush, pal.blush, pal.skin[2], pal.skin[3]];
+      r[M.ink] = [pal.eye[3], pal.skin[3], pal.outline, pal.outline];
+      r[MG] = pal.star || ['#ffffff', pal.accent[0], pal.accent[1], pal.metal[0]];
+      r[M.smear] = ['#ffffff', pal.accent[0], pal.accent[1], pal.accent[2]];
+      return r;
+    }
+  };
+
+  // ------------------------------------------------------------------ skirt contour limits (legs push the hem)
+  function angOf(ax, ay, bx, by) { return Math.atan2(by - ay, bx - ax) / D2R; }
+  function clampLink(ch, i, tx, ty, front) {
+    var px = ch.x[i - 1], py = ch.y[i - 1], L = Array.isArray(ch.def.len) ? ch.def.len[i - 1] : ch.def.len;
+    var a = angOf(px, py, ch.x[i], ch.y[i]), b = angOf(px, py, tx, ty);
+    if (front ? a > b : a < b) { ch.x[i] = px + Math.cos(b * D2R) * L; ch.y[i] = py + Math.sin(b * D2R) * L; }
+  }
+  function raised(d, s) {
+    var h = s === 'F' ? d.hipF : d.hipB, k = s === 'F' ? d.knF : d.knB;
+    var r = (h[1] + 17 - k[1]) / 8, f = d.ds && d.ds.drape;
+    var across = (s === 'F' ? h[0] - k[0] : k[0] - h[0]);
+    if (across > 2) r *= Math.max(0, 1 - (across - 2) / 4);
+    if (f && f[s] != null && f[s] > r) r = f[s];
+    return r < 0 ? 0 : (r > 1 ? 1 : r);
+  }
+  function limF(ch, i, sk) {
+    var d = sk && (sk.d || sk); if (!d || !d.knF) return;
+    if (raised(d, 'F') > 0.5) return;
+    var q = lerp(d.hipF, d.knF, i === 1 ? 0.3 : 0.62);
+    clampLink(ch, i, q[0] + 4.5, q[1], true);
+  }
+  function limB(ch, i, sk) {
+    var d = sk && (sk.d || sk); if (!d || !d.knB) return;
+    if (raised(d, 'B') > 0.5) return;
+    var q = lerp(d.hipB, d.knB, i === 1 ? 0.3 : 0.62);
+    clampLink(ch, i, q[0] - 4.5, q[1], false);
+  }
+  // a raised thigh lifts that side of the skirt: the hem lies over the thigh and hangs off it
+  function drape(d, s, c0, c1, c2) {
+    var r = raised(d, s);
+    if (r <= 0) return [c1, c2];
+    var h = s === 'F' ? d.hipF : d.hipB, k = s === 'F' ? d.knF : d.knB, dx = k[0] - h[0], dy = k[1] - h[1], l = Math.sqrt(dx * dx + dy * dy) || 1;
+    var nx = dy / l, ny = -dx / l;
+    if (ny > 0) { nx = -nx; ny = -ny; }
+    var T = [h[0] + dx * 0.3 + nx * 4, h[1] + dy * 0.3 + ny * 4];
+    var B = [h[0] + dx * 0.62 + nx * 2, h[1] + dy * 0.62 + ny * 2 + 3];
+    void c0;
+    return [lerp(c1, T, r), lerp(c2, B, r)];
+  }
+
+  // ------------------------------------------------------------------ chains
+  var TAIL_N = 10, TAIL_LEN = [5, 5, 5, 5, 5, 5, 5, 5, 5, 5];
+  // rest shape (deg added per link at arch 10): drops behind her, sweeps back, the tip curls up
+  var TAIL_PROF = [0, 6, 14, 24, 38, 56, 78, 100, 124, 146];
+  var TAIL_R = [2.2, 2.8, 3.3, 3.7, 3.9, 4.0, 4.0, 3.9, 3.6, 3.1, 2.2];
+  var HAIR_GRAV = 0.24;
+  C.chains = [
+    { id: 'tail', n: TAIL_N, len: TAIL_LEN, rest: [100, 106, 114, 124, 138, 156, 178, 200, 224, 246], stiff: 0.55, damp: 0.74, grav: 0.02, drag: 0.22, hys: 0.6 },
+    { id: 'hairA', n: 7, len: [10, 10, 10, 10, 10, 9, 9], rest: [100, 94, 92, 91, 92, 96, 102], stiff: [0.36, 0.3, 0.25, 0.21, 0.18, 0.15, 0.13], damp: 0.84, grav: HAIR_GRAV, drag: 0.3, cvel: 0.6 },
+    { id: 'hairB', n: 6, len: [10, 10, 10, 10, 9, 9], rest: [118, 104, 98, 98, 104, 114], stiff: [0.36, 0.3, 0.24, 0.2, 0.16, 0.14], damp: 0.84, grav: HAIR_GRAV, drag: 0.3, cvel: 0.6 },
+    { id: 'hairC', n: 6, len: [10, 10, 10, 9, 9, 8], rest: [92, 88, 87, 88, 90, 94], stiff: [0.38, 0.3, 0.24, 0.2, 0.16, 0.14], damp: 0.83, grav: HAIR_GRAV, drag: 0.3, cvel: 0.6 },
+    { id: 'lockN', n: 4, len: [7, 7, 7, 6], rest: [84, 88, 92, 96], stiff: 0.32, damp: 0.8, grav: 0.22, drag: 0.25, cvel: 0.5 },
+    { id: 'lockF', n: 3, len: [6, 6, 6], rest: [84, 88, 92], stiff: 0.34, damp: 0.8, grav: 0.22, drag: 0.25, cvel: 0.5 },
+    { id: 'ahoge', n: 3, len: [4, 4, 3], rest: [-96, -40, 20], stiff: 0.5, damp: 0.7, grav: 0.03, drag: 0.14 },
+    { id: 'sFb', n: 2, len: [8, 8], rest: [92, 90], stiff: [0.3, 0.24], damp: 0.84, grav: 0.24, drag: 0.42, cvel: 0.5 },
+    { id: 'sBb', n: 2, len: [8, 8], rest: [92, 90], stiff: [0.3, 0.24], damp: 0.84, grav: 0.24, drag: 0.42, cvel: 0.5 },
+    { id: 'hemF', n: 2, len: [8, 8], rest: [78, 84], stiff: [0.42, 0.36], damp: 0.78, grav: 0.2, drag: 0.32, limit: limF },
+    { id: 'hemB', n: 2, len: [8, 8], rest: [106, 100], stiff: [0.42, 0.36], damp: 0.78, grav: 0.2, drag: 0.32, limit: limB },
+    { id: 'cpN', n: 3, len: [12, 12, 12], rest: [94, 92, 91], stiff: [0.34, 0.28, 0.24], damp: 0.84, grav: 0.24, drag: 0.36, cvel: 0.4 },
+    { id: 'cpF', n: 3, len: [12, 12, 12], rest: [98, 95, 93], stiff: [0.34, 0.28, 0.24], damp: 0.84, grav: 0.24, drag: 0.36, cvel: 0.4 },
+    { id: 'chN', n: 1, len: [4], rest: [90], stiff: 0.2, damp: 0.8, grav: 0.3, drag: 0.3 },
+    { id: 'chF', n: 1, len: [4], rest: [90], stiff: 0.2, damp: 0.8, grav: 0.3, drag: 0.3 },
+    { id: 'pend', n: 2, len: [3, 3], rest: [90, 90], stiff: 0.25, damp: 0.8, grav: 0.3, drag: 0.3 },
+    { id: 'stA', n: 1, len: [8], rest: [-90], stiff: 0.14, damp: 0.84, grav: 0, drag: 0.2, slack: 1, hys: 0.65 },
+    { id: 'stB', n: 1, len: [6], rest: [-90], stiff: 0.2, damp: 0.84, grav: 0, drag: 0.2, slack: 1, hys: 0.65 },
+    { id: 'stC', n: 1, len: [6], rest: [-90], stiff: 0.18, damp: 0.84, grav: 0, drag: 0.2, slack: 1, hys: 0.65 }
+  ];
+  function own(ch) {
+    if (!ch._own) { ch.def = Object.assign({}, ch.def, { rest: ch.def.rest.slice() }); ch._own = true; }
+    return ch;
+  }
+
+  // ------------------------------------------------------------------ pose-only geometry (anchors use it)
+  var PV = [17, 27];
+  function headPt(d, x, y) { return R0(fr(d.neck, d.headAng, x - PV[0], y - PV[1])); }
+  function tailRoot(d) { return fr(d.pel, d.lean, -5, 3); }
+  var TA = new Float64Array(TAIL_N);
+  function tailAngles(d, out) {
+    var a0 = 100 + d.tail + d.lean * 0.5, k = d.arch / 10, whip = d.pen;
+    for (var i = 0; i < TAIL_N; i++) out[i] = a0 + TAIL_PROF[i] * k + (i >= 5 ? whip * (i - 4) : 0);
+    return out;
+  }
+  function tailCurve(d) {
+    var p = tailRoot(d), pts = [p];
+    tailAngles(d, TA);
+    for (var i = 0; i < TAIL_N; i++) { p = [p[0] + Math.cos(TA[i] * D2R) * TAIL_LEN[i], p[1] + Math.sin(TA[i] * D2R) * TAIL_LEN[i]]; pts.push(p); }
+    return pts;
+  }
+  // lead drifting star: behind-above her rear shoulder (pose offset bk)
+  function starTarget(d) {
+    var b = d.bk || [0, 0];
+    return [Math.round(d.neck[0] - 18 + b[0]), Math.round(d.neck[1] - 10 + b[1])];
+  }
+
+  // ------------------------------------------------------------------ flip (spins)
+  var JK = ['pel', 'waist', 'chest', 'neck', 'shF', 'elF', 'haF', 'shB', 'elB', 'haB',
+    'hipF', 'knF', 'anF', 'ftF', 'hipB', 'knB', 'anB', 'ftB', 'bk'];
+  function mir(sk, v) { return sk.flip ? [-v[0], v[1]] : v; }
+
+  C.sigExtra = function (sk, s, n) {
+    s[n++] = Math.round(sk.hemS != null ? sk.hemS : (sk.hem || 0)); s[n++] = Math.round(sk.tw || 0);
+    s[n++] = Math.round((sk.book || 0) * 20); s[n++] = Math.round(sk.bko || 0);
+    s[n++] = sk._tw | 0; s[n++] = sk._sd | 0;
+    return n;
+  };
+
+  C.post = function (sk) {
+    sk.headAng = Math.round(sk.headAng / 5) * 5;
+    sk.headAng = ((sk.headAng + 180) % 360 + 360) % 360 - 180;
+    sk.flip = !!(sk.ds && sk.ds.flip);
+    if (sk.flip) {
+      var o = { flip: false, ds: sk.ds, lean: sk.lean, chestAng: sk.chestAng, headAng: sk.headAng, handAngF: sk.handAngF, handAngB: sk.handAngB,
+        faF: sk.faF, faB: sk.faB, tail: sk.tail, arch: sk.arch, pen: sk.pen, skirt: sk.skirt, book: sk.book, bko: sk.bko, tw: sk.tw, hem: sk.hem };
+      for (var i = 0; i < JK.length; i++) { var k = JK[i]; o[k] = sk[k]; sk[k] = [-sk[k][0], sk[k][1]]; }
+      sk.d = o;
+    } else sk.d = sk;
+  };
+
+  // ------------------------------------------------------------------ anchors
+  C.headCenter = function (sk) { return mir(sk, headPt(sk.d, 18, 20)); };
+  C.headTop = function (sk) { return mir(sk, headPt(sk.d, 12, 5)); };     // ear tips (the head itself tops out 8 px lower)
+  C.footPoint = function (sk, s) {
+    var d = sk.d, f = s === 'F' ? d.ftF : d.ftB, a = s === 'F' ? d.faF : d.faB;
+    return mir(sk, R0(fr(f, a, 2, -1)));
+  };
+  function tipOf(sk, w) {
+    var d = sk.d;
+    switch (w) {
+      case 'fF': case 'fB': {
+        var f = w === 'fF' ? d.ftF : d.ftB, a = w === 'fF' ? d.faF : d.faB;
+        return R0(fr(f, a, 8, -2));
+      }
+      case 'heelF': case 'heelB': {
+        var f2 = w === 'heelF' ? d.ftF : d.ftB, a2 = w === 'heelF' ? d.faF : d.faB;
+        return R0(fr(f2, a2, -4.5, -2));
+      }
+      case 'kF': case 'kB': {
+        var k = w === 'kF' ? d.knF : d.knB, h = w === 'kF' ? d.hipF : d.hipB, dx = k[0] - h[0], dy = k[1] - h[1], l = Math.sqrt(dx * dx + dy * dy) || 1;
+        return R0([k[0] + dx / l * 4, k[1] + dy / l * 4]);
+      }
+      case 'tail': { var c = tailCurve(d); return R0(c[c.length - 1]); }
+      case 'hB': case 'hF': default: {
+        var hh = w === 'hB' ? d.haB : d.haF, ang = w === 'hB' ? d.handAngB : d.handAngF, v = rot(6, 0, ang);
+        return R0([hh[0] + v[0], hh[1] + v[1]]);
+      }
+    }
+  }
+  C.defaultMuzzle = function (sk) { return mir(sk, tipOf(sk, 'hF')); };
+  C.weaponPoint = function (sk) { return mir(sk, tipOf(sk, (sk.ds && sk.ds.weapon) || 'hF')); };
+  C.extraAnchor = function (sk, name) {
+    if (name === 'tail') return mir(sk, tipOf(sk, 'tail'));
+    if (name === 'star') {
+      var ds = sk.ds || {};
+      if (ds.stars === 'hand') return mir(sk, tipOf(sk, 'hF'));
+      return mir(sk, starTarget(sk.d));
+    }
+    return null;
+  };
+  C.partPoints = function (sk, part) {
+    var d = sk.d || sk;
+    switch (part) {
+      case 'hF': { var a = tipOf(sk, 'hF'); return [d.elF[0], d.elF[1], a[0], a[1]]; }
+      case 'hB': { var b = tipOf(sk, 'hB'); return [d.elB[0], d.elB[1], b[0], b[1]]; }
+      case 'fF': { var t = tipOf(sk, 'fF'); return [d.knF[0], d.knF[1], t[0], t[1]]; }
+      case 'fB': { var t2 = tipOf(sk, 'fB'); return [d.knB[0], d.knB[1], t2[0], t2[1]]; }
+      case 'heelF': { var t3 = tipOf(sk, 'heelF'); return [d.knF[0], d.knF[1], t3[0], t3[1]]; }
+      case 'heelB': { var t4 = tipOf(sk, 'heelB'); return [d.knB[0], d.knB[1], t4[0], t4[1]]; }
+      case 'kF': return [d.hipF[0], d.hipF[1], d.knF[0], d.knF[1]];
+      case 'tail': { var c = tailCurve(d); return [c[5][0], c[5][1], c[TAIL_N][0], c[TAIL_N][1]]; }
+    }
+    return [d.elF[0], d.elF[1], d.haF[0], d.haF[1]];
+  };
+  C.boundsExtra = function (sk) {
+    var d = sk.d, c = tailCurve(d), o = [];
+    o.push(mir(sk, R0(c[4])), mir(sk, R0(c[7])), mir(sk, R0(c[TAIL_N])));
+    var hb = headPt(d, 4, 20);
+    o.push(mir(sk, [hb[0] - 12, Math.min(-2, hb[1] + 60)]), mir(sk, [hb[0] - 4, hb[1]]));     // hair mass
+    o.push(mir(sk, R0(fr(d.pel, d.lean, -10, 38))), mir(sk, R0(fr(d.pel, d.lean, 8, 14))));     // coat panels / skirt
+    o.push(mir(sk, R0([d.haF[0] + 3, d.haF[1] + 14])), mir(sk, R0([d.haB[0] - 3, d.haB[1] + 14])));   // sleeve bells
+    o.push(mir(sk, starTarget(d)));
+    return o;
+  };
+
+  // ------------------------------------------------------------------ attach (every tick)
+  C.attach = function (sk, sec, ds) {
+    var d = sk.d || sk, by = sec.by, a = d.headAng, L = d.lean;
+    ds = ds || d.ds || {};
+    sec._ph = (sec._ph || 0) + 1;
+    var ph = sec._ph;
+    // tail: rest = pose curve + a lively cat sway (two waves; stronger toward the tip, the tip flicks)
+    var tl = own(by.tail), tr = tailRoot(d), sw = 7 * (ds.tsw == null ? 1 : ds.tsw), p1 = ph * 0.075, p2 = ph * 0.19;
+    tailAngles(d, TA);
+    for (var i = 0; i < TAIL_N; i++) {
+      var w = (0.15 + i * 0.1);
+      tl.def.rest[i] = TA[i] + sw * (Math.sin(p1 - i * 0.5) * w + (i >= 6 ? 0.45 * Math.sin(p2 - i * 0.7) * (i - 5) * 0.4 : 0));
+    }
+    sec.attach('tail', tr[0], tr[1], 0);
+    if (ds.tl) {
+      var c = tailCurve(d);
+      for (i = 0; i < c.length; i++) { tl.x[i] = tl.px[i] = c[i][0]; tl.y[i] = tl.py[i] = c[i][1]; }
+    }
+    // hair
+    var hA = headPt(d, 6, 22), hB = headPt(d, 3, 18), hC = headPt(d, 9, 26), lk = headPt(d, 12, 26), lf = headPt(d, 25, 23), ah = headPt(d, 16, 12);
+    var hd = ds.hd || 0, airy = ds.air ? 0.4 : 1;
+    ['hairA', 'hairB', 'hairC', 'lockN', 'sFb', 'sBb', 'hemF', 'hemB', 'cpN', 'cpF'].forEach(function (id) {
+      var ch = own(by[id]); if (ch._g0 == null) ch._g0 = ch.def.grav == null ? 0.25 : ch.def.grav;
+      ch.def.grav = ch._g0 * airy;
+    });
+    sec.attach('hairA', hA[0], hA[1], a * 0.4 + hd);
+    sec.attach('hairB', hB[0], hB[1], a * 0.4 + hd);
+    sec.attach('hairC', hC[0], hC[1], a * 0.3 + hd * 0.8);
+    sec.attach('lockN', lk[0], lk[1], a * 0.35);
+    sec.attach('lockF', lf[0], lf[1], a * 0.35);
+    sec.attach('ahoge', ah[0], ah[1], a);
+    if (ds.hs) ['hairA', 'hairB', 'hairC', 'lockN', 'lockF', 'sFb', 'sBb', 'cpN', 'cpF'].forEach(function (id) {
+      var ch = by[id]; if (!ch.ready) return;
+      for (var j = 1; j < ch.n; j++) {
+        var r = ch.restPos(j);
+        ch.x[j] += (r[0] - ch.x[j]) * ds.hs; ch.y[j] += (r[1] - ch.y[j]) * ds.hs;
+        ch.px[j] += (r[0] - ch.px[j]) * ds.hs; ch.py[j] += (r[1] - ch.py[j]) * ds.hs;
+      }
+    });
+    // sleeve bags hang from under the elbow
+    ['F', 'B'].forEach(function (s) {
+      var g = sleeveFrame(d, s);
+      sec.attach('s' + s + 'b', g.eb[0], g.eb[1], 0);
+    });
+    // hem lift eases in/out
+    var ht = d.hem != null ? d.hem : (sk.hem || 0);
+    sec._hem = sec._hem == null ? ht : sec._hem + (ht - sec._hem) * 0.35;
+    if (Math.abs(sec._hem - ht) < 0.05) sec._hem = ht;
+    sk.hemS = sec._hem;
+    // skirt contours
+    var fl = d.skirt || 0, F0 = fr(d.pel, L, 7, -4), B0 = fr(d.pel, L, -7, -4);
+    var hf = own(by.hemF), hb = own(by.hemB);
+    var rl = L * (0.4 + 0.6 * Math.min(1, Math.abs(L) / 90)) - (d.tw || 0);
+    hf.def.rest[0] = 78 - fl * 44 + rl; hf.def.rest[1] = 84 - fl * 36 + rl;
+    hb.def.rest[0] = 106 + fl * 44 + rl; hb.def.rest[1] = 100 + fl * 36 + rl;
+    sec.attach('hemF', F0[0], F0[1], 0);
+    sec.attach('hemB', B0[0], B0[1], 0);
+    // coat-tail panels: hang from the hip sides; book = flare back/out, bko = lift
+    var cf = (d.book || 0) * 46 + (d.bko || 0), cl = L * 0.5;
+    var cn = own(by.cpN), cfar = own(by.cpF);
+    cn.def.rest[0] = 94 + cf + cl; cn.def.rest[1] = 92 + cf * 0.9 + cl; cn.def.rest[2] = 91 + cf * 0.8 + cl;
+    cfar.def.rest[0] = 100 + cf * 1.1 + cl; cfar.def.rest[1] = 96 + cf + cl; cfar.def.rest[2] = 94 + cf * 0.9 + cl;
+    var PN = fr(d.pel, L * 0.6, -3, -4), PF = fr(d.pel, L * 0.6, -8, -5);
+    sec.attach('cpN', PN[0], PN[1], 0);
+    sec.attach('cpF', PF[0], PF[1], 0);
+    var tn = H.chainPts(by.cpN), tf = H.chainPts(by.cpF);
+    sec.attach('chN', tn[3][0], tn[3][1], 0);
+    sec.attach('chF', tf[3][0], tf[3][1], 0);
+    // chain-belt star pendant (front hip)
+    var pp = fr(d.pel, L * 0.6, 5, -1);
+    sec.attach('pend', pp[0], pp[1], 0);
+    // drifting stars: lead star near the target, one orbiting her upper body, one small one over the lead hand
+    var st = starTarget(d), b1 = Math.sin(ph * 0.05) * 2, ch2 = d.chest;
+    if (ds.stars === 'hand') {
+      var ht2 = tipOf(sk, 'hF');
+      st = [ht2[0] + 2, ht2[1] - 6];
+    }
+    sec.attach('stA', st[0], st[1] + 8 + b1, 0);
+    var ob = ph * 0.035;
+    sk._sd = Math.sin(ob) > 0 ? 1 : 0;
+    var oB = ds.stars === 'hand' ? [st[0] - 6 + Math.cos(ob * 3) * 6, st[1] + 2 + Math.sin(ob * 3) * 4] : [ch2[0] + Math.cos(ob) * 22, ch2[1] - 6 + Math.sin(ob) * 6];
+    sec.attach('stB', oB[0], oB[1] + 6, 0);
+    var oC = ds.stars === 'hand' ? [st[0] + 6, st[1] - 4 + Math.sin(ph * 0.08) * 2] : [ch2[0] + 18, ch2[1] - 26 + Math.sin(ph * 0.04 + 1) * 3];
+    sec.attach('stC', oC[0], oC[1] + 6, 0);
+    sk._tw = Math.floor(ph / 6) % 12;
+  };
+
+  // ------------------------------------------------------------------ drawing helpers (skirt surface)
+  function plMake(pts) {
+    var Ls = [0];
+    for (var i = 1; i < pts.length; i++) { var dx = pts[i][0] - pts[i - 1][0], dy = pts[i][1] - pts[i - 1][1]; Ls.push(Ls[i - 1] + Math.sqrt(dx * dx + dy * dy)); }
+    return { p: pts, L: Ls, T: Ls[Ls.length - 1] || 1 };
+  }
+  function plAt(pl, v) {
+    var d = v * pl.T, i = 1;
+    while (i < pl.p.length - 1 && pl.L[i] < d) i++;
+    var a = pl.L[i - 1], b = pl.L[i], u = b > a ? (d - a) / (b - a) : 0;
+    return lerp(pl.p[i - 1], pl.p[i], Math.max(0, Math.min(1, u)));
+  }
+  function surf(S, s, v) {
+    var p = lerp(plAt(S.f, v), plAt(S.b, v), s);
+    if (v > 0.8) p[1] += S.sag * Math.sin(Math.PI * Math.max(0, Math.min(1, s))) * (v - 0.8) / 0.2;
+    return p;
+  }
+  function band(S, sa, sb, v0, v1, n) {
+    var L = [], Rr = [];
+    for (var k = 0; k <= n; k++) {
+      var v = v0 + (v1 - v0) * k / n;
+      L.push(surf(S, typeof sa === 'function' ? sa(v) : sa, v));
+      Rr.push(surf(S, typeof sb === 'function' ? sb(v) : sb, v));
+    }
+    return H.flat(L.concat(Rr.reverse()));
+  }
+  function sLine(p, S, sfn, v0, v1, c, onlyOn, dark) {
+    var n = 6, prev = null;
+    for (var k = 0; k <= n; k++) {
+      var v = v0 + (v1 - v0) * k / n, q = R0(surf(S, typeof sfn === 'function' ? sfn(v) : sfn, v));
+      if (prev) { if (dark) p.darkLine(prev[0], prev[1], q[0], q[1], 1); else p.line(prev[0], prev[1], q[0], q[1], c, onlyOn); }
+      prev = q;
+    }
+  }
+  function hLine(p, S, s0, s1, v, c, onlyOn, dash) {
+    var n = 10, prev = null;
+    for (var k = 0; k <= n; k++) {
+      var q = R0(surf(S, s0 + (s1 - s0) * k / n, v));
+      if (prev && (!dash || k & 1)) p.line(prev[0], prev[1], q[0], q[1], c, onlyOn);
+      prev = q;
+    }
+  }
+  // wavy tapered ribbon (hair locks) — returns a flat polygon + side lines
+  function wavy(pts, w, amp, seed) {
+    var sub = [];
+    for (var i = 0; i < pts.length - 1; i++) for (var k = 0; k < 2; k++) sub.push(lerp(pts[i], pts[i + 1], k / 2));
+    sub.push(pts[pts.length - 1]);
+    var n = sub.length, Lf = [], Rt = [];
+    for (i = 0; i < n; i++) {
+      var a = sub[i > 0 ? i - 1 : 0], b = sub[i < n - 1 ? i + 1 : n - 1], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.sqrt(dx * dx + dy * dy) || 1;
+      var nx = -dy / l, ny = dx / l, t = i / (n - 1), ww = w[0] + (w[1] - w[0]) * t + (w[2] || 0) * Math.sin(Math.PI * t);
+      var wv = amp * Math.sin(i * 1.9 + seed) * (0.4 + t);
+      Lf.push([sub[i][0] + nx * (ww + wv), sub[i][1] + ny * (ww + wv)]);
+      Rt.push([sub[i][0] - nx * (ww - wv * 0.7), sub[i][1] - ny * (ww - wv * 0.7)]);
+    }
+    var tipP = sub[n - 1];
+    return { poly: H.flat(Lf.concat([[tipP[0] + (tipP[0] - sub[n - 2][0]) * 0.9, tipP[1] + (tipP[1] - sub[n - 2][1]) * 0.9]], Rt.reverse())), sub: sub, L: Lf, R: Rt };
+  }
+  function partPoly(wv, i0, i1, tip) {
+    var n = wv.sub.length, a = Math.max(0, i0), b = Math.min(n - 1, i1);
+    var L = wv.L.slice(a, b + 1), Rr = wv.R.slice(a, b + 1).reverse();
+    if (tip && b === n - 1) { var tp = wv.sub[n - 1], pv = wv.sub[n - 2]; L.push([tp[0] + (tp[0] - pv[0]) * 0.9, tp[1] + (tp[1] - pv[1]) * 0.9]); }
+    return H.flat(L.concat(Rr));
+  }
+
+  // ------------------------------------------------------------------ stars
+  var starImgs = {};
+  function starImg(size, shift) {
+    var key = size + ':' + shift;
+    if (starImgs[key]) return starImgs[key];
+    var rows = I.ART.gemini.stars[size], lg = { '0': col(MG, 0) };
+    for (var k = 1; k <= 3; k++) lg[String(k)] = col(MG, 1 + ((k - 1 + shift) % 3));
+    var img = I.parseArt(rows, lg, (rows[0].length - 1) >> 1, (rows.length - 1) >> 1);
+    return (starImgs[key] = img);
+  }
+  function drawStar(p, at, size, shift) { p.blit(starImg(size, shift % 3), Math.round(at[0]), Math.round(at[1])); }
+
+  // ------------------------------------------------------------------ parts
+  function drawHairLock(p, ch, w, amp, seed, strands, cuts, tone) {
+    var pts = H.chainPts(ch), wv = wavy(pts, w, amp, seed), sub = wv.sub, n = sub.length, i;
+    var t0 = tone || 0;
+    p.poly(wv.poly, M.hair, null, 1 + t0);
+    // shade band on the back side of the lock (volume)
+    p.poly(H.flat(wv.L.concat(wv.L.map(function (q, k) { return lerp(q, wv.R[k], 0.3); }).reverse())), M.hair, null, 2 + t0 > 3 ? 3 : 2 + t0);
+    // blue → violet → pink, dithered at the seams
+    var c1 = Math.round(n * cuts[0]), c2 = Math.round(n * cuts[1]);
+    H.recolor(p, partPoly(wv, c1, n - 1, true), M.hair, MV);
+    H.recolor(p, partPoly(wv, c1, c1 + 1, false), MV, M.hair, true);
+    H.recolor(p, partPoly(wv, c2, n - 1, true), MV, MP);
+    H.recolor(p, partPoly(wv, c2, c2 + 1, false), MP, MV, true);
+    var prev = null;
+    for (i = 0; i < n; i++) {
+      var q = R0(lerp(wv.L[i], wv.R[i], 0.12));
+      if (prev) p.darkLine(prev[0], prev[1], q[0], q[1], 1);
+      prev = q;
+    }
+    for (var s = 0; s < strands.length; s++) {
+      prev = null;
+      for (i = 1; i < n - 1; i++) {
+        var q2 = R0(lerp(wv.L[i], wv.R[i], strands[s] + 0.1 * Math.sin(i * 1.3 + s)));
+        if (prev && i > 1) p.darkLine(prev[0], prev[1], q2[0], q2[1], 1);
+        prev = q2;
+      }
+    }
+    // sheen: a short light streak near the top, and one in the violet part
+    var h0 = R0(lerp(wv.L[1], wv.R[1], 0.7)), h1 = R0(lerp(wv.L[3], wv.R[3], 0.68));
+    p.line(h0[0], h0[1], h1[0], h1[1], col(M.hair, 0), true);
+    if (n > 8) {
+      var k0 = Math.min(n - 3, c1 + 1), g0 = R0(lerp(wv.L[k0], wv.R[k0], 0.66)), g1 = R0(lerp(wv.L[k0 + 2], wv.R[k0 + 2], 0.62));
+      p.line(g0[0], g0[1], g1[0], g1[1], col(MV, 0), true);
+    }
+  }
+
+  // fluffy cat tail: thick capsules, fur tufts along both sides, blue → violet toward the tip
+  function drawTail(p, sk, sec, ds) {
+    var pts = ds.tl ? tailCurve(sk) : H.chainPts(sec.tail), i;
+    pts = H.chaikin(pts);
+    var m = pts.length, rr = [];
+    for (i = 0; i < m; i++) { var u = i / (m - 1) * (TAIL_R.length - 1), k = Math.floor(u), f = u - k; rr.push(k + 1 < TAIL_R.length ? TAIL_R[k] + (TAIL_R[k + 1] - TAIL_R[k]) * f : TAIL_R[k]); }
+    for (i = 0; i < m - 1; i++) p.cap(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], rr[i], rr[i + 1], M.hair, SH.thick, 1);
+    // fur tufts: small swept-back triangles alternating sides
+    for (i = 3; i < m - 1; i += 2) {
+      var a = pts[i - 1], b = pts[i + 1], dd = norm(b[0] - a[0], b[1] - a[1]), dx = dd[0], dy = dd[1];
+      var side = (i >> 1) & 1 ? 1 : -1, nx = -dy * side, ny = dx * side, r = rr[i];
+      var q0 = [pts[i][0] + nx * (r - 1) + dx * 1.5, pts[i][1] + ny * (r - 1) + dy * 1.5];
+      var q1 = [pts[i][0] + nx * (r + 1.6) - dx * 1.4, pts[i][1] + ny * (r + 1.6) - dy * 1.4];
+      var q2 = [pts[i][0] + nx * (r - 1) - dx * 2, pts[i][1] + ny * (r - 1) - dy * 2];
+      p.poly(H.flat([q0, q1, q2]), M.hair, null, side > 0 ? 1 : 2);
+    }
+    // fluffy tip tuft
+    var e = pts[m - 1], e0 = pts[m - 2], de = norm(e[0] - e0[0], e[1] - e0[1]);
+    p.poly(H.flat([[e[0] - de[1] * 2.6, e[1] + de[0] * 2.6], [e[0] + de[0] * 3.5, e[1] + de[1] * 3.5], [e[0] + de[1] * 2.6, e[1] - de[0] * 2.6]]), M.hair, null, 1);
+    // gradient: violet over the outer 45 %, dithered seam
+    var cut = Math.floor(m * 0.55), poly = [], j;
+    function sidePts(i0, i1, sg) {
+      var o = [];
+      for (j = i0; j <= i1; j++) {
+        var A = pts[Math.max(0, j - 1)], B = pts[Math.min(m - 1, j + 1)], q = norm(B[0] - A[0], B[1] - A[1]), rad = rr[j] + 3;
+        o.push([pts[j][0] - q[1] * rad * sg, pts[j][1] + q[0] * rad * sg]);
+      }
+      return o;
+    }
+    var Lp = sidePts(cut, m - 1, 1), Rp = sidePts(cut, m - 1, -1);
+    poly = H.flat(Lp.concat([[e[0] + de[0] * 6, e[1] + de[1] * 6]], Rp.reverse()));
+    H.recolor(p, poly, M.hair, MV);
+    var Ld = sidePts(cut, cut + 1, 1), Rd = sidePts(cut, cut + 1, -1);
+    H.recolor(p, H.flat(Ld.concat(Rd.reverse())), MV, M.hair, true);
+    // light fur streaks on the upper side, a dark crease on the underside
+    for (i = 2; i < m - 3; i += 3) {
+      var A2 = pts[i], B2 = pts[i + 1], q3 = norm(B2[0] - A2[0], B2[1] - A2[1]), up = q3[0] >= 0 ? -1 : 1;
+      var o0 = [A2[0] - q3[1] * rr[i] * 0.5 * up, A2[1] + q3[0] * rr[i] * 0.5 * up];
+      ln(p, o0, [o0[0] + q3[0] * 2, o0[1] + q3[1] * 2], col(i > cut ? MV : M.hair, 0), true);
+    }
+  }
+
+  // sleeve frame: band on the upper arm, elbow, wrist; n = forearm normal pointing up
+  function sleeveFrame(d, s) {
+    var sh = s === 'F' ? d.shF : d.shB, el = s === 'F' ? d.elF : d.elB, ha = s === 'F' ? d.haF : d.haB;
+    var e = norm(ha[0] - el[0], ha[1] - el[1]), n = [-e[1], e[0]];
+    if (n[1] > 0 || (Math.abs(n[1]) < 0.2 && n[0] > 0)) n = [-n[0], -n[1]];
+    var u = norm(el[0] - sh[0], el[1] - sh[1]), un = [-u[1], u[0]];
+    if (un[1] > 0 || (Math.abs(un[1]) < 0.2 && un[0] > 0)) un = [-un[0], -un[1]];
+    var band = lerp(sh, el, 0.45);
+    return { sh: sh, el: el, ha: ha, e: e, n: n, u: u, un: un, band: band, eb: [el[0] - n[0] * 2.5, el[1] - n[1] * 2.5] };
+  }
+  function drawArmSkin(p, sk, s) {
+    var sh = s === 'F' ? sk.shF : sk.shB, el = s === 'F' ? sk.elF : sk.elB, ha = s === 'F' ? sk.haF : sk.haB, t = s === 'F' ? 1 : 2;
+    p.cap(sh[0], sh[1], el[0], el[1], 2.3, 1.9, M.skin, SH.limbL, t);
+    p.cap(el[0], el[1], ha[0], ha[1], 1.9, 1.5, M.skin, SH.limbL, t);
+    p.ell(sh[0] - 0.5, sh[1] + 0.5, 2.5, 2.4, M.skin, SH.body, t);
+  }
+  function drawSleeve(p, sk, sec, s) {
+    var g = sleeveFrame(sk, s), t = s === 'F' ? 1 : 2, bag = H.chainPts(sec['s' + s + 'b']);
+    var A = [g.band[0] + g.un[0] * 2.6, g.band[1] + g.un[1] * 2.6], A2 = [g.band[0] - g.un[0] * 2.6, g.band[1] - g.un[1] * 2.6];
+    var Bt = [g.el[0] + g.n[0] * 3, g.el[1] + g.n[1] * 3];
+    var W = [g.ha[0] + g.e[0] * 2.5, g.ha[1] + g.e[1] * 2.5];
+    var Ct = [W[0] + g.n[0] * 4.6, W[1] + g.n[1] * 4.6], Dt = [W[0] - g.n[0] * 4.2, W[1] - g.n[1] * 4.2];
+    var E1 = bag[1], E2 = bag[2];
+    // keep the bag from folding up through the forearm
+    var lowest = [lerp(Dt, E2, 0.5)];
+    void lowest;
+    var outline = [A, Bt, Ct, Dt, E2, E1, bag[0], A2];
+    p.poly(H.flat(outline), M.c2, SH.soft, t);
+    // violet lining showing at the opening (lower half of the mouth of the sleeve) and along the bag edge
+    p.poly(H.flat([lerp(Ct, Dt, 0.45), Dt, lerp(Dt, E2, 0.35), lerp(lerp(Ct, Dt, 0.45), lerp(Dt, E2, 0.35), 0.5)]), ML, null, t);
+    // white cuff band just inside the opening (+ gold trim at the very edge)
+    var c0 = lerp(Ct, Bt, 0.22), c1 = lerp(Dt, E2, 0.2);
+    p.poly(H.flat([lerp(Ct, Bt, 0.07), lerp(Ct, Bt, 0.24), lerp(Dt, E1, 0.22), lerp(Dt, E2, 0.08)]), M.c1, null, t - 1 < 0 ? 0 : t - 1);
+    ln(p, Ct, lerp(Dt, E2, 0.02), col(M.metal, 1), true);
+    ln(p, c0, c1, col(M.metal, 2), true);
+    // folds down the bag + a highlight along the top
+    dl(p, lerp(Bt, bag[0], 0.5), lerp(Dt, E2, 0.5));
+    dl(p, lerp(A, A2, 0.5), lerp(E1, E2, 0.4));
+    ln(p, lerp(A, Bt, 0.3), lerp(Bt, Ct, 0.5), col(M.c2, 0), true);
+    // white top band where the sleeve is tied on (gold edge)
+    p.cap(A[0], A[1], A2[0], A2[1], 1.3, 1.3, M.c1, null, t - 1 < 0 ? 0 : t - 1);
+    var b0 = [g.band[0] + g.u[0] * 1.5, g.band[1] + g.u[1] * 1.5];
+    ln(p, [b0[0] + g.un[0] * 2.6, b0[1] + g.un[1] * 2.6], [b0[0] - g.un[0] * 2.6, b0[1] - g.un[1] * 2.6], col(M.metal, 1), true);
+  }
+  function drawHand(p, sk, s, ds) {
+    var el = s === 'F' ? sk.elF : sk.elB, ha = s === 'F' ? sk.haF : sk.haB;
+    var ang = s === 'F' ? sk.handAngF : sk.handAngB, shape = s === 'F' ? ds.handF : ds.handB;
+    var e = norm(ha[0] - el[0], ha[1] - el[1]);
+    H.hand(p, [ha[0] + e[0] * 0.5, ha[1] + e[1] * 0.5], ang, shape || 'paw', M.skin, M.skin, I.ART.gemini.hands);
+  }
+  // pink glow on the claw tips (ds.claw)
+  function drawClawGlow(p, sk, s) {
+    var ha = s === 'F' ? sk.haF : sk.haB, ang = (s === 'F' ? sk.handAngF : sk.handAngB) * D2R;
+    var ux = Math.cos(ang), uy = Math.sin(ang);
+    for (var k = -1; k <= 1; k++) {
+      var b = [ha[0] + ux * 5 - uy * k * 1.7, ha[1] + uy * 5 + ux * k * 1.7], tp = [b[0] + ux * 4 - uy * k * 0.9, b[1] + uy * 4 + ux * k * 0.9];
+      ln(p, b, tp, col(M.acc, k === 0 ? 0 : 1));
+    }
+  }
+
+  // leg: bare thigh, navy sock band under the knee, slouchy white leg warmer, chunky platform shoe
+  function drawLeg(p, sk, s, lockOff, strap) {
+    var hip = s === 'F' ? sk.hipF : sk.hipB, kn = s === 'F' ? sk.knF : sk.knB;
+    var an = s === 'F' ? sk.anF : sk.anB, ft = s === 'F' ? sk.ftF : sk.ftB, fa = s === 'F' ? sk.faF : sk.faB;
+    var lo = lockOff || 0, t = s === 'F' ? 1 : 2;
+    an = [an[0] + lo, an[1]]; ft = [ft[0] + lo, ft[1]];
+    p.cap(hip[0], hip[1], kn[0], kn[1], 3.8, 2.6, M.skin, SH.limbL, t);
+    // shin: navy sock, then the leg warmer from a third of the way down
+    p.cap(kn[0], kn[1], an[0], an[1], 2.5, 1.8, M.c2, SH.limb, t);
+    var sd = norm(an[0] - kn[0], an[1] - kn[1]), sl = Math.sqrt((an[0] - kn[0]) * (an[0] - kn[0]) + (an[1] - kn[1]) * (an[1] - kn[1]));
+    p.cap(kn[0] - sd[1] * 0.4, kn[1] + sd[0] * 0.4, kn[0] + sd[0] * 3, kn[1] + sd[1] * 3, 2.6, 2.4, M.skin, SH.limbL, t);  // knee cap
+    var w0 = lerp(kn, an, 0.3), w1 = lerp(kn, an, 0.98);
+    p.cap(w0[0], w0[1], w1[0], w1[1], 2.8, 3.4, M.c1, SH.limbL, t);
+    var wb = [an[0] + sd[0] * 0.5, an[1] + sd[1] * 0.5];
+    p.ell(wb[0] - 0.5, wb[1] - 1, 3.7, 2.4, M.c1, SH.soft, t);       // slouch over the shoe
+    // ribs + scrunch folds
+    var nx = -sd[1], ny = sd[0];
+    for (var k = 0; k < 3; k++) {
+      var q = lerp(w0, w1, 0.25 + k * 0.25);
+      dl(p, [q[0] + nx * 2.5 - sd[0] * 0.5, q[1] + ny * 2.5 - sd[1] * 0.5], [q[0] - nx * 2.5 + sd[0] * 0.5, q[1] - ny * 2.5 + sd[1] * 0.5]);
+    }
+    ln(p, [w0[0] + nx * 2.6, w0[1] + ny * 2.6], [w0[0] - nx * 2.6, w0[1] - ny * 2.6], col(M.c1, 0), true);
+    void sl;
+    if (strap) {     // thigh strap: navy band, gold ring, tiny star charm
+      var gq = lerp(hip, kn, 0.62), tx = kn[0] - hip[0], ty = kn[1] - hip[1], tl = Math.sqrt(tx * tx + ty * ty) || 1, gx = -ty / tl * 3.4, gy = tx / tl * 3.4;
+      ln(p, [gq[0] + gx, gq[1] + gy], [gq[0] - gx, gq[1] - gy], col(M.c2, 1), true);
+      ln(p, [gq[0] + gx + tx / tl, gq[1] + gy + ty / tl], [gq[0] - gx + tx / tl, gq[1] - gy + ty / tl], col(M.c2, 2), true);
+      var rg = R0([gq[0] - gx * 0.75, gq[1] - gy * 0.75]);
+      p.pxOn(rg[0], rg[1], col(M.metal, 0));
+    }
+    // platform shoe (relative to the sole point, rotated by the foot pitch): thick violet sole, navy upper, round toe
+    var sole = [[-4.5, 0], [7, 0], [8.4, -1.2], [8.6, -3], [-4.6, -3]];
+    var up = [[-4.4, -3], [8.4, -3], [8.2, -5], [6.5, -6.8], [3.5, -7.6], [0.5, -8.8], [-2.5, -9], [-4.4, -8]];
+    var P1 = [], P2 = [], i;
+    for (i = 0; i < sole.length; i++) { var a = fr(ft, fa, sole[i][0], sole[i][1]); P1.push(a[0], a[1]); }
+    for (i = 0; i < up.length; i++) { var b = fr(ft, fa, up[i][0], up[i][1]); P2.push(b[0], b[1]); }
+    p.poly(P1, ML, SH.soft, t);
+    p.poly(P2, M.c2, SH.limbL, t);
+    ln(p, fr(ft, fa, -4, -2), fr(ft, fa, 7.6, -2), col(ML, t - 1), true);            // sole stripe
+    ln(p, fr(ft, fa, -4.4, -3), fr(ft, fa, 8.2, -3), col(M.metal, 1), true);         // gold welt
+    var tg = R0(fr(ft, fa, 6, -5.5)); p.pxOn(tg[0], tg[1], col(M.c2, 0));            // toe shine
+    var bw = R0(fr(ft, fa, 2.5, -7.4));                                              // strap buckle
+    p.pxOn(bw[0], bw[1], col(M.metal, 0)); p.pxOn(bw[0] + 1, bw[1], col(M.metal, 2));
+  }
+
+  function skirtSurf(sk, sec, hu, ext) {
+    var W = sk.waist, wa = sk.lean * 0.7 + sk.chestAng * 0.3, hf = H.chainPts(sec.hemF), hb = H.chainPts(sec.hemB);
+    var df = drape(sk, 'F', hf[0], hf[1], hf[2]), db = drape(sk, 'B', hb[0], hb[1], hb[2]);
+    if (hu) { df = [df[0], [df[1][0], df[1][1] - hu]]; db = [db[0], [db[1][0], db[1][1] - hu]]; }
+    if (ext) {
+      var ef = norm(df[1][0] - df[0][0], df[1][1] - df[0][1]), eb = norm(db[1][0] - db[0][0], db[1][1] - db[0][1]);
+      df = [df[0], [df[1][0] + ef[0] * ext, df[1][1] + ef[1] * ext]]; db = [db[0], [db[1][0] + eb[0] * ext, db[1][1] + eb[1] * ext]];
+    }
+    return {
+      f: plMake([fr(W, wa, 4.5, 3), hf[0], df[0], df[1]]),
+      b: plMake([fr(W, wa, -5, 3), hb[0], db[0], db[1]]),
+      sag: 1.5
+    };
+  }
+  // white frilled petticoat: scalloped hem peeking below the navy layer
+  function drawPetticoat(p, S) {
+    p.poly(band(S, 0, 1, 0.25, 1, 4), M.c1, null, 1);
+    p.poly(band(S, 0.55, 1, 0.3, 1, 3), M.c1, null, 2);
+    for (var k = 0; k <= 10; k++) {
+      var q = surf(S, -0.02 + 1.04 * k / 10, 1);
+      p.ell(q[0] - 0.5, q[1] - 0.6, 1.6, 1.3, M.c1, null, k & 1 ? 1 : 2);
+    }
+    hLine(p, S, 0.02, 0.98, 0.86, col(M.c1, 3), true, true);
+  }
+  // navy overskirt: open at the very front (petticoat shows), gold-trimmed hem and front edge, pleats
+  var SF = function (v) { return 0.16 - 0.1 * v; };
+  function drawOverskirt(p, S) {
+    p.poly(band(S, SF, 1, 0, 1, 4), M.c2, SH.soft, 1);
+    p.poly(band(S, function (v) { return 0.68 + 0.04 * v; }, 1, 0.05, 1, 3), M.c2, null, 2);
+    sLine(p, S, function (v) { return 0.42 + 0.06 * v; }, 0.2, 1, 0, true, true);
+    sLine(p, S, function (v) { return 0.78 + 0.03 * v; }, 0.2, 1, 0, true, true);
+    sLine(p, S, function (v) { return 0.3 + 0.1 * v; }, 0.25, 0.95, col(M.c2, 0), true);
+    hLine(p, S, SF(0.95), 1, 0.92, col(M.metal, 1), true);
+    sLine(p, S, function (v) { return SF(v) + 0.02; }, 0.05, 0.93, col(M.metal, 1), true);
+    var sp = R0(surf(S, 0.5, 0.85));
+    p.pxOn(sp[0], sp[1], col(MG, 0));        // a tiny sparkle stitched on the navy
+  }
+  function drawBelt(p, sk, sec) {
+    var W = sk.waist, wa = sk.lean * 0.7 + sk.chestAng * 0.3, L = sk.lean;
+    // waistband (navy) + gold chain slung low across the hips
+    var a = fr(W, wa, -5.5, 3), b = fr(W, wa, 5, 3);
+    p.cap(a[0], a[1], b[0], b[1], 1.3, 1.3, M.c2, null, 2);
+    var c0 = fr(W, wa, -5.5, 4.5), c2 = fr(sk.pel, L * 0.6, 5.5, -1), cm = lerp(c0, c2, 0.5);
+    cm = [cm[0], cm[1] + 1.5];
+    var pts = [c0, cm, c2];
+    for (var k = 0; k < 2; k++) {
+      for (var i = 0; i < 5; i++) {
+        var q = R0(lerp(pts[k], pts[k + 1], i / 5));
+        p.px(q[0], q[1], col(M.metal, i & 1 ? 2 : 0));
+        p.pxOn(q[0], q[1] + 1, col(M.metal, 3));
+      }
+    }
+    // star pendant on the front hip (swings: chain 'pend')
+    var pc = H.chainPts(sec.pend);
+    ln(p, pc[0], pc[1], col(M.metal, 1)); ln(p, pc[1], pc[2], col(M.metal, 2));
+    p.end();
+    drawStar(p, [pc[2][0], pc[2][1] + 2], 's3', (sk._tw || 0) + 1);
+    p.end({ hard: true });
+  }
+
+  function drawCoat(p, sk, sec, which) {
+    var ch = sec[which], pts = H.chainPts(ch), t = which === 'cpN' ? 1 : 2;
+    var w = [2.8, 3.6, 4.2, 4.4], L = [], Rr = [], i;
+    for (i = 0; i < pts.length; i++) {
+      var a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], q = norm(b[0] - a[0], b[1] - a[1]);
+      L.push([pts[i][0] - q[1] * w[i], pts[i][1] + q[0] * w[i]]);
+      Rr.push([pts[i][0] + q[1] * w[i], pts[i][1] - q[0] * w[i]]);
+    }
+    var n = pts.length - 1, e = norm(pts[n][0] - pts[n - 1][0], pts[n][1] - pts[n - 1][1]);
+    var tip = [pts[n][0] + e[0] * 4, pts[n][1] + e[1] * 4];
+    // the outer edge (L, toward the back) ends higher: a slanted, pointed hem
+    var poly = L.slice(0, n).concat([lerp(L[n], pts[n], 0.2), tip, Rr[n]], Rr.slice(0, n).reverse());
+    p.poly(H.flat(poly), M.c2, SH.soft, t);
+    // violet lining along the inner edge + gold trim
+    var inner = Rr.map(function (q, k) { return lerp(q, pts[k], 0.35); });
+    p.poly(H.flat(Rr.concat([tip], inner.reverse())), ML, null, t);
+    for (i = 0; i < n; i++) ln(p, L[i], L[i + 1], col(M.metal, 2), true);
+    ln(p, Rr[n], tip, col(M.metal, 1), true);
+    ln(p, lerp(L[n], pts[n], 0.2), tip, col(M.metal, 1), true);
+    dl(p, lerp(L[1], Rr[1], 0.5), lerp(L[n], Rr[n], 0.45));
+    p.end();
+    // star charm on a short chain at the tip
+    var cc = H.chainPts(sec[which === 'cpN' ? 'chN' : 'chF']);
+    ln(p, tip, cc[1], col(M.metal, 1));
+    p.end({ outline: false });
+    drawStar(p, [cc[1][0], cc[1][1] + 2], 's5', (sk._tw || 0) + (t === 1 ? 0 : 2));
+    p.end({ hard: true });
+  }
+
+  function drawTorso(p, sk) {
+    var c = sk.chest, ca = sk.chestAng, W = sk.waist, wa = sk.lean * 0.6 + ca * 0.4;
+    // neck
+    p.cap(c[0] + 0.5, c[1] + 1, sk.neck[0] - 0.5, sk.neck[1], 1.7, 1.6, M.skin, null, 2);
+    // bare torso (skin): shoulders → slim waist
+    var body = H.flat([fr(c, ca, -3, 0), fr(c, ca, -5.5, 1.5), fr(c, ca, -6, 6), fr(c, ca, -5, 11), fr(W, wa, -4.2, 0), fr(W, wa, -4.8, 3.5),
+      fr(W, wa, 4.4, 3.5), fr(W, wa, 3.8, 0), fr(c, ca, 4.6, 12), fr(c, ca, 5.8, 8.5), fr(c, ca, 5.2, 4.5), fr(c, ca, 3.5, 1), fr(c, ca, 1.5, -0.5)]);
+    p.poly(body, M.skin, SH.body);
+    // navel + a hint of the ribcage/waist shading
+    var nv = R0(fr(W, wa, 2.2, 0.5)); p.darken(nv[0], nv[1], 1);
+    dl(p, fr(c, ca, -5.5, 8), fr(W, wa, -4.2, -1));
+    // cropped navy halter top: from the halter neck over the bust, ends under the bust
+    var top = H.flat([fr(c, ca, 0, -0.5), fr(c, ca, 2.6, 0.5), fr(c, ca, 5, 4.2), fr(c, ca, 6, 8.2), fr(c, ca, 4.6, 10.6), fr(c, ca, 0, 11),
+      fr(c, ca, -5, 10.2), fr(c, ca, -5.6, 6.5), fr(c, ca, -3, 5.5), fr(c, ca, -1, 2.5)]);
+    p.poly(top, M.c2, SH.body);
+    // violet band under the bust, white halter strap, gold edge
+    ln(p, fr(c, ca, -5, 9.6), fr(c, ca, 4.6, 10), col(ML, 1), true);
+    ln(p, fr(c, ca, -5, 10.4), fr(c, ca, 4.4, 10.8), col(ML, 2), true);
+    ln(p, fr(c, ca, -0.6, 0), fr(c, ca, 4.6, 4.6), col(M.c1, 1), true);
+    ln(p, fr(c, ca, -1.6, 0.8), fr(c, ca, 3.8, 5.4), col(M.metal, 2), true);
+    ln(p, fr(c, ca, -5.4, 6.4), fr(c, ca, -3, 5.6), col(M.c2, 0), true);
+    // centre-front: a small star gem low on the top
+    var g = R0(fr(c, ca, 3.2, 8));
+    p.pxOn(g[0], g[1] - 1, col(MG, 1)); p.pxOn(g[0] - 1, g[1], col(MG, 2)); p.pxOn(g[0] + 1, g[1], col(MG, 3)); p.pxOn(g[0], g[1] + 1, col(MG, 2)); p.pxOn(g[0], g[1], col(MG, 0));
+  }
+  function drawCollar(p, sk) {
+    var c = sk.chest, ca = sk.chestAng, n = sk.neck;
+    // white choker-halter band around the neck with a gold star clasp
+    var a0 = lerp(c, n, 0.35);
+    p.cap(fr(a0, ca, -2, 0)[0], fr(a0, ca, -2, 0)[1], fr(a0, ca, 2.2, -0.3)[0], fr(a0, ca, 2.2, -0.3)[1], 1.1, 1.1, M.c1, null, 1);
+    var g = R0(fr(a0, ca, 2, 0.6));
+    p.pxOn(g[0], g[1], col(M.metal, 0));
+    p.px(g[0], g[1] + 1, col(M.metal, 1));
+  }
+
+  function mirrorBuffer(p) {
+    var BW = I.BW, OX = I.OX, m = p.m, y, x;
+    var x0 = p.mx0, x1 = p.mx1;
+    if (x1 <= x0) return;
+    var nx0 = 2 * OX - (x1 - 1), nx1 = 2 * OX - x0 + 1;
+    if (nx0 < 0) nx0 = 0; if (nx1 > BW) nx1 = BW;
+    var row = mirrorBuffer.row || (mirrorBuffer.row = new Uint8Array(BW));
+    for (y = p.my0; y < p.my1; y++) {
+      var o = y * BW;
+      row.fill(0);
+      for (x = x0; x < x1; x++) { var t = 2 * OX - x; if (t >= 0 && t < BW) row[t] = m[o + x]; }
+      m.fill(0, o + x0, o + x1);
+      for (x = nx0; x < nx1; x++) m[o + x] = row[x];
+    }
+    p.mx0 = Math.min(nx0, x0); p.mx1 = Math.max(nx1, x1);
+  }
+
+  function drawStars(p, sec, sk, front) {
+    var s = sk._tw || 0;
+    var A = H.chainPts(sec.stA)[1], B = H.chainPts(sec.stB)[1], Cc = H.chainPts(sec.stC)[1];
+    if (front) {
+      drawStar(p, A, (s % 6) < 3 ? 's7' : 's5', s);
+      drawStar(p, Cc, 's3', s + 1);
+      if (sk._sd) drawStar(p, B, 's5', s + 2);
+    } else if (!sk._sd) drawStar(p, B, 's5', s + 2);
+    p.end({ hard: true });
+  }
+
+  C.draw = function (D) {
+    var p = D.p, sk0 = D.sk, d = sk0.d || sk0, ds = D.ds, sec = D.sec, z = ds.z || {};
+    if (ds.only === 'star') {      // blink: nothing but a star glint at her centre
+      var cc = [Math.round((sk0.neck[0] + sk0.pel[0]) / 2), Math.round((sk0.neck[1] + sk0.pel[1]) / 2)];
+      drawStar(p, cc, ds.onlySize || 's9', sk0._tw || 0); p.end({ hard: true });
+      return;
+    }
+    var eyes = ds.eyes || 'open';
+    if (D.blink && (eyes === 'open' || eyes === 'focus' || eyes === 'sad' || eyes === 'wide')) eyes = (D.blink > 5 || D.blink < 3) ? 'half' : 'closed';
+    var hu = -Math.round(sk0.hemS != null ? sk0.hemS : (sk0.hem || 0));
+    var S = skirtSurf(d, sec, hu, 0), S2 = skirtSurf(d, sec, hu, 3);
+    var lockF = sk0.flip ? 0 : D.lock.F, lockB = sk0.flip ? 0 : D.lock.B;
+    var showStars = ds.stars !== 0;
+    var steps = [
+      [-13, function () { if (showStars) drawStars(p, sec, sk0, false); }],
+      [z.hair != null ? z.hair : -11, function () {
+        drawHairLock(p, sec.hairB, [6, 4, 4], 2.2, 1.9, [0.35, 0.7], [0.45, 0.78], 1); p.end();
+        drawHairLock(p, sec.hairA, [7, 5, 5], 2.4, 0.3, [0.3, 0.55, 0.8], [0.42, 0.76], 0); p.end();
+      }],
+      [-10, function () { drawCoat(p, d, sec, 'cpF'); }],
+      [-9.5, function () { drawHairLock(p, sec.hairC, [5, 3, 3], 1.8, 3.1, [0.4, 0.75], [0.48, 0.8], 0); p.end(); }],
+      [z.armB != null ? z.armB : -7, function () { drawArmSkin(p, d, 'B'); p.end(); drawSleeve(p, d, sec, 'B'); p.end(); drawHand(p, d, 'B', ds); p.end(); }],
+      [z.legB != null ? z.legB : -4, function () { drawLeg(p, d, 'B', lockB, false); p.end(); }],
+      [z.tail != null ? z.tail : -3.5, function () { drawTail(p, d, sec, ds); p.end(); }],
+      [z.coatN != null ? z.coatN : -3, function () { drawCoat(p, d, sec, 'cpN'); }],
+      [z.legF != null ? z.legF : -1.5, function () { drawLeg(p, d, 'F', lockF, true); p.end(); }],
+      [-1, function () { drawPetticoat(p, S2); p.end(); drawOverskirt(p, S); p.end(); }],
+      [-0.5, function () { drawBelt(p, d, sec); }],
+      [0, function () { drawTorso(p, d); p.end(); }],
+      [0.5, function () { drawCollar(p, d); p.end(); }],
+      [2, function () {
+        var img = H.headImage(C.headSet, eyes, ds.mouth || 'neutral', ds.blush ? 'blush' : '', d.headAng);
+        p.blit(img, d.neck[0], d.neck[1]);
+        var ah = H.chainPts(sec.ahoge);
+        p.cap(ah[0][0], ah[0][1] + 1, ah[1][0], ah[1][1], 0.9, 0.8, M.hair, null);
+        p.cap(ah[1][0], ah[1][1], ah[2][0], ah[2][1], 0.8, 0.6, M.hair, null);
+        p.cap(ah[2][0], ah[2][1], ah[3][0], ah[3][1], 0.6, 0.5, M.hair, null, 0);
+        p.end();
+        drawStar(p, headPt(d, 4, 14), 's7', (sk0._tw || 0) + 1); p.end({ hard: true });     // star clip on the bun
+      }],
+      [2.5, function () { drawHairLock(p, sec.lockN, [2.8, 1.6, 1], 1, 0.7, [0.5], [0.55, 0.9], 0); p.end(); }],
+      [3, function () { drawHairLock(p, sec.lockF, [1.8, 0.9, 0.6], 0.6, 2.2, [], [0.6, 0.95], 0); p.end(); }],
+      [z.armF != null ? z.armF : 4, function () { drawArmSkin(p, d, 'F'); p.end(); drawSleeve(p, d, sec, 'F'); p.end(); }],
+      [4.5, function () { if (D.smear) { H.smear2(p, D.smear, M.smear); p.end({ outline: false }); } }],
+      [z.armF != null ? z.armF + 0.6 : 5, function () { drawHand(p, d, 'F', ds); p.end(); }],
+      [5.5, function () {
+        if (ds.claw) { if (ds.claw.indexOf('B') >= 0) drawClawGlow(p, d, 'B'); if (ds.claw.indexOf('F') >= 0) drawClawGlow(p, d, 'F'); p.end({ ring: col(M.acc, 3) }); }
+      }],
+      [6, function () { if (showStars) drawStars(p, sec, sk0, true); }]
+    ];
+    steps.sort(function (a, b) { return a[0] - b[0]; });
+    p.fastTone = true;
+    var prof = I._gemProf;
+    try {
+      for (var i = 0; i < steps.length; i++) {
+        if (prof) { var t0 = performance.now(); steps[i][1](); prof[steps[i][0]] = (prof[steps[i][0]] || 0) + performance.now() - t0; } else steps[i][1]();
+      }
+    } finally { p.fastTone = false; }
+    // grounded poses: nothing (hair, tail, panels) sinks more than 2 px into the floor
+    if (!ds.air && p.my1 > I.OY + 3) {
+      for (var y = Math.max(p.my0, I.OY + 3); y < p.my1; y++) p.m.fill(0, y * I.BW + p.mx0, y * I.BW + p.mx1);
+    }
+    if (sk0.flip) mirrorBuffer(p);
+    // teleport dissolve: checker out 50 % / 75 % of the pixels
+    if (ds.dith) {
+      var BW = I.BW;
+      for (var yy = p.my0; yy < p.my1; yy++) for (var xx = p.mx0; xx < p.mx1; xx++) {
+        var k = (xx & 1) + ((yy & 1) << 1);
+        if (ds.dith >= 2 ? k !== 0 : ((xx + yy) & 1)) p.m[yy * BW + xx] = 0;
+      }
+    }
+  };
+
+  C.build = function () { C.headSet = I.ART.gemini.build(); };
+  // expose pose-only helpers for the anim files / tools
+  C.geo = { tailCurve: tailCurve, starTarget: starTarget, tipOf: tipOf, sleeveFrame: sleeveFrame };
+  I.CHARS.gemini = C;
+})();
+
+</script>
 <script data-file="rig/anims/gen.js">
 /* LATENT CLASH — RIG: procedural helpers for authoring (locomotion cycles). */
 (function () {
@@ -23449,6 +25898,47 @@
 })();
 
 </script>
+<script data-file="rig/anims/gemini-base.js">
+/* LATENT CLASH — RIG: Gemini 娘 base motion (stance + all common anims + airJump).
+ * Personality: mischievous, light on her toes, cat-like; the tail never stops, the hair, sleeves, coat panels
+ * and skirt follow through.
+ */
+(function () {
+  'use strict';
+  var LC = window.LC = window.LC || {};
+  var R = LC.rig = LC.rig || {};
+  var I = R._ = R._ || {};
+  var P = I.P, bob = I.bob;
+  // local aliases: coat → book (panel flare), cl → bko (panel lift), st → bk (lead star offset)
+  function mapPose(o) {
+    if (!o) return o;
+    if (o.coat != null) o.book = o.coat;
+    if (o.cl != null) o.bko = o.cl;
+    if (o.st) o.bk = o.st;
+    return o;
+  }
+  var def = I.defGem = function (name, d) {
+    if (d.keys) d.keys.forEach(function (k) { k[1] = mapPose(P(k[1])); });
+    return I.defAnim('gemini', name, d);
+  };
+  var S = I.CHARS.gemini.rest;
+  var POSE = I.POSE_GEM = { stance: S };
+
+  // ---------------------------------------------------------------- idle
+  def('idle', {
+    segs: [['loop', 64, true]], step: 2,
+    keys: [[0, S], [16, bob(S, 0, 1, { sq: 1 })], [32, S], [48, bob(S, 0, 1, { sq: 1 })]]
+  });
+})();
+
+</script>
+<script data-file="rig/anims/gemini-attacks.js">
+/* LATENT CLASH — RIG: Gemini 娘 attacks (normals, specials, super). */
+(function () {
+  'use strict';
+})();
+
+</script>
 <script data-file="rig/anims/placeholders.js">
 /* LATENT CLASH — RIG: required animation list (contract §3.3) and placeholders.
  *
@@ -23518,6 +26008,18 @@
       dragonRise: [g('startup', 5), g('rise', 14), g('fall', 12, true), g('land', 14)],
       call: sar(7, 3, 30), callHit: [g('hold', 14), g('rise', 16), g('slam', 12), g('recovery', 22)],
       roar: sar(9, 6, 24)
+    }),
+    gemini: Object.assign({}, COMMON, {
+      dashF: [g('go', 16)], dashB: [g('go', 18)], walkB: [g('loop', 32, 1)],
+      super: [g('startup', 6), g('cast', 12), g('active', 54), g('recovery', 28)],
+      airJump: [g('go', 6)],
+      '5L': sar(4, 3, 7), '5M': sar(7, 4, 12), '5H': sar(10, 5, 20),
+      '2L': sar(4, 3, 8), '2M': sar(7, 4, 13), '2H': sar(10, 5, 22),
+      jL: jsar(4, 8), jM: jsar(6, 6), jH: jsar(9, 6),
+      star: sar(11, 3, 24), airStar: [g('startup', 9), g('active', 3), g('recovery', 12, true)],
+      starRise: [g('startup', 4), g('rise', 12), g('fall', 12, true), g('land', 14)],
+      twin: sar(10, 2, 18), twinStrike: sar(8, 4, 14),
+      blinkOut: [g('startup', 5), g('vanish', 5)], blinkIn: [g('appear', 5), g('recovery', 9)]
     })
   };
 
@@ -23535,6 +26037,11 @@
     gpt: {
       '5M': '5L', '2L': '5L', '2M': '5L', '2H': '5H', jL: 'jumpFall', jM: 'jumpFall', jH: 'jumpFall',
       breath: '5L', airBreath: 'jumpFall', dragonRise: '5H', call: 'throw', callHit: 'throwHit', roar: '5H', super: '5H'
+    },
+    gemini: {
+      '5M': '5L', '2L': '5L', '2M': '5L', '2H': '5H', jL: 'jumpFall', jM: 'jumpFall', jH: 'jumpFall',
+      airJump: 'jumpRise', star: '5L', airStar: 'jumpFall', starRise: '5H', twin: '5L', twinStrike: '5L',
+      blinkOut: 'crouchIn', blinkIn: 'crouchOut', super: '5H'
     }
   };
   var FALLBACK = ['idle'];
