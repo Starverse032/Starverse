@@ -313,7 +313,7 @@
     var r = function (id) { return self.reachOf(me, id) + 15; };
     var full = me.meter >= 100;
     // universal
-    var isG = C === 'gpt', gW = isG ? (P.gWalk != null ? P.gWalk : 0.35) : 1;   // GPT: patient, lets them come
+    var isG = C === 'gpt', gW = isG ? (P.gWalk != null ? P.gWalk : 0.15) : 1;   // GPT: patient, lets them come
     add('walkF', (0.6 + ag * 0.6) * (isG && dx < 150 ? gW : 1), [{ d: 6, n: 10 + this.rng.int(20) }]);
     add('walkB', dx < D(120) ? 0.35 : 0.1, [{ d: 4, n: 8 + this.rng.int(14) }]);
     add('wait', 0.25 * (1 - ag) + (isG ? (P.gWait != null ? P.gWait : 0.5) : 0), [{ d: dx < D(80) ? 1 : 4, n: 8 + this.rng.int(12) }]);
