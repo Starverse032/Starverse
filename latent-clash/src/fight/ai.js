@@ -25,6 +25,15 @@
     { react: 10, block: 0.88, guess: 0.8, aa: 0.78, punish: 0.86, depth: 3, confirm: 5, tech: 0.55, sup: 1.0, think: 4, aggr: 0.62, jump: 0.06, mash: 0, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 1 }
   ];
 
+  // per-character neutral profile (distances in px; D() = V1 constants scaled for the V2 bodies)
+  var PROF = {
+    claude:   { dp: 'sonnet',     want: D(92), jr: [D(70), D(130)], dashW: 0.8,  superR: D(200) },
+    deepseek: { dp: 'breach',     want: D(60), jr: [D(70), D(150)], dashW: 0.9,  superR: D(120) },
+    gpt:      { dp: 'dragonRise', want: 80,    jr: [D(70), D(125)], dashW: 0.55, superR: 0 }
+  };
+  function prof(ch) { return PROF[ch] || PROF.claude; }
+  F.AI_PROF = PROF;
+
   function AI(m, side, level, seed) {
     this.m = m; this.side = side; this.rng = new F.RNG(seed >>> 0);
     this.setLevel(level);
@@ -32,6 +41,7 @@
     this.guardT = 0; this.guardLow = false; this.idleT = 0; this.nextThink = 0;
     this.hitTick = -99; this.blockTick = -99; this.lastInst = -1; this.comboStep = 0;
     this.techTried = false; this.wakePlanned = false; this.jumpAtk = false; this.held = {};
+    this.blkLog = []; this.lastAct = null; this.oppGuard = 0; this.projV = 0;
   }
   F.AI = AI;
 
@@ -53,7 +63,11 @@
       ob.guard = o.mv.stance === 'air' || o.air ? 'high' : (h.guard || 'mid');
       ob.reach = h.box ? h.box[0] + h.box[2] : (h.beam ? 400 : D(60));
       if (o.mv.whale) ob.reach = 300;
+      if (o.mv.flame) ob.reach = 29 + F.v(o.mv.flame.length, o.str);
+      if (o.mv.roar) ob.reach = F.v(o.mv.roar.radius, o.str);
+      if (o.mv.attn) ob.reach = 500;
     }
+    if (o.mv && o.mv.cmdGrab) ob.grab = true;
     for (var i = 0; i < m.projs.length; i++) { var p = m.projs[i]; if (p.owner === o) ob.projs.push({ x: p.x, y: p.y, vx: p.vx }); }
     this.obs.push(ob);
     if (this.obs.length > 40) this.obs.shift();
@@ -105,6 +119,9 @@
       if (m.state !== 'fight') { this.q.length = 0; return {}; }
       return this.q.length ? this.emit() : this.holdGuard(me, o);
     }
+    if (me.action === 'blockstun' && this.lastAct !== 'blockstun') { this.blkLog.push(m.tick); if (this.blkLog.length > 6) this.blkLog.shift(); }
+    this.lastAct = me.action;
+    this.oppGuard = this.oppGuard * 0.985 + ((o.action === 'guard' || o.action === 'blockstun') ? 0.015 : 0);   // ~ share of time the opponent spends guarding
     if (me.action !== 'thrown') this.techTried = false;
     if (me.action === 'thrown' && !this.techTried) {
       this.techTried = true;
@@ -146,11 +163,11 @@
   AI.prototype.threat = function (me, pv, dx) {
     if (!pv) return null;
     var pdx = Math.abs(pv.x - me.x);
-    if (pv.act === 'attack' && (pv.ph === 'startup' || pv.ph === 'active') && pv.kind !== 'throw' && pdx < pv.reach + D(34)) return 'strike';
+    if (pv.act === 'attack' && (pv.ph === 'startup' || pv.ph === 'active') && pv.kind !== 'throw' && !pv.grab && pdx < pv.reach + D(34)) return 'strike';
     if (pv.air && pdx < D(110) && F.sign(me.x - pv.x) === F.sign(pv.vx || 0)) return 'air';
     for (var i = 0; i < pv.projs.length; i++) {
       var p = pv.projs[i];
-      if (F.sign(me.x - p.x) === F.sign(p.vx) && Math.abs(p.x - me.x) < D(150)) return 'proj:' + Math.abs(p.x - me.x);
+      if (F.sign(me.x - p.x) === F.sign(p.vx) && Math.abs(p.x - me.x) < D(150)) { this.projV = Math.abs(p.vx); return 'proj:' + Math.abs(p.x - me.x); }
     }
     return null;
   };
@@ -167,7 +184,8 @@
       if (th === 'air') {
         if (this.chance(P.aa * 0.25) || (this.aaRolled !== pv && (this.aaRolled = pv) && this.chance(P.aa))) {
           var air = dx < D(70);
-          if (air && this.chance(0.7)) { this.push(this.special(C === 'claude' ? 'sonnet' : 'breach', this.level >= 4 ? 'H' : 'M'), 'aa'); return this.emit(); }
+          if (C === 'gpt' && dx < 64 && this.chance(0.25 * (P.gRoar || 1))) { this.push(this.special('roar', 'M'), 'aaRoar'); return this.emit(); }
+          if (air && this.chance(0.7)) { this.push(this.special(prof(C).dp, this.level >= 4 ? 'H' : 'M'), 'aa'); return this.emit(); }
           if (dx < D(60)) { this.push(this.press('H'), 'aa5H'); return this.emit(); }
         }
         if (this.chance(P.block)) { this.guardT = 14; this.guardLow = false; return this.holdGuard(me, o, null); }
@@ -179,6 +197,11 @@
         if (C === 'claude' && pd < D(70) && pd > D(24) && this.chance(P.block * 0.2)) { this.push(this.special('guardrail', 'M'), 'absorb'); return this.emit(); }
         if (C === 'deepseek' && pd > D(30) && pd < D(120) && dx < D(260) && this.chance(P.block * 0.3)) { this.push(this.special('dive', dx < D(200) ? 'H' : 'M'), 'diveProj'); return this.emit(); }
         if (C === 'deepseek' && pd > D(50) && me.proj === 0 && this.chance(P.block * 0.15)) { this.push(this.special('wave', 'H'), 'clash'); return this.emit(); }
+        if (C === 'gpt') {   // roar erases projectiles inside its radius: time it so the wave is out when the shot arrives
+          var est = pd - this.projV * P.react, arrive = est - this.projV * 10;
+          if (arrive < 76 && est > 24 && this.chance((P.block * 0.6 + 0.1) * (P.gRoar || 1))) { this.push(this.special('roar', arrive < 50 ? 'L' : 'M'), 'roarProj'); return this.emit(); }
+          if (est >= 76 && this.chance(0.6)) return this.holdGuard(me, o, null);   // wait for it
+        }
         if (pd > D(50) && pd < D(110) && dx > D(110) && this.chance(P.block * 0.35)) { this.push([{ d: 9, n: 3 }], 'jumpProj'); this.jumpAtk = true; return this.emit(); }
         if (this.chance(P.block + 0.1)) { this.guardT = 12; this.guardLow = true; return this.holdGuard(me, o, null); }
       }
@@ -194,11 +217,32 @@
     // whiff / block punish
     if (pv && pv.act === 'attack' && pv.ph === 'recovery' && pv.hit !== 'hit' && this.punRolled !== pv.mv + pv.x) {
       this.punRolled = pv.mv + pv.x;
-      if (this.chance(C === 'claude' && P.cPun ? P.cPun : P.punish)) { var pp = this.punisher(me, dx); if (pp) { this.push(pp, 'punish'); this.comboStep = 0; return this.emit(); } }
+      var whiffCall = pv.mv === 'call' && o.action === 'attack' && o.mv && o.mv.id === 'call';   // 30f recovery: dash in if needed
+      if (this.chance(Math.min(0.97, (C === 'claude' && P.cPun ? P.cPun : P.punish) + (whiffCall ? 0.25 : 0)))) {
+        var pp = this.punisher(me, dx, o);
+        if (!pp && whiffCall && dx < this.reachOf(me, '5H') + 70) pp = [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 12 }].concat(this.press('H'));
+        if (pp) { this.push(pp, 'punish'); this.comboStep = 0; return this.emit(); }
+      }
+    }
+    // vs GPT up close while blocking a lot: leave command-grab range (jump back / back-dash)
+    if (o.ch === 'gpt' && dx < 74 && C !== 'gpt' && this.recentBlocks(150) >= 2 && o.action !== 'attack' && this.escRolled !== this.blkLog[this.blkLog.length - 1]) {
+      this.escRolled = this.blkLog[this.blkLog.length - 1];
+      if (this.chance(P.block * (P.vsGrab != null ? P.vsGrab : 0.6))) {
+        if (this.chance(0.5) && me.x > T.WALL + 50 && me.x < LC.STAGE_W - T.WALL - 50) this.push([{ d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }], 'escDash');
+        else this.push([{ d: this.chance(0.5) ? 7 : 8, n: 3 }], 'escJump');
+        return this.emit();
+      }
     }
     // opponent knocked down: approach or set up
     if (o.action === 'down' || o.action === 'getup') {
       if (dx > D(90)) { if (C === 'claude' && me.proj === 0 && this.chance(0.04)) { this.push(this.special('spark', 'L'), 'oki'); return this.emit(); } return { right: o.x > me.x, left: o.x < me.x }; }
+      if (C === 'gpt' && o.action === 'getup' && dx < 62 && o.af >= T.GETUP - 7 && this.okiRolled !== o.recoverTick + ':' + this.m.round + ':' + o.af0) {
+        this.okiRolled = o.recoverTick + ':' + this.m.round + ':' + o.af0;
+        var ok = this.rng.next();   // meaty mix-up: command grab / low / tail lash / wait
+        if (ok < 0.42 * (P.gOki != null ? P.gOki : 1)) { this.push([{ d: 5, n: 1 }].concat(this.special('call', 'M')), 'okiCall'); return this.emit(); }
+        if (ok < 0.62) { this.push([{ d: 2, n: 4 }].concat(this.press('M', 2)), 'okiLow'); return this.emit(); }
+        if (ok < 0.74) { this.push([{ d: 5, n: 5 }].concat(this.press('H')), 'okiTail'); return this.emit(); }
+      }
       return this.hold(me, o, dx);
     }
     if (this.m.tick < this.nextThink) return this.hold(me, o, dx);
@@ -210,7 +254,7 @@
 
   // default between decisions: drift toward a preferred range, guard if the opponent looks active
   AI.prototype.hold = function (me, o, dx) {
-    var want = me.ch === 'claude' ? D(92) : D(60);
+    var want = prof(me.ch).want;
     if (this.m.timer < 1800 && this.behind()) want -= D(30);
     var out = {};
     var tow = o.x > me.x ? 'right' : 'left', away = o.x > me.x ? 'left' : 'right';
@@ -218,6 +262,11 @@
     if (dx > want + D(16)) out[tow] = true;
     else if (dx < want - D(30) && me.x > T.WALL + 30 && me.x < LC.STAGE_W - T.WALL - 30 && (this.m.tick >> 4) % 3 === 0) out[away] = true;
     return out;
+  };
+  AI.prototype.recentBlocks = function (win) {
+    var n = 0;
+    for (var i = 0; i < this.blkLog.length; i++) if (this.m.tick - this.blkLog[i] <= win) n++;
+    return n;
   };
   AI.prototype.behind = function () {
     var me = this.m.f[this.side], o = this.m.f[1 - this.side];
@@ -231,8 +280,16 @@
     return b ? b[0] + b[2] : 0;
   };
 
-  AI.prototype.punisher = function (me, dx) {
+  AI.prototype.punisher = function (me, dx, o) {
     var C = me.ch, d = this.P.depth;
+    if (C === 'gpt') {
+      if (o && !o.air && dx < 56 && this.chance(0.55)) return this.special('call', dx < 50 ? 'H' : 'M');   // 190 on a recovering body
+      if (dx <= this.reachOf(me, '5L') + 15 && d >= 2) return this.press('L');
+      if (dx <= this.reachOf(me, '5M') + 13) return this.press(d >= 1 ? 'M' : 'H');
+      if (dx <= this.reachOf(me, '5H') + 13) return this.press('H');
+      if (dx < 140) return this.special('breath', dx < 95 ? 'L' : dx < 120 ? 'M' : 'H');
+      return null;
+    }
     var r5H = this.reachOf(me, '5H') + 13, r5M = this.reachOf(me, '5M') + 13;
     if (dx <= this.reachOf(me, '5L') + 15 && d >= 2) return this.press('L');
     if (dx <= r5M) return this.press(d >= 1 ? 'M' : 'H');
