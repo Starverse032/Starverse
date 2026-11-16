@@ -18,11 +18,11 @@
 
   // ---- the constellation: two tilted stick figures holding hands (screen coords, facing 1) ----------
   function figure(hx, hy) {
-    var ux = 0.28, uy = 0.96, nx = 0.96, ny = -0.28;
+    var ux = 0.4, uy = 0.92, nx = 0.92, ny = -0.4;
     function P(a, b) { return [Math.round(hx + ux * a + nx * b), Math.round(hy + uy * a + ny * b)]; }
-    return { H: P(0, 0), C: P(17, 0), L: P(29, -21), R: P(19, 23), P: P(45, 1), F1: P(78, 12), F2: P(80, -10) };
+    return { H: P(0, 0), C: P(18, 0), L: P(24, -27), R: P(22, 26), P: P(50, 1), F1: P(86, 14), F2: P(88, -12) };
   }
-  var TA = figure(120, 14), TB = figure(184, 10);
+  var TA = figure(104, 10), TB = figure(176, 6);
   var V = [], E = [];
   [TA, TB].forEach(function (f, k) {
     var base = V.length;
@@ -52,13 +52,13 @@
       for (x = 0; x < BW; x++) { var bi = Math.floor(v), fr = v - bi; d[y * BW + x] = sky[Math.min(4, bi + (I.bayer(x, y) < fr ? 1 : 0))]; }
     }
     // milky-way dust band: a dithered arc across the upper sky, two tones + bright knots
-    var mw = [mixc(N[2], Au[1], 0.22), mixc(N[1], Au[2], 0.28), mixc(N[1], S[1], 0.35)];
+    var mw = [mixc(N[2], Au[1], 0.14), mixc(N[2], Au[2], 0.2), mixc(N[1], S[1], 0.3)];
     for (x = 0; x < BW; x++) {
       var cyb = 40 + Math.sin(x * 0.009 + 0.6) * 26, hw = 14 + Math.sin(x * 0.031) * 5 + Math.sin(x * 0.083 + 1) * 3;
       for (y = Math.max(0, Math.floor(cyb - hw)); y < cyb + hw; y++) {
         var k = 1 - Math.abs(y + 0.5 - cyb) / hw, n = 0.5 + 0.25 * Math.sin(x * 0.21 + y * 0.13) + 0.25 * Math.sin(x * 0.07 - y * 0.31);
         var dd = k * n;
-        if (I.bayer(x, y) < dd * 0.9) d[y * BW + x] = dd > 0.55 ? mw[1] : mw[0];
+        if (I.bayer(x, y) < dd * 0.6) d[y * BW + x] = dd > 0.6 ? mw[1] : mw[0];
         if (dd > 0.72 && I.hash(x * 7 + y * 131) > 0.86) d[y * BW + x] = mw[2];
       }
     }
@@ -83,15 +83,15 @@
     B.bdBase = I.toCanvas(base);
 
     // aurora: tileable 800-px band, curtains of vertical streaks, blue top -> violet -> pink hem
-    var ab = new I.Buf(AW, 110), ac = [mixc(Au[0], N[2], 0.45), mixc(Au[1], N[2], 0.42), mixc(Au[2], N[2], 0.4), mixc(Au[3], N[2], 0.35), mixc(Au[5], N[1], 0.35)];
+    var ab = new I.Buf(AW, 110), ac = [mixc(Au[0], N[2], 0.3), mixc(Au[1], N[2], 0.28), mixc(Au[2], N[2], 0.3), mixc(Au[3], N[2], 0.35), mixc(Au[5], N[1], 0.15)];
     function s8(k, x0, ph) { return Math.sin(x0 * TAU * k / AW + ph); }
     for (x = 0; x < AW; x++) {
       var top = 18 + 9 * s8(2, x, 1) + 5 * s8(5, x, 0), len = 46 + 16 * s8(3, x, 2);
-      var str = 0.45 + 0.35 * s8(4, x, 0) * s8(7, x, 0.5) + 0.2 * (I.hash(Math.floor(x / 3) * 13) - 0.3);
+      var str = (0.5 + 0.4 * s8(4, x, 0) * s8(7, x, 0.5)) * (0.45 + 0.75 * I.hash(Math.floor(x / 2) * 13) * (0.6 + 0.4 * s8(23, x, 1)));
       for (y = Math.round(top); y < top + len && y < 110; y++) {
         var u = (y - top) / len, den = str * (u < 0.15 ? u / 0.15 : 1 - (u - 0.15) / 0.85 * 0.95);
-        if (I.bayer(x, y) < den * 0.75) ab.set(x, y, u < 0.3 ? ac[0] : u < 0.6 ? ac[1] : ac[2]);
-        if (u > 0.08 && u < 0.14 && str > 0.62 && I.bayer(x, y) < 0.5) ab.set(x, y, ac[4]);
+        if (I.bayer(x, y) < den * 0.95) ab.set(x, y, u < 0.32 ? ac[0] : u < 0.62 ? ac[1] : ac[2]);
+        if (u > 0.04 && u < 0.1 && str > 0.55) ab.set(x, y, ac[4]);
       }
     }
     B.aur = I.toCanvas(ab);
