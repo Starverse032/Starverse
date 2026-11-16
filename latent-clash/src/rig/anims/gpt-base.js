@@ -63,10 +63,10 @@
   var SQ = P(S, { hip: [0, -41], lean: 14, bend: 4, hF: [20, -54], hB: [4, -50], skirt: 0.1, wing: 0.3, wf: 10, eyes: 'focus' });
   def('jumpSquat', { segs: [['go', 4]], step: 1, keys: [[0, bob(S, 0, 3)], [2, SQ]] });
   var JR = POSE.jumpRise = P(S, { hip: [0, -52], lean: 0, bend: -4, tilt: -4, fF: [9, -18], fB: [-5, -8], faF: 35, faB: 50,
-    hF: [20, -72], hB: [-10, -66], handF: 'claw', handB: 'open', skirt: 0.35, tail: 14, arch: 6, wing: 0.75, wf: -6 });
+    hF: [20, -72], hB: [-10, -66], handF: 'claw', handB: 'open', skirt: 0.45, hem: -6, tail: 14, arch: 6, wing: 0.75, wf: -6, air: true });
   def('jumpRise', { segs: [['loop', 12, true]], step: 3, keys: [[0, JR], [6, P(JR, { hB: [-11, -65], fF: [9, -19], wing: 0.85, wf: -12 })]] });
   var JF = POSE.jumpFall = P(S, { hip: [0, -52], lean: 2, bend: -2, fF: [8, -5], fB: [-7, -11], faF: 20, faB: 40,
-    hF: [20, -68], hB: [-12, -64], handF: 'claw', handB: 'open', skirt: 0.6, tail: -6, arch: 7, wing: 0.55, wf: 8, air: true });
+    hF: [20, -68], hB: [-12, -64], handF: 'claw', handB: 'open', skirt: 0.7, hem: -9, tail: -6, arch: 7, wing: 0.55, wf: 8, air: true });
   def('jumpFall', { segs: [['loop', 12, true]], step: 3, keys: [[0, JF], [6, P(JF, { hB: [-12, -63], fB: [-7, -10], wing: 0.6, wf: 2 })]] });
   def('land', {
     segs: [['go', 6]], step: 1,

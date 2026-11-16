@@ -66,10 +66,10 @@
       ['recovery', P(CL, { hF: [30, -37] }), 'out'], ['recovery+6', P(C, { claw: '' })], ['recovery+9', C]]
   });
   // 2M: low sliding kick along the floor, the leg out of the slit (reach 56)
-  var CM = P(C, HIT, { hip: [4, -20], lean: 12, bend: 4, fF: [48, -3], faF: -4, fB: [-10, 0], hF: [22, -48], hB: [6, -40], handF: 'claw', weapon: 'fF', skirt: 0.25, mouth: 'neutral' });
+  var CM = P(C, HIT, { hip: [4, -20], lean: 12, bend: 4, fF: [48, -3], faF: -4, fB: [-10, 0], hF: [22, -48], hB: [6, -40], handF: 'claw', weapon: 'fF', skirt: 0.25, drape: { F: 1 }, mouth: 'neutral' });
   def('2M', {
     segs: sar(9, 4, 16), step: 2,
-    keys: [['startup', c0], ['startup+5', P(c0, { fF: [20, -8], faF: 20, lean: 18 }), 'out'],
+    keys: [['startup', c0], ['startup+5', P(c0, { fF: [20, -8], faF: 20, lean: 18, drape: { F: 1 } }), 'out'],
       ['active', P(CM, { smear: { part: 'fF', from: 'startup+5', n: 3 } }), 'snap'], ['active+2', CM, 'snap'],
       ['recovery', P(CM, { fF: [38, -3] }), 'out'], ['recovery+15', C]]
   });
