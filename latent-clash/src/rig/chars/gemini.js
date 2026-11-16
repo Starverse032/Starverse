@@ -109,16 +109,16 @@
   }
 
   // ------------------------------------------------------------------ chains
-  var TAIL_N = 10, TAIL_LEN = [5, 5, 5, 5, 5, 5, 5, 5, 5, 5];
+  var TAIL_N = 10, TAIL_LEN = [4.6, 4.6, 4.6, 4.6, 4.6, 4.6, 4.6, 4.6, 4.4, 4.2];
   // rest shape (deg added per link at arch 10): drops behind her, sweeps back, the tip curls up
-  var TAIL_PROF = [0, 6, 14, 24, 38, 56, 78, 100, 124, 146];
+  var TAIL_PROF = [0, 4, 10, 20, 36, 58, 84, 110, 134, 154];
   var TAIL_R = [1.8, 2.2, 2.6, 2.9, 3.1, 3.2, 3.2, 3.1, 2.9, 2.5, 1.8];
   var HAIR_GRAV = 0.24;
   C.chains = [
-    { id: 'tail', n: TAIL_N, len: TAIL_LEN, rest: [100, 106, 114, 124, 138, 156, 178, 200, 224, 246], stiff: 0.55, damp: 0.74, grav: 0.02, drag: 0.22, hys: 0.6 },
-    { id: 'hairA', n: 7, len: [10, 10, 10, 10, 10, 9, 9], rest: [100, 94, 92, 91, 92, 96, 102], stiff: [0.36, 0.3, 0.25, 0.21, 0.18, 0.15, 0.13], damp: 0.84, grav: HAIR_GRAV, drag: 0.3, cvel: 0.6 },
-    { id: 'hairB', n: 6, len: [10, 10, 10, 10, 9, 9], rest: [118, 104, 98, 98, 104, 114], stiff: [0.36, 0.3, 0.24, 0.2, 0.16, 0.14], damp: 0.84, grav: HAIR_GRAV, drag: 0.3, cvel: 0.6 },
-    { id: 'hairC', n: 6, len: [10, 10, 10, 9, 9, 8], rest: [92, 88, 87, 88, 90, 94], stiff: [0.38, 0.3, 0.24, 0.2, 0.16, 0.14], damp: 0.83, grav: HAIR_GRAV, drag: 0.3, cvel: 0.6 },
+    { id: 'tail', n: TAIL_N, len: TAIL_LEN, rest: [100, 104, 110, 120, 136, 158, 184, 210, 234, 254], stiff: 0.55, damp: 0.74, grav: 0.02, drag: 0.22, hys: 0.6 },
+    { id: 'hairA', n: 7, len: [10, 10, 10, 10, 10, 9, 9], rest: [100, 94, 92, 92, 95, 100, 108], stiff: [0.36, 0.3, 0.25, 0.21, 0.18, 0.15, 0.13], damp: 0.84, grav: HAIR_GRAV, drag: 0.3, cvel: 0.6 },
+    { id: 'hairB', n: 6, len: [10, 10, 10, 10, 9, 9], rest: [120, 106, 100, 102, 112, 128], stiff: [0.36, 0.3, 0.24, 0.2, 0.16, 0.14], damp: 0.84, grav: HAIR_GRAV, drag: 0.3, cvel: 0.6 },
+    { id: 'hairC', n: 6, len: [10, 10, 10, 9, 9, 8], rest: [92, 88, 86, 85, 84, 82], stiff: [0.38, 0.3, 0.24, 0.2, 0.16, 0.14], damp: 0.83, grav: HAIR_GRAV, drag: 0.3, cvel: 0.6 },
     { id: 'lockN', n: 4, len: [7, 7, 7, 6], rest: [84, 88, 92, 96], stiff: 0.32, damp: 0.8, grav: 0.22, drag: 0.25, cvel: 0.5 },
     { id: 'lockF', n: 3, len: [6, 6, 6], rest: [84, 88, 92], stiff: 0.34, damp: 0.8, grav: 0.22, drag: 0.25, cvel: 0.5 },
     { id: 'ahoge', n: 3, len: [4, 4, 3], rest: [-96, -40, 20], stiff: 0.5, damp: 0.7, grav: 0.03, drag: 0.14 },
@@ -311,9 +311,9 @@
     // coat-tail panels: hang from the hip sides; book = flare back/out, bko = lift
     var cf = (d.book || 0) * 46 + (d.bko || 0), cl = L * 0.5;
     var cn = own(by.cpN), cfar = own(by.cpF);
-    cn.def.rest[0] = 104 + cf + cl; cn.def.rest[1] = 98 + cf * 0.9 + cl; cn.def.rest[2] = 95 + cf * 0.8 + cl;
+    cn.def.rest[0] = 110 + cf + cl; cn.def.rest[1] = 102 + cf * 0.9 + cl; cn.def.rest[2] = 97 + cf * 0.8 + cl;
     cfar.def.rest[0] = 112 + cf * 1.1 + cl; cfar.def.rest[1] = 104 + cf + cl; cfar.def.rest[2] = 99 + cf * 0.9 + cl;
-    var PN = fr(d.pel, L * 0.6, -5, -4), PF = fr(d.pel, L * 0.6, -9, -5);
+    var PN = fr(d.pel, L * 0.6, -7, -4), PF = fr(d.pel, L * 0.6, -10, -5);
     sec.attach('cpN', PN[0], PN[1], 0);
     sec.attach('cpF', PF[0], PF[1], 0);
     var tn = H.chainPts(by.cpN), tf = H.chainPts(by.cpF);
@@ -419,9 +419,9 @@
   function drawHairLock(p, ch, w, amp, seed, strands, cuts, tone) {
     var pts = H.chainPts(ch), wv = wavy(pts, w, amp, seed), sub = wv.sub, n = sub.length, i;
     var t0 = tone || 0;
-    p.poly(wv.poly, M.hair, null, 1 + t0);
+    p.poly(wv.poly, M.hair, null, 1 + (t0 > 1 ? 1 : 0));
     // shade band on the back side of the lock (volume)
-    p.poly(H.flat(wv.L.concat(wv.L.map(function (q, k) { return lerp(q, wv.R[k], 0.3); }).reverse())), M.hair, null, 2 + t0 > 3 ? 3 : 2 + t0);
+    p.poly(H.flat(wv.L.concat(wv.L.map(function (q, k) { return lerp(q, wv.R[k], 0.22); }).reverse())), M.hair, null, 2 + t0 > 3 ? 3 : 2 + t0);
     // blue → violet → pink, dithered at the seams
     var c1 = Math.round(n * cuts[0]), c2 = Math.round(n * cuts[1]);
     H.recolor(p, partPoly(wv, c1, n - 1, true), M.hair, MV);
@@ -462,6 +462,7 @@
     for (i = 3; i < m - 1; i += 2) {
       var a = pts[i - 1], b = pts[i + 1], dd = norm(b[0] - a[0], b[1] - a[1]), dx = dd[0], dy = dd[1];
       var side = (i >> 1) & 1 ? 1 : -1, nx = -dy * side, ny = dx * side, r = rr[i];
+      if (ny > 0.3) continue;
       var q0 = [pts[i][0] + nx * (r - 1) + dx * 1.5, pts[i][1] + ny * (r - 1) + dy * 1.5];
       var q1 = [pts[i][0] + nx * (r + 1.6) - dx * 1.4, pts[i][1] + ny * (r + 1.6) - dy * 1.4];
       var q2 = [pts[i][0] + nx * (r - 1) - dx * 2, pts[i][1] + ny * (r - 1) - dy * 2];
@@ -761,11 +762,11 @@
     var steps = [
       [-13, function () { if (showStars) drawStars(p, sec, sk0, false); }],
       [z.hair != null ? z.hair : -11, function () {
-        drawHairLock(p, sec.hairB, [6, 4, 4], 2.2, 1.9, [0.35, 0.7], [0.45, 0.78], 1); p.end();
-        drawHairLock(p, sec.hairA, [7, 5, 5], 2.4, 0.3, [0.3, 0.55, 0.8], [0.42, 0.76], 0); p.end();
+        drawHairLock(p, sec.hairB, [6, 3.5, 4], 2.6, 1.9, [0.35, 0.7], [0.36, 0.68], 1); p.end();
+        drawHairLock(p, sec.hairA, [7, 4, 5], 2.8, 0.3, [0.3, 0.55, 0.8], [0.34, 0.66], 0); p.end();
       }],
       [-10, function () { drawCoat(p, d, sec, 'cpF'); }],
-      [-9.5, function () { drawHairLock(p, sec.hairC, [5, 3, 3], 1.8, 3.1, [0.4, 0.75], [0.48, 0.8], 0); p.end(); }],
+      [-9.5, function () { drawHairLock(p, sec.hairC, [5, 2.5, 3], 2.2, 3.1, [0.4, 0.75], [0.38, 0.7], 0); p.end(); }],
       [z.armB != null ? z.armB : -7, function () { drawArmSkin(p, d, 'B'); p.end(); drawSleeve(p, d, sec, 'B'); p.end(); drawHand(p, d, 'B', ds); p.end(); }],
       [z.legB != null ? z.legB : -4, function () { drawLeg(p, d, 'B', lockB, false); p.end(); }],
       [z.tail != null ? z.tail : -4.5, function () { drawTail(p, d, sec, ds); p.end(); }],

@@ -106,7 +106,7 @@
       e = E[k]; u = (t - e.t0) / SEG; if (u <= 0) continue; if (u > 1) u = 1;
       a = V[e[0]]; b = V[e[1]];
       var x1 = a.x + (b.x - a.x) * u, y1 = a.y + (b.y - a.y) * u;
-      ctx.fillStyle = C.line[0]; I.runLine(ctx, sx + a.x - 1, sy + a.y, sx + Math.round(x1) - 1, sy + Math.round(y1), 3);
+      ctx.fillStyle = C.line[0]; I.runLine(ctx, sx + a.x - 1, sy + a.y - 1, sx + Math.round(x1) - 1, sy + Math.round(y1) - 1, 3);
       ctx.fillStyle = bright ? '#ffffff' : C.line[1]; I.runLine(ctx, sx + a.x, sy + a.y, sx + Math.round(x1), sy + Math.round(y1), 1);
       if (u < 1) { ctx.fillStyle = '#ffffff'; ctx.fillRect(sx + Math.round(x1) - 1, sy + Math.round(y1), 3, 1); ctx.fillRect(sx + Math.round(x1), sy + Math.round(y1) - 1, 1, 3); }
     }

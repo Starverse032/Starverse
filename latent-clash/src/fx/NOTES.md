@@ -128,7 +128,10 @@ Next / known weaknesses (GPT):
   `night`/`deep`; `main` = light, `twk` = iri), added to `I.CHS` (rings, hit.special, sparkle, meter.full, super.charge
   bake/tint per char), screen `burstCols` gemini (superBg/superFinish/koBackdrop/impact; gemini line/wedge images are
   baked ~0.15 s after init in idle time), generic2 `orbC.gemini*`.
-- [ ] 2. super: `screen.superBackdrop` gemini branch (`gemini-backdrop.js`), `gemini.meteor` (`gemini-super.js`).
+- [x] 2. super: `screen.superBackdrop` gemini branch (`gemini-backdrop.js`: night sky, milky-way band, aurora, constellation
+  drawing itself t 2..35 (`I.GEM.CONST`), drifting stars at 3 depths, star-iris intro/outro) and `gemini.meteor`
+  (`gemini-super.js`: gather, flare, 3 sweeping meteor waves, impacts, X beams, crossing star, full-screen star burst,
+  stardust; events + frames). Reviewed in `node tools/fx-gpt-comp.mjs --char=gemini --tx=200` (dark sky; dummies).
 - [~] 3. specials: DONE in `gemini.js` and reviewed (dark/warm/light): `gemini.star` sprite (faceted iridescent star,
   3 sizes, halo + orbiting motes on H, trail, glint), `gemini.starCast`, `gemini.starHit`, `gemini.clawHit`,
   `gemini.sparkles`. TODO in `gemini-specials.js`: riseTrail, twinSpawn, twinVanish, blinkOut, blinkIn.

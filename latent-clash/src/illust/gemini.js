@@ -417,19 +417,22 @@
 
   // ---------------------------------------------------------------- emblem: four-pointed star with cat ears
   function emblem(P, size) {
-    var s = size / 16, c = 8 * s, cy = 9 * s;
-    var ears = P.poly([3.2 * s, 6 * s, 3.4 * s, 0.6 * s, 7 * s, 3.6 * s]).or(P.poly([12.8 * s, 6 * s, 12.6 * s, 0.6 * s, 9 * s, 3.6 * s]));
-    P.part(ears, S.u1, S.ul);
+    var s = size / 16, cx = 8 * s - 0.5, cy = 9.2 * s - 0.5;
+    // ears sit on the star's upper inner corners, like a cat head
+    var eL = P.poly([3.4 * s, 8.2 * s, 2.4 * s, 0.8 * s, 7.6 * s, 4.6 * s]), eR = P.poly([12.6 * s, 8.2 * s, 13.6 * s, 0.8 * s, 8.4 * s, 4.6 * s]);
+    P.part(eL.or(eR), S.u1, S.ul);
+    P.recol(eL.or(eR).band(-1, 1), [S.u1], S.u0);
     if (size >= 32) {
-      P.fill(P.poly([8.2, 10, 7.4, 4.5, 12.5, 7]).and(ears), S.z1);
-      P.fill(P.poly([23.8, 10, 24.6, 4.5, 19.5, 7]).and(ears), S.z1);
-    } else { P.px(4, 3, S.z1); P.px(11, 3, S.z1); }
-    star4(P, c - 0.5, cy - 0.5, 7 * s, { k: 0.34, line: S.ul,
+      P.fill(P.poly([7.6, 13, 6.4, 5, 12.4, 8.8]), S.z1); P.fill(P.poly([24.4, 13, 25.6, 5, 19.6, 8.8]), S.z1);
+      P.fill(P.poly([7.6, 13, 7, 9, 10, 11]), S.z2); P.fill(P.poly([24.4, 13, 25, 9, 22, 11]), S.z2);
+    } else { P.px(3, 3, S.z1); P.px(3, 4, S.z1); P.px(4, 4, S.z1); P.px(12, 3, S.z1); P.px(12, 4, S.z1); P.px(11, 4, S.z1); }
+    star4(P, cx, cy, 7 * s, { k: 0.42, inner: 1, line: S.ul,
       cols: [S.a0, S.a1, S.u1, S.a2, S.u2, S.u1, S.a1, S.u0] });
-    var core = P.ell(c - 0.5, cy - 0.5, 1.6 * s, 1.6 * s);
     if (size >= 32) {
-      P.fill(core, S.q1); P.fill(core.and(P.rect(c - 0.5, 0, 9, 32)), S.q2); P.fill(core.and(P.rect(0, cy, 32, 9)), S.q3);
-      P.px(Math.round(c - 1), Math.round(cy - 2), S.W); P.px(Math.round(c - 1), Math.round(cy - 1), S.q0);
+      var core = P.ell(cx, cy, 3.2, 3.2);
+      P.fill(core, S.q1); P.fill(core.and(P.rect(cx, 0, 9, 32)), S.q2); P.fill(core.and(P.rect(0, cy, 32, 9)), S.q3);
+      P.fill(core.and(P.rect(cx, cy, 9, 9)), S.q0);
+      P.px(Math.round(cx - 1), Math.round(cy - 2), S.W); P.px(Math.round(cx), Math.round(cy - 1), S.W);
     } else { P.px(7, 8, S.W); P.px(8, 8, S.q1); P.px(7, 9, S.q2); P.px(8, 9, S.q3); }
     P.outer(S.ol);
   }
@@ -471,12 +474,12 @@
     Q.recol(fr.shift(-2, 6).or(fr.shift(0, 6)), [S.s1, S.s0], S.s2);
     // cat ears (cheated down so their lower halves cut into the top of the frame), bases under the fringe
     FR.forEach(function (c) { HH.hairClump(Q, c, S.h1); });
-    catEar(Q, [26, 46, 23, 38, 23, 30, 25, 26, 31, 28, 37, 32, 41, 37, 34, 43], [28, 42, 26, 35, 26, 30, 29, 30, 33, 32, 37, 36], [[30, 42, 29, 35], [34, 40, 33, 35]]);
-    catEar(Q, [73, 39, 78, 34, 84, 30, 90, 27, 92, 33, 91, 41, 88, 47, 81, 44], [77, 39, 83, 34, 88, 31, 89, 36, 87, 42, 84, 44], [[82, 43, 86, 36]]);
     // hair sweeping across the sides
     HH.hairClump(Q, [[36, 36, 30, 48, 32, 58, 26, 66, 22, 72], 10, 5, 11, 0, [0.1, 0.6]], S.h1);
     HH.hairClump(Q, [[76, 32, 81, 44, 79, 54, 84, 62, 90, 68], 9, 5, 10, 0, [0.1, 0.6]], S.h1);
     HH.hairClump(Q, [[16, 36, 10, 46, 13, 56, 6, 66], 7, 3, 8, 0], S.h2);
+    catEar(Q, [26, 46, 23, 38, 23, 30, 25, 26, 31, 28, 37, 32, 41, 37, 34, 43], [28, 42, 26, 35, 26, 30, 29, 30, 33, 32, 37, 36], [[30, 42, 29, 35], [34, 40, 33, 35]]);
+    catEar(Q, [73, 39, 78, 34, 84, 30, 90, 27, 92, 33, 91, 41, 88, 47, 81, 44], [77, 39, 83, 34, 88, 31, 89, 36, 87, 42, 84, 44], [[82, 43, 86, 36]]);
     // colour shift toward violet at the lower sides (pixel coordinates)
     shiftBy(Q, null, function (x, y) { return y + 0.42 * Math.abs(x - 150); }, 62, 999);
   }

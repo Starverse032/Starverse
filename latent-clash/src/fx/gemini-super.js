@@ -19,7 +19,7 @@
   var G = I.GEM = I.GEM || [{}, {}];
   var DUR = 76;
   var EV = { gather: 0, flare: 12, rain: [14, 24, 34], impact: [20, 30, 40], beams: 44, cross: 50, burst: 56, settle: 60, end: 76, hits: [21, 31, 41, 50, 57] };
-  var NM = 12, RV = 18, DX = 0.5, DY = 0.866;     // meteors per wave, speed px/f, direction (x by facing)
+  var NM = 15, RV = 18, DX = 0.5, DY = 0.866;     // meteors per wave, speed px/f, direction (x by facing)
   var LANE = { x: 0, y: GY - 124, w: W, h: 128 };
   function soft() { return LC.settings && LC.settings.flash === false; }
 
@@ -30,7 +30,8 @@
         var s = R * 2 + 5, c = s / 2;
         return I.anim(s, s, 4, Math.floor(c), Math.floor(c), function (b, f) { I.gemStar(b, c, c, R, f * PI / 8, pal, { rim: true, p: 0.52, core: 0.2 }); }, 1, true);
       });
-      g.mcol = { trail: ['#ffffff', g.S[1], g.S[2], g.A[1], g.A[2], g.dk], fine: [g.A[2], g.dk, I.mix(g.S[1], g.dk, 0.5)],
+      g.mcol = { trail: ['#ffffff', g.S[1], g.S[2], g.A[1], g.A[2], g.dk],
+        trailH: [1, 2, 3].map(function (h) { return ['#ffffff', g.S[h], I.mix(g.S[h], g.A[1], 0.5), g.A[1], g.A[2], g.dk]; }), fine: [g.A[2], g.dk, I.mix(g.S[1], g.dk, 0.5)],
         beam: [g.dk, g.A[2], g.A[1], g.A[0], '#ffffff'], edge: [g.S[1], g.S[2]], burst: [g.A[3], g.A[2], g.S[2], g.S[1], g.A[0], '#ffffff'] };
     });
   });
@@ -39,7 +40,8 @@
   function meteor(w, m) {      // deterministic per (wave, index)
     var h1 = I.hash(w * 97 + m * 13 + 5), h2 = I.hash(w * 31 + m * 7 + 11), h3 = I.hash(w * 53 + m * 29 + 3);
     var big = m % 3 === 0;
-    return { ix: -14 + ((m + 0.15 + h1 * 0.7) / NM) * (W + 28), ti: EV.rain[w] + 6 + Math.floor(h2 * 8), v: RV + h3 * 5, big: big, L: big ? 74 : 40 + Math.floor(h3 * 16), hue: m & 3, y0: GY + Math.floor(h1 * 3) };
+    var u = (m + 0.15 + h1 * 0.7) / NM;     // impacts sweep across the screen from her side
+    return { u: u, ti: EV.rain[w] + 4 + Math.floor(u * 7 + h2 * 3), v: RV + h3 * 5, big: big, L: big ? 74 : 40 + Math.floor(h3 * 16), hue: m % 3, y0: GY + Math.floor(h1 * 3) };
   }
   function trail(ctx, hx, hy, ux, uy, L, big, C, t) {
     var step = big ? 2 : 3;
@@ -60,18 +62,20 @@
       if (t < EV.rain[w] || t > EV.rain[w] + 30) continue;
       for (m = 0; m < NM; m++) {
         var M = meteor(w, m), dt = M.ti - t;
+        M.ix = f > 0 ? -14 + M.u * (W + 28) : W + 14 - M.u * (W + 28);
+        var TC = M.big ? C : g.mcol.trailH[M.hue];
         if (dt > 16) continue;
         if (dt >= 0) {          // falling
           var hx = M.ix - ux * dt * M.v, hy = M.y0 - uy * dt * M.v;
           if (hy < -M.L) continue;
-          trail(ctx, sx + hx, sy + hy, ux, uy, M.L, M.big, C, t);
+          trail(ctx, sx + hx, sy + hy, ux, uy, M.L, M.big, TC, t);
           if (M.big) I.drawAnim(ctx, g.ps[3], (t + m) & 7, sx + Math.round(hx), sy + Math.round(hy), 1);
           else I.gemPS(ctx, pal, 1, t + m, sx + Math.round(hx), sy + Math.round(hy));
         } else {
           var a = -dt;
           if (a < 3) {          // the tail drains into the floor
             var rem = M.L - a * M.v;
-            if (rem > 4) trail(ctx, sx + M.ix - ux * a * M.v, sy + M.y0 - uy * a * M.v, ux, uy, rem + a * M.v, M.big, C, t);
+            if (rem > 4) trail(ctx, sx + M.ix - ux * a * M.v, sy + M.y0 - uy * a * M.v, ux, uy, rem + a * M.v, M.big, TC, t);
           }
           impact(ctx, sx + Math.round(M.ix), sy + M.y0, a, M, g, pal, w * 17 + m);
         }
@@ -143,12 +147,12 @@
   function starSpans(ctx, sx, sy, cx, cy, R, col) {
     ctx.fillStyle = col;
     var y0 = Math.max(-8, Math.floor(cy - R)), y1 = Math.min(H + 8, Math.ceil(cy + R));
-    for (var y = y0; y < y1; y += 2) {
-      var dy = Math.abs(y + 1 - cy) / R; if (dy >= 1) continue;
+    for (var y = y0; y < y1; y++) {
+      var dy = Math.abs(y + 0.5 - cy) / R; if (dy >= 1) continue;
       var q = 1 - Math.sqrt(dy), hw = Math.round(R * q * q);
       if (hw < 1) continue;
       var xa = Math.max(-8, cx - hw), xb = Math.min(W + 8, cx + hw);
-      if (xb > xa) ctx.fillRect(sx + xa, sy + y, xb - xa, 2);
+      if (xb > xa) ctx.fillRect(sx + xa, sy + y, xb - xa, 1);
     }
   }
   function drawBurst(ctx, sx, sy, t, g, cx, cy, sf, a0) {
