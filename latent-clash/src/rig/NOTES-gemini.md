@@ -13,8 +13,14 @@ four gemini files exist), `anims/placeholders.js` (her segment table + aliases).
   16-key `G.catWalk`, 1.8 / 1.5 px/f, 32-f loops), crouch set (pounce-crouch, tail up), jump set, airJump (6-f tuck
   flip via `I.gemSpin`), land, dashF (pounce leap), dashB (springy hop), guards (sleeves crossed, ears flat), hits,
   launch, down, getup (all-fours → spring up). Ears fold flat (`ears: 'flat'` → head extra) on guards/hits/down.
-- TODO step 3: normals (reach 5L 30 · 5M 48 · 5H 58 · 2L 32 · 2M 50 · 2H 60 · jL 28 · jM 38 · jH 46).
-- TODO step 4: star, airStar, starRise, twin, twinStrike, blinkOut, blinkIn, super.
+- DONE step 3 (first pass, sheet-reviewed): 5L/2L/jL claw swipes (pink smear + claw glow), 5M snap kick, 2M slide
+  kick, jM air kick, 5H/2H/jH spinning heel kicks (`flip`, tail locked behind the leg). Reach at the first active
+  frame (weapon anchor x): 5L 30 · 5M 48 · 5H 58 · 2L 31 · 2M 51 · 2H 60 · jL 27 · jM 38 · jH 46 (all within ±2).
+- DONE step 4 (first pass, sheet-reviewed): star (stars gather to the hand → card flick, muzzle = hand (34,-75)),
+  airStar (muzzle (28,-46), 45° down), starRise (corkscrew: alternate drawings flipped, claw high), twin (paws
+  together → fling + finger-to-cheek wink), twinStrike (pounce → lunging double-claw X swipe, reach 46),
+  blinkOut (curl → checker dissolve → star glint s9/s7/s3: `only: 'star'`), blinkIn (reverse + flourish), super
+  (gather → twirl → hand to the sky, held; arm sweeps down to point ahead at active+44 for the X beams; wink).
 - TODO step 5: throw, throwHit, thrown, intro, win, lose.
 
 ## Implementation notes
