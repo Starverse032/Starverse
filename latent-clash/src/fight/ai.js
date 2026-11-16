@@ -182,7 +182,7 @@
     var th = this.threat(me, pv, dx);
     if (th) {
       if (th === 'air') {
-        var aaP = C === 'gpt' ? Math.min(0.95, P.aa * (P.gAA != null ? P.gAA : 1.3)) : P.aa;   // GPT: patient, watches the air
+        var aaP = C === 'gpt' ? Math.min(0.95, P.aa * (P.gAA != null ? P.gAA : 1)) : P.aa;   // GPT: patient, watches the air
         if (this.chance(aaP * 0.25) || (this.aaRolled !== pv && (this.aaRolled = pv) && this.chance(aaP))) {
           var air = dx < D(70);
           if (C === 'gpt' && dx < 64 && this.chance(0.25 * (P.gRoar || 1))) { this.push(this.special('roar', 'M'), 'aaRoar'); return this.emit(); }
