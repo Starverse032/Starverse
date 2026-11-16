@@ -175,65 +175,6 @@ async function main() {
     }
     if (args.plans) for (const c in plans) console.log('AI plans ' + c + ': ' + Object.entries(plans[c]).sort((a, b) => b[1] - a[1]).slice(0, 24).map(([k, v]) => k + ' ' + v).join(', '));
   }
-  // determinism check jobs
-  const det = [{ mode: 'demo', stage: 'training', seed: 4242, rounds: 2, time: 99, intro: true, p1: { char: 'claude', control: 'cpu', level: 4 }, p2: { char: 'deepseek', control: 'cpu', level: 4 } },
-    { mode: 'demo', stage: 'training', seed: 777, rounds: 2, time: 99, intro: false, p1: { char: 'deepseek', control: 'cpu', level: 2 }, p2: { char: 'deepseek', palette: 1, control: 'cpu', level: 5 } },
-    { mode: 'demo', stage: 'training', seed: 4343, rounds: 2, time: 99, intro: true, p1: { char: 'gpt', control: 'cpu', level: 5 }, p2: { char: 'claude', control: 'cpu', level: 3 } },
-    { mode: 'demo', stage: 'training', seed: 818, rounds: 2, time: 99, intro: false, p1: { char: 'deepseek', control: 'cpu', level: 4 }, p2: { char: 'gpt', control: 'cpu', level: 4 } },
-    { mode: 'demo', stage: 'training', seed: 919, rounds: 2, time: 99, intro: false, p1: { char: 'gpt', control: 'cpu', level: 3 }, p2: { char: 'gpt', palette: 1, control: 'cpu', level: 3 } }];
-  for (const c of det) { jobs.push({ det: 1, cfg: c }); jobs.push({ det: 2, cfg: c }); }
-  const t0 = Date.now();
-  const results = new Array(jobs.length);
-  let next = 0;
-  await Promise.all(pages.map(async p => {
-    while (next < jobs.length) {
-      const i = next++;
-      results[i] = await p.evaluate(([c, o]) => window.SIM(c, o), [jobs[i].cfg, { draw: !!args.draw, plans: !!args.plans, off: args.off ? Object.fromEntries(String(args.off).split(',').map(k => [k, 1])) : null }]);
-    }
-  }));
-  const secs = (Date.now() - t0) / 1000;
-
-  // ---- report
-  let violations = 0, unfinished = 0;
-  const table = {}, usage = { claude: {}, deepseek: {} }, dmg = { claude: {}, deepseek: {} }, lens = [];
-  let ticks = 0;
-  results.forEach((r, i) => {
-    const j = jobs[i];
-    ticks += r.t;
-    if (r.viol.length) { violations += r.viol.length; console.log('VIOLATION seed', j.cfg.seed, r.viol.join(' | ')); }
-    if (!r.finished) unfinished++;
-    if (j.det) return;
-    const key = j.la + 'v' + j.lb;
-    const T = table[key] || (table[key] = { n: 0, claude: 0, draw: 0, rounds: 0, len: 0, timeups: 0, perfect: 0 });
-    T.n++;
-    const clSide = j.swap ? 1 : 0;
-    const w = r.result ? r.result.winner : -1;
-    if (w === -1) T.draw++; else if (w === clSide) T.claude++;
-    T.rounds += r.roundLen.length;
-    T.len += r.roundLen.reduce((a, b) => a + b, 0);
-    T.timeups += (r.result.finishes[0].concat(r.result.finishes[1])).filter(x => x === 'time').length;
-    lens.push(...r.roundLen);
-    const chars = j.swap ? ['deepseek', 'claude'] : ['claude', 'deepseek'];
-    for (let s = 0; s < 2; s++) for (const k in r.usage[s]) usage[chars[s]][k] = (usage[chars[s]][k] || 0) + r.usage[s][k];
-    for (let s = 0; s < 2; s++) for (const k in r.dmgBy[s]) dmg[chars[s]][k] = (dmg[chars[s]][k] || 0) + r.dmgBy[s][k];
-  });
-  console.log('\nBALANCE (Claude vs DeepSeek, both side assignments)');
-  console.log('pair   matches  Claude win%  draws  avg round (s)  time-ups/round');
-  for (const k in table) {
-    const T = table[k];
-    console.log(k.padEnd(6), String(T.n).padStart(7), ((100 * T.claude / Math.max(1, T.n - T.draw)).toFixed(1) + '%').padStart(12), String(T.draw).padStart(6),
-      (T.len / Math.max(1, T.rounds) / 60).toFixed(1).padStart(14), (T.timeups / Math.max(1, T.rounds)).toFixed(2).padStart(15));
-  }
-  for (const c in usage) {
-    const tot = Object.values(usage[c]).reduce((a, b) => a + b, 0);
-    const top = Object.entries(usage[c]).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + (100 * v / tot).toFixed(1) + '%');
-    console.log('\nmove usage ' + c + ': ' + top.join(', '));
-  }
-  for (const c in dmg) {
-    const tot = Object.entries(dmg[c]).filter(e => e[0][0] !== '_').reduce((a, b) => a + b[1], 0);
-    console.log('damage by source ' + c + ' (total ' + tot + ', counters ' + (dmg[c]._counters || 0) + '): ' +
-      Object.entries(dmg[c]).filter(e => e[0][0] !== '_').sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k, v]) => k + ' ' + (100 * v / tot).toFixed(1) + '%').join(', '));
-  }
   // determinism
   let detOk = true;
   for (let i = 0; i < jobs.length; i++) if (jobs[i].det === 1) { if (results[i].snap !== results[i + 1].snap) { detOk = false; console.log('DETERMINISM FAIL seed', jobs[i].cfg.seed); } }
