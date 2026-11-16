@@ -104,17 +104,24 @@
     p.a = x0; p.b = y0; p.d = x1; p.e = y1; p.life = life; p.c = size; p.f0 = pal; p.delay = delay | 0;
     return p;
   }
+  var RT = { tick: -9, x: 0, y: 0, ph: 0 };
   function silPt(g, edgeOnly) { var L = edgeOnly ? g.silEdge : g.silPts, i = I.RI(0, (L.length >> 1) - 1); return [L[i * 2], L[i * 2 + 1]]; }
 
   I.def('gemini.riseTrail', function (x, y, O) {
     var g = G[O.pal], f = O.facing, ph = I.tick * 0.55;
     for (var s = 0; s < 2; s++) {
       var a = ph + s * PI, ox = Math.round(Math.sin(a) * 9) * f, front = Math.cos(a) > 0, L = O.layer != null ? O.layer : front ? I.FRONT : I.BACK;
-      var d = I.add(I.K_DOT, x + ox, y, L);
-      d.size = front ? 2 : 1; d.life = 14; d.vy = 0.35; d.ramp = s ? [g.S[2], g.A[1], g.A[2], g.dk] : [g.S[1], g.S[1], g.A[1], g.A[2]]; d.e = 1;
+      var cont = RT.tick === I.tick - 1 && Math.abs(RT.x - x) < 40 && Math.abs(RT.y - y) < 40, d;
+      if (cont) {     // ribbon from this strand's previous point: continuous strands
+        d = I.add(I.K_RIBBON, x + ox, y, L);
+        d.a = RT.x + Math.round(Math.sin(RT.ph + s * PI) * 9) * f; d.b = RT.y;
+      } else { d = I.add(I.K_DOT, x + ox, y, L); d.e = 1; }
+      d.size = front ? 2 : 1; d.life = 14; d.vy = 0.35;
+      d.ramp = s ? ['#ffffff', g.S[2], g.S[2], g.A[1], g.A[2], g.dk] : ['#ffffff', g.S[1], g.S[1], g.A[1], g.A[2], g.dk];
       if ((I.tick + s) % 3 === 0) { var p = I.gemStarP(O.pal, x + ox, y, front ? 1 : 0, 0, 0.25, 16, L); p.vrot *= 0.5; }
     }
     if ((I.tick & 3) === 0) I.gemTwinkle(O.pal, x + I.RS() * 12, y + I.RR(2, 10), 2, 10, I.FRONT);
+    RT.tick = I.tick; RT.x = x; RT.y = y; RT.ph = ph;
   }, { desc: 'Per call: one dot on each of two strands (cyan / pink) at +-9 px around the point, helix phase from the FX tick (the strand passing behind goes to the back layer); a small spinning star on each strand every 3rd call; twinkles. Dots drift down and shrink over 14f, so calls every frame draw two intertwined star trails spiralling up.', use: 'Every frame of starRise "rise" at weapon (claw tip), facing = hers. opts.layer forces one layer.' });
 
   I.def('gemini.twinSpawn', function (x, y, O) {
