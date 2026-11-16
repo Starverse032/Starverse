@@ -11,6 +11,11 @@
   (v1 took 0.4 s). About 590 baked canvases are pre-warmed at the end of `init`, so the first draw has
   no upload hitch. The remaining max spikes (7–15 ms) come from the first draw onto a freshly created
   canvas in the benchmark.
+- GPT perf (same machine, noisy): gpt bakes add ≈ 130–145 ms to `init` (gpt-super ≈ 60–80 with palette-1
+  heads deferred to an idle `setTimeout` ≈ 0.1 s after init, gpt-backdrop ≈ 20–38, gpt-specials ≈ 25–37,
+  breath/shared ≈ 6–9) plus ≈ 15 ms in `screen` for the gpt wedge/line images; total `init` measured
+  1.08–1.30 s across runs. gpt super composition (backdrop + attention back + front) draw: median 0.3 ms,
+  p90 0.5–0.9 ms; the particle stress test is unchanged (median 0.2–0.3 ms).
 
 ## Files (manifest order)
 `pix.js` software rasteriser (Buf, poly/ray/star/ring/ellipse, outline, Scale2x, RotSprite-lite, `I.anim`
