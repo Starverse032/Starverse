@@ -171,7 +171,7 @@
   AI.prototype.threat = function (me, pv, dx) {
     if (!pv) return null;
     var pdx = Math.abs(pv.x - me.x);
-    var lunge = me.ch === 'gpt' && pv.lunge ? pv.lunge * (this.P.gLunge != null ? this.P.gLunge : 1) : 0;   // GPT's patient guard reads lunges
+    var lunge = me.ch === 'gpt' && pv.lunge ? pv.lunge * (this.P.gLunge != null ? this.P.gLunge : 1.6) : 0;   // GPT's patient guard reads lunges
     if (pv.act === 'attack' && (pv.ph === 'startup' || pv.ph === 'active') && pv.kind !== 'throw' && !pv.grab && pdx < pv.reach + D(34) + lunge) return 'strike';
     if (pv.air && pdx < D(110) && F.sign(me.x - pv.x) === F.sign(pv.vx || 0)) return 'air';
     for (var i = 0; i < pv.projs.length; i++) {
