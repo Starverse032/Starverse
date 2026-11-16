@@ -21,7 +21,16 @@ four gemini files exist), `anims/placeholders.js` (her segment table + aliases).
   together → fling + finger-to-cheek wink), twinStrike (pounce → lunging double-claw X swipe, reach 46),
   blinkOut (curl → checker dissolve → star glint s9/s7/s3: `only: 'star'`), blinkIn (reverse + flourish), super
   (gather → twirl → hand to the sky, held; arm sweeps down to point ahead at active+44 for the X beams; wink).
-- TODO step 5: throw, throwHit, thrown, intro, win, lose.
+- DONE step 5 (first pass, sheet-reviewed): throw (two-paw pounce-grab on air, pout, ears droop), throwHit (grab →
+  hop onto the victim's chest → double-sole kick-off + back flip; self-contained hop root ≤ -24, grab anchor
+  (30,-62) → (24,-62) → released at (56,-36) end of toss), thrown, intro (tuck drop-in → pounce-crouch → cat stretch
+  → yawn-stretch → paw-lick → finger-to-cheek wink → stance), win (hop-twirl → finger-to-cheek wink, heel kicked up,
+  sway, paw-lick loop), lose (ears flat, head hung, tail limp, sniffle loop).
+- ALL 44 required anims authored (no placeholders; segment-table check passes, no console errors).
+- Other fighters unchanged: claude/deepseek/gpt anchor hashes + render counts identical before/after (`--perf`).
+- Perf: `--perf` gemini_drawMs ≈ 1.06 (worst case, re-render every frame; claude 1.05, gpt 1.02 in the same run).
+- NEXT (polish, if budget): second review round on 5H/2H/jH, dashF, throwHit flip frames; hair is heavy/dark in
+  the mid-back; front sleeve reads as a block when the paw is high; tail overlaps the hair ends.
 
 ## Implementation notes
 - Materials re-purposed: legs = violet hair (hair2), tip = pink ends, shoe = violet lining, white = gold eye (eye2),
