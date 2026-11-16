@@ -16,9 +16,9 @@
   FallbackPuppet.prototype.getAnchor = function () { return null; };
   FallbackPuppet.prototype.getBounds = function () { return { x: -15, y: -104, w: 30, h: 104 }; };
   FallbackPuppet.prototype.draw = function (ctx, sx, sy, o) {
-    var P = (LC.PAL[this.ch] || LC.PAL.claude)[this.pal] || LC.PAL.claude[0];
+    var P = palFor(this.ch, this.pal);
     var low = /crouch|down|getup|2[LMH]/.test(this.anim) || this.seg === 'lie';
-    var h = this.seg === 'lie' ? 20 : low ? 68 : (this.ch === 'deepseek' ? 98 : 104);
+    var C = F.chars[this.ch], h = this.seg === 'lie' ? 20 : low ? 68 : ((C && C.height) || 100);
     var col = o && o.silhouette ? o.silhouette : P.cloth1[1];
     ctx.globalAlpha = o && o.alpha != null ? o.alpha : 1;
     ctx.fillStyle = P.outline; ctx.fillRect(sx - 14, sy - h - 1, 28, h + 1);
@@ -39,7 +39,15 @@
   // ------------------------------------------------------------------ helpers
   function rect(ctx, x, y, w, h, c) { ctx.fillStyle = c; ctx.fillRect(x | 0, y | 0, w | 0, h | 0); }
   F.rect = rect;
-  function palOf(f) { return (LC.PAL[f.ch] || LC.PAL.claude)[f.pal] || LC.PAL[f.ch][0]; }
+  // palette for a character id (falls back to the first roster palette that exists)
+  function palFor(ch, pal) {
+    var set = LC.PAL[ch];
+    if (!set) for (var i = 0; !set && i < (LC.CHARS || []).length; i++) set = LC.PAL[LC.CHARS[i]];
+    if (!set) for (var k in LC.PAL) { if (LC.PAL[k] && LC.PAL[k][0] && LC.PAL[k][0].outline) { set = LC.PAL[k]; break; } }
+    return set[pal] || set[0];
+  }
+  F.palFor = palFor;
+  function palOf(f) { return palFor(f.ch, f.pal); }
   F.palOf = palOf;
 
   function shadow(ctx, m, f) {
