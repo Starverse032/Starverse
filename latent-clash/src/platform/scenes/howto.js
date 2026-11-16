@@ -16,14 +16,10 @@
     return w;
   };
 
-  // One tab per fighter (pause move list): same label style as the how-to tabs, centred on cx.
-  ui.rosterTabs = function (c, sel, cx, y, maxW) {
-    var names = LC.CHARS.map(function (ch) { return ((LORE.chars[ch] || {}).nameZh || ch).replace(/\s+/g, ''); });
+  // One tab per fighter (pause move list): the short name (zh name minus 娘), as on the how-to tabs.
+  ui.rosterTabs = function (c, sel, cx, y) {
+    var names = LC.CHARS.map(function (ch) { var n = (LORE.chars[ch] || {}).nameZh || ch; return n.replace(/\s*娘$/, '') || n; });
     var ws = names.map(function (n) { return LC.font.measure(n, { size: 10 }).w + 12; });
-    if (ws.reduce(function (a, b) { return a + b + 2; }, 0) > (maxW || W - 40)) {
-      names = names.map(function (n) { return n.replace(/娘$/, ''); });
-      ws = names.map(function (n) { return LC.font.measure(n, { size: 10 }).w + 12; });
-    }
     var tot = ws.reduce(function (a, b) { return a + b + 2; }, -2), x = Math.round(cx - tot / 2);
     names.forEach(function (n, i) {
       var on = LC.CHARS[i] === sel, col = ui.charCol(LC.CHARS[i], 0);
@@ -136,12 +132,11 @@
   LC.scenes.define('howto', function (params) {
     var page = params.page || 0, scroll = 0, maxScroll = 0, pageT = 0;
     // two fixed pages, then one move-list page per fighter in LC.CHARS
-    // Tab labels: one consistent style for every fighter — the zh name without the space
-    // ("Claude娘"), else (if the row would not fit) the short latin name ("DeepSeek"), else size 8.
+    // Tab labels: one style for every fighter — the zh name minus 娘 (Claude / DeepSeek / GPT / Gemini,
+    // same as the select tiles and pause tabs) at size 10, shrinking to size 8 if the row would not fit.
     var FIX = ['基本操作', '系统'], TAB_L = 86, TAB_GAP = 2;
     var shortName = function (ch) { var n = (LORE.chars[ch] || {}).nameZh || ch; return n.replace(/\s*娘$/, '') || n; };
     var STYLES = [
-      { size: 10, pad: 6, label: function (ch) { return ((LORE.chars[ch] || {}).nameZh || ch).replace(/\s+/g, ''); } },
       { size: 10, pad: 6, label: shortName },
       { size: 8, pad: 4, label: shortName }
     ];
