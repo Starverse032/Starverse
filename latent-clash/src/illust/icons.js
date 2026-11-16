@@ -120,6 +120,11 @@
       if (I.gptEmblem) I.gptEmblem(P, size);
       return P.canvas(K.slotColors('gpt', 0));
     }
+    if (I.ART && I.ART[ch] && I.ART[ch].emblem) {
+      // V2.6+: generic per-character hook (Gemini: four-pointed star with cat ears)
+      I.ART[ch].emblem(P, size);
+      return P.canvas(K.slotColors(ch, 0));
+    }
     // cute whale: round body, light belly, raised fluke, eye, spout
     var tail = I.fluke(P, 3.2 * s, 4.2 * s, -Math.PI / 2 - 0.5, 0.42 * s).or(P.sr([5 * s, 10 * s, 3.6 * s, 7 * s, 3.2 * s, 4.6 * s], 2.6 * s, 2 * s));
     P.part(tail, S.d1, S.dl);
