@@ -759,6 +759,10 @@
     steps.sort(function (a, b) { return a[0] - b[0]; });
     p.fastTone = true;
     try { for (var i = 0; i < steps.length; i++) steps[i][1](); } finally { p.fastTone = false; }
+    // grounded poses: nothing (wing tips, hair, tail) sinks more than 2 px into the floor
+    if (!ds.air && p.my1 > I.OY + 3) {
+      for (var y = Math.max(p.my0, I.OY + 3); y < p.my1; y++) p.m.fill(0, y * I.BW + p.mx0, y * I.BW + p.mx1);
+    }
     if (sk0.flip) mirrorBuffer(p);
   };
 
