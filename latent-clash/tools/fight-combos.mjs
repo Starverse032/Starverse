@@ -30,7 +30,7 @@ export const COMBOS = {
     { name: '2L > 2M > 2H (tail sweep)', dist: 44, steps: ['2L', '2M', '2H'], hits: 3 },
     { name: '5L > 5M > 623H (dragonRise)', dist: 36, steps: ['5L', '5M', '623H'], hits: 3 },
     { name: 'jH > 5M > 623H (dragonRise)', dist: 110, steps: ['j9', 'jH', '5M', '623H'], hits: 3 },
-    { name: '5M > 5H > 236H (3 hits) > SUPER', dist: 52, steps: ['5M', '5H', '236H', 'w14', 'SUPER'], hits: 10, meter: true }
+    { name: '5M > 5H > 236H (3 hits) > SUPER', dist: 52, steps: ['5M', '5H', '236H', 'w34', 'SUPER'], hits: 10, meter: true }
   ]
 };
 // --vs=claude|deepseek|gpt : dummy character (default: the next one in the roster)
