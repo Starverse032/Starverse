@@ -392,8 +392,8 @@
     // beckoning hand: palm toward us, index finger raised and crooking toward her, the rest folded
     // (the hand is tilted: crooked index finger points up-right at the blob, others curled on the right)
     var palm = P.spoly([95, 89, 94, 84, 95.5, 79.5, 100, 77.5, 104, 78.5, 106, 82, 105.5, 87, 101.5, 90]);
-    var thumb = P.sr([96, 84, 93, 80, 92, 75.5], 3.8, 2.8);
-    var idx = P.sr([100, 79.5, 103, 75, 106, 72, 108.6, 71, 109.8, 73.2], 3.6, 2.4);
+    var thumb = P.sr([96.5, 86, 94, 83.5, 93, 80.5], 3.6, 2.8);
+    var idx = P.sr([100, 79.5, 103, 75.5, 105.8, 73.2, 108.2, 72.8, 109.4, 74.8, 108.6, 76.8], 3.6, 2.2);
     var curl = P.ell(105.6, 80.6, 2, 1.9).or(P.ell(106.2, 84, 1.9, 1.9)).or(P.ell(105, 87.2, 1.7, 1.7));
     var hand = palm.or(thumb).or(idx).or(curl);
     P.part(hand, S.s1, S.sl);
@@ -401,7 +401,7 @@
     P.recol(hand.band(-1, 1), [S.s1], S.s0);
     P.line([102.5, 79.5, 104.5, 79.5], S.s2); P.line([103.5, 82.5, 105, 82.5], S.s2); P.line([103.5, 85.5, 104.5, 85.5], S.s2);
     P.line([96, 86, 98.5, 87.5, 101, 87], S.s2, true);
-    P.px(109, 73, S.bl);
+    P.px(108, 77, S.bl);
   }
   function drawLowArm(P) {
     farSleeve(P);
