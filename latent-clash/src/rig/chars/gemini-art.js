@@ -27,39 +27,39 @@
     '-': 255
   };
 
-  // pivot (under the jaw) = column 17, row 27. Crown row 12 (15 above the pivot), ear tips rows 4-5, chin row 28.
+  // pivot (under the jaw) = column 17, row 27. Crown row 11-12 (≈15 above the pivot), ear tips rows 3-4, chin row 28.
   var HEAD = [
     '..............................',
     '..............................',
     '..............................',
-    '..............................',
-    '..........h...................',
-    '.........hhs..........h.......',
-    '.........hPs.........Hh.......',
-    '........shPps.......Hph.......',
-    '........shPPps.....HPps.......',
-    '........shPppns....hpPps......',
-    '.......sshPppns...HppPps......',
-    '.......shhPpnns..HhpPnps......',
-    '..ss...shhhhnnhhHHHhpnhhs.....',
-    '.shhs.sshhhhhhhHHHHHHhhhhs....',
-    'shHHhsshhhhhhHHHHHHHHHhhhhs...',
-    'shHhhhshhhhhhhhHHHHhhhhhhhhs..',
-    'shhhhhshhhhhhhhhhhhhhhhhhhhhs.',
-    'sshhhsshhhhhhhshhhhhhhshhhhhs.',
-    '.sssssshhhhhhshhhhhhshhhhhhhhs',
-    '..sshhhhhhhhshhhhhhshhhhhhshhs',
-    '..shhhhhhhhshhhhhhshhhhhhshhhs',
-    '..shhhhhhhshhhKkkshhhkkkkshhs.',
-    '..shhhhhhhshhqkkkkkkkkkkkkkhs.',
-    '..shhhhhhhshhqkkkkkkkkkkkkkks.',
-    '..shhhhhhhshhhqkkkkkkkkkkkkk..',
-    '..shhhhhhhshhhqkkkkkkkkkkkkk..',
-    '..sshhhhhhshhhqqkkkkkkkkkkk...',
-    '...shhhhhhshhh..qqkkkkkkkk....',
-    '...sshhhhhshhs....qqkkkkq.....',
-    '....sshhhhhss.......qqq.......',
-    '.....ssshhs...................'
+    '.........h....................',
+    '........hhs...........h.......',
+    '........hPs..........hhs......',
+    '.......shPps........hPPs......',
+    '.......shPPps......hPppns.....',
+    '.......shPppns....HhPppns.....',
+    '......sshPppnsHHHhhPppnss.....',
+    '...ss.shhhPpnshHHHHhhpnnhs....',
+    '..shhsshhhhhhhhhHHHHHhhhhhs...',
+    '.shHhhshhhhhhhhhhhHHhhhhhhhs..',
+    'shHhhhhshhhhhhhhhhhhhhhhhhhhs.',
+    'shhhhhhshhhhhhhhhshhhhhhhhhhs.',
+    'shhhhhsshhhhhhhhshhhhhhshhhhhs',
+    '.shhssshhhhhhhhshhhhhhshhhhhhs',
+    '..ssshhhhhhhhhshhhhhshhhhhshhs',
+    '...shhhhhhhhhshhhKhhshhKhhshhs',
+    '...shhhhhhhhshhhkkkhshkkkhskhs',
+    '...shhhhhhhshhhqkkkkkKkkkkkkhs',
+    '...shhhhhhhshhqkkkkkkkkkkkkks.',
+    '...shhhhhhhshhqkkkkkkkkkkkkks.',
+    '...shhhhhhhshhqkkkkkkkkkkkkk..',
+    '...shhhhhhhshhhqkkkkkkkkkkkk..',
+    '...shhhhhhhshhhqkkkkkkkkkkk...',
+    '...sshhhhhhshhhhqkkkkkkkkkk...',
+    '....shhhhhhshhh..qqkkkkkkk....',
+    '....sshhhhhshhs....qqkkkq.....',
+    '.....sshhhhhss................',
+    '......sssshs..................'
   ];
 
   // eye overlay: near eye cols 0-3 (rose), far eye cols 7-9 (gold), placed at eyeAt
@@ -192,8 +192,8 @@
       var set = {
         base: I.parseArt(HEAD, LEGEND, 17, 27),
         eyes: {}, mouth: {}, cache: {},
-        eyeAt: [15, 21], mouthAt: [20, 26],
-        extras: { blush: { img: I.parseArt(['bb......b'], LEGEND), at: [15, 25] } }
+        eyeAt: [15, 20], mouthAt: [21, 25],
+        extras: { blush: { img: I.parseArt(['bb......b'], LEGEND), at: [15, 24] } }
       };
       Object.keys(EYES).forEach(function (k) { var e = set.eyes[k] = I.parseArt(EYES[k], LEGEND); if (EYE_DY[k]) e.dy = EYE_DY[k]; });
       Object.keys(MOUTHS).forEach(function (k) { var m = set.mouth[k] = I.parseArt(MOUTHS[k], LEGEND); if (MOUTHS[k][0].length >= 5) m.dx = -1; });
