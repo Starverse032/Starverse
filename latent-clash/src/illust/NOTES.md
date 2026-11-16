@@ -12,7 +12,33 @@
   faceted iridescent four-pointed star; `catEar()`, furry `tail()`, `twin()`.
 - icons.js: generic `I.ART[c].emblem(P, size)` hook before the whale fallback; api.js ICONS +
   `emblem.gemini(.lg)`. cutin.js untouched (uses the generic cutinFace/Motif/Over hooks).
-- IN PROGRESS: review of cut-in / face / emblem, then a bust refinement round.
+DONE (all reviewed at ×4 in both palettes; zero console errors in the gallery and at game boot — no
+"[illust] no art for gemini" any more; init ≈ 500 ms with four chars; `illust-hash check`: all 80
+Claude/DeepSeek/GPT portraits, icons, banners, logo and title frames pixel-identical to the baseline):
+- Bust: rose-red near eye / gold far eye (`EL2` legend maps the eye map to g*), narrow cat pupils,
+  sly lopsided smile, blush; cat ears with pink inner + white fluff; wavy fringe (own FR, tips flick
+  outward), ahoge, huge wavy back hair with escaping curls; side bun + faceted star clip; navy halter
+  (gold-trimmed edges, white V panel, star gem at the chest, star on the collar, violet under-bust band);
+  near detached sleeve top (white frill, gold trim); raised far arm: bell sleeve hanging from the wrist
+  (white cuff, gold trim, violet lining wedge), index finger reaching up-LEFT to the cheek (not
+  vertical); furry tail curling in at the right (blue → violet → pink tip, skipped by `hairShift`);
+  floating iridescent stars.
+- Win: near-eye wink, D-shaped grin + fang, peace sign, stars; light-twin = small translucent head
+  (checker fill over transparency, light rim, eye glints, smile) peeking from behind at upper left.
+- Lose: ears flattened sideways, teary wide eyes, pout, worried brows, "?" + drooping star, limp
+  tail, arm lowered (sleeve only).
+- Cut-in: red/gold `bigEye` (far eye recoloured e*→g*) narrowed, round pupil replaced by a slit +
+  glint, outer-corner glint streaks, both ear tips cutting the top of the frame (cheated down), hair
+  sweeping at the sides shifting to violet; motif = layered huge four-pointed star + constellation
+  lines/nodes; over the band: streaking stars with trails (never slot 0 — the band stays opaque).
+- Face 24×24: hand map (ears, blue → violet → pink hair, red + gold eyes, navy collar + star gem).
+- Emblem 16/32: faceted pink-violet four-pointed star (k 0.42) with violet cat ears on its upper inner
+  corners; 32 px has pink inner ears and a four-hue iridescent core.
+WEAK / NEXT:
+- Twin silhouette in bustWin is small (head only, ~25 px); reads as a "ghost" more than a full copy.
+- Near-sleeve top (bottom left) is a small strip; halter top is a large plain navy area.
+- Escaping curls are thin outlined loops; 16 px emblem ears are 2–3 px.
+- Title key art still shows only Claude vs DeepSeek (not in this brief).
 
 ## GPT progress / next steps (V2.5 third fighter — truthful, current)
 DONE (zero console errors; init ≈ 430 ms with three chars; Claude/DeepSeek art, emblems, logo, banners
@@ -136,3 +162,5 @@ WEAK / NEXT (if there is budget):
 - Shots: `node tools/illust-shots.mjs [all|portraits|claude|deepseek|gpt|logo|banners|icons|title|gallery|sheet:<expr>]`
   → `.shots/illust/*.png` (×4 assets, contact sheets, gallery page, title frames; prints init ms,
   title ms/frame and any console errors).
+- Regression: `node tools/illust-hash.mjs save` (baseline) / `check` → pixel hashes of every
+  non-Gemini portrait, icon, banner, logo and title frame.

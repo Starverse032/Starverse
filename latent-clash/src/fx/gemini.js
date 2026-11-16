@@ -189,7 +189,11 @@
     var g = G[pal];
     if (g.ready) return;
     g.ready = true;
-    for (var i = 0; i < BK.length; i++) { try { BK[i][1](pal); } catch (err) { console.error('[fx] gemini bake failed: ' + BK[i][0], err); } }
+    for (var i = 0; i < BK.length; i++) {
+      var t0 = performance.now();
+      try { BK[i][1](pal); } catch (err) { console.error('[fx] gemini bake failed: ' + BK[i][0], err); }
+      (I.gemTimes = I.gemTimes || []).push([BK[i][0] + pal, +(performance.now() - t0).toFixed(1)]);
+    }
   };
   I.onInit('gemini(pal0)', function () {
     I.gemNeed(0);
