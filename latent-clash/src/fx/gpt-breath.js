@@ -78,7 +78,7 @@
         dsc(ctx, D[2 - q], PR[k] * fr * (1 - p / lim * 0.35) + (q === 2 && p < 0.12 ? 1 : 0), Math.round(xx), Math.round(yy));
       }
     }
-    if (phase !== 'end' || t < 3) {      // white-hot core streak along the axis
+    if (phase !== 'end') {      // white-hot core streak along the axis
       var cl = Ln * (phase === 'start' ? Math.min(0.38, grow * 0.5) : 0.38) * (phase === 'end' ? 0.5 : 1);
       ctx.fillStyle = '#ffffff';
       I.runLine(ctx, sx + dx * 1, sy + dy * 1 - (Math.abs(dx) >= Math.abs(dy) ? 1 : 0), sx + dx * cl, sy + dy * cl - (Math.abs(dx) >= Math.abs(dy) ? 1 : 0), 3);

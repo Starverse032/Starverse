@@ -119,13 +119,13 @@
     P.recol(m.band(3, -1), [S.x1], S.x2);
     P.recol(m.band(-1, 2), [S.x1], S.x0);
     P.recol(m.edge().and(m.band(2, -1)), [S.x3], S.xl);
+    var inner = K.inner(m), q = 1.1 / P.s;
     for (var k = 1; k <= nr; k++) {
-      var t = k / (nr + 1.2), a = along(pts, t), hw = (w * (1 - t) * (1 - t) + 2 * w * 0.72 * t * (1 - t) + 1.9 * t * t) / 2 + 1;
-      var nx = -a.ty, ny = a.tx, q = P.s < 1.5 ? 0.9 : 0.5;
-      var r = P.poly([a.x + nx * hw, a.y + ny * hw, a.x - nx * hw + a.tx * 0.6, a.y - ny * hw + a.ty * 0.6,
-        a.x - nx * hw + a.tx * (0.6 + q), a.y - ny * hw + a.ty * (0.6 + q), a.x + nx * hw + a.tx * q, a.y + ny * hw + a.ty * q]).and(K.inner(m));
+      var t = k / (nr + 1.2), a = along(pts, t), hw = (w * (1 - t) * (1 - t) + 2 * w * 0.72 * t * (1 - t) + 1.9 * t * t) / 2 + 0.6;
+      var nx = -a.ty, ny = a.tx, bow = Math.min(1.6, hw * 0.5);
+      var r = P.sr([a.x + nx * hw, a.y + ny * hw, a.x + a.tx * bow, a.y + a.ty * bow, a.x - nx * hw, a.y - ny * hw], q, q).and(inner);
       P.recol(r, [S.x1, S.x0], S.x2);
-      P.recol(r.shift(Math.round(a.tx), Math.round(a.ty)).and(K.inner(m)).sub(r), [S.x1], S.x0);
+      P.recol(r.shift(Math.round(a.tx * 1.4), Math.round(a.ty * 1.4)).and(inner).sub(r), [S.x1], S.x0);
     }
     return m;
   }
@@ -486,7 +486,7 @@
   function cutinOver(P) {
     // the near horn breaks the panel: from below the frame across the cheek line and the slanted cut
     P.s = 2.8; P.ox = -4; P.oy = -103.6;
-    var hm = horn(P, [37, 68, 31.5, 57, 26.5, 48.5, 22.5, 42, 19.5, 35], 7.6, 4);
+    var hm = horn(P, [40, 70, 32.5, 60, 27.5, 51, 24.8, 43, 24.6, 34], 9, 5);
     P.s = 1; P.ox = 0; P.oy = 0;
     P.fill(hm.grow(1).sub(hm), S.ol);
     [[22, 14], [48, 56], [12, 44], [60, 20], [36, 30]].forEach(function (p, i) {
