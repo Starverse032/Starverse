@@ -20,7 +20,8 @@
 
   F.defineChar({
     id: 'claude',
-    hp: 1000,
+    hp: 1000, height: 104,
+    order: ['spark', 'sonnet', 'haiku', 'guardrail', 'super'],   // move list (getMoveList)
     // V2 body (CONTRACT-V2 §V2.2): 104 px tall, crouch 70, push width 26
     walkF: 1.6, walkB: 1.2,
     jump: { vy: 7.92, g: 0.36, vxF: 2.9, vxB: 2.5 },          // apex ~84 px, 44f airtime
@@ -103,7 +104,7 @@
           seg: 'rise', fr: [0, 8], box: [0, -136, 46, 132], anchor: 'weapon', dmg: { L: 100, M: 120, H: 140 },
           lv: 'S', kd: 'launch', lvx: 1.6, lvy: -6.6, stun: [0, 18], fx: 'hit.special', jug: 2, impact: true
         }],
-        trail: 'claude.sonnetTrail', riseFx: 'claude.sonnetPillar', sfx: 'claude.sonnet'
+        trail: 'claude.sonnetTrail', trailEvery: 2, riseFx: 'claude.sonnetPillar', sfx: 'claude.sonnet'
       },
       haiku: {
         kind: 'special', motion: '214', simple: 4, lore: 'haiku',
@@ -143,6 +144,7 @@
         segs: [['startup', 6], ['cast', 10], ['active', 40], ['recovery', 30]],
         inv: { all: [0, 17] },
         flashAt: 5, bgOut: 12,        // backdrop outro from recovery f12 (fx V2 timeline)
+        pagesAt: 4,                   // claude.pages at the book on cast f4
         // beam drawn at the muzzle (book centre ~(34,-82)); visual 80 px tall, hitbox 68
         beam: { seg: 'active', y: -116, h: 68, x0: 44, grow: 56, max: 420, fwd: 16 },   // fwd: book/beam origin ahead of the muzzle so the book does not hide her face
         hits: [{

@@ -19,7 +19,8 @@
 
   F.defineChar({
     id: 'deepseek',
-    hp: 1000,
+    hp: 1000, height: 98,
+    order: ['wave', 'breach', 'chain', 'dive', 'diveKick', 'super'],   // move list (getMoveList)
     // V2 body (CONTRACT-V2 §V2.2): 98 px tall, crouch 66, push width 28
     walkF: 2.0, walkB: 1.5,
     jump: { vy: 8.57, g: 0.39, vxF: 3.2, vxB: 2.7 },          // apex ~90 px, 44f airtime

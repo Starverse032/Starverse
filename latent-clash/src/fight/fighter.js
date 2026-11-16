@@ -304,7 +304,7 @@
     else if (!this.air) this.vx = 0;
     if (sg.vyc != null) this.vy = sg.vyc;
     if (mv.flashAt === this.mf) this.m.superFlash(this);
-    if (mv.trail && (sg.id === 'rise' || sg.id === 'fall' || (sg.id === 'active' && mv.air)) && (this.ch !== 'claude' || (this.sf & 1) === 0)) {
+    if (mv.trail && (mv.trailSegs ? mv.trailSegs.indexOf(sg.id) >= 0 : (sg.id === 'rise' || sg.id === 'fall' || (sg.id === 'active' && mv.air))) && (!mv.trailEvery || (this.sf % mv.trailEvery) === 0)) {
       var wp = this.anchor(mv.trailAnchor || 'weapon');
       F.fx(mv.trail, this.x + wp.x * this.facing, this.y + wp.y, { facing: this.facing, palette: this.pal });
     }
@@ -314,7 +314,7 @@
       this.m.addShake(4, 16);
       this.m.stageEvent('hit', { x: cx, power: 1 });
     }
-    if (mv.kind === 'super' && this.ch === 'claude' && sg.id === 'cast' && this.sf === 4) {
+    if (mv.pagesAt != null && sg.id === 'cast' && this.sf === mv.pagesAt) {
       var bp = this.anchor('muzzle');
       F.fx('claude.pages', this.x + bp.x * this.facing, this.y + bp.y, { facing: this.facing, palette: this.pal, power: 1 });
     }

@@ -41,7 +41,7 @@
       out.push({ id: id, name: NORMAL_ZH[id], nameEn: NORMAL_EN[id], input: id.replace('5', '').replace('j', 'j.'), simple: id,
         type: 'normal', desc: gd + (id === '2H' ? '，命中击倒。' : '。轻→中→重可连续取消。'), damage: dmgOf(mv) });
     });
-    var order = charId === 'claude' ? ['spark', 'sonnet', 'haiku', 'guardrail', 'super'] : ['wave', 'breach', 'chain', 'dive', 'diveKick', 'super'];
+    var order = C.order || Object.keys(C.moves).filter(function (k) { var x = C.moves[k]; return !x.internal && (x.kind === 'special' || x.kind === 'super'); });
     order.forEach(function (id) {
       var mv = C.moves[id], lore = L[id] || {};
       if (!mv) return;
