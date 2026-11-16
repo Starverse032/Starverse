@@ -1,5 +1,13 @@
 # FIGHT — NOTES
 
+## GPT progress / next steps (CONTRACT-V2 §V2.5 — keep truthful, updated as work lands)
+- [ ] 1 roster generalisation (engine / AI / HUD / tools / stubs iterate `LC.CHARS`, no silent substitution)
+- [ ] 2 `chars/gpt.js` (normals, throw, breath, airBreath, dragonRise, call → callHit, roar, super)
+- [ ] 3 CPU plan for GPT + the other two CPUs vs her
+- [ ] 4 sim / combos for all pairings, balance
+- [ ] 5 shots (`--real --boxes`)
+- [ ] 6 notes (tuning table, combos, AI notes)
+
 ## V2 progress / next steps (CONTRACT-V2 retune — keep truthful)
 - [x] 1 retune to the V2 bodies (boxes, movement, spacing, reach, specials, fx positions); sim, combos, box shots
 - [x] 2 presentation fixes: training panels now under the cut-in; move tag under the name row on an opaque
