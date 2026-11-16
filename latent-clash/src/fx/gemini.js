@@ -81,6 +81,24 @@
     b.blit(m, 0, 0);
   };
 
+  /** Tiny sparkle (no outline, reads on dark and pale): '+' or 'x' arms of length n, white centre,
+   *  iridescent hue inside, accent tip; n >= 4 adds a waist (concave four-pointed look). */
+  I.gemMini = function (b, cx, cy, n, hue, pal, diag) {
+    var g = G[pal], hu = I.col(g.hue[hue & 3]), tip = I.col(g.A[2]), mid = I.col(g.A[1]), wh = I.col('#ffffff');
+    var dirs = diag ? [[1, 1], [-1, 1], [1, -1], [-1, -1]] : [[1, 0], [-1, 0], [0, 1], [0, -1]], m = diag ? n - 1 : n;
+    for (var k = 0; k < 4; k++) for (var i = 1; i <= m; i++) {
+      var c = i === m ? tip : i === m - 1 && m > 2 ? mid : hu;
+      if (i === 1 && n >= 4) c = wh;
+      b.set(cx + dirs[k][0] * i, cy + dirs[k][1] * i, c);
+    }
+    if (n >= 4 && !diag) { var wc = I.col(I.mix(g.hue[hue & 3], g.A[1], 0.35)); b.set(cx + 1, cy + 1, wc); b.set(cx - 1, cy + 1, wc); b.set(cx + 1, cy - 1, wc); b.set(cx - 1, cy - 1, wc); }
+    b.set(cx, cy, wh);
+  };
+  /** Baked tiny sparkle: 8 frames alternating '+' / 'x' with the hue cycling. */
+  function miniAnim(pal, n) {
+    var s = n * 2 + 3, c = n + 1;
+    return I.anim(s, s, NROT, c, c, function (b, f) { I.gemMini(b, c, c, (f & 1) ? n : n, (f >> 1) + 1, pal, !!(f & 1)); }, 1, true);
+  }
   /** Baked spinning star: NROT frames, square cell, origin centre. */
   function starAnim(pal, R, o) {
     var s = Math.ceil(R) * 2 + 5, c = s / 2;
@@ -92,7 +110,7 @@
       colours(pal);
       var g = G[pal], Au = g.Au, dk = g.dkU;
       // particle stars: tiny (R 2.5, no outline), small (3.6), mid (5.2), big (7)
-      g.ps = [starAnim(pal, 2.6, { outline: false, core: 0.5 }), starAnim(pal, 3.6, { core: 0.4 }), starAnim(pal, 5.2, { core: 0.32 }), starAnim(pal, 7, { rim: true })];
+      g.ps = [miniAnim(pal, 2), miniAnim(pal, 3), miniAnim(pal, 4), starAnim(pal, 7, { rim: true, p: 0.56 })];
       // projectile: L / M / H
       g.proj = [starAnim(pal, 7.5, { rim: true, p: 0.6, core: 0.22 }), starAnim(pal, 10, { rim: true, p: 0.56, core: 0.2 }), starAnim(pal, 13.5, { rim: true, p: 0.56, core: 0.18 })];
       // halo for the big star: dithered glow disc, 2 pulse frames
@@ -115,7 +133,8 @@
       g.cast = I.anim(40, 40, 8, 20, 20, function (b, f) {
         var R = [3, 6, 9, 8, 6, 4, 2.5, 1.5][f];
         if (f < 5) { var gl = [8, 14, 18, 15, 10][f]; b.rect(20 - gl, 20, gl * 2 + 1, 1, Au[1]); b.rect(20, 20 - gl, 1, gl * 2 + 1, Au[1]); b.rect(20 - (gl >> 1), 20, gl + 1, 1, I.col('#ffffff')); b.rect(20, 20 - (gl >> 1), 1, gl + 1, I.col('#ffffff')); }
-        I.gemStar(b, 20.5, 20.5, R, f * 0.2, pal, { outline: R > 3 ? dk : false, core: 0.4 });
+        if (R >= 5) I.gemStar(b, 20.5, 20.5, R, f * 0.2, pal, { core: 0.3, p: 0.56 });
+        else I.gemMini(b, 20, 20, Math.max(1, Math.round(R)), f, pal, f & 1);
       }, 1, true);
       // star hit: big faceted star flashes, swells and cracks apart into 4 arms, 12f, 72x72
       g.hit = I.anim(72, 72, 12, 36, 36, function (b, f) {
@@ -149,8 +168,8 @@
           if (lf > 7) m.breakup(1 - (lf - 7) * 0.16, k, 0);
           b.blit(m, 0, 0);
           if (lf >= 1 && lf < 7) {     // tiny star at the tip
-            var q = qb(p, gl), tr = lf < 4 ? 3.6 : 2.6;
-            I.gemStar(b, q[0] + 0.5, q[1] + 0.5, tr, lf * 0.3 + k, pal, { core: 0.5, outline: lf < 4 ? dk : false });
+            var q = qb(p, gl);
+            I.gemMini(b, Math.round(q[0]), Math.round(q[1]), lf < 4 ? 3 : 2, k + lf, pal, lf & 1);
           }
         }
       });
