@@ -557,10 +557,11 @@
     var g;
     if (att.puppet && !att.puppetFallback) { var a = att.anchor('grab'); g = [a.x, a.y]; }
     else g = lerpPath(att.C.grabPath['call' + sg.id], att.sf / Math.max(1, sg.f - 1));
+    vic.thrownPose = sg.id === 'slam' ? ['launch', 'loop', Math.min(0.99, att.sf / sg.f)] : null;   // slammed body, not upright
     var c = vic.anchor('chest');
     vic.x = att.x + g[0] * att.facing - c.x * vic.facing;
     vic.y = Math.min(GY, att.y + g[1] - c.y);
-    if (sg.id === 'slam' && att.sf >= sg.f - 1) callRelease(m, att, vic);
+    if (sg.id === 'slam' && att.sf >= sg.f - 1) { vic.thrownPose = null; callRelease(m, att, vic); }
   };
 
   function callRelease(m, att, vic) {

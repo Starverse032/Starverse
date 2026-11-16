@@ -51,7 +51,7 @@
     this.tag = null; this.tagT = 0;
     this.anim = 'idle'; this.pseg = 'loop'; this.pu = 0;
     this.lastHitKind = null; this.recoverTick = -1; this.hidden = false;
-    this.hardKD = false; this.attnX = null; this.attnY = null; this.flameAt = null;
+    this.hardKD = false; this.attnX = null; this.attnY = null; this.flameAt = null; this.thrownPose = null;
     this.inp.reset();
   };
 
@@ -610,7 +610,10 @@
         else { anim = 'down'; seg = 'lie'; u = (af - 10) / F.segLen(ch, 'down', 'lie'); }
         break;
       case 'getup': anim = 'getup'; seg = 'rise'; u = Math.min(af / T.GETUP, 0.99); break;
-      case 'thrown': anim = 'thrown'; seg = 'loop'; u = af / F.segLen(ch, 'thrown', 'loop'); break;
+      case 'thrown':
+        if (this.thrownPose) { anim = this.thrownPose[0]; seg = this.thrownPose[1]; u = this.thrownPose[2]; }
+        else { anim = 'thrown'; seg = 'loop'; u = af / F.segLen(ch, 'thrown', 'loop'); }
+        break;
       case 'intro': anim = 'intro'; seg = 'act'; u = Math.min(af / F.segLen(ch, 'intro', 'act'), 0.99); break;
       case 'win': case 'lose':
         if (af < 30) { anim = a; seg = 'in'; u = af / 30; }
