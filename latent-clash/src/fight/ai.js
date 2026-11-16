@@ -370,7 +370,7 @@
       if (dx > 120 && dx < 260) add('wait', 0.3, [{ d: 4, n: 6 + this.rng.int(10) }]);
     } else {
       if (me.proj === 0 && dx > D(110)) add('wave', (0.7 + (dx > D(200) ? 0.4 : 0)) * pk, this.special('wave', dx > D(200) ? 'H' : 'M'));
-      if (dx > D(50) && dx < D(110)) add('chain', (0.5 + ag * 0.25) * (P.dChain || 1), this.special('chain', dx > D(90) ? 'H' : 'M'));
+      if (dx > D(50) && dx < D(110)) add('chain', (0.5 + ag * 0.25) * (P.dChain || 1) * (MU.chain || 1), this.special('chain', dx > D(90) ? 'H' : 'M'));
       if (dx > D(90) && dx < D(240) && this.level >= 2) add('diveM', 0.07 + ag * 0.05, this.special('dive', 'M'));
       if (dx > D(60) && dx < D(200) && this.level >= 3) add('diveH', 0.07 + ag * 0.05, this.special('dive', 'H'));
       if (dx > D(90) && dx < D(170)) add('jumpKick', P.jump * 3, [{ d: 9, n: 3 }]);
