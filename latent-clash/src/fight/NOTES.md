@@ -1,10 +1,16 @@
 # FIGHT — NOTES
 
 ## GPT progress / next steps (CONTRACT-V2 §V2.5 — keep truthful, updated as work lands)
-- [ ] 1 roster generalisation (engine / AI / HUD / tools / stubs iterate `LC.CHARS`, no silent substitution)
-- [ ] 2 `chars/gpt.js` (normals, throw, breath, airBreath, dragonRise, call → callHit, roar, super)
-- [ ] 3 CPU plan for GPT + the other two CPUs vs her
-- [ ] 4 sim / combos for all pairings, balance
+- [x] 1 roster generalisation (code): unknown ids fall back to the first registered `LC.CHARS` entry with a
+  warning; fallback puppet height / palette, move-list order (`C.order`), trail parity, Claude's pages,
+  AI profile table (`PROF` in ai.js) are per-character data; stubs know GPT (metrics, segments, anchors)
+- [x] 2 `chars/gpt.js` written + engine support (flame hits, roar circle + projectile erase, command grab
+  `tryCmdGrab`/`callStep`, hard knock-down, super target latch + pin, breath / attention rendering, box overlay)
+  — NOT yet run or verified at the time of writing
+- [~] 3 CPU: GPT plans (breath, tail pokes, call vs guarders, tick-call, oki mix-up, roar vs projectiles /
+  anti-air / wake-up, airBreath, punisher) and vs-GPT logic (escape jump/back-dash, fewer projectiles close,
+  whiff-call punish, wake-up jump/back-dash) written; untuned
+- [~] 4 sim tool for all pairings written (`--pairs`, `--mirror`, `--plans`); combos tool not yet; balance not run
 - [ ] 5 shots (`--real --boxes`)
 - [ ] 6 notes (tuning table, combos, AI notes)
 
