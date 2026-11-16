@@ -202,7 +202,7 @@
       }
       case 'heelF': case 'heelB': {
         var f2 = w === 'heelF' ? d.ftF : d.ftB, a2 = w === 'heelF' ? d.faF : d.faB;
-        return R0(fr(f2, a2, -4.5, -2));
+        return R0(fr(f2, a2, -3.5, 0.5));
       }
       case 'kF': case 'kB': {
         var k = w === 'kF' ? d.knF : d.knB, h = w === 'kF' ? d.hipF : d.hipB, dx = k[0] - h[0], dy = k[1] - h[1], l = Math.sqrt(dx * dx + dy * dy) || 1;
