@@ -166,7 +166,10 @@
           og.drawImage(gc, Math.round(sx), Math.round(sy), cw, chh, col * (cw * S + gap), row * (chh * S + gap), cw * S, chh * S);
           label(og, String(t), col * (cw * S + gap), row * (chh * S + gap), Math.max(1, S >> 1));
         }
-        if (!isSpr) FX.update();
+        if (!isSpr) {      // per-frame trails: keep spawning along a rising path (gemini.riseTrail)
+          if (/gemini\.riseTrail/.test(name) && t < 14) FX.spawn(name, mx + (t + 1) * (opts.facing < 0 ? -1 : 1), my - (t + 1) * 5, opts);
+          FX.update();
+        }
       }
     });
     FX.clear();
