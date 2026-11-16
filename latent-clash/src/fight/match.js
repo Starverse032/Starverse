@@ -644,6 +644,8 @@
   F.init = function () {
     F.clearAnimCache();
     F.clearIllustCache();
+    if (F.resetWhaleInfo) F.resetWhaleInfo();   // fx spriteInfo caches (re-read after the fx module is up)
+    if (F.resetGptInfo) F.resetGptInfo();
     if (F.hudInit) { try { F.hudInit(); } catch (e) { F.err('hud.init', e); } }
     return Promise.resolve();
   };
