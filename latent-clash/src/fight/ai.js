@@ -43,7 +43,7 @@
     claude:   { dp: 'sonnet',     want: D(92), jr: [D(70), D(130)], dashW: 0.8,  superR: D(200) },
     deepseek: { dp: 'breach',     want: D(60), jr: [D(70), D(150)], dashW: 0.9,  superR: D(120) },
     gpt:      { dp: 'dragonRise', want: 80,    jr: [D(70), D(125)], dashW: 0.55, superR: 0, vs: { deepseek: { breath: 1.7 } } },   // vs: matchup plan multipliers (breath, tail, call)
-    gemini:   { dp: 'starRise',   want: 92,    jr: [D(70), D(140)], dashW: 1.0,  superR: 0 }
+    gemini:   { dp: 'starRise',   want: 92,    jr: [D(70), D(140)], dashW: 1.0,  superR: 0, vs: { deepseek: { starMin: 160 } } }
   };
   // Gemini per-level plan multipliers (LV[i].gem; missing = 1): star zoning, twin set-ups, blink, double-jump
   // approaches, hit-and-run retreats, pokes. vsTwin / vsBlink: the other CPUs' respect for a pending twin strike
@@ -168,9 +168,10 @@
     if (a === 'attack') return this.inMove(me, o, pv, dx) || {};
     if (a === 'blockstun') {
       // GPT: a blocked rekka step (DeepSeek's chain) -> buffered reversal rising claw through the next step
-      if (me.ch === 'gpt' && o.mv && (o.mv.id === 'chain' || o.mv.id === 'chain2') && me.stun <= 6 && dx < 70 && this.rekStun !== o.moveInst) {
+      if ((me.ch === 'gpt' || me.ch === 'gemini') && o.mv && (o.mv.id === 'chain' || o.mv.id === 'chain2') && me.stun <= 6 && dx < 70 && this.rekStun !== o.moveInst) {
         this.rekStun = o.moveInst;
-        if (this.chance(this.P.block * (this.P.gRekka != null ? this.P.gRekka : 0.7))) { this.q.length = 0; this.push(this.special('dragonRise', this.level >= 4 ? 'H' : 'M'), 'antiRekka'); return this.emit(); }
+        var rk = me.ch === 'gpt' ? (this.P.gRekka != null ? this.P.gRekka : 0.7) : gem(this.P, 'rekka') * 0.5;
+        if (this.chance(this.P.block * rk)) { this.q.length = 0; this.push(this.special(prof(me.ch).dp, this.level >= 4 ? 'H' : 'M'), 'antiRekka'); return this.emit(); }
       }
       this.guardT = Math.max(this.guardT, 4); return this.holdGuard(me, o, pv);
     }
@@ -583,7 +584,8 @@
   AI.prototype.geminiPlans = function (me, o, dx, add, r, ag) {
     var P = this.P, st = gem(P, 'star'), tw = gem(P, 'twin'), bl = gem(P, 'blink'), dj = gem(P, 'dj');
     var pk = o.ch === 'gpt' && dx < 150 ? 0.25 : 1;   // no stars into a point-blank roar
-    if (me.proj === 0 && dx > 130) add('star', (0.6 + (dx > 210 ? 0.5 : 0)) * st * pk, this.special('star', dx > 210 ? 'L' : this.pick(['L', 'H'])));
+    var MUg = (prof('gemini').vs && prof('gemini').vs[o.ch]) || {}, sMin = MUg.starMin || 130;
+    if (me.proj === 0 && dx > sMin) add('star', (0.6 + (dx > 210 ? 0.5 : 0)) * st * pk * (MUg.star || 1), this.special('star', dx > 210 ? 'L' : this.pick(['L', 'H'])));
     if (me.proj === 0 && dx > 100 && (o.air || this.oppJumpy > 0.3)) add('starM', (0.5 + this.oppJumpy) * st * pk, this.special('star', 'M'));   // catches jumps
     if (me.proj === 0 && dx > 120 && dx < 220) add('starHrun', 0.25 * st * pk, this.special('star', 'H').concat([{ d: 6, n: 14 }]));
     // twin set-ups only out of quick-punish range (the gesture has 18 recovery frames); point-blank: oki only
