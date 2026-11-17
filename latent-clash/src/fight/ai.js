@@ -29,8 +29,13 @@
   var PROF = {
     claude:   { dp: 'sonnet',     want: D(92), jr: [D(70), D(130)], dashW: 0.8,  superR: D(200) },
     deepseek: { dp: 'breach',     want: D(60), jr: [D(70), D(150)], dashW: 0.9,  superR: D(120) },
-    gpt:      { dp: 'dragonRise', want: 80,    jr: [D(70), D(125)], dashW: 0.55, superR: 0, vs: { deepseek: { breath: 1.7 } } }   // vs: matchup plan multipliers (breath, tail, call)
+    gpt:      { dp: 'dragonRise', want: 80,    jr: [D(70), D(125)], dashW: 0.55, superR: 0, vs: { deepseek: { breath: 1.7 } } },   // vs: matchup plan multipliers (breath, tail, call)
+    gemini:   { dp: 'starRise',   want: 92,    jr: [D(70), D(140)], dashW: 1.0,  superR: 0 }
   };
+  // Gemini per-level plan multipliers (LV[i].gem; missing = 1): star zoning, twin set-ups, blink, double-jump
+  // approaches, hit-and-run retreats, pokes. vsTwin / vsBlink: the other CPUs' respect for a pending twin strike
+  // and their punish chance on blink recovery (LV[i].vsTwin, .vsBlink; missing = 1).
+  function gem(P, k) { return P.gem && P.gem[k] != null ? P.gem[k] : 1; }
   function prof(ch) { return PROF[ch] || PROF.claude; }
   F.AI_PROF = PROF;
 
@@ -47,8 +52,9 @@
 
   AI.prototype.setLevel = function (l) { this.level = F.clamp(l | 0 || 3, 1, 5); this.P = LV[this.level - 1]; };
 
-  AI.prototype.onContact = function (att, vic, what) {
+  AI.prototype.onContact = function (att, vic, what, h) {
     var me = this.m.f[this.side];
+    if (att === me && what === 'hit' && h && h.src === 'twin') { this.twinHitTick = this.m.tick; return; }   // not her own move
     if (att === me && what === 'hit') this.hitTick = this.m.tick;
     if (att === me && what === 'block') this.blockTick = this.m.tick;
   };
@@ -68,6 +74,9 @@
       if (o.mv.attn) ob.reach = 500;
     }
     if (o.mv && o.mv.cmdGrab) ob.grab = true;
+    if (o.twin) ob.twin = { id: o.twin.id, x: o.twin.x, left: F.twinLeft(o.twin), st: o.twin.st };   // Gemini's light-twin
+    if (o.mv && o.mv.blink) { var bsg = o.seg(); ob.blink = bsg ? bsg.id : null; ob.ph = ob.blink === 'recovery' ? 'recovery' : 'blink'; }
+    if (o.djT > 0) ob.dj = true;
     if (o.res && o.res.segs[0] && o.res.segs[0].vx) ob.lunge = o.res.segs[0].vx * o.res.segs[0].f;   // forward travel during start-up
     for (var i = 0; i < m.projs.length; i++) { var p = m.projs[i]; if (p.owner === o) ob.projs.push({ x: p.x, y: p.y, vx: p.vx }); }
     this.obs.push(ob);
@@ -123,10 +132,20 @@
     if (me.action === 'blockstun' && this.lastAct !== 'blockstun') { this.blkLog.push(m.tick); if (this.blkLog.length > 6) this.blkLog.shift(); }
     this.lastAct = me.action;
     this.oppGuard = this.oppGuard * 0.985 + ((o.action === 'guard' || o.action === 'blockstun') ? 0.015 : 0);   // ~ share of time the opponent spends guarding
+    if (o.action === 'jumpSquat' && o.af === 1) this.oppJumpy = (this.oppJumpy || 0) * 0.7 + 0.3; else if ((m.tick & 63) === 0) this.oppJumpy = (this.oppJumpy || 0) * 0.9;
     if (me.action !== 'thrown') this.techTried = false;
     if (me.action === 'thrown' && !this.techTried) {
       this.techTried = true;
       if (this.chance(this.P.tech)) { this.q.length = 0; this.push([{ d: 5, n: 2 + this.rng.int(3), b: '' }, { d: 5, b: 'LM', n: 2 }]); }
+    }
+    if (this.gsrcT > 0) this.gsrcT--;
+    var pv0 = this.seen();
+    if (pv0 && pv0.twin && pv0.twin.id !== this.twinRolled && pv0.twin.left >= 0) {   // a pending twin strike near me
+      var est = pv0.twin.left - this.P.react;
+      if (est <= 14 && est >= -6 && Math.abs(pv0.twin.x - me.x) < 100) {
+        this.twinRolled = pv0.twin.id;
+        if (this.chance(Math.min(0.97, this.P.block * (this.P.vsTwin != null ? this.P.vsTwin : 1) + 0.08))) { this.gsrc = pv0.twin.x; this.gsrcT = Math.max(6, est + 10); }
+      }
     }
     if (this.q.length) return this.emit();
     var pv = this.seen();
@@ -162,7 +181,8 @@
     if (this.guardT > 0) this.guardT--;
     this.guardLow = low;
     var out = {};
-    if (o.x > me.x) out.left = true; else out.right = true;
+    var sx = this.gsrcT > 0 && this.gsrc != null ? this.gsrc : o.x;   // the twin's side while it is about to claw
+    if (sx > me.x) out.left = true; else out.right = true;
     if (low) out.down = true;
     return out;
   };
@@ -194,6 +214,17 @@
       this.diveRolled = pv.x;
       if (this.chance(P.block * (P.gDive != null ? P.gDive : 0.8))) { this.q.length = 0; this.push(this.special('roar', 'H'), 'roarDive'); return this.emit(); }
     }
+    // vs a pending twin strike (rolled in think): move away when it is on her side and there is room, else guard
+    if (this.gsrcT > 0) {
+      var twSide = F.sign(this.gsrc - me.x), herSide = F.sign(o.x - me.x);
+      if (twSide === herSide && this.gsrcT > 10 && me.x > T.WALL + 60 && me.x < LC.STAGE_W - T.WALL - 60 && this.escTw !== this.twinRolled && this.chance(0.35)) {
+        this.escTw = this.twinRolled; this.gsrcT = 0;
+        this.push([{ d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }], 'twinAvoid'); return this.emit();
+      }
+      this.guardLow = true;
+      return this.holdGuard(me, o, null);
+    }
+    if (C === 'gemini') { var gs = this.geminiNow(me, o, pv, dx); if (gs) return gs; }
     // keep guarding briefly once committed
     if (this.guardT > 0) {
       var tn = this.threat(me, pv, dx);
@@ -239,7 +270,8 @@
     if (pv && pv.act === 'attack' && pv.ph === 'recovery' && pv.hit !== 'hit' && this.punRolled !== pv.mv + pv.x) {
       this.punRolled = pv.mv + pv.x;
       var whiffCall = pv.mv === 'call' && o.action === 'attack' && o.mv && o.mv.id === 'call';   // 30f recovery: dash in if needed
-      if (this.chance(Math.min(0.97, (C === 'claude' && P.cPun ? P.cPun : P.punish) + (whiffCall ? 0.25 : 0)))) {
+      var blinkPun = pv.blink === 'recovery' ? (P.vsBlink != null ? P.vsBlink : 1) : 1;
+      if (this.chance(Math.min(0.97, ((C === 'claude' && P.cPun ? P.cPun : P.punish) + (whiffCall ? 0.25 : 0)) * blinkPun))) {
         var pp = this.punisher(me, dx, o);
         if (!pp && whiffCall && dx < this.reachOf(me, '5H') + 70) pp = [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 12 }].concat(this.press('H'));
         if (pp) { this.push(pp, 'punish'); this.comboStep = 0; return this.emit(); }
@@ -349,6 +381,11 @@
     if (dx <= r('5M') && dx > r('5L') - 10) add('5M', 0.8, this.press('M'));
     if (dx <= r('2M') && dx > r('2L') - 10) add('2M', 0.8, this.press('M', 2));
     var MU = (PF.vs && PF.vs[o.ch]) || {};   // matchup multipliers
+    if (o.twin && o.twin.st !== 'super' && C !== 'gemini') {   // hit her to dispel the twin
+      var dsp = P.vsDispel != null ? P.vsDispel : 1;
+      if (dx <= r('5M') + 6) add('dispel', 0.9 * dsp, this.press(dx <= r('5L') ? 'L' : 'M', this.chance(0.5) ? 2 : 5));
+      else if (dx < D(110) && Math.abs(o.twin.x - me.x) > 70) add('dispelDash', 0.5 * dsp, [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 8 }].concat(this.press('M')));
+    }
     var gT = C === 'gpt' ? (P.gTail != null ? P.gTail : 1.8) * (MU.tail || 1) : 1;   // GPT: patient spacing with the long tail
     if (dx <= r('5H') && dx > r('5M') - 8) add('5H', 0.35 * gT, this.press('H'));
     if (dx <= r('2H') && dx > r('2M') - 8) add('2H', 0.3 * gT, this.press('H', 3));
@@ -361,6 +398,8 @@
       if (me.proj === 0 && dx > D(70) && dx <= D(120)) add('spark', 0.35 * pk, this.special('spark', 'H'));
       if (dx < D(80) && dx > D(30)) add('haiku', P.cHaiku, this.special('haiku', this.pick(['L', 'M'])));   // unsafe raw; mostly a combo ender
       if (dx < D(70) && this.level >= 3) add('guardrail', P.cGuard + (o.action === 'attack' ? 0.1 : 0), this.special('guardrail', this.pick(['L', 'M'])));
+    } else if (C === 'gemini') {
+      this.geminiPlans(me, o, dx, add, r, ag);
     } else if (C === 'gpt') {
       var og = this.oppGuard, gC = (P.gCall != null ? P.gCall : 1) * (MU.call || 1), gB = (P.gBreath != null ? P.gBreath : 1) * (MU.breath || 1);
       if (dx > 62 && dx < 145) add('breath', (0.45 + (dx > 95 ? 0.25 : 0)) * gB, this.special('breath', dx < 95 ? 'L' : dx < 120 ? 'M' : 'H'));
@@ -398,6 +437,7 @@
     if (me.ch === 'gpt' && this.jumpAtk && me.vy > -1.5 && h > 44 && dx > 40 && dx < 120 && toward && !o.air && this.chance(0.12 * (this.P.gAir != null ? this.P.gAir : 1))) {
       this.jumpAtk = false; this.push(this.special('airBreath', dx > 90 ? 'H' : dx > 65 ? 'M' : 'L'), 'airBreath'); return this.emit();
     }
+    if (me.ch === 'gemini') { var ga = this.geminiAir(me, o, pv, dx, h, toward); if (ga) return ga; }
     if (me.ch === 'claude' && this.jumpAtk && me.vy > -1 && h > D(30) && dx > D(110) && me.proj === 0 && this.chance(0.05)) {
       this.jumpAtk = false; this.push(this.special('airSpark', 'M'), 'airSpark'); return this.emit();
     }
@@ -430,6 +470,13 @@
         this.q.length = 0; this.push([{ d: 5, n: Math.max(1, rem - 4) }].concat(this.special('call', 'M')), 'tickCall');
         return {};
       }
+      if (blk && C === 'gemini' && this.chance(0.3 * gem(P, 'run'))) {   // hit-and-run: poke, then leave
+        var rem2 = me.res.total - me.mf - 1;
+        this.q.length = 0;
+        if (this.chance(0.5) || me.x < T.WALL + 70 || me.x > LC.STAGE_W - T.WALL - 70) this.push([{ d: 5, n: Math.max(1, rem2 - 2) }].concat(this.special('blink', this.cornered(me, o) ? 'M' : 'L')), 'runBlink');
+        else this.push([{ d: 5, n: Math.max(1, rem2) }, { d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }], 'runDash');
+        return {};
+      }
       if (blk && this.chance(0.5)) {
         if (mv.rank < 2 && this.chance(0.5)) next = this.press('M', mv.stance === 'crouch' ? 2 : 5);
         else if (C === 'claude' && me.proj === 0 && this.chance(0.4)) next = this.special('spark', 'M');
@@ -457,7 +504,84 @@
     if (full && this.P.depth >= 3 && this.chance(this.P.sup * 0.5)) return this.special('super', 'H');
     if (C === 'claude') return dx < D(70) ? this.special('haiku', this.level >= 4 ? 'H' : 'M') : (me.proj === 0 ? this.special('spark', 'H') : null);
     if (C === 'gpt') return dx < 60 && this.chance(0.45) ? this.special('dragonRise', 'H') : (dx < 130 ? this.special('breath', dx < 90 ? 'M' : 'H') : null);
+    if (C === 'gemini') return dx < 56 && this.chance(0.55) ? this.special('starRise', this.level >= 4 ? 'H' : 'M') : (me.proj === 0 && dx < 150 ? this.special('star', 'H') : null);
     return dx < D(80) ? (this.chance(0.7) ? this.special('chain', 'H') : this.special('breach', 'H')) : (me.proj === 0 ? this.special('wave', 'H') : null);
+  };
+
+  // ------------------------------------------------------------------ Gemini
+  AI.prototype.cornered = function (me, o) {
+    var away = F.sign(me.x - o.x) || -me.facing;
+    return away > 0 ? me.x > LC.STAGE_W - T.WALL - 64 : me.x < T.WALL + 64;
+  };
+  // every tick (before the decision gate): follow a twin hit, time her pressure with her own twin, swap
+  AI.prototype.geminiNow = function (me, o, pv, dx) {
+    var P = this.P, m = this.m, tw = me.twin;
+    // the twin landed: link into a chain (5M / 2M) or dash in
+    if (this.twinHitTick != null && m.tick - this.twinHitTick < 12 && (o.action === 'hitstun' || o.action === 'caught') && this.tcRolled !== this.twinHitTick) {
+      this.tcRolled = this.twinHitTick;
+      if (this.chance(0.35 + 0.15 * P.depth)) {
+        if (dx <= this.reachOf(me, '5M') + 8) { this.push(this.press('M', this.chance(0.5) ? 2 : 5), 'twinConfirm'); this.comboStep = 1; return this.emit(); }
+        if (dx < 130) { this.push([{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 7 }].concat(this.press('L')), 'twinConfirmDash'); return this.emit(); }
+      }
+    }
+    if (!tw || tw.st === 'super') return null;
+    var left = F.twinLeft(tw);
+    // pressure / cross-up timing: her low / mid / throw lands a few frames before or after the twin
+    // (never within TWIN_GRACE: that would be forgiven anyway)
+    if (left >= 0 && this.twSet !== tw.id) {
+      var close = dx <= this.reachOf(me, '2M') + 6, tside = F.sign(tw.x - o.x) !== F.sign(me.x - o.x);
+      if (close && (left === 10 || left === 2) && !o.air) {
+        this.twSet = tw.id;
+        if (this.chance(0.55 + 0.1 * P.depth) * gem(P, 'twin')) {
+          var k = this.rng.next();
+          if (k < 0.45) this.push(this.press(dx <= this.reachOf(me, '2L') + 6 ? 'L' : 'M', 2), tside ? 'twinXlow' : 'twinLow');
+          else if (k < 0.75) this.push(this.press(dx <= this.reachOf(me, '5L') + 6 ? 'L' : 'M', 5), tside ? 'twinXmid' : 'twinMid');
+          else if (dx < me.C.throwRange - 2) this.push([{ d: 6, b: 'LM', n: 2 }, { d: 5, n: 1 }], 'twinThrow');
+          else this.push(this.press('M', 2), 'twinLow');
+          return this.emit();
+        }
+      }
+      // approach so the pressure lands with the twin (H twin behind them: walk / dash in)
+      if (!close && left > 12 && left < 40 && dx < 150 && !o.air && this.chance(0.08)) { this.push([{ d: 6, n: Math.min(14, left - 10) }], 'twinApproach'); return this.emit(); }
+    }
+    // H swap: the twin stands across the opponent and she is pressured / far away
+    if (left > 14 && this.swRolled !== tw.id && F.sign(tw.x - o.x) !== F.sign(me.x - o.x) && Math.abs(tw.x - o.x) < 90 && dx > 60 && this.level >= 2) {
+      this.swRolled = tw.id;
+      if (this.chance(0.25 * gem(P, 'blink'))) { this.push(this.special('blink', 'H'), 'swap'); return this.emit(); }
+    }
+    return null;
+  };
+  AI.prototype.geminiPlans = function (me, o, dx, add, r, ag) {
+    var P = this.P, st = gem(P, 'star'), tw = gem(P, 'twin'), bl = gem(P, 'blink'), dj = gem(P, 'dj');
+    var pk = o.ch === 'gpt' && dx < 150 ? 0.25 : 1;   // no stars into a point-blank roar
+    if (me.proj === 0 && dx > 130) add('star', (0.6 + (dx > 210 ? 0.5 : 0)) * st * pk, this.special('star', dx > 210 ? 'L' : this.pick(['L', 'H'])));
+    if (me.proj === 0 && dx > 100 && (o.air || this.oppJumpy > 0.3)) add('starM', (0.5 + this.oppJumpy) * st * pk, this.special('star', 'M'));   // catches jumps
+    if (me.proj === 0 && dx > 120 && dx < 220) add('starHrun', 0.25 * st * pk, this.special('star', 'H').concat([{ d: 6, n: 14 }]));
+    if (!me.twin && o.action !== 'attack') {
+      if (dx < 76) add('twinL', 0.3 * tw, this.special('twin', 'L'));
+      if (dx > 70 && dx < 150) add('twinM', 0.22 * tw, this.special('twin', 'M'));
+      if (dx > 50 && dx < 200 && this.level >= 2) add('twinH', (0.22 + ag * 0.1) * tw, this.special('twin', 'H'));
+    }
+    if (dx > 60 && dx < 140 && o.action === 'attack') add('blinkM', 0.25 * bl, this.special('blink', 'M'));   // through them
+    if (this.cornered(me, o) && dx < 90) add('blinkEsc', 0.45 * bl, this.special('blink', 'M'));
+    if (dx < 70 && !this.cornered(me, o)) add('blinkL', 0.12 * bl, this.special('blink', 'L'));
+    if (!me.twin && dx > 80 && dx < 220 && this.level >= 3) add('blinkAir', 0.06 * bl, this.special('blink', 'H'));
+    if (dx > D(110) && dx < D(190)) add('djIn', P.jump * 3 * dj * (0.6 + ag), [{ d: 9, n: 3 }]);
+  };
+  AI.prototype.geminiAir = function (me, o, pv, dx, h, toward) {
+    var P = this.P;
+    if (!me.djUsed && me.C.airJump && h > 20) {
+      // bait an anti-air: the opponent starts a rising special under her -> double jump away
+      if (pv && pv.act === 'attack' && pv.kind === 'special' && pv.mv === prof(o.ch).dp && dx < 100 && this.djbRolled !== pv) {
+        this.djbRolled = pv;
+        if (this.chance(0.3 * gem(P, 'dj') * P.block)) { this.push([{ d: 5, n: 1 }, { d: 7, n: 2 }], 'djBack'); return this.emit(); }
+      }
+      if (this.jumpAtk === 'djIn' && me.vy > -1.2 && toward && dx > 50) { this.jumpAtk = 'djIn2'; this.push([{ d: 5, n: 1 }, { d: 9, n: 2 }], 'dj'); return this.emit(); }
+    }
+    if (this.jumpAtk && me.proj === 0 && me.vy > -1.5 && h > 44 && dx > 80 && dx < 190 && toward && this.chance(0.08 * gem(P, 'star'))) {
+      this.jumpAtk = false; this.push(this.special('airStar', dx > 150 ? 'H' : dx > 115 ? 'M' : 'L'), 'airStar'); return this.emit();
+    }
+    return null;
   };
 
   // ------------------------------------------------------------------ wake-up
@@ -473,6 +597,7 @@
     var vsG = o.ch === 'gpt' && me.ch !== 'gpt' && dx < 72 ? (this.P.vsWake != null ? this.P.vsWake : 0.1) : 0;   // her meaty command grab
     if (close && r < 0.08 + this.level * 0.03) { this.push(this.special(prof(me.ch).dp, 'H'), 'reversal'); return this.emit(); }
     if (me.ch === 'gpt' && close && !oAtk && r < 0.16 + this.level * 0.02) { this.push(this.special('roar', 'H'), 'wakeRoar'); return this.emit(); }
+    if (me.ch === 'gemini' && close && r < 0.2 + this.level * 0.02) { this.push(this.special('blink', this.cornered(me, o) || this.chance(0.5) ? 'M' : 'L'), 'wakeBlink'); return this.emit(); }
     if (close && r < 0.18 + this.level * 0.03 + vsG) { this.push([{ d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }], 'wakeBack'); return this.emit(); }
     if (vsG && r < 0.18 + this.level * 0.03 + 2 * vsG) { this.push([{ d: 7, n: 3 }], 'wakeJump'); return this.emit(); }
     if (close && !oAtk && r < 0.3) { this.push([{ d: 6, b: 'LM', n: 2 }, { d: 5, n: 1 }], 'wakeThrow'); return this.emit(); }

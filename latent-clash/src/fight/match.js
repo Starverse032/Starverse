@@ -206,8 +206,8 @@
         if (td.startMove && att.side === 0 && td.startTick != null && att.mf != null) td.startup = att.mf + 1;
       }
     }
-    if (this.ai[0]) this.ai[0].onContact(att, vic, what);
-    if (this.ai[1]) this.ai[1].onContact(att, vic, what);
+    if (this.ai[0]) this.ai[0].onContact(att, vic, what, h);
+    if (this.ai[1]) this.ai[1].onContact(att, vic, what, h);
   };
 
   // ------------------------------------------------------------------ inputs
