@@ -124,6 +124,8 @@
         }
       }
       tw.mf++;
+      var lg = f.C.moves.twinStrike.lunge || 0;   // the pounce: forward travel during start-up
+      if (sg.id === 'startup' && lg) { tw.vx = lg * tw.facing; tw.x = F.clamp(tw.x + tw.vx, lo(), hi()); } else tw.vx = 0;
       if (sg.id === 'active' && !tw.hitDone) twinHit(m, f, tw, o);
     }
   }

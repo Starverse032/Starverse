@@ -123,9 +123,9 @@
         twin: { seg: 'active', wait: { L: 28, M: 8, H: 36 }, dash: 110, dashF: 14, stopAt: 36, behind: 34, near: 200 },
         cancel: 'super'
       },
-      // performed by the twin (never by her): one mid claw, 70 damage, combo-able stun
+      // performed by the twin (never by her): a pouncing mid claw, 70 damage, combo-able stun
       twinStrike: {
-        kind: 'special', internal: true, lore: 'twin', anim: 'twinStrike',
+        kind: 'special', internal: true, lore: 'twin', anim: 'twinStrike', lunge: 2,   // pounces 16 px during start-up
         segs: [['startup', 8], ['active', 4], ['recovery', 14]],
         hits: [{ seg: 'active', box: [14, -62, 34, 30], dmg: 70, lv: 'S', guard: 'mid', stun: [26, 16], push: [6, 10], src: 'twin',
           chip: 0.2, fx: 'gemini.clawHit', fx2: 'hit.special' }]
