@@ -15,9 +15,14 @@
   starRise, vs-DeepSeek star range 160, vs-Claude jump ×.4 → L3 Claude–Gemini 48.7 %, L5 54.0 % (n = 150).
   Regression: the three old pairings give bit-identical tables to the pre-Gemini engine (HEAD-snapshot copy, same
   seeds, `--chars=claude,deepseek,gpt --n=40 --levels=1,3,5`).
-- [ ] 3 sim / combos extended, balance (L1/L3/L5), no loops
+- [~] 3 sim (`--chars` default = 4 fighters, pair order keeps old seeds, twin hit/block counts, `--eval`) and combos
+  (Gemini 6 combos incl. 2 with the twin, `T` step; mix check twin H (+ blink swap) + her 2L/5L at k = −6..6: no
+  unblockable — gaps ≤ 3 ticks blockable with one fixed guard, larger gaps need a guard switch; oki check 2H > 214H
+  meaty twin + throw: every timing has an escape (guard toward the twin, reversal), works vs no defence) — all OK
+  (77 real `--all`, 39 stubs). Twin H wait 36 → 39 (claw ≈ 47f after spawn: 2H > 214H is a true meaty).
+  Grace window counted in ticks (block-stop does not extend it). Final balance runs: pending.
 - [ ] 4 shots
-- [ ] 5 notes, `getMoveList('gemini')`
+- [x] 5 `getMoveList('gemini')` (double jump row, star 65/65/90 (H = 2 hits), airStar, twin = twinStrike 70, super 320)
 
 ## GPT progress / next steps (CONTRACT-V2 §V2.5 — keep truthful, updated as work lands)
 - [x] 1 roster generalisation (code): unknown ids fall back to the first registered `LC.CHARS` entry with a
