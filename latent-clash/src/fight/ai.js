@@ -18,11 +18,11 @@
   // cGuard guardrail base, cSpark zoning spark, cPun whiff/block-punish chance (overrides punish),
   // cMash / cThrow (L1: her mashed reach + throws over-performed). dChain = DeepSeek rekka plan weight (L2).
   var LV = [
-    { react: 28, block: 0.12, guess: 0.5, aa: 0.04, punish: 0.06, depth: 0, confirm: 30, tech: 0.03, sup: 0.15, think: 16, aggr: 0.45, jump: 0.10, mash: 0.35, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 0.6, cMash: 0.4, cThrow: 0.6, gWalk: 0.8, gJump: 1 },
-    { react: 22, block: 0.32, guess: 0.55, aa: 0.18, punish: 0.25, depth: 1, confirm: 16, tech: 0.10, sup: 0.35, think: 11, aggr: 0.50, jump: 0.09, mash: 0.15, cJump: 0.3, cHaiku: 0.04, cGuard: 0.12, cSpark: 1.4, cPun: 0.5, cThrow: 0.4, cMash: 2, dChain: 0.4, gWalk: 0.4 },
-    { react: 17, block: 0.58, guess: 0.64, aa: 0.42, punish: 0.5, depth: 2, confirm: 10, tech: 0.25, sup: 0.65, think: 8, aggr: 0.55, jump: 0.08, mash: 0.05, cJump: 0.3, cHaiku: 0.02, cGuard: 0.12, cSpark: 1.5, cPun: 0.8, gWalk: 0.35 },
-    { react: 13, block: 0.76, guess: 0.72, aa: 0.62, punish: 0.72, depth: 3, confirm: 7, tech: 0.40, sup: 0.85, think: 6, aggr: 0.6, jump: 0.07, mash: 0, cJump: 0.3, cHaiku: 0.03, cGuard: 0.12, cSpark: 1.5, cPun: 0.95, gWalk: 0.2 },
-    { react: 10, block: 0.88, guess: 0.8, aa: 0.78, punish: 0.86, depth: 3, confirm: 5, tech: 0.55, sup: 1.0, think: 4, aggr: 0.62, jump: 0.06, mash: 0, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 1, gWalk: 0.15 }
+    { react: 28, block: 0.12, guess: 0.5, aa: 0.04, punish: 0.06, depth: 0, confirm: 30, tech: 0.03, sup: 0.15, think: 16, aggr: 0.45, jump: 0.10, mash: 0.35, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 0.6, cMash: 0.4, cThrow: 0.6, gWalk: 0.8, gJump: 1 , gem: { walk: 0.35, dash: 0.4 } },
+    { react: 22, block: 0.32, guess: 0.55, aa: 0.18, punish: 0.25, depth: 1, confirm: 16, tech: 0.10, sup: 0.35, think: 11, aggr: 0.50, jump: 0.09, mash: 0.15, cJump: 0.3, cHaiku: 0.04, cGuard: 0.12, cSpark: 1.4, cPun: 0.5, cThrow: 0.4, cMash: 2, dChain: 0.4, gWalk: 0.4 , gem: { walk: 0.35, dash: 0.4 } },
+    { react: 17, block: 0.58, guess: 0.64, aa: 0.42, punish: 0.5, depth: 2, confirm: 10, tech: 0.25, sup: 0.65, think: 8, aggr: 0.55, jump: 0.08, mash: 0.05, cJump: 0.3, cHaiku: 0.02, cGuard: 0.12, cSpark: 1.5, cPun: 0.8, gWalk: 0.35 , gem: { walk: 0.35, dash: 0.4 } },
+    { react: 13, block: 0.76, guess: 0.72, aa: 0.62, punish: 0.72, depth: 3, confirm: 7, tech: 0.40, sup: 0.85, think: 6, aggr: 0.6, jump: 0.07, mash: 0, cJump: 0.3, cHaiku: 0.03, cGuard: 0.12, cSpark: 1.5, cPun: 0.95, gWalk: 0.2 , gem: { walk: 0.35, dash: 0.4 } },
+    { react: 10, block: 0.88, guess: 0.8, aa: 0.78, punish: 0.86, depth: 3, confirm: 5, tech: 0.55, sup: 1.0, think: 4, aggr: 0.62, jump: 0.06, mash: 0, cJump: 0.55, cHaiku: 0.1, cGuard: 0.12, cSpark: 1, gWalk: 0.15 , gem: { walk: 0.35, dash: 0.4 } }
   ];
 
   // per-character neutral profile (distances in px; D() = V1 constants scaled for the V2 bodies)
@@ -289,6 +289,14 @@
     // opponent knocked down: approach or set up
     if (o.action === 'down' || o.action === 'getup') {
       if (dx > D(90)) { if (C === 'claude' && me.proj === 0 && this.chance(0.04)) { this.push(this.special('spark', 'L'), 'oki'); return this.emit(); } return { right: o.x > me.x, left: o.x < me.x }; }
+      if (C === 'gemini' && !me.twin && o.action === 'down' && !o.ko && this.okiTw !== this.m.round + ':' + (this.m.tick - o.af)) {
+        // meaty twin on wake-up: L strikes ≈ 47f after the press, H ≈ 55f (down 10 + lie 26 + get-up 24 = 60)
+        var okT = dx < 80 ? 13 : 5;
+        if (o.af === okT && dx < 200) {
+          this.okiTw = this.m.round + ':' + (this.m.tick - o.af);
+          if (this.chance(0.5 * gem(P, 'twin') + 0.1 * P.depth)) { this.push(this.special('twin', dx < 80 ? 'L' : 'H'), 'okiTwin'); return this.emit(); }
+        }
+      }
       if (C === 'gpt' && o.action === 'getup' && dx < 62 && o.af >= T.GETUP - 7 && this.okiRolled !== this.m.round + ':' + (this.m.tick - o.af)) {
         this.okiRolled = this.m.round + ':' + (this.m.tick - o.af);
         var ok = this.rng.next();   // meaty mix-up: command grab / low / tail lash / wait
@@ -367,11 +375,12 @@
     var full = me.meter >= 100;
     // universal
     var isG = C === 'gpt', gW = isG ? (P.gWalk != null ? P.gWalk : 0.15) : 1;   // GPT: patient, lets them come
-    add('walkF', (0.6 + ag * 0.6) * (isG && dx < 150 ? gW : 1), [{ d: 6, n: 10 + this.rng.int(20) }]);
+    var isN = C === 'gemini', nW = isN ? gem(P, 'walk') : 1, nD = isN ? gem(P, 'dash') : 1;   // Gemini: hit-and-run, not a rushdown
+    add('walkF', (0.6 + ag * 0.6) * (isG && dx < 150 ? gW : 1) * nW, [{ d: 6, n: 10 + this.rng.int(20) }]);
     add('walkB', dx < D(120) ? 0.35 : 0.1, [{ d: 4, n: 8 + this.rng.int(14) }]);
     add('wait', 0.25 * (1 - ag) + (isG ? (P.gWait != null ? P.gWait : 0.5) : 0), [{ d: dx < D(80) ? 1 : 4, n: 8 + this.rng.int(12) }]);
     var PF = prof(C), vsG = o.ch === 'gpt' && C !== 'gpt';
-    if (dx > D(70)) add('dashF', (0.25 + ag * 0.4 * PF.dashW) * (isG && dx < 170 ? gW : 1), [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 1 }]);
+    if (dx > D(70)) add('dashF', (0.25 + ag * 0.4 * PF.dashW) * (isG && dx < 170 ? gW : 1) * nD, [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 1 }]);
     if (dx < D(70) && me.x > T.WALL + 60 && me.x < LC.STAGE_W - T.WALL - 60) add('dashB', 0.15, [{ d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }]);
     var jr = PF.jr;
     if (dx > jr[0] && dx < jr[1]) add('jumpIn', P.jump * 4 * (0.6 + ag) * (C === 'claude' ? P.cJump : isG ? (P.gJump != null ? P.gJump : 0.25) : 1), [{ d: 9, n: 3 }]);   // V2: DeepSeek's breach box anti-airs Claude's jump-ins well
