@@ -43,7 +43,7 @@
     claude:   { dp: 'sonnet',     want: D(92), jr: [D(70), D(130)], dashW: 0.8,  superR: D(200) },
     deepseek: { dp: 'breach',     want: D(60), jr: [D(70), D(150)], dashW: 0.9,  superR: D(120) },
     gpt:      { dp: 'dragonRise', want: 80,    jr: [D(70), D(125)], dashW: 0.55, superR: 0, vs: { deepseek: { breath: 1.7 } } },   // vs: matchup plan multipliers (breath, tail, call)
-    gemini:   { dp: 'starRise',   want: 92,    jr: [D(70), D(140)], dashW: 1.0,  superR: 0, vs: { deepseek: { starMin: 160 } } }
+    gemini:   { dp: 'starRise',   want: 92,    jr: [D(70), D(140)], dashW: 1.0,  superR: 0, vs: { deepseek: { starMin: 160 }, claude: { jump: 0.4 } } }
   };
   // Gemini per-level plan multipliers (LV[i].gem; missing = 1): star zoning, twin set-ups, blink, double-jump
   // approaches, hit-and-run retreats, pokes. vsTwin / vsBlink: the other CPUs' respect for a pending twin strike
@@ -395,6 +395,7 @@
     // universal
     var isG = C === 'gpt', gW = isG ? (P.gWalk != null ? P.gWalk : 0.15) : 1;   // GPT: patient, lets them come
     var isN = C === 'gemini', nW = isN ? gem(P, 'walk') : 1, nD = isN ? gem(P, 'dash') : 1;   // Gemini: hit-and-run, not a rushdown
+    var nMU = isN ? ((PROF.gemini.vs && PROF.gemini.vs[o.ch]) || {}) : {}, nJ = isN ? gem(P, 'jump') * (nMU.jump || 1) : 1;
     var twP = isN && me.twin && me.twin.st !== 'super' && F.twinLeft(me.twin) > 12;   // her twin is still waiting: stay safe
     if (twP) { nW *= 0.3; nD *= 0.3; add('twinWait', 1.2 * gem(P, 'wait'), [{ d: dx < D(80) ? 1 : 4, n: 6 + this.rng.int(8) }]); }
     add('walkF', (0.6 + ag * 0.6) * (isG && dx < 150 ? gW : 1) * nW, [{ d: 6, n: 10 + this.rng.int(20) }]);
@@ -404,7 +405,7 @@
     if (dx > D(70)) add('dashF', (0.25 + ag * 0.4 * PF.dashW) * (isG && dx < 170 ? gW : 1) * nD, [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 1 }]);
     if (dx < D(70) && me.x > T.WALL + 60 && me.x < LC.STAGE_W - T.WALL - 60) add('dashB', 0.15, [{ d: 4, n: 2 }, { d: 5, n: 2 }, { d: 4, n: 2 }, { d: 5, n: 1 }]);
     var jr = PF.jr;
-    if (dx > jr[0] && dx < jr[1]) add('jumpIn', P.jump * 4 * (0.6 + ag) * (C === 'claude' ? P.cJump : isG ? (P.gJump != null ? P.gJump : 0.25) : isN ? gem(P, 'jump') : 1), [{ d: 9, n: 3 }]);   // V2: DeepSeek's breach box anti-airs Claude's jump-ins well
+    if (dx > jr[0] && dx < jr[1]) add('jumpIn', P.jump * 4 * (0.6 + ag) * (C === 'claude' ? P.cJump : isG ? (P.gJump != null ? P.gJump : 0.25) : isN ? nJ : 1), [{ d: 9, n: 3 }]);   // V2: DeepSeek's breach box anti-airs Claude's jump-ins well
     if (dx < D(70)) add('jumpN', P.jump * (C === 'claude' ? P.cJump / 0.55 : 1), [{ d: 8, n: 3 }]);
     // pokes at range
     if (dx <= r('5L')) { add('5L', 0.7, this.press('L')); add('2L', 0.7, this.press('L', 2)); }
@@ -599,7 +600,8 @@
     if (this.cornered(me, o) && dx < 90) add('blinkEsc', 0.45 * bl, this.special('blink', 'M'));
     if (dx < 70 && !this.cornered(me, o)) add('blinkL', 0.12 * bl, this.special('blink', 'L'));
     if (!me.twin && dx > 80 && dx < 220 && this.level >= 3) add('blinkAir', 0.06 * bl, this.special('blink', 'H'));
-    if (dx > D(110) && dx < D(190)) add('djIn', P.jump * 3 * dj * gem(P, 'jump') * (0.6 + ag), [{ d: 9, n: 3 }]);
+    var MUj = ((PROF.gemini.vs && PROF.gemini.vs[o.ch]) || {}).jump || 1;
+    if (dx > D(110) && dx < D(190)) add('djIn', P.jump * 3 * dj * gem(P, 'jump') * MUj * (0.6 + ag), [{ d: 9, n: 3 }]);
   };
   AI.prototype.geminiAir = function (me, o, pv, dx, h, toward) {
     var P = this.P;
