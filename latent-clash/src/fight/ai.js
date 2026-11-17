@@ -267,6 +267,11 @@
           if (arrive < 76 && est > 24 && this.chance((P.block * 0.6 + 0.1) * (P.gRoar || 1))) { this.push(this.special('roar', arrive < 50 ? 'L' : 'M'), 'roarProj'); return this.emit(); }
           if (est >= 76 && this.chance(0.6)) return this.holdGuard(me, o, null);   // wait for it
         }
+        if (C === 'gemini') {   // clash with a star, blink through it (invulnerable), else block — rarely jump
+          if (pd > D(40) && me.proj === 0 && this.chance(P.block * 0.35 * gem(P, 'star'))) { this.push(this.special('star', 'L'), 'clash'); return this.emit(); }
+          if (pd > 30 && pd < 80 && dx < 220 && this.chance(P.block * 0.25 * gem(P, 'blink'))) { this.push(this.special('blink', 'M'), 'blinkProj'); return this.emit(); }
+          if (this.chance(P.block + 0.15)) { this.guardT = 12; this.guardLow = true; return this.holdGuard(me, o, null); }
+        }
         if (pd > D(50) && pd < D(110) && dx > D(110) && this.chance(P.block * 0.35)) { this.push([{ d: 9, n: 3 }], 'jumpProj'); this.jumpAtk = true; return this.emit(); }
         if (this.chance(P.block + 0.1)) { this.guardT = 12; this.guardLow = true; return this.holdGuard(me, o, null); }
       }
