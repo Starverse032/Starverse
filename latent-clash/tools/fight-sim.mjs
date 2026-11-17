@@ -4,6 +4,7 @@
  * invariants every tick, checks determinism, and prints a balance table.
  *
  *   node tools/fight-sim.mjs [--n=12] [--levels=1,3,5] [--real] [--seed=1] [--draw] [--pairs=claude-gpt,deepseek-gpt] [--mirror]
+ *     --chars   roster (default claude,deepseek,gpt,gemini); --oldorder = the pre-Gemini pair order (i < j)
  *     --n       matches per (character pair, level, side) (each pairing runs both side assignments)
  *     --pairs   character pairs (default: every cross pairing of the roster); --mirror adds a-vs-a
  *     --levels  equal-level pairings to test
@@ -22,10 +23,13 @@ const args = Object.fromEntries(process.argv.slice(2).map(a => { const b = a.rep
 const N = +(args.n || 12);
 const LEVELS = String(args.levels || '1,3,5').split(',').map(Number);
 const SEED = +(args.seed || 1);
-const ROSTER = String(args.chars || 'claude,deepseek,gpt').split(',');
+const ROSTER = String(args.chars || 'claude,deepseek,gpt,gemini').split(',');
 let PAIRS = [];
+// pair order: by the later character first (cd, cg, dg, c-gem, d-gem, g-gem), so adding a fighter keeps the
+// seeds of the existing pairings (same --seed -> same results for them)
 if (args.pairs) PAIRS = String(args.pairs).split(',').map(p => p.split('-'));
-else for (let i = 0; i < ROSTER.length; i++) for (let j = i + 1; j < ROSTER.length; j++) PAIRS.push([ROSTER[i], ROSTER[j]]);
+else if (args.oldorder) for (let i = 0; i < ROSTER.length; i++) for (let j = i + 1; j < ROSTER.length; j++) PAIRS.push([ROSTER[i], ROSTER[j]]);
+else for (let j = 1; j < ROSTER.length; j++) for (let i = 0; i < j; i++) PAIRS.push([ROSTER[i], ROSTER[j]]);
 if (args.mirror) for (const c of ROSTER) PAIRS.push([c, c]);
 const url = 'file://' + root + '/dev/fight-sandbox.html?manual=1' + (args.real ? '' : '&stubs=all');
 
@@ -43,7 +47,7 @@ function pageRunner() {
     if (opts.plans) for (let s = 0; s < 2; s++) if (m.ai[s]) { const ai = m.ai[s], pu = ai.push; ai.push = function (st, name) { if (name) plans[s][name] = (plans[s][name] || 0) + 1; return pu.call(this, st, name); }; }
     const dmgBy = [{}, {}], oc = m.onContact;
     m.onContact = function (att, vic, what, dmg, h, kind, counter) {
-      if (what === 'hit') { const k = kind === 'throw' ? 'throw' : (h && h.fx && /sparkHit|waveHit/.test(h.fx)) ? 'proj' : (att.mv ? att.mv.id : kind); dmgBy[att.side][k] = (dmgBy[att.side][k] || 0) + dmg; }
+      if (what === 'hit') { const k = kind === 'throw' ? 'throw' : (h && h.src === 'twin') ? 'twin' : (h && h.fx && /sparkHit|waveHit|starHit/.test(h.fx) && !h.meteor) ? 'proj' : (att.mv ? att.mv.id : kind); dmgBy[att.side][k] = (dmgBy[att.side][k] || 0) + dmg; }
       if (what === 'grab' || what === 'erase') dmgBy[att.side]['_' + what] = (dmgBy[att.side]['_' + what] || 0) + 1;
       if (counter) dmgBy[att.side]._counters = (dmgBy[att.side]._counters || 0) + 1;
       return oc.apply(this, arguments);
@@ -114,7 +118,10 @@ async function main() {
     { mode: 'demo', stage: 'training', seed: 777, rounds: 2, time: 99, intro: false, p1: { char: 'deepseek', control: 'cpu', level: 2 }, p2: { char: 'deepseek', palette: 1, control: 'cpu', level: 5 } },
     { mode: 'demo', stage: 'training', seed: 4343, rounds: 2, time: 99, intro: true, p1: { char: 'gpt', control: 'cpu', level: 5 }, p2: { char: 'claude', control: 'cpu', level: 3 } },
     { mode: 'demo', stage: 'training', seed: 818, rounds: 2, time: 99, intro: false, p1: { char: 'deepseek', control: 'cpu', level: 4 }, p2: { char: 'gpt', control: 'cpu', level: 4 } },
-    { mode: 'demo', stage: 'training', seed: 919, rounds: 2, time: 99, intro: false, p1: { char: 'gpt', control: 'cpu', level: 3 }, p2: { char: 'gpt', palette: 1, control: 'cpu', level: 3 } }];
+    { mode: 'demo', stage: 'training', seed: 919, rounds: 2, time: 99, intro: false, p1: { char: 'gpt', control: 'cpu', level: 3 }, p2: { char: 'gpt', palette: 1, control: 'cpu', level: 3 } },
+    { mode: 'demo', stage: 'training', seed: 5151, rounds: 2, time: 99, intro: true, p1: { char: 'gemini', control: 'cpu', level: 5 }, p2: { char: 'deepseek', control: 'cpu', level: 4 } },
+    { mode: 'demo', stage: 'training', seed: 5252, rounds: 2, time: 99, intro: false, p1: { char: 'claude', control: 'cpu', level: 3 }, p2: { char: 'gemini', control: 'cpu', level: 3 } },
+    { mode: 'demo', stage: 'training', seed: 5353, rounds: 2, time: 99, intro: false, p1: { char: 'gemini', control: 'cpu', level: 4 }, p2: { char: 'gemini', palette: 1, control: 'cpu', level: 4 } }];
   for (const c of det) { jobs.push({ det: 1, cfg: c }); jobs.push({ det: 2, cfg: c }); }
   const t0 = Date.now();
   const results = new Array(jobs.length);

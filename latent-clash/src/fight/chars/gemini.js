@@ -127,7 +127,7 @@
       twinStrike: {
         kind: 'special', internal: true, lore: 'twin', anim: 'twinStrike',
         segs: [['startup', 8], ['active', 4], ['recovery', 14]],
-        hits: [{ seg: 'active', box: [14, -62, 34, 30], dmg: 70, lv: 'S', guard: 'mid', stun: [26, 16], push: [6, 10],
+        hits: [{ seg: 'active', box: [14, -62, 34, 30], dmg: 70, lv: 'S', guard: 'mid', stun: [26, 16], push: [6, 10], src: 'twin',
           chip: 0.2, fx: 'gemini.clawHit', fx2: 'hit.special' }]
       },
       // 闪现: blinkOut → hidden → blinkIn. Invulnerable from vanish f0 to recovery f0 (2f after she is
