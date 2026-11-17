@@ -259,7 +259,7 @@
       }
       if (th === 'strike' && this.blockRolled !== pv) {
         this.blockRolled = pv;
-        if (this.chance(C === 'gemini' && me.twin ? Math.min(0.97, P.block + 0.15 * gem(P, 'wait')) : P.block)) {
+        if (this.chance(C === 'gemini' ? Math.min(0.97, P.block + (P.gem && P.gem.blk || 0) + (me.twin ? 0.15 : 0)) : P.block)) {
           this.guardT = 16;
           this.guardLow = pv.guard === 'low' ? this.chance(P.guess) : pv.guard === 'high' ? !this.chance(P.guess) : true;
           return this.holdGuard(me, o, null);
@@ -271,7 +271,7 @@
       this.punRolled = pv.mv + pv.x;
       var whiffCall = pv.mv === 'call' && o.action === 'attack' && o.mv && o.mv.id === 'call';   // 30f recovery: dash in if needed
       var blinkPun = pv.blink === 'recovery' ? (P.vsBlink != null ? P.vsBlink : 1) : 1;
-      if (this.chance(Math.min(0.97, ((C === 'claude' && P.cPun ? P.cPun : P.punish) + (whiffCall ? 0.25 : 0)) * blinkPun))) {
+      if (this.chance(Math.min(0.97, ((C === 'claude' && P.cPun ? P.cPun : C === 'gemini' && P.gem && P.gem.pun ? P.gem.pun : P.punish) + (whiffCall ? 0.25 : 0)) * blinkPun))) {
         var pp = this.punisher(me, dx, o);
         if (!pp && whiffCall && dx < this.reachOf(me, '5H') + 70) pp = [{ d: 6, n: 2 }, { d: 5, n: 2 }, { d: 6, n: 2 }, { d: 5, n: 12 }].concat(this.press('H'));
         if (pp) { this.push(pp, 'punish'); this.comboStep = 0; return this.emit(); }
