@@ -1,5 +1,13 @@
 # FIGHT — NOTES
 
+## Gemini progress / next steps (CONTRACT-V2 §V2.6 — keep truthful, updated as work lands)
+- [ ] 1 `chars/gemini.js` + engine support (double jump, star variants, twin entity, blink / swap, super)
+- [ ] 2 CPU: Gemini plans L1–5 + vs-Gemini logic for the other three
+- [ ] 3 sim / combos extended, balance (L1/L3/L5), no loops
+- [ ] 4 shots
+- [ ] 5 notes, `getMoveList('gemini')`
+Status: started (docs read); nothing of Gemini is in the engine yet.
+
 ## GPT progress / next steps (CONTRACT-V2 §V2.5 — keep truthful, updated as work lands)
 - [x] 1 roster generalisation (code): unknown ids fall back to the first registered `LC.CHARS` entry with a
   warning; fallback puppet height / palette, move-list order (`C.order`), trail parity, Claude's pages,
