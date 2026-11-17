@@ -119,7 +119,7 @@
       // away, else in front), strikes ≈ 44f later. One twin at a time.
       twin: {
         kind: 'special', motion: '214', simple: 4, lore: 'twin',
-        segs: [['startup', 10], ['active', 2], ['recovery', 18]],
+        segs: [['startup', 10], ['active', 2], ['recovery', 13]],   // rig recovery (18) played over 13f (balance)
         twin: { seg: 'active', wait: { L: 28, M: 8, H: 36 }, dash: 110, dashF: 14, stopAt: 36, behind: 34, near: 200 },
         cancel: 'super'
       },
