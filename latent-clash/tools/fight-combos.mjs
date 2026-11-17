@@ -148,7 +148,7 @@ function gemPage() {
     const A = m.f[0], B = m.f[1];
     B.x = A.x + 70; m.update({}, {});
     const ev = []; const oc = m.onContact;
-    m.onContact = function (att, vic, what, dmg, h) { if (att === A && (what === 'hit' || what === 'block')) ev.push({ what, twin: !!(h && h.src === 'twin'), t: m.tick }); return oc.apply(this, arguments); };
+    m.onContact = function (att, vic, what, dmg, h) { if (att === A && (what === 'hit' || what === 'block')) { const tw = !!(h && h.src === 'twin'); ev.push({ what, twin: tw, t: m.tick, side: F.sign((tw && A.twin ? A.twin.x : A.x) - B.x) }); } return oc.apply(this, arguments); };
     const D = { 2: { down: 1 }, 1: { down: 1, left: 1 }, 4: { left: 1 } };
     const q = [{ down: 1 }, { down: 1 }, { down: 1, left: 1 }, { down: 1, left: 1 }, { left: 1, H: 1 }, { left: 1, H: 1 }, {}];
     let pressAt = -1, startup = atk === 'jL' ? 0 : 4, swapAt = -1;
@@ -167,7 +167,7 @@ function gemPage() {
       m.update(i1, ev.length < 2 && t > 8 ? g : {});
     }
     const her = ev.find(e => !e.twin), tw2 = ev.find(e => e.twin);
-    return { her: her ? her.what : '-', twin: tw2 ? tw2.what : '-', gap: her && tw2 ? her.t - tw2.t : null };
+    return { her: her ? her.what : '-', twin: tw2 ? tw2.what : '-', gap: her && tw2 ? her.t - tw2.t : null, side: her && tw2 ? her.side * tw2.side : 0 };
   };
   window.GEMOKI = function (vs, opt, k) {
     const F = LC.fight, T = F.T; F.headless = true;
