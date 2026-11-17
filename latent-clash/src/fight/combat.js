@@ -620,7 +620,12 @@
   var projId = 0;
   F.spawnProj = function (m, f) {
     var P = f.mv.proj, s = f.str;
+    if (P.poseSpawn && f.puppet && !f.puppetFallback) {   // read the release pose (pose() runs after step)
+      var sg0 = f.seg();
+      try { f.puppet.setPoseSeg(sg0.anim || f.mv.anim, sg0.as, 0); } catch (e) { F.err('rig.setPoseSeg spawn', e); }
+    }
     var a = f.puppet && !f.puppetFallback ? f.anchor(P.spawn) : { x: P.spawnFb[0], y: P.spawnFb[1] };
+    if (P.poseSpawn) a = { x: F.clamp(a.x, P.spawnFb[0] - 10, P.spawnFb[0] + 10), y: F.clamp(a.y, P.spawnFb[1] - 10, P.spawnFb[1] + 10) };
     var ax = F.clamp(a.x, 8, 60), ay = F.clamp(a.y, -110, 0);
     var x = f.x + ax * f.facing, y = P.ground ? GY : f.y + ay;
     var p = {

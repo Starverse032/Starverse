@@ -47,7 +47,10 @@
     x = F.clamp(x, lo(), hi());
     var tw = newTwin(m, f, s, x);
     tw.wait = F.v(D.wait, s);
-    if (s === 'M') { tw.dashN = tw.dashLeft = D.dashF; tw.dashV = toward * D.dash / D.dashF; tw.facing = toward; }
+    if (s === 'M') {   // dashes up to D.dash forward, stopping D.stopAt in front of the opponent (as she saw them)
+      var dd = F.clamp(Math.abs(o.x - x) - (D.stopAt || 36), 0, D.dash);
+      tw.dashN = tw.dashLeft = D.dashF; tw.dashV = toward * dd / D.dashF; tw.facing = toward;
+    }
     f.twin = tw;
     tfx('gemini.twinSpawn', f, tw.x, GY, tw.facing);
     F.sfx('gemini.twin', { pan: F.pan(tw.x, m.camX) });

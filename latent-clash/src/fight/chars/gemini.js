@@ -21,7 +21,7 @@
       hits: [h]
     };
   }
-  var STAR_FX = { hitFx: 'gemini.starHit', hitSfx: 'gemini.starHit', castFx: 'gemini.starCast', castSfx: 'gemini.star', blockFx: true };
+  var STAR_FX = { poseSpawn: true, hitFx: 'gemini.starHit', hitSfx: 'gemini.starHit', castFx: 'gemini.starCast', castSfx: 'gemini.star', blockFx: true };
   function star(o) { for (var k in STAR_FX) o[k] = STAR_FX[k]; return o; }
 
   F.defineChar({
@@ -115,12 +115,12 @@
         trail: 'gemini.riseTrail', trailSegs: ['rise'], sfx: 'gemini.rise'
       },
       // 双子·分身: the gesture; the light-twin appears on active f0 (twin.js). L: where she stands, strikes
-      // ≈ 36f later · M: waits 8f, dashes 110 px forward in 14f, strikes · H: behind the opponent (≤ 200 px
+      // ≈ 36f later · M: waits 8f, dashes up to 110 px forward in 14f (stops 36 px in front of the opponent), strikes · H: behind the opponent (≤ 200 px
       // away, else in front), strikes ≈ 44f later. One twin at a time.
       twin: {
         kind: 'special', motion: '214', simple: 4, lore: 'twin',
         segs: [['startup', 10], ['active', 2], ['recovery', 18]],
-        twin: { seg: 'active', wait: { L: 28, M: 8, H: 36 }, dash: 110, dashF: 14, behind: 34, near: 200 },
+        twin: { seg: 'active', wait: { L: 28, M: 8, H: 36 }, dash: 110, dashF: 14, stopAt: 36, behind: 34, near: 200 },
         cancel: 'super'
       },
       // performed by the twin (never by her): one mid claw, 70 damage, combo-able stun
