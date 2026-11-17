@@ -43,7 +43,7 @@
     claude:   { dp: 'sonnet',     want: D(92), jr: [D(70), D(130)], dashW: 0.8,  superR: D(200) },
     deepseek: { dp: 'breach',     want: D(60), jr: [D(70), D(150)], dashW: 0.9,  superR: D(120) },
     gpt:      { dp: 'dragonRise', want: 80,    jr: [D(70), D(125)], dashW: 0.55, superR: 0, vs: { deepseek: { breath: 1.7 } } },   // vs: matchup plan multipliers (breath, tail, call)
-    gemini:   { dp: 'starRise',   want: 92,    jr: [D(70), D(140)], dashW: 1.0,  superR: 0, vs: { deepseek: { starMin: 160 }, claude: { jump: 0.4 } } }
+    gemini:   { dp: 'starRise',   want: 92,    jr: [D(70), D(140)], dashW: 1.0,  superR: 0, wantVs: { deepseek: 110 }, vs: { deepseek: { walk: 0.5 }, claude: { jump: 0.4 } } }
   };
   // Gemini per-level plan multipliers (LV[i].gem; missing = 1): star zoning, twin set-ups, blink, double-jump
   // approaches, hit-and-run retreats, pokes. vsTwin / vsBlink: the other CPUs' respect for a pending twin strike
