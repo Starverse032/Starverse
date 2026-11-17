@@ -11,9 +11,11 @@
  *     --cross   also run level a vs level b pairings (1v3, 3v5, 5v1 ...)
  *     --real    use real modules where present (default: stubs=all, pure gameplay)
  *     --draw    also call draw() every 30 ticks (catches render exceptions; slower)
+ *     --eval=f  evaluate the JS file f in every page after load (tuning experiments, e.g. scale move data)
  */
 import { createRequire } from 'module';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
@@ -105,6 +107,7 @@ async function main() {
     await p.goto(url);
     await p.waitForFunction(() => window.FS && FS.ready, null, { timeout: 20000 });
     await p.evaluate(pageRunner);
+    if (args.eval) await p.evaluate(fs.readFileSync(String(args.eval), 'utf8'));   // tuning experiments (dev only)
     pages.push(p);
   }
   const jobs = [];
