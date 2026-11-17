@@ -192,7 +192,9 @@ function gemPage() {
       if (B.action === 'getup' && g0 < 0) g0 = t;
       if (g0 >= 0) {
         const w = t - g0, bk = B.facing > 0 ? 'left' : 'right', fw = B.facing > 0 ? 'right' : 'left';
-        if (opt === 'blockTech') i2 = B.action === 'thrown' ? { L: 1, M: 1 } : { down: 1, [bk]: 1 };
+        const twx = A.twin ? A.twin.x : A.x;
+        if (opt === 'blockHer') i2 = B.action === 'thrown' ? { L: 1, M: 1 } : { down: 1, [bk]: 1 };
+        else if (opt === 'blockTwin') i2 = B.action === 'thrown' ? { L: 1, M: 1 } : { down: 1, [twx > B.x ? 'left' : 'right']: 1 };
         else if (opt === 'backdash') i2 = (w >= 20 && w <= 21) || (w >= 25 && w <= 26) ? { [bk]: 1 } : {};
         else if (opt === 'jump') i2 = w >= 18 && w <= 34 ? { up: 1 } : {};
         else if (opt === 'reversal') i2 = [{ [fw]: 1 }, { [fw]: 1 }, { down: 1 }, { down: 1 }, { down: 1, [fw]: 1 }, { down: 1, [fw]: 1, H: 1 }, { H: 1 }][w - 17] || {};
@@ -256,13 +258,19 @@ if (!process.argv.includes('--no-gemini') && (!ONLY || ONLY.split(',').indexOf('
     if (bad) fail++;
     console.log((bad ? 'FAIL' : 'OK  ') + ' gemini mix twin H' + (swap ? ' + blink swap' : '') + ' + ' + atk.padEnd(2) + ' vs ' + vs.padEnd(8) + ' k=-6..6: ' + line + '  (B: a fixed guard blocks both · s: needs a guard switch, gap > ' + 3 + 'f · X: unblockable · .: one of them missed)');
   }
-  for (const vs of ['claude', 'deepseek']) for (const opt of ['none', 'blockTech', 'backdash', 'jump', 'reversal']) {
-    const res = [];
-    for (let k = -8; k <= 10; k += 2) res.push(await page.evaluate(([a, b, c]) => window.GEMOKI(a, b, c), [vs, opt, k]));
-    const lost = res.filter(r => r.thrown || r.hits).length;
-    const ok = res.every(r => r.twin) && (opt === 'none' ? lost > 0 : lost === 0);
-    if (!ok) fail++;
-    console.log((ok ? 'OK  ' : 'FAIL') + ' gemini oki 2H > 214H (meaty twin) + throw vs ' + vs.padEnd(8) + ' wake-up ' + opt.padEnd(9) + ' thrown / hit at ' + lost + '/' + res.length + ' timings' + (opt === 'none' ? '' : ' (blocked ' + res.reduce((a, r) => a + r.blocks, 0) + ')'));
+  const KS = []; for (let k = -8; k <= 10; k += 2) KS.push(k);
+  for (const vs of ['claude', 'deepseek']) {
+    const OPTS = ['none', 'blockTwin', 'blockHer', 'backdash', 'jump', 'reversal'], lostAt = {};
+    for (const opt of OPTS) {
+      const res = [];
+      for (const k of KS) res.push(await page.evaluate(([a, b, c]) => window.GEMOKI(a, b, c), [vs, opt, k]));
+      lostAt[opt] = res.map(r => !!(r.thrown || r.hits));
+      if (!res.every(r => r.twin)) { fail++; console.log('FAIL gemini oki: no twin'); }
+      console.log('     gemini oki 2H > 214H (meaty twin) + throw vs ' + vs.padEnd(8) + ' wake-up ' + opt.padEnd(9) + ' k=-8..10: ' + res.map(r => r.thrown ? 'T' : r.hits ? 'H' : (r.blocks ? 'b' : '-')).join(''));
+    }
+    const esc = KS.every((k, i) => OPTS.some(o => o !== 'none' && !lostAt[o][i])), real = lostAt.none.some(x => x);
+    if (!esc || !real) fail++;
+    console.log((esc && real ? 'OK  ' : 'FAIL') + ' gemini oki twin + throw vs ' + vs + ': every timing has an escape (' + esc + '), the set-up works vs no defence (' + real + ')  (T thrown · H hit · b blocked · - nothing)');
   }
 }
 await browser.close();
