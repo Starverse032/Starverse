@@ -22,7 +22,7 @@ const mot = (seq, b) => seq.split('').map((d, i, a) => st(2, +d, i === a.length 
 const press = (b, d, wait) => [st(2, d || 5, b), st(wait || 1, d || 5)];
 const W = n => [st(n, 5)];
 const near = [st(40, 6)];                       // walk in until close (generic)
-const nearC = { claude: [st(68, 6)], deepseek: [st(60, 6)], gpt: [st(84, 6)] };   // V2: ~50 px apart (START_SEP 168)
+const nearC = { claude: [st(68, 6)], deepseek: [st(60, 6)], gpt: [st(84, 6)], gemini: [st(70, 6)] };   // V2: ~50 px apart (START_SEP 168)
 
 const T = (p1, p2, extra) => Object.assign({ mode: 'training', stage: 'training', seed: 7, p1: { char: p1 }, p2: { char: p2, control: 'human' }, training: { dummy: 'stand', guard: 'none', hitboxes: !!args.boxes } }, extra || {});
 const S = [];
@@ -100,6 +100,37 @@ add('gpt-superko-60', V('gpt', 'claude', { hp2: 150 }), [...nearC.gpt, st(2, 5, 
 add('gpt-intro', { mode: 'versus', stage: 'library', seed: 3, intro: true, p1: { char: 'gpt' }, p2: { char: 'deepseek', control: 'cpu', level: 3 } }, [...W(150)]);
 add('gpt-hud', { mode: 'demo', stage: 'abyss', seed: 11, intro: false, p1: { char: 'deepseek', control: 'cpu', level: 5 }, p2: { char: 'gpt', control: 'cpu', level: 5 } }, [...W(1300)]);
 add('gpt-matchend', { mode: 'demo', stage: 'library', seed: 23, intro: false, p1: { char: 'gpt', control: 'cpu', level: 5 }, p2: { char: 'claude', control: 'cpu', level: 3 } }, [], 'quote');
+
+// Gemini 娘 (CONTRACT-V2 §V2.6): normals, stars, starRise, every twin, every blink (incl. the swap), double jump,
+// super timeline + super KO, intro / HUD / win quote — `--only=gem-`
+const GM = (extra, o2) => T('gemini', o2 || 'claude', extra);
+const gs = { '5L': 4, '5M': 7, '5H': 10, '2L': 4, '2M': 7, '2H': 10 };
+for (const n of ['5L', '5M', '5H', '2L', '2M', '2H']) { const d = n[0] === '2' ? 2 : 5; add(`gem-${n}`, GM(), [...nearC.gemini, st(1, d, n[1]), st(gs[n], d)]); }
+add('gem-5H-late', GM(), [...nearC.gemini, st(1, 5, 'H'), st(14, 5)]);
+add('gem-jL', GM(), [st(30, 6), st(3, 9), st(22, 5), st(2, 5, 'L'), st(5, 5)]);
+add('gem-jM', GM(), [st(30, 6), st(3, 9), st(22, 5), st(2, 5, 'M'), st(7, 5)]);
+add('gem-jH', GM(), [st(30, 6), st(3, 9), st(22, 5), st(2, 5, 'H'), st(10, 5)]);
+add('gem-throw', GM(), [...nearC.gemini, st(1, 5, 'LM'), st(24, 5)]);
+for (const n of ['L', 'M', 'H']) { add(`gem-star${n}-0`, GM(), [...mot('236', n), ...W(11)]); add(`gem-star${n}-20`, GM(), [...mot('236', n), ...W(30)]); }
+add('gem-starM-vsjump', GM({ training: { dummy: 'jump', guard: 'none', hitboxes: !!args.boxes } }), [...mot('236', 'M'), ...W(34)]);
+add('gem-starH-hit2', GM(), [st(30, 6), ...mot('236', 'H'), ...W(52)]);
+add('gem-airStar', GM(), [st(20, 6), st(3, 9), st(16, 5), ...mot('236', 'M'), ...W(16)]);
+add('gem-starRise', GM(), [st(80, 6), ...mot('623', 'H'), ...W(6)]);
+add('gem-starRise-top', GM(), [st(80, 6), ...mot('623', 'H'), ...W(14)]);
+for (const [n, ws] of [['L', [14, 30, 46]], ['M', [14, 28, 40]], ['H', [14, 40, 56]]]) for (const w of ws) add(`gem-twin${n}-${w}`, GM(), [st(n === 'L' ? 70 : 20, 6), ...mot('214', n), ...W(w)]);
+for (const [n, ws] of [['L', [2, 8, 14, 20]], ['M', [8, 14, 20]], ['H', [8, 14, 22]]]) for (const w of ws) add(`gem-blink${n}-${w}`, GM(), [st(30, 6), ...mot('252', n), ...W(w)]);
+for (const w of [6, 14, 18, 26]) add(`gem-swap-${w}`, GM(), [st(20, 6), ...mot('214', 'H'), ...W(20), ...mot('252', 'H'), ...W(w)]);
+add('gem-dj-flip', GM(), [st(3, 9), st(14, 5), st(2, 9), st(2, 5)]);
+add('gem-dj-apex', GM(), [st(3, 9), st(14, 5), st(2, 9), st(16, 5)]);
+for (const w of [20, 56, 66, 74, 84, 97, 104, 110, 124, 136]) add(`gem-super-${w}`, V('gemini', 'claude'), [...nearC.gemini, st(2, 5, 'HS'), ...W(w)]);
+add('gem-super-twin', V('gemini', 'deepseek'), [st(20, 6), ...mot('214', 'L'), ...W(26), st(2, 5, 'HS'), ...W(84)]);
+add('gem-superko', V('gemini', 'claude', { hp2: 150 }), [...nearC.gemini, st(2, 5, 'HS'), ...W(118)], 'ko12');
+add('gem-superko-60', V('gemini', 'claude', { hp2: 150 }), [...nearC.gemini, st(2, 5, 'HS'), ...W(118)], 'ko60');
+add('gem-intro', { mode: 'versus', stage: 'library', seed: 3, intro: true, p1: { char: 'gemini' }, p2: { char: 'gpt', control: 'cpu', level: 3 } }, [...W(150)]);
+add('gem-intro-drop', { mode: 'versus', stage: 'library', seed: 3, intro: true, p1: { char: 'deepseek' }, p2: { char: 'gemini', control: 'cpu', level: 3 } }, [...W(4)]);
+add('gem-hud', { mode: 'demo', stage: 'abyss', seed: 11, intro: false, p1: { char: 'gemini', control: 'cpu', level: 5 }, p2: { char: 'claude', control: 'cpu', level: 5 } }, [...W(1300)]);
+add('gem-hud-p2', { mode: 'demo', stage: 'library', seed: 12, intro: false, p1: { char: 'gpt', control: 'cpu', level: 5 }, p2: { char: 'gemini', palette: 1, control: 'cpu', level: 5 } }, [...W(900)]);
+add('gem-matchend', { mode: 'demo', stage: 'library', seed: 23, intro: false, p1: { char: 'gemini', control: 'cpu', level: 5 }, p2: { char: 'claude', control: 'cpu', level: 3 } }, [], 'quote');
 
 const only = args.only ? String(args.only).split(',') : null;
 const browser = await chromium.launch();
