@@ -136,7 +136,7 @@ function okiPage() {
 //   twin's first active frame (also after an H blink swap: she is behind, the twin in front). For |k| <= TWIN_GRACE
 //   at least one FIXED guard (stand/crouch x left/right) must block both contacts; for larger gaps the victim needs to
 //   switch guard (a real, reactable left/right mix-up) — reported, not required.
-//  oki: 2H sweep -> meaty twin L (oki timing) -> her throw at k = -8..10 frames around the twin's claw; wake-up options
+//  oki: 2H sweep > 214H (meaty twin behind the sleeping victim) -> her throw at k = -8..10 frames around the claw; wake-up options
 //   block+tech / backdash / jump / reversal must each take no throw and no clean hit (chip only) at every k, while
 //   'none' must lose at some k (the set-up is real).
 function gemPage() {
@@ -181,11 +181,12 @@ function gemPage() {
     let pressed = false, spawnT = -1, throwT = -1, g0 = -1;
     for (t = 0; t < 320; t++) {
       let i1 = q.length ? q.shift() : {}, i2 = {};
-      // meaty twin L: motion at down af 10 -> spawn ≈ af 25 -> claw ≈ af 60..63 (first vulnerable get-up frames)
-      if (!pressed && B.action === 'down' && B.af === 10) { pressed = true; q.push({ down: 1 }, { down: 1 }, { down: 1, left: 1 }, { down: 1, left: 1 }, { left: 1, L: 1 }, { left: 1, L: 1 }, {}); tw0 = m.tick + 8; }
+      // meaty twin: 2H (hit) cancelled into 214H -> the twin appears behind the sleeping victim and claws ≈ 45f
+      // later (= the first vulnerable get-up frames); she walks in and throws k frames around the claw
+      if (!pressed && A.connected === 'hit' && A.mv && A.mv.id === '2H') { pressed = true; q.length = 0; q.push({ down: 1 }, { down: 1 }, { down: 1, left: 1 }, { down: 1, left: 1 }, { left: 1, H: 1 }, { left: 1, H: 1 }, {}); tw0 = m.tick + 8; }
       const tw = A.twin;
       if (tw) { twinOut = true; if (spawnT < 0) spawnT = t; }
-      if (spawnT >= 0 && throwT < 0 && t === spawnT + 35 + k - 6) throwT = t;   // throw active ≈ k frames after the claw
+      if (spawnT >= 0 && throwT < 0 && t === spawnT + 45 + k - 6) throwT = t;   // throw active ≈ k frames after the claw
       if (throwT >= 0 && t >= throwT && t < throwT + 2) i1 = { right: 1, L: 1, M: 1 };
       else if (twinOut && throwT < 0 && Math.abs(B.x - A.x) > 30 && !q.length) i1 = { right: 1 };
       if (B.action === 'getup' && g0 < 0) g0 = t;
@@ -261,7 +262,7 @@ if (!process.argv.includes('--no-gemini') && (!ONLY || ONLY.split(',').indexOf('
     const lost = res.filter(r => r.thrown || r.hits).length;
     const ok = res.every(r => r.twin) && (opt === 'none' ? lost > 0 : lost === 0);
     if (!ok) fail++;
-    console.log((ok ? 'OK  ' : 'FAIL') + ' gemini oki sweep -> twin L + throw vs ' + vs.padEnd(8) + ' wake-up ' + opt.padEnd(9) + ' thrown / hit at ' + lost + '/' + res.length + ' timings' + (opt === 'none' ? '' : ' (blocked ' + res.reduce((a, r) => a + r.blocks, 0) + ')'));
+    console.log((ok ? 'OK  ' : 'FAIL') + ' gemini oki 2H > 214H (meaty twin) + throw vs ' + vs.padEnd(8) + ' wake-up ' + opt.padEnd(9) + ' thrown / hit at ' + lost + '/' + res.length + ' timings' + (opt === 'none' ? '' : ' (blocked ' + res.reduce((a, r) => a + r.blocks, 0) + ')'));
   }
 }
 await browser.close();
