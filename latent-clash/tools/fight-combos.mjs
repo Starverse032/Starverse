@@ -177,14 +177,14 @@ function gemPage() {
     m.onContact = function (att, vic, what, dmg, h) { if (att === A && m.tick > tw0) { if (what === 'hit' && !(h && h.src === 'twin') && A.mv && A.mv.id === 'throwHit') thrown++; else if (what === 'hit') hits++; else if (what === 'block') blocks++; } return oc.apply(this, arguments); };
     let tw0 = 1e9;
     const q = [{ down: 1, H: 1 }, { down: 1, H: 1 }, {}];
-    let downT = -1, throwT = -1, g0 = -1;
+    let pressed = false, spawnT = -1, throwT = -1, g0 = -1;
     for (t = 0; t < 320; t++) {
       let i1 = q.length ? q.shift() : {}, i2 = {};
-      if (B.action === 'down' && downT < 0) { downT = t; }
-      if (downT >= 0 && t === downT + 13 - 1) { q.push({ down: 1 }, { down: 1 }, { down: 1, left: 1 }, { down: 1, left: 1 }, { left: 1, L: 1 }, { left: 1, L: 1 }, {}); tw0 = m.tick + 8; }
+      // meaty twin L: motion at down af 10 -> spawn ≈ af 25 -> claw ≈ af 60..63 (first vulnerable get-up frames)
+      if (!pressed && B.action === 'down' && B.af === 10) { pressed = true; q.push({ down: 1 }, { down: 1 }, { down: 1, left: 1 }, { down: 1, left: 1 }, { left: 1, L: 1 }, { left: 1, L: 1 }, {}); tw0 = m.tick + 8; }
       const tw = A.twin;
-      if (tw) twinOut = true;
-      if (tw && throwT < 0 && F.twinLeft(tw) === 6 - k) throwT = t;
+      if (tw) { twinOut = true; if (spawnT < 0) spawnT = t; }
+      if (spawnT >= 0 && throwT < 0 && t === spawnT + 35 + k - 6) throwT = t;   // throw active ≈ k frames after the claw
       if (throwT >= 0 && t >= throwT && t < throwT + 2) i1 = { right: 1, L: 1, M: 1 };
       else if (twinOut && throwT < 0 && Math.abs(B.x - A.x) > 30 && !q.length) i1 = { right: 1 };
       if (B.action === 'getup' && g0 < 0) g0 = t;

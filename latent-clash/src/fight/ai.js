@@ -309,8 +309,8 @@
     if (o.action === 'down' || o.action === 'getup') {
       if (dx > D(90)) { if (C === 'claude' && me.proj === 0 && this.chance(0.04)) { this.push(this.special('spark', 'L'), 'oki'); return this.emit(); } return { right: o.x > me.x, left: o.x < me.x }; }
       if (C === 'gemini' && !me.twin && o.action === 'down' && !o.ko && this.okiTw !== this.m.round + ':' + (this.m.tick - o.af)) {
-        // meaty twin on wake-up: L strikes ≈ 47f after the press, H ≈ 55f (down 10 + lie 26 + get-up 24 = 60)
-        var okT = dx < 80 ? 13 : 5;
+        // meaty twin on wake-up (down 10 + lie 26 + get-up 24 = 60): L claws ≈ 50f after the motion, H ≈ 60f
+        var okT = dx < 80 ? 10 : 1;
         if (o.af === okT && dx < 200) {
           this.okiTw = this.m.round + ':' + (this.m.tick - o.af);
           if (this.chance(0.5 * gem(P, 'twin') + 0.1 * P.depth)) { this.push(this.special('twin', dx < 80 ? 'L' : 'H'), 'okiTwin'); return this.emit(); }
