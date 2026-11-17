@@ -36,14 +36,18 @@ window.fightStubs = function () {
       breath: [['startup', 12], ['active', 16], ['recovery', 22]], airBreath: [['startup', 10], ['active', 12], ['recovery', 12, 1]],
       dragonRise: [['startup', 5], ['rise', 14], ['fall', 12, 1], ['land', 14]],
       call: [['startup', 7], ['active', 3], ['recovery', 30]], callHit: [['hold', 14], ['rise', 16], ['slam', 12], ['recovery', 22]],
-      roar: [['startup', 9], ['active', 6], ['recovery', 24]]
+      roar: [['startup', 9], ['active', 6], ['recovery', 24]],
+      airJump: [['go', 6]], star: [['startup', 11], ['active', 3], ['recovery', 24]], airStar: [['startup', 9], ['active', 3], ['recovery', 12, 1]],
+      starRise: [['startup', 4], ['rise', 12], ['fall', 12, 1], ['land', 14]], twin: [['startup', 10], ['active', 2], ['recovery', 18]],
+      twinStrike: [['startup', 8], ['active', 4], ['recovery', 14]], blinkOut: [['startup', 5], ['vanish', 5]], blinkIn: [['appear', 5], ['recovery', 9]]
     };
     // per-character segment overrides (CONTRACT-V2 §V2.5: GPT super cast 12 / active 50, dashes 20 / 22)
-    var SEGC = { gpt: { 'super': [['startup', 6], ['cast', 12], ['active', 50], ['recovery', 30]], dashF: [['go', 20]], dashB: [['go', 22]] } };
+    var SEGC = { gpt: { 'super': [['startup', 6], ['cast', 12], ['active', 50], ['recovery', 30]], dashF: [['go', 20]], dashB: [['go', 22]] },
+      gemini: { 'super': [['startup', 6], ['cast', 12], ['active', 54], ['recovery', 28]], dashF: [['go', 16]], dashB: [['go', 18]], walkF: [['loop', 32, 1]], walkB: [['loop', 32, 1]] } };
     function segsOf(c, a) { return (SEGC[c] && SEGC[c][a]) || SEGS[a] || SEGS.idle; }
     ['5L', '5M', '5H', '2L', '2M', '2H'].forEach(function (n) { SEGS[n] = [['startup', 8], ['active', 4], ['recovery', 14]]; });
     ['jL', 'jM', 'jH'].forEach(function (n) { SEGS[n] = [['startup', 7], ['active', 6], ['recovery', 12, 1]]; });
-    var CH = { claude: { h: 104, ch: 70, w: 26 }, deepseek: { h: 98, ch: 66, w: 28 }, gpt: { h: 102, ch: 68, w: 28 } };   // V2 metrics
+    var CH = { claude: { h: 104, ch: 70, w: 26 }, deepseek: { h: 98, ch: 66, w: 28 }, gpt: { h: 102, ch: 68, w: 28 }, gemini: { h: 96, ch: 64, w: 24 } };   // V2 metrics
     var R = LC.rig = {};
     R.init = function () { return Promise.resolve(); };
     R.listAnims = function () { return Object.keys(SEGS); };
@@ -88,6 +92,7 @@ window.fightStubs = function () {
         case 'footB': return { x: -7, y: 0 };
         case 'weapon': return b ? { x: b[0] + b[2] - 2, y: b[1] + b[3] / 2 } : { x: this.c === 'claude' ? 30 : 22, y: top + 32 };
         case 'muzzle':
+          if (this.c === 'gemini') return this.a === 'star' ? { x: 34, y: -75 } : this.a === 'airStar' ? { x: 28, y: -46 } : this.a === 'super' ? { x: 16, y: -104 } : { x: 23, y: -61 };
           if (this.c === 'gpt') return this.a === 'breath' ? { x: 23, y: -81 } : this.a === 'airBreath' ? { x: 30, y: -76 } : this.a === 'super' ? { x: 22, y: -105 } : { x: 6, y: -88 };
           return this.c === 'deepseek' && this.a === 'wave' ? { x: 40, y: 0 } : (this.a === 'airSpark' ? { x: 36, y: -56 } : { x: this.a === 'super' ? 34 : 40, y: this.a === 'super' ? -82 : top + 26 });
         case 'grab':

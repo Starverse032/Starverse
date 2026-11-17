@@ -97,7 +97,7 @@
       if (bar) box(ctx, m, bar, '#5ee6a8', '#5ee6a8');
       if (f.twin) {   // Gemini's light-twin: body outline (cannot be hit) + its claw box while active
         var tw = f.twin, tb = F.worldBox([-12, -94, 24, 94], tw.x, tw.y, tw.facing);
-        box(ctx, m, tb, '#ff8fe0', null);
+        box(ctx, m, tb, '#ff8fe0', '#ff8fe0');
         var th = F.twinHitBox(tw);
         if (th) box(ctx, m, th, '#ff3b3b', '#ff3b3b');
         var tx2 = Math.round(tw.x - m.camX);

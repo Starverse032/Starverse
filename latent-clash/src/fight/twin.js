@@ -189,7 +189,7 @@
     if (F.headless) return;
     for (var i = 0; i < 2; i++) {
       var f = m.f[i], tw = f.twin, p = f.twinPuppet;
-      if (!tw || !p || !p.tick || tw.stop > 0) continue;
+      if (!tw || !p || !p.tick || tw.stop > 0 || tw.st === 'dash') continue;   // (dash: a reset follows at the new spot)
       try { p.setPoseSeg(tw.anim, tw.seg, tw.u); p.tick({ x: tw.x, y: tw.y, vx: tw.vx, vy: 0, facing: tw.facing, grounded: true }); }
       catch (e) { F.err('rig.tick twin', e); }
     }

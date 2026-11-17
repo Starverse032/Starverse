@@ -219,6 +219,10 @@
     var fade = F.clamp((tw.ft - 12) / 8, 0, 1), base = (m.tick & 7) >= 4 ? 0.55 : 0.63;
     var col = palOf(f).accent[1];
     try {
+      if (f.twinPuppetFor !== tw.id + ':' + Math.round(tw.x)) {   // new twin (or moved by a swap): settle hair / tail there
+        f.twinPuppetFor = tw.id + ':' + Math.round(tw.x);
+        if (p.reset) { p.setPoseSeg(tw.anim, tw.seg, tw.u); p.reset({ x: tw.x, y: tw.y, vx: 0, vy: 0, facing: tw.facing, grounded: true }); }
+      }
       p.setPoseSeg(tw.anim, tw.seg, tw.u);
       p.draw(ctx, Math.round(tw.x - m.camX), Math.round(tw.y), { facing: tw.facing, flash: 0.7, flashColor: col, alpha: base * fade, silhouette: null });
     } catch (e) { F.err('rig.draw twin', e); }
