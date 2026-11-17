@@ -261,6 +261,7 @@
     var A = this.f[0], Bf = this.f[1], i;
     var frozen = this.freeze > 0;
     for (i = 0; i < 2; i++) this.f[i].inp.push(raw[i], frozen || this.f[i].stop > 0, this.f[i].facing);
+    if (F.twinFxTick) F.twinFxTick(this);
     if (frozen) {
       this.freeze--;
       if (this.flash) { this.flash.t++; if (this.freeze <= 0) this.flash = null; }
@@ -276,6 +277,7 @@
     F.collectStrikes(this, A, Bf, ev);
     F.collectStrikes(this, Bf, A, ev);
     for (i = 0; i < ev.length; i++) F.applyHit(this, ev[i].att, ev[i].vic, ev[i].h, ev[i]);
+    if (F.updateTwins) F.updateTwins(this);   // Gemini's light-twin: its strike is the later contact of the tick
     this.resolvePositions();
     this.updateFacing();
     this.updateCombos();
@@ -287,6 +289,7 @@
       f.pose();
       if (f.stop <= 0) f.tickPuppet();
     }
+    if (F.tickTwinPuppets) F.tickTwinPuppets(this);
     var adv = !(A.stop > 0 && Bf.stop > 0);
     if (adv) this.fxUpdate();
     if (this.impact && (adv || this.impact.t < 2)) this.impact.t++;   // tint + dark beat, then hold in hit-stop
@@ -449,6 +452,7 @@
     this.koInfo = { tick: this.tick, x: kp0.x, y: F.clamp(kp0.y, 40, GY - 8), kind: this.lastKill ? this.lastKill.kind : 'normal', winner: this.roundWinner };
     for (i = this.projs.length - 1; i >= 0; i--) F.killProj(this, this.projs[i], true);
     this.projs.length = 0;
+    for (i = 0; i < 2; i++) if (this.f[i].twin) F.twinVanish(this, this.f[i], true);
     this.slowPending = T.KO_SLOW;
     this.koFlash = 24;
     this.addShake(4, 24);
@@ -613,7 +617,8 @@
           invuln: f.strikeInvuln(), combo: f.combo
         };
       }),
-      projectiles: this.projs.map(function (p) { return { owner: p.owner.side, kind: p.kind, x: p.x, y: p.y }; })
+      projectiles: this.projs.map(function (p) { return { owner: p.owner.side, kind: p.kind, x: p.x, y: p.y }; }),
+      twins: this.f.filter(function (f) { return f.twin; }).map(function (f) { return { owner: f.side, kind: f.twin.kind, state: f.twin.st, x: f.twin.x, y: f.twin.y, facing: f.twin.facing }; })
     };
   };
 
@@ -646,6 +651,7 @@
     F.clearIllustCache();
     if (F.resetWhaleInfo) F.resetWhaleInfo();   // fx spriteInfo caches (re-read after the fx module is up)
     if (F.resetGptInfo) F.resetGptInfo();
+    if (F.resetGeminiInfo) F.resetGeminiInfo();
     if (F.hudInit) { try { F.hudInit(); } catch (e) { F.err('hud.init', e); } }
     return Promise.resolve();
   };
