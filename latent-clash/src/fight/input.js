@@ -43,11 +43,16 @@
     this.dash = null; this.dashAge = 99;
     this.facing = 1;
     this.log = [];               // input-history display: [{ d, b, n }]
+    this.upEt = -1;              // effective time of the last fresh up press
   }
   F.Input = Input;
 
   Input.prototype.reset = function () {
-    this.presses.length = 0; this.dash = null; this.dashAge = 99;
+    this.presses.length = 0; this.dash = null; this.dashAge = 99; this.upEt = -1;
+  };
+  // up was freshly pressed within maxAge effective frames, after effective time `after`
+  Input.prototype.upEdge = function (maxAge, after) {
+    return this.upEt > after && this.ett - this.upEt <= maxAge;
   };
 
   Input.prototype.push = function (raw, frozen, facing) {
@@ -59,6 +64,7 @@
     var i = this.t % SIZE;
     this.dx[i] = x; this.dy[i] = y; this.et[i] = this.ett;
     this.facing = facing;
+    if (y > 0 && this.dy[(this.t - 1 + SIZE) % SIZE] <= 0) this.upEt = this.ett;   // fresh up (double jump)
 
     var held = (raw.L ? B.L : 0) | (raw.M ? B.M : 0) | (raw.H ? B.H : 0) | (raw.S ? B.S : 0);
     var pressed = held & ~this.held;

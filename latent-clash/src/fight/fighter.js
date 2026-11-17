@@ -52,6 +52,7 @@
     this.anim = 'idle'; this.pseg = 'loop'; this.pu = 0;
     this.lastHitKind = null; this.recoverTick = -1; this.hidden = false;
     this.hardKD = false; this.attnX = null; this.attnY = null; this.flameAt = null; this.thrownPose = null;
+    this.twin = null; this.djUsed = false; this.djT = 0; this.jumpEt = 0; this.blinkSwap = false; this.blinkAir = false; this.blkSrc = null;
     this.inp.reset();
   };
 
@@ -120,6 +121,7 @@
     var mv = this.C.moves[id];
     if (!mv) return false;
     if (mv.proj && this.proj > 0) return false;
+    if (mv.twin && this.twin) return false;   // Gemini: one twin at a time
     if (mv.air) {
       if (this.airSpecial) return false;
       if (mv.minHeight && this.height() < mv.minHeight) return false;
@@ -246,6 +248,9 @@
       F.fx('claude.haikuSlash', this.x + hp.x * this.facing, this.y + hp.y, { facing: this.facing, palette: this.pal, index: (+sg.id[3]) - 1 });
     }
     if (mv.id === 'dive') F.diveSeg(this.m, this, sg.id);
+    if (mv.blink) F.blinkSeg(this.m, this, sg.id);
+    if (mv.twin && sg.id === mv.twin.seg) F.spawnTwin(this.m, this);
+    if (sg.airEnd && this.air) { this.endMove(); return; }   // blink H (no twin): she leaves the move airborne
     if (mv.riseFx && sg.id === 'rise') F.fx(mv.riseFx, this.x, GY, { facing: this.facing, palette: this.pal, power: this.str === 'H' ? 1 : this.str === 'L' ? 0.6 : 0.8 });
     var pw = this.str === 'H' ? 1 : this.str === 'L' ? 0 : 0.5;
     if (mv.startFx && sg.idx === 0) {   // e.g. gpt.breathCast at the mouth on startup f0
@@ -263,6 +268,7 @@
     if (sg.id === 'cast' && mv.kind === 'super') {
       if (mv.castSfx) F.sfx(mv.castSfx, { pan: F.pan(this.x, this.m.camX) });
       if (mv.attn) F.attnLatch(this.m, this, this.m.opp(this));
+      if (mv.meteor) F.meteorLatch(this.m, this, this.m.opp(this));
     }
     if (sg.id === 'bounce') { this.vy = -3.8; this.vx = -1.8 * this.facing; this.air = true; }
   };
@@ -321,7 +327,8 @@
     if (sg.vx != null) this.vx = sg.vx * this.facing;
     else if (!this.air) this.vx = 0;
     if (sg.vyc != null) this.vy = sg.vyc;
-    if (mv.flashAt === this.mf) this.m.superFlash(this);
+    if (mv.flashAt === this.mf) { this.m.superFlash(this); if (mv.meteor) F.superTwin(this.m, this); }
+    if (mv.meteor && sg.id === 'recovery' && this.sf === mv.meteor.twinOut && this.twin && this.twin.st === 'super') F.twinVanish(this.m, this, true);
     if (mv.trail && (mv.trailSegs ? mv.trailSegs.indexOf(sg.id) >= 0 : (sg.id === 'rise' || sg.id === 'fall' || (sg.id === 'active' && mv.air))) && (!mv.trailEvery || (this.sf % mv.trailEvery) === 0)) {
       var wp = this.anchor(mv.trailAnchor || 'weapon');
       F.fx(mv.trail, this.x + wp.x * this.facing, this.y + wp.y, { facing: this.facing, palette: this.pal });
@@ -359,6 +366,7 @@
       var ph = o.phase();
       if (ph === 'startup' || ph === 'active') return true;
     }
+    if (o.twin && F.twinThreat(o.twin, this)) return true;   // Gemini's light-twin is about to claw
     var ps = this.m.projs;
     for (var i = 0; i < ps.length; i++) {
       var p = ps[i];
@@ -393,9 +401,20 @@
     var dir = d === 7 ? -1 : d === 9 ? 1 : d === 8 ? 0 : this.jumpDir;
     this.vx = dir > 0 ? J.vxF * this.facing : dir < 0 ? -J.vxB * this.facing : 0;
     this.vy = -J.vy; this.air = true; this.airUsed = false; this.airSpecial = false;
+    this.djUsed = false; this.djT = 0; this.jumpEt = this.inp.ett;
     this.setActionRaw('jump');
     F.fx('dust.jump', this.x, GY, { facing: this.facing });
     F.sfx('jump', { pan: F.pan(this.x, this.m.camX), vol: 0.6 });
+  };
+  // Gemini's double jump: one extra jump per airtime (8/9/7 pressed again in the air; `airJump` flip)
+  Fighter.prototype.airJump = function () {
+    var d = this.inp.dir(this.facing), J = this.C.airJump;
+    var dir = d === 7 ? -1 : d === 9 ? 1 : 0;
+    this.vx = dir > 0 ? J.vxF * this.facing : dir < 0 ? -J.vxB * this.facing : 0;
+    this.vy = -J.vy; this.djUsed = true; this.djT = J.frames || 6; this.af = 0;
+    F.fx('gemini.sparkles', this.x, this.y, { facing: this.facing, palette: this.pal, 'char': this.ch, layer: 'back', power: 0.7 });
+    F.sfx('jump', { pan: F.pan(this.x, this.m.camX), vol: 0.5, pitch: 1.2 });
+    if (this.m.onAirJump) this.m.onAirJump(this);
   };
   Fighter.prototype.startDash = function (k) {
     var D = k === 'F' ? this.C.dashF : this.C.dashB;
@@ -445,7 +464,8 @@
         if (this.af >= 4) this.takeoff();
         break;
       case 'jump':
-        this.tryAir();
+        if (this.djT > 0) this.djT--;
+        if (!this.tryAir() && C.airJump && !this.djUsed && this.height() > 6 && this.inp.upEdge(3, this.jumpEt)) this.airJump();
         break;
       case 'land':
         if (this.af >= this.landLag) { this.setActionRaw('idle'); this.neutral(o); }
@@ -599,6 +619,7 @@
         anim = this.guardLow ? 'guardCrouch' : 'guardStand'; seg = 'loop'; u = af / F.segLen(ch, anim, 'loop'); break;
       case 'jumpSquat': anim = 'jumpSquat'; seg = 'go'; u = Math.min(af / 4, 0.99); break;
       case 'jump':
+        if (this.djT > 0) { var dn = (this.C.airJump && this.C.airJump.frames) || 6; anim = 'airJump'; seg = 'go'; u = Math.min(0.99, (dn - this.djT) / dn); break; }
         anim = this.vy < 0 ? 'jumpRise' : 'jumpFall'; seg = 'loop'; u = af / F.segLen(ch, anim, 'loop'); break;
       case 'land': anim = 'land'; seg = 'go'; u = Math.min(af / Math.max(this.landLag, 6), 0.99); break;
       case 'dashF': case 'dashB': anim = a; seg = 'go'; u = Math.min(af / this.dashN, 0.99); break;

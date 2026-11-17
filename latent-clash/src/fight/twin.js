@@ -179,8 +179,10 @@
   // every simulate call (also during the super-flash freeze): fx-time for the fade-in after twinSpawn
   F.twinFxTick = function (m) {
     for (var i = 0; i < 2; i++) {
-      var tw = m.f[i].twin;
-      if (tw) tw.ft++;
+      var f = m.f[i], tw = f.twin;
+      if (!tw) continue;
+      tw.ft++;
+      if (tw.st === 'super') { tw.anim = f.anim; tw.seg = f.pseg; tw.u = f.pu; }
     }
   };
   F.tickTwinPuppets = function (m) {
