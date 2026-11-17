@@ -132,10 +132,11 @@ function okiPage() {
 }
 
 // Gemini checks (twin.js rules):
-//  mix: twin H behind the victim + her own 2L (low) / 5L (mid) / jL (overhead) landing k = -6..6 frames after the
+//  mix: twin H behind the victim + her own 2L (low) / 5L (mid) landing k = -6..6 frames after the
 //   twin's first active frame (also after an H blink swap: she is behind, the twin in front). For |k| <= TWIN_GRACE
 //   at least one FIXED guard (stand/crouch x left/right) must block both contacts; for larger gaps the victim needs to
-//   switch guard (a real, reactable left/right mix-up) — reported, not required.
+//   switch guard (a real left/right mix-up) — reported, not required. (The twin is always mid, so an overhead vs the
+//   twin can only conflict by direction, as the mid 5L does.)
 //  oki: 2H sweep > 214H (meaty twin behind the sleeping victim) -> her throw at k = -8..10 frames around the claw; wake-up options
 //   block+tech / backdash / jump / reversal must each take no throw and no clean hit (chip only) at every k, while
 //   'none' must lose at some k (the set-up is real).
@@ -154,7 +155,7 @@ function gemPage() {
     for (t = 0; t < 140; t++) {
       let i1 = q.length ? q.shift() : {};
       const tw = A.twin, left = tw ? F.twinLeft(tw) : -1;
-      if (swap && tw && swapAt < 0 && left === 24) { swapAt = t; q.push({ down: 1 }, { down: 1 }, {}, {}, { down: 1, H: 1 }, { down: 1, H: 1 }, {}); }
+      if (swap && tw && swapAt < 0 && left === 44) { swapAt = t; q.push({ down: 1 }, { down: 1 }, {}, {}, { down: 1, H: 1 }, { down: 1, H: 1 }, {}); }
       if (atk === 'jL' && tw && pressAt < 0 && left >= 0 && left === 30 - k && !swap) pressAt = t;
       if (atk !== 'jL' && tw && pressAt < 0 && left >= 0 && left === startup + 1 - k) pressAt = t;
       if (pressAt >= 0 && t >= pressAt) {
@@ -246,7 +247,7 @@ if (!process.argv.includes('--no-oki')) {
 if (!process.argv.includes('--no-gemini') && (!ONLY || ONLY.split(',').indexOf('gemini') >= 0)) {
   await page.evaluate(gemPage);
   const G = ['sL', 'sR', 'cL', 'cR'];
-  for (const vs of ['claude', 'deepseek']) for (const swap of [false, true]) for (const atk of swap ? ['2L', '5L'] : ['2L', '5L', 'jL']) {
+  for (const vs of ['claude', 'deepseek']) for (const swap of [false, true]) for (const atk of ['2L', '5L']) {
     let line = '', bad = 0;
     for (let k = -6; k <= 6; k += 1) {
       let any = false, gap = null, landed = false;
