@@ -11,7 +11,10 @@
   logic for the others (pending-twin guard / back-dash, dispel pokes, blink-recovery punish only in the real
   recovery). Tuning in progress: interim real-module sim (n = 100 per side) Gemini's opponents win L3 56/54/49 %,
   L5 58/50/52 % (Claude / DeepSeek / GPT); data changes so far: damage +5–8 %, twinStrike pounce 2 px/f, twin
-  gesture recovery 18 → 13 (rig recovery played faster).
+  gesture recovery 18 → 13 (rig recovery played faster). Later: star clash / blink-through vs projectiles, anti-rekka
+  starRise, vs-DeepSeek star range 160, vs-Claude jump ×.4 → L3 Claude–Gemini 48.7 %, L5 54.0 % (n = 150).
+  Regression: the three old pairings give bit-identical tables to the pre-Gemini engine (HEAD-snapshot copy, same
+  seeds, `--chars=claude,deepseek,gpt --n=40 --levels=1,3,5`).
 - [ ] 3 sim / combos extended, balance (L1/L3/L5), no loops
 - [ ] 4 shots
 - [ ] 5 notes, `getMoveList('gemini')`
