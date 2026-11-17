@@ -82,7 +82,7 @@
       if (f.action === 'attack' && f.mv && f.mv.hits) {
         var sg = f.seg();
         f.mv.hits.forEach(function (h) {
-          if (h.seg !== sg.id || (h.fr && (f.sf < h.fr[0] || f.sf > h.fr[1]))) return;
+          if (h.seg !== sg.id || (h.fr && (f.sf < h.fr[0] || f.sf > h.fr[1])) || (h.at && F.hitAt(h, f.sf) < 0)) return;
           var lb = F.hitLocal(f, h);
           if (!lb) return;
           if (h.radius) { circle(ctx, m, F.roarCircle(f), '#ff3b3b'); return; }
@@ -95,6 +95,14 @@
       }
       var bar = F.barrierBox(f);
       if (bar) box(ctx, m, bar, '#5ee6a8', '#5ee6a8');
+      if (f.twin) {   // Gemini's light-twin: body outline (cannot be hit) + its claw box while active
+        var tw = f.twin, tb = F.worldBox([-12, -94, 24, 94], tw.x, tw.y, tw.facing);
+        box(ctx, m, tb, '#ff8fe0', null);
+        var th = F.twinHitBox(tw);
+        if (th) box(ctx, m, th, '#ff3b3b', '#ff3b3b');
+        var tx2 = Math.round(tw.x - m.camX);
+        rect(ctx, tx2 - 2, Math.round(tw.y), 5, 1, '#ff8fe0'); rect(ctx, tx2, Math.round(tw.y) - 2, 1, 5, '#ff8fe0');
+      }
       var ox = Math.round(f.x - m.camX);
       rect(ctx, ox - 2, Math.round(f.y), 5, 1, '#ffffff'); rect(ctx, ox, Math.round(f.y) - 2, 1, 5, '#ffffff');
     }

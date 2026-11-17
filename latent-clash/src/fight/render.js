@@ -123,7 +123,16 @@
       if (mv.whale && st >= 0 && st < 60) F.sprite(ctx, 'deepseek.whale', sx + f.facing * mv.whale.x, GY, st, o);
       // [C] GPT super: necks + heads behind the fighters (target point latched at cast f0)
       if (mv.attn && st >= 0 && st < 70 && f.attnX != null) F.sprite(ctx, 'gpt.attention', 0, 0, st, attnOpts(m, f, 'back'));
+      // [C] Gemini super: streak rain + constellation flare behind the fighters
+      if (mv.meteor && st >= 0 && st < 76) F.sprite(ctx, 'gemini.meteor', 0, 0, st, meteorOpts(m, f, 'back'));
       return;
+    }
+    // [D] Gemini super: hand stars, meteors, impacts, X beams, burst (fallback: the hit lane on hit ticks)
+    if (mv.meteor && st >= 0 && st < 76) {
+      if (!F.sprite(ctx, 'gemini.meteor', 0, 0, st, meteorOpts(m, f, 'front')) && sg.id === 'active' && F.hitAt(mv.hits[0], f.sf) >= 0) {
+        var mb = F.meteorBox(f);
+        if (mb) rect(ctx, mb.x - m.camX, mb.y + mb.h - 10, mb.w, 10, palOf(f).accent[1]);
+      }
     }
     // [D] GPT super: lines, beams, orb, burst, scales after the fighters
     if (mv.attn && st >= 0 && st < 70 && f.attnX != null) {
@@ -174,6 +183,48 @@
     }
   }
 
+  // ax, ay = her muzzle (raised hand) on screen, bx, by = the twin's (fx defaults if the twin is gone)
+  function meteorOpts(m, f, part) {
+    var a = f.anchor('muzzle'), o = { ax: Math.round(f.x + a.x * f.facing - m.camX), ay: Math.round(f.y + a.y), facing: f.facing, palette: f.pal, part: part };
+    var tw = f.twin;
+    if (tw && tw.st === 'super') {
+      var b = twinAnchor(f, tw, 'muzzle') || { x: 16, y: -104 };
+      o.bx = Math.round(tw.x + b.x * tw.facing - m.camX); o.by = Math.round(tw.y + b.y);
+    }
+    return o;
+  }
+  function twinPuppet(f) {
+    if (f.twinPuppet === undefined) {
+      f.twinPuppet = null;
+      if (!F.headless && F.mod('rig', 'createPuppet')) {
+        try { f.twinPuppet = LC.rig.createPuppet(f.ch, { palette: f.pal }) || null; } catch (e) { F.err('rig.createPuppet twin', e); f.twinPuppet = null; }
+      }
+      if (!f.twinPuppet) f.twinPuppet = new FallbackPuppet(f.ch, f.pal);
+    }
+    return f.twinPuppet;
+  }
+  function twinAnchor(f, tw, name) {
+    var p = twinPuppet(f), a = null;
+    if (!p || p.fallback || !p.getAnchor) return null;
+    try { p.setPoseSeg(tw.anim, tw.seg, tw.u); a = p.getAnchor(name); } catch (e) { F.err('rig.getAnchor twin', e); }
+    return a && isFinite(a.x) && isFinite(a.y) ? a : null;
+  }
+  // Gemini's light-twin: the same puppet, pink-violet flash tint (palette accent[1]) at ~60 % alpha with a
+  // gentle 8-frame shimmer; fades in over twinSpawn t 12..20; drawn under both fighters
+  function drawTwin(ctx, m, f) {
+    var tw = f.twin;
+    if (!tw || F.twinHidden(f)) return;
+    var p = twinPuppet(f);
+    if (!p) return;
+    var fade = F.clamp((tw.ft - 12) / 8, 0, 1), base = (m.tick & 7) >= 4 ? 0.55 : 0.63;
+    var col = palOf(f).accent[1];
+    try {
+      p.setPoseSeg(tw.anim, tw.seg, tw.u);
+      p.draw(ctx, Math.round(tw.x - m.camX), Math.round(tw.y), { facing: tw.facing, flash: 0.7, flashColor: col, alpha: base * fade, silhouette: null });
+    } catch (e) { F.err('rig.draw twin', e); }
+  }
+  F.drawTwin = drawTwin;
+
   function attnOpts(m, f, part) {
     return { tx: Math.round(f.attnX - m.camX), ty: Math.round(f.attnY), facing: f.facing, palette: f.pal, part: part };
   }
@@ -181,7 +232,9 @@
   function drawProjs(ctx, m) {
     for (var i = 0; i < m.projs.length; i++) {
       var p = m.projs[i], sx = Math.round(p.x - m.camX), sy = Math.round(p.y);
-      if (!F.sprite(ctx, p.sprite, sx, sy, p.t, { facing: F.sign(p.vx) || p.facing, palette: p.owner.pal, power: p.power != null ? p.power : 1, angle: p.vy ? Math.atan2(p.vy, Math.abs(p.vx)) : 0 })) {
+      // gemini.star takes the travel direction as an absolute screen angle (facing -1: PI ...)
+      var ang = p.spec.absAngle ? Math.atan2(p.vy, p.vx || p.facing) : (p.vy ? Math.atan2(p.vy, Math.abs(p.vx)) : 0);
+      if (!F.sprite(ctx, p.sprite, sx, sy, p.t, { facing: F.sign(p.vx) || p.facing, palette: p.owner.pal, power: p.power != null ? p.power : 1, angle: ang })) {
         var P = palOf(p.owner), b = p.box || p.spec.box;
         rect(ctx, sx + b[0], sy + b[1], b[2], b[3], P.accent[2]);
         rect(ctx, sx + b[0] + 2, sy + b[1] + 2, b[2] - 4, b[3] - 4, P.accent[0]);
@@ -367,6 +420,7 @@
     engineSprites(ctx, m, A, 'back'); engineSprites(ctx, m, B, 'back');
     fxDraw(ctx, m, 'back');
     shadow(ctx, m, A); shadow(ctx, m, B);
+    drawTwin(ctx, m, A); drawTwin(ctx, m, B);
     var top = m.f[m.topSide], under = m.f[1 - m.topSide];
     drawPuppet(ctx, m, under); drawPuppet(ctx, m, top);
     // [D] engine front sprites
