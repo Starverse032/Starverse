@@ -530,9 +530,9 @@
     // (never within TWIN_GRACE: that would be forgiven anyway)
     if (left >= 0 && this.twSet !== tw.id) {
       var close = dx <= this.reachOf(me, '2M') + 6, tside = F.sign(tw.x - o.x) !== F.sign(me.x - o.x);
-      if (close && (left === 10 || left === 2) && !o.air) {
+      if (close && (left === 11 || left === 0) && !o.air) {   // lands ≈ 5f before / after the twin's claw
         this.twSet = tw.id;
-        if (this.chance(0.55 + 0.1 * P.depth) * gem(P, 'twin')) {
+        if (this.chance((0.55 + 0.1 * P.depth) * gem(P, 'twin'))) {
           var k = this.rng.next();
           if (k < 0.45) this.push(this.press(dx <= this.reachOf(me, '2L') + 6 ? 'L' : 'M', 2), tside ? 'twinXlow' : 'twinLow');
           else if (k < 0.75) this.push(this.press(dx <= this.reachOf(me, '5L') + 6 ? 'L' : 'M', 5), tside ? 'twinXmid' : 'twinMid');
