@@ -20,8 +20,15 @@
   unblockable — gaps ≤ 3 ticks blockable with one fixed guard, larger gaps need a guard switch; oki check 2H > 214H
   meaty twin + throw: every timing has an escape (guard toward the twin, reversal), works vs no defence) — all OK
   (77 real `--all`, 39 stubs). Twin H wait 36 → 39 (claw ≈ 47f after spawn: 2H > 214H is a true meaty).
-  Grace window counted in ticks (block-stop does not extend it). Final balance runs: pending.
-- [ ] 4 shots
+  Grace window counted in ticks (block-stop does not extend it).
+  Final balance (LEAD, real modules, n = 300 per cell, seeds 21 / 57, A's win %): determinism OK, 0 violations,
+  0 unfinished, 0 console errors; combos 77/77 OK.
+  claude-gemini L1 58.5, L3 46.7 / 44.8, L5 54.7 / 55.0 · deepseek-gemini L1 39.1, L3 52.0 / 50.3, L5 54.3 / 51.0 ·
+  gpt-gemini L1 61.7, L3 50.3 / 44.0, L5 49.0 / 47.7 · claude-deepseek L1 56.3, L3 46.7 / 46.7, L5 54.3 / 58.7 ·
+  claude-gpt L1 50.7, L3 48.0 / 46.3, L5 47.5 / 53.0 · deepseek-gpt L1 56.9, L3 53.0 / 56.3, L5 55.0 / 57.0.
+  Known: level 1 is uneven for Gemini (39–62 %); deepseek-gpt sits at the top of the band at L5.
+- [~] 4 shots: not done by the engineer; LEAD checked star H, twin H, blink swap and the super timeline in the
+  built game (screenshots) — no dedicated `fight-shots` scenarios for Gemini yet.
 - [x] 5 `getMoveList('gemini')` (double jump row, star 65/65/90 (H = 2 hits), airStar, twin = twinStrike 70, super 320)
 
 ## GPT progress / next steps (CONTRACT-V2 §V2.5 — keep truthful, updated as work lands)
