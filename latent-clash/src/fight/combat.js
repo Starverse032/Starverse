@@ -353,7 +353,7 @@
     var inCombo = vic.action === 'hitstun' || vic.action === 'launch' || vic.action === 'caught';
     if (!inCombo) { att.combo = 0; att.comboDmg = 0; att.comboStart = m.tick; }
     vic.blkSrc = null;
-    if (vic.twin) F.twinVanish(m, vic, true);   // Gemini's twin vanishes when she is hit
+    if (vic.twin) F.twinVanish(m, vic, true, 'hit');   // Gemini's twin vanishes when she is hit
     var inst = ctx.twin ? 't' + proj.id : proj ? 'p' + proj.id : 'm' + att.moveInst;
     if (att.scaleInst !== inst) { att.scaleInst = inst; att.scaleIdx = att.combo; }
     var idx = (kind === 'super' || (mv && mv.hits && mv.hits.length > 1) || h.every) ? att.scaleIdx : att.combo;
@@ -479,7 +479,7 @@
     att.throwBack = back;
     att.victim = vic;
     abortMove(vic);
-    if (vic.twin) F.twinVanish(m, vic, true);
+    if (vic.twin) F.twinVanish(m, vic, true, 'thrown');
     vic.setActionRaw('thrown'); vic.thrower = att; vic.techT = T.THROW_TECH;
     vic.vx = 0; vic.vy = 0; vic.air = false; vic.pushN = 0;
     vic.facing = -att.facing;
@@ -564,7 +564,7 @@
     att.startMove(G.to, s);
     att.victim = vic;
     abortMove(vic);
-    if (vic.twin) F.twinVanish(m, vic, true);
+    if (vic.twin) F.twinVanish(m, vic, true, 'thrown');
     vic.setActionRaw('thrown'); vic.thrower = att; vic.techT = 0;
     vic.vx = 0; vic.vy = 0; vic.air = false; vic.pushN = 0; vic.pullTo = null;
     vic.facing = -att.facing;

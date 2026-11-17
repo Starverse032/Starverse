@@ -57,12 +57,12 @@
     return tw;
   };
 
-  F.twinVanish = function (m, f, fx) {
+  F.twinVanish = function (m, f, fx, why) {
     var tw = f.twin;
     if (!tw) return;
     f.twin = null;
     if (fx) tfx('gemini.twinVanish', f, tw.x, tw.y, tw.facing);
-    if (m.onTwin) m.onTwin(f, tw, 'vanish');
+    if (m.onTwin) m.onTwin(f, tw, why || 'vanish');
   };
 
   // frames until the twin's strike is active (0 while active, -1 when it cannot hit any more)
@@ -118,7 +118,7 @@
       if (tw.mf > 0) {
         tw.sf++;
         if (tw.sf >= sg.f) {
-          if (tw.si >= tw.res.segs.length - 1) { F.twinVanish(m, f, true); return; }
+          if (tw.si >= tw.res.segs.length - 1) { F.twinVanish(m, f, true, tw.hitDone ? 'done' : 'whiff'); return; }
           tw.si++; tw.sf = 0; sg = tw.res.segs[tw.si];
           if (sg.id === 'active') F.sfx('gemini.twinStrike', { pan: F.pan(tw.x, m.camX) });
         }
@@ -149,7 +149,7 @@
       F.sfx('counter.catch', { pan: F.pan(tw.x, m.camX), vol: 0.7 });
       vic.addMeter(5);
       if (m.onContact) m.onContact(f, vic, 'absorb', 0, null, 'special');
-      F.twinVanish(m, f, true);
+      F.twinVanish(m, f, true, 'absorb');
       return;
     }
     if (vic.strikeInvuln() || !F.juggleOK(vic, h)) return;
