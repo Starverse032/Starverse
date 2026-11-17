@@ -49,6 +49,8 @@ function pageRunner() {
     m.onContact = function (att, vic, what, dmg, h, kind, counter) {
       if (what === 'hit') { const k = kind === 'throw' ? 'throw' : (h && h.src === 'twin') ? 'twin' : (h && h.fx && /sparkHit|waveHit|starHit/.test(h.fx) && !h.meteor) ? 'proj' : (att.mv ? att.mv.id : kind); dmgBy[att.side][k] = (dmgBy[att.side][k] || 0) + dmg; }
       if (what === 'grab' || what === 'erase') dmgBy[att.side]['_' + what] = (dmgBy[att.side]['_' + what] || 0) + 1;
+      if (h && h.src === 'twin') dmgBy[att.side]['_twin ' + what] = (dmgBy[att.side]['_twin ' + what] || 0) + 1;
+      if (what === 'hit' && vic.twin) dmgBy[vic.side]['_twin lost'] = (dmgBy[vic.side]['_twin lost'] || 0) + 1;
       if (counter) dmgBy[att.side]._counters = (dmgBy[att.side]._counters || 0) + 1;
       return oc.apply(this, arguments);
     };
@@ -178,7 +180,8 @@ async function main() {
     }
     for (const c in dmg) {
       const tot = Object.entries(dmg[c]).filter(e => e[0][0] !== '_').reduce((a, b) => a + b[1], 0);
-      console.log('damage by source ' + c + ' (total ' + tot + ', counters ' + (dmg[c]._counters || 0) + (dmg[c]._grab ? ', grabs ' + dmg[c]._grab : '') + (dmg[c]._erase ? ', erased ' + dmg[c]._erase : '') + '): ' +
+      const ex = Object.keys(dmg[c]).filter(k => /^_twin/.test(k)).map(k => ', ' + k.slice(1) + ' ' + dmg[c][k]).join('');
+      console.log('damage by source ' + c + ' (total ' + tot + ', counters ' + (dmg[c]._counters || 0) + (dmg[c]._grab ? ', grabs ' + dmg[c]._grab : '') + (dmg[c]._erase ? ', erased ' + dmg[c]._erase : '') + ex + '): ' +
         Object.entries(dmg[c]).filter(e => e[0][0] !== '_').sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k, v]) => k + ' ' + (100 * v / tot).toFixed(1) + '%').join(', '));
     }
     if (args.plans) for (const c in plans) console.log('AI plans ' + c + ': ' + Object.entries(plans[c]).sort((a, b) => b[1] - a[1]).slice(0, 24).map(([k, v]) => k + ' ' + v).join(', '));
