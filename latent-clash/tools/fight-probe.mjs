@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* LATENT CLASH — FIGHT probe: dumps rig metrics (charInfo, anchors per anim segment, bounds) and
  * fx spriteInfo for the sprites FIGHT uses, from the real modules. Used for the V2 retune.
- *   node tools/fight-probe.mjs [--anims=5L,2H] [--anchors=weapon,muzzle] [--n=4]          */
+ *   node tools/fight-probe.mjs [--chars=gemini] [--anims=5L,2H] [--anchors=weapon,muzzle] [--n=4] [--fx=gemini.meteor,gemini.star] */
 import { createRequire } from 'module';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -19,7 +19,7 @@ const out = await page.evaluate((a) => {
   const anims = a.anims ? a.anims.split(',') : null;
   const anchors = (a.anchors || 'weapon,muzzle,chest,top,grab').split(',');
   const n = +(a.n || 4);
-  for (const ch of ['claude', 'deepseek']) {
+  for (const ch of (a.chars ? a.chars.split(',') : ['claude', 'deepseek'])) {
     const c = o.chars[ch] = { info: R.charInfo(ch), anims: {} };
     const p = R.createPuppet(ch, { palette: 0 });
     for (const an of R.listAnims(ch)) {
@@ -40,7 +40,7 @@ const out = await page.evaluate((a) => {
       c.anims[an] = segs;
     }
   }
-  for (const s of ['claude.beam', 'claude.guardrail', 'claude.spark', 'claude.book', 'deepseek.wave', 'deepseek.whale', 'deepseek.tidal', 'deepseek.pool', 'screen.superBackdrop', 'screen.impact']) {
+  for (const s of (a.fx ? a.fx.split(',') : ['claude.beam', 'claude.guardrail', 'claude.spark', 'claude.book', 'deepseek.wave', 'deepseek.whale', 'deepseek.tidal', 'deepseek.pool', 'screen.superBackdrop', 'screen.impact'])) {
     try { const i = LC.fx.spriteInfo(s); o.fx[s] = i && i.frames ? Object.assign({}, i, { frames: i.frames.map((f, t) => t + ':' + (f && f.w ? [f.x, f.y, f.w, f.h].join(',') : '-')).join(' ') }) : i; } catch (e) { o.fx[s] = 'ERR ' + e; }
   }
   return o;
