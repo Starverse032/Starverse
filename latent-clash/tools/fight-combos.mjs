@@ -37,7 +37,8 @@ export const COMBOS = {
     { name: 'jH > 5L > 5M > 5H > 236H (star H, 2 hits)', dist: 118, steps: ['j9', 'jH', '5L', '5M', '5H', '236H'], hits: 6 },
     { name: '2L > 2M > 2H (sweep)', dist: 34, steps: ['2L', '2M', '2H'], hits: 3 },
     { name: '5L > 5M > 623H (starRise)', dist: 32, steps: ['5L', '5M', '623H'], hits: 3 },
-    { name: '214L > twin > 5M > 5H > 623H', dist: 44, steps: ['214L', 'T', '5M', '5H', '623H'], hits: 4 },
+    { name: '214L > twin > 5M > 5H > 236H', dist: 44, steps: ['214L', 'T', '5M', '5H', '236H'], hits: 5 },
+    { name: '214L > twin > 5L > 5M > 623H', dist: 40, steps: ['214L', 'T', '5L', '5M', '623H'], hits: 4 },
     { name: '5M > 5H > 236H > SUPER', dist: 40, steps: ['5M', '5H', '236H', 'w8', 'SUPER'], hits: 8, meter: true }
   ]
 };
