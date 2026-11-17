@@ -39,6 +39,7 @@
     THROW_PROT: 6,             // unthrowable frames after leaving hit/block stun
     WAKE_THROW_INV: 6,         // unthrowable after get-up
     THROW_DMG: 120,
+    TWIN_GRACE: 3,             // Gemini: twin + her own hit within this many frames of a block -> blocked in any guard
     KO_STOP: 42, KO_SLOW: 72, KO_BG_HOLD: 64, KO_BG_FADE: 12,
     FLASH: 44,                 // super flash freeze length
     IMPACT: 8,                 // screen.impact length (frames)

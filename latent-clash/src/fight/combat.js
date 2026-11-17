@@ -69,6 +69,11 @@
     }
     if (h.flame) return F.flameLocal(f);
     if (h.radius) { var rc = F.roarCircle(f, true); return [rc.x - rc.r, rc.y - rc.r, 2 * rc.r, 2 * rc.r]; }
+    if (h.meteor) {   // Gemini super: fx gemini.meteor frames[t] (screen space) -> world -> local
+      var mb = F.meteorBox(f);
+      if (!mb) return null;
+      return [f.facing > 0 ? mb.x - f.x : f.x - mb.x - mb.w, mb.y - f.y, mb.w, mb.h];
+    }
     if (h.attn) {   // GPT super: fx box rel. the target point latched at cast f0 (world) -> local
       var wb = F.attnBox(f);
       if (!wb) return null;
@@ -98,6 +103,11 @@
       if (h.fr && (f.sf < h.fr[0] || f.sf > h.fr[1])) continue;
       var key = h.group;
       if (h.every) key = h.group + ':' + Math.floor((f.sf - (h.fr ? h.fr[0] : 0)) / h.every);
+      if (h.at) {   // hits on listed segment frames (each live for 2 frames)
+        var ak = F.hitAt(h, f.sf);
+        if (ak < 0) continue;
+        key = h.group + ':' + ak;
+      }
       if (f.hitGroups[key]) continue;
       var lb = F.hitLocal(f, h);
       if (!lb) continue;
@@ -105,6 +115,8 @@
     }
     return out;
   };
+
+  F.hitAt = function (h, sf) { for (var q = 0; q < h.at.length; q++) if (sf >= h.at[q] && sf <= h.at[q] + 1) return q; return -1; };
 
   var whaleInfo;
   F.whaleInfo = function () {
@@ -222,6 +234,7 @@
     if (h.juggleAny) return true;
     return vic.juggle + (h.jug || 1) <= T.JUGGLE_MAX;
   }
+  F.juggleOK = juggleOK;
 
   // ------------------------------------------------------------------ strike resolution (per tick)
   var tmpA = [], tmpH = [];
@@ -289,8 +302,9 @@
     var finalHit = !proj && h0.final && (ctx.sf != null ? ctx.sf : att.sf) >= h0.final.from;
     var h = hitSpec(h0, s, finalHit ? h0.final : null);
     var lv = h.lv || 'M';
-    var srcX = proj ? proj.x - proj.vx * 4 : att.x;
-    var dir = proj ? F.sign(proj.vx) || att.facing : (F.sign(vic.x - att.x) || att.facing);
+    var srcX = ctx.srcX != null ? ctx.srcX : (proj ? proj.x - proj.vx * 4 : att.x);
+    var dir = ctx.dir || (proj ? F.sign(proj.vx) || att.facing : (F.sign(vic.x - att.x) || att.facing));
+    var tag = ctx.twin ? 'twin' : 'self';   // contact source for the twin + mix-up rule
     var kind = proj ? 'special' : mv.kind;
     if (!proj && ctx.key != null) att.hitGroups[ctx.key] = 1;
 
@@ -302,7 +316,13 @@
     }
 
     var dmg0 = F.v(h.dmg, s) || 0;
-    var blk = F.blockCheck(m, vic, h, srcX);
+    // twin + mix-up rule (twin.js): the other source landing <= TWIN_GRACE frames after a block is blocked in any guard
+    var b0 = vic.blkSrc, blk = null;
+    if (b0 && b0.att === att && b0.tag !== tag && vic.inp.ett - b0.et <= T.TWIN_GRACE && vic.guardState() && h.guard !== 'none') {
+      blk = { low: vic.isCrouching(), grace: true };
+      if (m.onGrace) m.onGrace(att, vic, h);
+    }
+    if (!blk) blk = F.blockCheck(m, vic, h, srcX);
     if (blk) {
       var chip = Math.round(dmg0 * (F.v(h.chip, s) || 0));
       if (chip > 0) { vic.hp = Math.max(0, vic.hp - chip); att.stats.damage += chip; if (vic.hp <= 0) m.lastKill = { side: att.side, kind: kind === 'super' ? 'super' : 'chip' }; }
@@ -312,6 +332,7 @@
       bs = Math.max(4, bs | 0);
       if (vic.action === 'attack') abortMove(vic);
       vic.guardLow = blk.low; vic.setActionRaw('blockstun'); vic.stun = bs; vic.stunMax = bs; vic.vx = 0;
+      vic.blkSrc = { att: att, tag: tag, et: vic.inp.ett };
       var pb = h.push ? F.v(h.push[1], s) : T.PUSH[lv][1];
       pushback(att, vic, pb, dir, !proj);
       var bst = T.BLOCKSTOP[lv] != null ? T.BLOCKSTOP[lv] : 7;
@@ -331,7 +352,9 @@
     var counter = vic.action === 'attack' && vic.mv && vic.mv.kind !== 'super' && vic.mv.kind !== 'system' && vic.phase() !== 'recovery';
     var inCombo = vic.action === 'hitstun' || vic.action === 'launch' || vic.action === 'caught';
     if (!inCombo) { att.combo = 0; att.comboDmg = 0; att.comboStart = m.tick; }
-    var inst = proj ? 'p' + proj.id : 'm' + att.moveInst;
+    vic.blkSrc = null;
+    if (vic.twin) F.twinVanish(m, vic, true);   // Gemini's twin vanishes when she is hit
+    var inst = ctx.twin ? 't' + proj.id : proj ? 'p' + proj.id : 'm' + att.moveInst;
     if (att.scaleInst !== inst) { att.scaleInst = inst; att.scaleIdx = att.combo; }
     var idx = (kind === 'super' || (mv && mv.hits && mv.hits.length > 1) || h.every) ? att.scaleIdx : att.combo;
     var sc = T.SCALE[Math.min(idx, T.SCALE.length - 1)];
@@ -456,6 +479,7 @@
     att.throwBack = back;
     att.victim = vic;
     abortMove(vic);
+    if (vic.twin) F.twinVanish(m, vic, true);
     vic.setActionRaw('thrown'); vic.thrower = att; vic.techT = T.THROW_TECH;
     vic.vx = 0; vic.vy = 0; vic.air = false; vic.pushN = 0;
     vic.facing = -att.facing;
@@ -540,6 +564,7 @@
     att.startMove(G.to, s);
     att.victim = vic;
     abortMove(vic);
+    if (vic.twin) F.twinVanish(m, vic, true);
     vic.setActionRaw('thrown'); vic.thrower = att; vic.techT = 0;
     vic.vx = 0; vic.vy = 0; vic.air = false; vic.pushN = 0; vic.pullTo = null;
     vic.facing = -att.facing;
@@ -601,7 +626,8 @@
     var p = {
       id: ++projId, owner: f, inst: f.moveInst, spec: P, str: s, kind: P.kind, sprite: P.sprite,
       box: F.v(P.box, s), power: F.num(F.v(P.power, s), 1),
-      cruise: P.cruiseY != null && !P.ground ? f.y + P.cruiseY : null,
+      cruise: F.v(P.cruiseY, s) != null && !P.ground ? f.y + F.v(P.cruiseY, s) : null,
+      hitsLeft: F.v(P.hits, s) || 1, nohit: 0,
       x: x, y: y, vx: F.v(P.vx, s) * f.facing, vy: F.v(P.vy, s) || 0, t: 0, dist: 0,
       range: F.v(P.range, s) || 99999, facing: f.facing, stop: 0, dead: false,
       hit: {
@@ -609,6 +635,7 @@
         fx: P.hitFx, sfx: P.hitSfx, air: 'knock', lvx: 2.0, lvy: -4.4, jug: 1
       }
     };
+    if (p.hitsLeft > 1) p.hit.every = 1;   // multi-hit star: all hits share the first hit's scaling
     m.projs.push(p);
     f.proj++;
     if (P.castFx) F.fx(P.castFx, x, y, { facing: f.facing, palette: f.pal, power: p.power });
@@ -659,7 +686,7 @@
       var vic = m.opp(q.owner), qb = projBox(q);
       if (vic.action === 'attack' && vic.mv && vic.mv.kind === 'super' && vic.seg().id === 'active') {
         var big = vic.mv.hits[0];
-        var lb = (big.beam || big.attn) ? F.hitLocal(vic, big) : big.box;
+        var lb = (big.beam || big.attn || big.meteor) ? F.hitLocal(vic, big) : big.box;
         if (lb && F.overlap(qb, F.worldBox(lb, vic.x, vic.y, vic.facing))) { killProj(m, q, true); continue; }
       }
       if (vic.action === 'attack' && vic.mv && vic.mv.roar && vic.seg().id === 'active' && F.circleRect(F.roarCircle(vic), qb)) {
@@ -678,12 +705,18 @@
         if (m.onContact) m.onContact(q.owner, vic, 'absorb', 0, null, 'special');
         continue;
       }
+      if (q.nohit > 0) { q.nohit--; continue; }   // multi-hit star between its hits
       if (m.noHits || vic.strikeInvuln() || !juggleOK(vic, q.hit)) continue;
       var hurts = F.hurtBoxes(vic, tmpH), touch = false;
       for (j = 0; j < hurts.length; j++) if (F.overlap(qb, hurts[j])) { touch = true; break; }
       if (!touch) continue;
       var hx = q.x + F.sign(q.vx) * 6, hy = q.spec.ground ? q.y - 18 : q.y;
-      F.applyHit(m, q.owner, vic, q.hit, { proj: q, x: hx, y: hy });
+      var res = F.applyHit(m, q.owner, vic, q.hit, { proj: q, x: hx, y: hy });
+      if (res === 'block' && q.spec.blockFx) {   // gemini.starHit also when blocked (sfx at 0.6)
+        F.fx(q.spec.hitFx, hx, hy, { facing: F.sign(q.vx) || q.facing, palette: q.owner.pal, power: q.power, 'char': q.owner.ch });
+        if (q.spec.hitSfx) F.sfx(q.spec.hitSfx, { pan: F.pan(hx, m.camX), vol: 0.6 });
+      }
+      if (q.hitsLeft > 1 && (res === 'hit' || res === 'block')) { q.hitsLeft--; q.nohit = q.spec.rehit || 10; continue; }
       killProj(m, q, false);
     }
     // compact
