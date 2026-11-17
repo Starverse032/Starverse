@@ -186,7 +186,7 @@ function gemPage() {
       if (!pressed && A.connected === 'hit' && A.mv && A.mv.id === '2H') { pressed = true; q.length = 0; q.push({ down: 1 }, { down: 1 }, { down: 1, left: 1 }, { down: 1, left: 1 }, { left: 1, H: 1 }, { left: 1, H: 1 }, {}); tw0 = m.tick + 8; }
       const tw = A.twin;
       if (tw) { twinOut = true; if (spawnT < 0) spawnT = t; }
-      if (spawnT >= 0 && throwT < 0 && t === spawnT + 45 + k - 6) throwT = t;   // throw active ≈ k frames after the claw
+      if (spawnT >= 0 && throwT < 0 && t === spawnT + 48 + k - 6) throwT = t;   // throw active ≈ k frames after the claw
       if (throwT >= 0 && t >= throwT && t < throwT + 2) i1 = { right: 1, L: 1, M: 1 };
       else if (twinOut && throwT < 0 && Math.abs(B.x - A.x) > 30 && !q.length) i1 = { right: 1 };
       if (B.action === 'getup' && g0 < 0) g0 = t;
