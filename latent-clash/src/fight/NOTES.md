@@ -7,7 +7,11 @@
   standing / crouching opponent at 200 px, hits a jumper), starRise heights 47/57/67, twin L/M/H timings
   (hit 36 / 29 / 44 f after spawn), blink L/M/H (inv, hidden, positions, through the opponent, air variant), double
   jump (+≈ 40–60 px), super 320 raw / 82 chip. Not yet: AI, sim/combos, shots, move list.
-- [ ] 2 CPU: Gemini plans L1–5 + vs-Gemini logic for the other three
+- [~] 2 CPU (ai.js): Gemini plans (`geminiPlans` / `geminiNow` / `geminiAir`, `GEM` per-level knobs) + vs-Gemini
+  logic for the others (pending-twin guard / back-dash, dispel pokes, blink-recovery punish only in the real
+  recovery). Tuning in progress: interim real-module sim (n = 100 per side) Gemini's opponents win L3 56/54/49 %,
+  L5 58/50/52 % (Claude / DeepSeek / GPT); data changes so far: damage +5–8 %, twinStrike pounce 2 px/f, twin
+  gesture recovery 18 → 13 (rig recovery played faster).
 - [ ] 3 sim / combos extended, balance (L1/L3/L5), no loops
 - [ ] 4 shots
 - [ ] 5 notes, `getMoveList('gemini')`
