@@ -1,12 +1,16 @@
 # FIGHT — NOTES
 
 ## Gemini progress / next steps (CONTRACT-V2 §V2.6 — keep truthful, updated as work lands)
-- [ ] 1 `chars/gemini.js` + engine support (double jump, star variants, twin entity, blink / swap, super)
+- [~] 1 `chars/gemini.js` + engine support (`twin.js`: twin entity, blink / swap, super twin + meteor boxes, mix-up
+  rule; fighter.js double jump; combat.js multi-hit star, `at` hit ticks, grace rule; render twin / meteor; training
+  twin box; stubs know Gemini) — written; scripted check (real modules) OK for normals, 3 stars (M flies over a
+  standing / crouching opponent at 200 px, hits a jumper), starRise heights 47/57/67, twin L/M/H timings
+  (hit 36 / 29 / 44 f after spawn), blink L/M/H (inv, hidden, positions, through the opponent, air variant), double
+  jump (+≈ 40–60 px), super 320 raw / 82 chip. Not yet: AI, sim/combos, shots, move list.
 - [ ] 2 CPU: Gemini plans L1–5 + vs-Gemini logic for the other three
 - [ ] 3 sim / combos extended, balance (L1/L3/L5), no loops
 - [ ] 4 shots
 - [ ] 5 notes, `getMoveList('gemini')`
-Status: started (docs read); nothing of Gemini is in the engine yet.
 
 ## GPT progress / next steps (CONTRACT-V2 §V2.5 — keep truthful, updated as work lands)
 - [x] 1 roster generalisation (code): unknown ids fall back to the first registered `LC.CHARS` entry with a
