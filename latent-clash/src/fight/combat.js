@@ -318,7 +318,7 @@
     var dmg0 = F.v(h.dmg, s) || 0;
     // twin + mix-up rule (twin.js): the other source landing <= TWIN_GRACE frames after a block is blocked in any guard
     var b0 = vic.blkSrc, blk = null;
-    if (b0 && b0.att === att && b0.tag !== tag && vic.inp.ett - b0.et <= T.TWIN_GRACE && vic.guardState() && h.guard !== 'none') {
+    if (b0 && b0.att === att && b0.tag !== tag && m.tick - b0.tick <= T.TWIN_GRACE && vic.guardState() && h.guard !== 'none') {
       blk = { low: vic.isCrouching(), grace: true };
       if (m.onGrace) m.onGrace(att, vic, h);
     }
@@ -332,7 +332,7 @@
       bs = Math.max(4, bs | 0);
       if (vic.action === 'attack') abortMove(vic);
       vic.guardLow = blk.low; vic.setActionRaw('blockstun'); vic.stun = bs; vic.stunMax = bs; vic.vx = 0;
-      vic.blkSrc = { att: att, tag: tag, et: vic.inp.ett };
+      vic.blkSrc = { att: att, tag: tag, tick: m.tick };   // ticks, not effective frames: a guard can be switched during block-stop
       var pb = h.push ? F.v(h.push[1], s) : T.PUSH[lv][1];
       pushback(att, vic, pb, dir, !proj);
       var bst = T.BLOCKSTOP[lv] != null ? T.BLOCKSTOP[lv] : 7;

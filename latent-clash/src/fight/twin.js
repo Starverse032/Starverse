@@ -6,7 +6,7 @@
  *    Its hit goes through F.applyHit like a projectile (hit-stop on the twin, not on her; guard
  *    direction from the twin's x; combo scaling and gauge as her own hits).
  *  - twin + mix-up rule (T.TWIN_GRACE): a hit from one source (her / her projectiles vs her twin) that
- *    lands ≤ TWIN_GRACE effective frames after the victim BLOCKED the other source is blocked in any
+ *    lands ≤ TWIN_GRACE ticks (0 = the same tick) after the victim BLOCKED the other source is blocked in any
  *    guard (either direction, standing or crouching) — so one correct guard for the first contact
  *    always blocks a twin strike + her low / overhead / cross-up arriving on (almost) the same frame.
  *  - blink repositioning (mv.blink, F.blinkSeg), the double jump (fighter.js, C.airJump),
