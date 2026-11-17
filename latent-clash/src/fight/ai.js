@@ -568,16 +568,18 @@
     if (me.proj === 0 && dx > 130) add('star', (0.6 + (dx > 210 ? 0.5 : 0)) * st * pk, this.special('star', dx > 210 ? 'L' : this.pick(['L', 'H'])));
     if (me.proj === 0 && dx > 100 && (o.air || this.oppJumpy > 0.3)) add('starM', (0.5 + this.oppJumpy) * st * pk, this.special('star', 'M'));   // catches jumps
     if (me.proj === 0 && dx > 120 && dx < 220) add('starHrun', 0.25 * st * pk, this.special('star', 'H').concat([{ d: 6, n: 14 }]));
-    if (!me.twin && o.action !== 'attack') {
-      if (dx < 76) add('twinL', 0.3 * tw, this.special('twin', 'L'));
-      if (dx > 70 && dx < 150) add('twinM', 0.22 * tw, this.special('twin', 'M'));
-      if (dx > 50 && dx < 200 && this.level >= 2) add('twinH', (0.22 + ag * 0.1) * tw, this.special('twin', 'H'));
+    // twin set-ups only out of quick-punish range (the gesture has 18 recovery frames); point-blank: oki only
+    var safe = dx > (gem(P, 'tsafe') * 100) || o.action === 'down' || (o.action === 'attack' && o.phase() === 'recovery' && dx > 70);
+    if (!me.twin && safe && o.action !== 'blockstun') {
+      if (dx > 100 && dx < 170) add('twinL', 0.18 * tw, this.special('twin', 'L'));   // a trap she waits behind
+      if (dx > 90 && dx < 150) add('twinM', 0.22 * tw, this.special('twin', 'M'));
+      if (dx > 90 && dx < 200 && this.level >= 2) add('twinH', (0.22 + ag * 0.1) * tw, this.special('twin', 'H'));
     }
     if (dx > 60 && dx < 140 && o.action === 'attack') add('blinkM', 0.25 * bl, this.special('blink', 'M'));   // through them
     if (this.cornered(me, o) && dx < 90) add('blinkEsc', 0.45 * bl, this.special('blink', 'M'));
     if (dx < 70 && !this.cornered(me, o)) add('blinkL', 0.12 * bl, this.special('blink', 'L'));
     if (!me.twin && dx > 80 && dx < 220 && this.level >= 3) add('blinkAir', 0.06 * bl, this.special('blink', 'H'));
-    if (dx > D(110) && dx < D(190)) add('djIn', P.jump * 3 * dj * (0.6 + ag), [{ d: 9, n: 3 }]);
+    if (dx > D(110) && dx < D(190)) add('djIn', P.jump * 3 * dj * gem(P, 'jump') * (0.6 + ag), [{ d: 9, n: 3 }]);
   };
   AI.prototype.geminiAir = function (me, o, pv, dx, h, toward) {
     var P = this.P;
