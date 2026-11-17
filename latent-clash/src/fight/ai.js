@@ -31,8 +31,8 @@
   var GEM = [
     { walk: 0.5, dash: 0.5, jump: 0.8 },
     { walk: 0.35, dash: 0.4, jump: 0.6 },
-    { walk: 0.3, dash: 0.35, jump: 0.5 },
-    { walk: 0.3, dash: 0.35, jump: 0.5 },
+    { walk: 0.3, dash: 0.35, jump: 0.5, star: 2.2, twin: 0.6, blk: 0.1, pun: 0.7 },
+    { walk: 0.3, dash: 0.35, jump: 0.5, star: 1.6, twin: 0.8, blk: 0.05 },
     { walk: 0.3, dash: 0.35, jump: 0.5 }
   ];
   for (var gi = 0; gi < LV.length; gi++) LV[gi].gem = GEM[gi];

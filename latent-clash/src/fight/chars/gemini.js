@@ -53,15 +53,15 @@
 
     moves: {
       // claw swipes (L) · platform-shoe kicks (M) · spinning tail-and-heel attacks (H)
-      '5L': N('L', 'stand', 4, 3, 7,   { box: [10, -68, 22, 14], dmg: 28, adv: [3, 1], fx: 'gemini.clawHit' }),
-      '5M': N('M', 'stand', 7, 4, 12,  { box: [20, -61, 30, 16], dmg: 55, adv: [2, -1] }),
-      '5H': N('H', 'stand', 10, 5, 20, { box: [16, -76, 44, 44], dmg: 85, adv: [1, -5], air: 'knock' }),
+      '5L': N('L', 'stand', 4, 3, 7,   { box: [10, -68, 22, 14], dmg: 30, adv: [3, 1], fx: 'gemini.clawHit' }),
+      '5M': N('M', 'stand', 7, 4, 12,  { box: [20, -61, 30, 16], dmg: 60, adv: [2, -1] }),
+      '5H': N('H', 'stand', 10, 5, 20, { box: [16, -76, 44, 44], dmg: 92, adv: [1, -5], air: 'knock' }),
       '2L': N('L', 'crouch', 4, 3, 8,  { box: [11, -21, 22, 14], dmg: 26, guard: 'low', adv: [2, 0], fx: 'gemini.clawHit' }),
-      '2M': N('M', 'crouch', 7, 4, 13, { box: [17, -14, 36, 14], dmg: 52, guard: 'low', adv: [1, -2] }),
-      '2H': N('H', 'crouch', 10, 5, 22, { box: [12, -16, 50, 20], dmg: 80, guard: 'low', kd: 'down', adv: [0, -9] }),
-      'jL': N('L', 'air', 4, 8, 12,    { box: [9, -59, 20, 18], dmg: 28, guard: 'high', stun: [12, 9], fx: 'gemini.clawHit' }),
-      'jM': N('M', 'air', 6, 6, 12,    { box: [10, -38, 30, 22], dmg: 52, guard: 'high', stun: [15, 11] }),
-      'jH': N('H', 'air', 9, 6, 12,    { box: [12, -49, 36, 32], dmg: 80, guard: 'high', stun: [18, 13] }),
+      '2M': N('M', 'crouch', 7, 4, 13, { box: [17, -14, 36, 14], dmg: 55, guard: 'low', adv: [1, -2] }),
+      '2H': N('H', 'crouch', 10, 5, 22, { box: [12, -16, 50, 20], dmg: 86, guard: 'low', kd: 'down', adv: [0, -9] }),
+      'jL': N('L', 'air', 4, 8, 12,    { box: [9, -59, 20, 18], dmg: 30, guard: 'high', stun: [12, 9], fx: 'gemini.clawHit' }),
+      'jM': N('M', 'air', 6, 6, 12,    { box: [10, -38, 30, 22], dmg: 55, guard: 'high', stun: [15, 11] }),
+      'jH': N('H', 'air', 9, 6, 12,    { box: [12, -49, 36, 32], dmg: 86, guard: 'high', stun: [18, 13] }),
 
       'throw': {
         kind: 'throw', anim: 'throw',
@@ -84,7 +84,7 @@
           spawn: 'muzzle', spawnFb: [34, -75], cruiseY: { L: -64, M: null, H: -66 }, power: { L: 0.3, M: 0.6, H: 1 },
           vx: { L: 5.2, M: 3.9, H: 2.4 }, vy: { L: 0, M: -1.42, H: 0 },
           hits: { L: 1, M: 1, H: 2 }, rehit: 10,
-          dmg: { L: 60, M: 60, H: 42 }, lv: 'S', stun: [22, 16], chip: 0.2, push: [10, 10]
+          dmg: { L: 65, M: 65, H: 45 }, lv: 'S', stun: [22, 16], chip: 0.2, push: [10, 10]
         })
       },
       airStar: {
@@ -95,7 +95,7 @@
           seg: 'active', kind: 'star', sprite: 'gemini.star', absAngle: true, box: [-10, -10, 20, 20],
           spawn: 'muzzle', spawnFb: [28, -46], power: 0.6,
           vx: { L: 2.6, M: 3.2, H: 3.8 }, vy: { L: 2.6, M: 3.2, H: 3.8 }, diag: true,   // 45° down-forward
-          dmg: 55, lv: 'S', stun: [20, 14], chip: 0.2, push: [8, 8]
+          dmg: 60, lv: 'S', stun: [20, 14], chip: 0.2, push: [8, 8]
         })
       },
       // 双子升星: invulnerable start-up, anti-air, knock-down (claw stays over her head: x +6..+18)
@@ -109,7 +109,7 @@
         ],
         inv: { strike: { L: [0, 5], M: [0, 7], H: [0, 9] }, 'throw': [0, 36] },
         hits: [{
-          seg: 'rise', fr: [0, 7], box: [0, -122, 40, 118], anchor: 'weapon', dmg: { L: 90, M: 105, H: 120 },
+          seg: 'rise', fr: [0, 7], box: [0, -122, 40, 118], anchor: 'weapon', dmg: { L: 95, M: 110, H: 125 },
           lv: 'S', kd: 'launch', lvx: 1.5, lvy: -6.6, stun: [0, 18], fx: 'gemini.clawHit', fx2: 'hit.special', jug: 2, impact: true
         }],
         trail: 'gemini.riseTrail', trailSegs: ['rise'], sfx: 'gemini.rise'
