@@ -396,6 +396,7 @@
     var isG = C === 'gpt', gW = isG ? (P.gWalk != null ? P.gWalk : 0.15) : 1;   // GPT: patient, lets them come
     var isN = C === 'gemini', nW = isN ? gem(P, 'walk') : 1, nD = isN ? gem(P, 'dash') : 1;   // Gemini: hit-and-run, not a rushdown
     var nMU = isN ? ((PROF.gemini.vs && PROF.gemini.vs[o.ch]) || {}) : {}, nJ = isN ? gem(P, 'jump') * (nMU.jump || 1) : 1;
+    nW *= nMU.walk || 1; nD *= nMU.walk || 1;
     var twP = isN && me.twin && me.twin.st !== 'super' && F.twinLeft(me.twin) > 12;   // her twin is still waiting: stay safe
     if (twP) { nW *= 0.3; nD *= 0.3; add('twinWait', 1.2 * gem(P, 'wait'), [{ d: dx < D(80) ? 1 : 4, n: 6 + this.rng.int(8) }]); }
     add('walkF', (0.6 + ag * 0.6) * (isG && dx < 150 ? gW : 1) * nW, [{ d: 6, n: 10 + this.rng.int(20) }]);
